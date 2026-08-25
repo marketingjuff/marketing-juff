@@ -26,6 +26,7 @@ import {
   ArchiveRestore,
   ChevronDown,
   Inbox,
+  ArrowDownAZ,
 } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
@@ -53,6 +54,7 @@ import {
   setDescartado,
   setSequenceArquivado,
   setStatus,
+  sortStoriesByName,
   splitFrame,
   storiesQueryOptions,
   undoMerge,
@@ -610,6 +612,25 @@ function StoriesPage() {
               }
             >
               <CheckCheck className="size-4" /> Aprovar pendentes
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1"
+              disabled={fila.length < 2}
+              onClick={() =>
+                setConfirm({
+                  title: "Ordenar por nome?",
+                  description:
+                    "A fila principal é reordenada pelo nome do arquivo da primeira arte de cada story e renumerada de 1 em diante. Fusões, artes não utilizadas e demais projetos não são alterados.",
+                  action: () =>
+                    mutate.mutate(async () => {
+                      await sortStoriesByName(sequenceId);
+                    }),
+                })
+              }
+            >
+              <ArrowDownAZ className="size-4" /> Ordenar por nome
             </Button>
           </div>
         ) : null}
