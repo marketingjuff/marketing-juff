@@ -258,26 +258,43 @@ export async function addFramesToStory(
   }
 }
 
-export async function setStatus(storyId: string, status: StoryStatus): Promise<void> {
+/** Aprova uma arte. O status do bloco é recalculado pelo gatilho do banco. */
+export async function approveFrame(frameId: string): Promise<void> {
   const { error } = await supabase
-    .from("stories")
-    .update({
-      status,
-      ...(status === "aprovado" ? { adjust_comment: null, adjust_comment_at: null } : {}),
-    })
-    .eq("id", storyId);
+    .from("story_frames")
+    .update({ status: "aprovado" })
+    .eq("id", frameId);
   if (error) throw error;
 }
 
-export async function requestAdjust(storyId: string, comment: string): Promise<void> {
+/** Pede ajuste em uma arte, guardando o comentário e a data na própria arte. */
+export async function requestFrameAdjust(frameId: string, comment: string): Promise<void> {
   const { error } = await supabase
-    .from("stories")
+    .from("story_frames")
     .update({
       status: "ajustar",
       adjust_comment: comment,
       adjust_comment_at: new Date().toISOString(),
     })
-    .eq("id", storyId);
+    .eq("id", frameId);
+  if (error) throw error;
+}
+
+/**
+ * Troca a imagem de uma arte. Guarda a imagem anterior, marca como refeito e
+ * preserva nome, ordem, textos e o comentário de ajuste. Nada é apagado.
+ */
+export async function replaceFrameImage(frame: Frame, file: File): Promise<void> {
+  const path = await uploadImage(file);
+  const { error } = await supabase
+    .from("story_frames")
+    .update({
+      image_path: path,
+      image_path_anterior: frame.image_path,
+      trocado_em: new Date().toISOString(),
+      status: "refeito",
+    })
+    .eq("id", frame.id);
   if (error) throw error;
 }
 
@@ -305,18 +322,26 @@ async function removeImages(paths: string[]): Promise<void> {
 export async function deleteStory(story: Story): Promise<void> {
   const { error } = await supabase.from("stories").delete().eq("id", story.id);
   if (error) throw error;
-  await removeImages(story.frames.map((f) => f.image_path));
+  await removeImages([
+    ...story.frames.map((f) => f.image_path),
+    ...story.frames.map((f) => f.image_path_anterior).filter((p): p is string => Boolean(p)),
+  ]);
 }
 
+/** Aprova todas as artes em pendente e refeito. Artes em ajustar não são tocadas. */
 export async function approveAllPending(stories: Story[]): Promise<void> {
-  const ids = stories.filter((s) => s.status === "pendente").map((s) => s.id);
+  const ids = stories
+    .flatMap((s) => s.frames)
+    .filter((f) => f.status === "pendente" || f.status === "refeito")
+    .map((f) => f.id);
   if (ids.length === 0) return;
   const { error } = await supabase
-    .from("stories")
-    .update({ status: "aprovado", adjust_comment: null, adjust_comment_at: null })
+    .from("story_frames")
+    .update({ status: "aprovado" })
     .in("id", ids);
   if (error) throw error;
 }
+
 
 /* ---------------- sequências ---------------- */
 
