@@ -37,7 +37,6 @@ export type Frame = {
   url_anterior: string;
 };
 
-
 export type Story = {
   id: string;
   position: number;
@@ -86,7 +85,9 @@ export async function fetchSequences(): Promise<Sequence[]> {
 export async function fetchStories(sequenceId: string | null): Promise<Story[]> {
   let query = supabase
     .from("stories")
-    .select("id, position, status, adjust_comment, adjust_comment_at, nome_bloco, sequence_id, descartado")
+    .select(
+      "id, position, status, adjust_comment, adjust_comment_at, nome_bloco, sequence_id, descartado",
+    )
     .order("position", { ascending: true });
   query = sequenceId ? query.eq("sequence_id", sequenceId) : query.is("sequence_id", null);
 
@@ -163,12 +164,14 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
         url_anterior: f.image_path_anterior ? (urls.get(f.image_path_anterior) ?? "") : "",
       })),
   }));
-
 }
 
 /** Nome do arquivo sem extensão, aparado em 60 caracteres. */
 export function nomeDoArquivo(file: File): string {
-  return file.name.replace(/\.[^.]+$/, "").trim().slice(0, 60);
+  return file.name
+    .replace(/\.[^.]+$/, "")
+    .trim()
+    .slice(0, 60);
 }
 
 /** Comparação natural: números como números, sem diferenciar maiúsculas/acentos. */
@@ -342,7 +345,6 @@ export async function approveAllPending(stories: Story[]): Promise<void> {
   if (error) throw error;
 }
 
-
 /* ---------------- sequências ---------------- */
 
 export async function createSequence(nome: string): Promise<Sequence> {
@@ -404,7 +406,9 @@ export async function deleteSequence(id: string): Promise<void> {
   if (error) throw error;
   await removeImages(
     stories.flatMap((s) =>
-      s.frames.flatMap((f) => [f.image_path, f.image_path_anterior]).filter((p): p is string => Boolean(p)),
+      s.frames
+        .flatMap((f) => [f.image_path, f.image_path_anterior])
+        .filter((p): p is string => Boolean(p)),
     ),
   );
 }
@@ -496,11 +500,7 @@ export async function sortStoriesByName(sequenceId: string | null): Promise<void
   await reorderStories(ordenados.map((s) => s.id));
 }
 
-export async function moveFrame(
-  frameId: string,
-  targetStory: Story,
-  index: number,
-): Promise<void> {
+export async function moveFrame(frameId: string, targetStory: Story, index: number): Promise<void> {
   if (targetStory.frames.length >= MAX_FRAMES) {
     throw new Error(`Cada story aceita no máximo ${MAX_FRAMES} frames`);
   }
@@ -545,10 +545,7 @@ export async function normalize(sequenceId: string | null): Promise<void> {
       );
   }
   const remaining = stories.filter((s) => s.frames.length > 0);
-  const grupos = [
-    remaining.filter((s) => !s.descartado),
-    remaining.filter((s) => s.descartado),
-  ];
+  const grupos = [remaining.filter((s) => !s.descartado), remaining.filter((s) => s.descartado)];
   for (const grupo of grupos) {
     for (const [i, story] of grupo.entries()) {
       if (story.position !== i + 1) {

@@ -169,7 +169,6 @@ function StoriesPage() {
   const editable = canEdit(profile, "social.stories");
   const canApprove = editable && (profile?.role === "admin" || profile?.role === "gestor");
 
-
   const [sequenceId, setSequenceId] = useState<string | null>(null);
   const { data: sequences = [] } = useQuery(sequencesQueryOptions);
   const { data: stories = [], isLoading } = useQuery(storiesQueryOptions(sequenceId));
@@ -183,7 +182,7 @@ function StoriesPage() {
   const [exportando, setExportando] = useState(false);
   const [dragging, setDragging] = useState<{ type: string; descartado?: boolean } | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
-  
+
   const [planoAberto, setPlanoAberto] = useState(false);
   const [salvarAberto, setSalvarAberto] = useState(false);
   const [renomearAberto, setRenomearAberto] = useState(false);
@@ -345,7 +344,6 @@ function StoriesPage() {
     }
   }
 
-
   function handleDragStart(event: DragStartEvent) {
     setDragging((event.active.data.current as { type: string }) ?? null);
   }
@@ -356,8 +354,7 @@ function StoriesPage() {
       | { type: string; storyId: string; frameId?: string; index?: number; descartado?: boolean }
       | undefined;
     const over = event.over?.data.current as
-      | { type: string; storyId?: string; frameId?: string; index?: number }
-      | undefined;
+      { type: string; storyId?: string; frameId?: string; index?: number } | undefined;
     if (!active || !over || !editable) return;
 
     const byId = (id?: string) => stories.find((s) => s.id === id);
@@ -480,7 +477,6 @@ function StoriesPage() {
       onOpenFrame: (index: number) => setLightbox(story.frames[index]?.url ?? null),
     };
   }
-
 
   if (!podeVer) {
     return (
@@ -757,7 +753,6 @@ function StoriesPage() {
         </DndContext>
       </div>
 
-
       <PlanDialog
         open={planoAberto}
         stories={stories}
@@ -770,7 +765,8 @@ function StoriesPage() {
           <DialogHeader>
             <DialogTitle>Quantos stories você quer no plano?</DialogTitle>
             <DialogDescription>
-              O PDF leva as {fila.length} arte(s) da fila principal. As não utilizadas ficam de fora.
+              O PDF leva as {fila.length} arte(s) da fila principal. As não utilizadas ficam de
+              fora.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5">
