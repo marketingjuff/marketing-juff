@@ -12,9 +12,21 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Sparkles, Trash2, CheckCheck, Layers, FileDown, FileUp, Save, Loader2 } from "lucide-react";
+import {
+  Sparkles,
+  CheckCheck,
+  Layers,
+  FileDown,
+  FileUp,
+  Save,
+  Loader2,
+  Archive,
+  ArchiveRestore,
+  ChevronDown,
+  Inbox,
+} from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
 import { StoryCard } from "@/components/stories/StoryCard";
@@ -26,7 +38,6 @@ import {
   MAX_FRAMES,
   addFramesToStory,
   approveAllPending,
-  clearApproved,
   createStoriesFromFiles,
   deleteSequence,
   deleteStory,
@@ -39,6 +50,8 @@ import {
   requestAdjust,
   saveAsSequence,
   sequencesQueryOptions,
+  setDescartado,
+  setSequenceArquivado,
   setStatus,
   splitFrame,
   storiesQueryOptions,
@@ -54,6 +67,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -87,12 +101,12 @@ export const Route = createFileRoute("/_authenticated/social/stories")({
       {
         name: "description",
         content:
-          "Planejamento editorial de stories da Juff: sequências salvas, textos por arte, exportação em PDF e importação do plano.",
+          "Planejamento editorial de stories da Juff: projetos salvos, textos por arte, exportação em PDF e importação do plano.",
       },
       { property: "og:title", content: "Stories — Marketing Juff" },
       {
         property: "og:description",
-        content: "Sequências, textos, PDF e plano editorial dos stories da Juff.",
+        content: "Projetos, textos, PDF e plano editorial dos stories da Juff.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -113,19 +127,31 @@ const FILTROS: { key: Filtro; label: string }[] = [
 
 const AREA = "__area__";
 
-function NewStoryZone({ visible }: { visible: boolean }) {
-  const { setNodeRef, isOver } = useDroppable({ id: "new-story", data: { type: "new-story" } });
+function DropZone({
+  id,
+  type,
+  visible,
+  label,
+  icon,
+}: {
+  id: string;
+  type: string;
+  visible: boolean;
+  label: string;
+  icon: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id, data: { type } });
   if (!visible) return null;
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        "grid min-h-[7rem] place-items-center rounded-xl border-2 border-dashed border-primary/50 bg-primary-soft/50 text-sm text-primary",
+        "grid min-h-[6rem] place-items-center rounded-xl border-2 border-dashed border-primary/50 bg-primary-soft/50 text-sm text-primary",
         isOver && "border-primary bg-primary-soft",
       )}
     >
       <span className="flex items-center gap-2">
-        <Layers className="size-4" /> Solte aqui para criar um story novo
+        {icon} {label}
       </span>
     </div>
   );
@@ -142,25 +168,44 @@ function StoriesPage() {
   const { data: sequences = [] } = useQuery(sequencesQueryOptions);
   const { data: stories = [], isLoading } = useQuery(storiesQueryOptions(sequenceId));
 
-  const sequenciaAtual = sequences.find((s) => s.id === sequenceId) ?? null;
-  const nomeAtual = sequenciaAtual?.nome ?? "Área de trabalho";
+  const projetoAtual = sequences.find((s) => s.id === sequenceId) ?? null;
+  const nomeAtual = projetoAtual?.nome ?? "Área de trabalho";
 
   const [filtro, setFiltro] = useState<Filtro>("todos");
+  const [mostrarArquivados, setMostrarArquivados] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [exportando, setExportando] = useState(false);
-  const [dragging, setDragging] = useState<{ type: string } | null>(null);
+  const [dragging, setDragging] = useState<{ type: string; descartado?: boolean } | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [editando, setEditando] = useState<Story | null>(null);
   const [planoAberto, setPlanoAberto] = useState(false);
   const [salvarAberto, setSalvarAberto] = useState(false);
   const [renomearAberto, setRenomearAberto] = useState(false);
-  const [nomeSequencia, setNomeSequencia] = useState("");
+  const [excluirAberto, setExcluirAberto] = useState(false);
+  const [confirmaNome, setConfirmaNome] = useState("");
+  const [exportAberto, setExportAberto] = useState(false);
+  const [quantidade, setQuantidade] = useState("0");
+  const [nomeProjeto, setNomeProjeto] = useState("");
   const [pendentes, setPendentes] = useState<File[] | null>(null);
+  const [naoUsadasAberto, setNaoUsadasAberto] = useState(false);
   const [confirm, setConfirm] = useState<{
     title: string;
     description: string;
     action: () => void;
   } | null>(null);
+
+  const fila = useMemo(() => stories.filter((s) => !s.descartado), [stories]);
+  const descartadas = useMemo(() => stories.filter((s) => s.descartado), [stories]);
+
+  const visiveisProjetos = useMemo(
+    () => sequences.filter((s) => (mostrarArquivados ? true : !s.arquivado)),
+    [sequences, mostrarArquivados],
+  );
+
+  // Se o projeto aberto sumir da lista visível, volta para a Área de trabalho.
+  useEffect(() => {
+    if (sequenceId && !sequences.some((s) => s.id === sequenceId)) setSequenceId(null);
+  }, [sequenceId, sequences]);
 
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ["stories"] });
@@ -179,10 +224,10 @@ function StoriesPage() {
     },
   });
 
-  const aprovados = stories.filter((s) => s.status === "aprovado").length;
+  const aprovados = fila.filter((s) => s.status === "aprovado").length;
   const visiveis = useMemo(
-    () => (filtro === "todos" ? stories : stories.filter((s) => s.status === filtro)),
-    [stories, filtro],
+    () => (filtro === "todos" ? fila : fila.filter((s) => s.status === filtro)),
+    [fila, filtro],
   );
 
   const sensors = useSensors(
@@ -209,30 +254,31 @@ function StoriesPage() {
       void enviarPara(files, null);
       return;
     }
+    setNomeProjeto("");
     setPendentes(files);
   }
 
-  async function salvarSequencia(nome: string) {
+  async function salvarProjeto(nome: string) {
     try {
-      const sequence = await saveAsSequence(nome, stories);
+      const projeto = await saveAsSequence(nome, fila);
       await refresh();
-      setSequenceId(sequence.id);
-      toast.success(`Sequência "${nome}" salva`);
+      setSequenceId(projeto.id);
+      toast.success(`Projeto "${nome}" salvo`);
     } catch (error) {
       toast.error((error as Error).message);
     }
   }
 
-  async function criarSequenciaComArquivos(nome: string, files: File[]) {
+  async function criarProjetoComArquivos(nome: string, files: File[]) {
     setUploading(true);
     try {
       const { createSequence } = await import("@/lib/stories");
-      const sequence = await createSequence(nome);
-      await createStoriesFromFiles(files, sequence.id);
-      await normalize(sequence.id);
+      const projeto = await createSequence(nome);
+      await createStoriesFromFiles(files, projeto.id);
+      await normalize(projeto.id);
       await refresh();
-      setSequenceId(sequence.id);
-      toast.success(`Sequência "${nome}" criada com ${files.length} arte(s)`);
+      setSequenceId(projeto.id);
+      toast.success(`Projeto "${nome}" criado com ${files.length} arte(s)`);
     } catch (error) {
       toast.error((error as Error).message);
     } finally {
@@ -240,10 +286,10 @@ function StoriesPage() {
     }
   }
 
-  async function exportar() {
+  async function exportar(qtd: number) {
     setExportando(true);
     try {
-      await exportPlanPdf(stories, nomeAtual);
+      await exportPlanPdf(fila, nomeAtual, qtd);
     } catch (error) {
       toast.error((error as Error).message);
     } finally {
@@ -254,8 +300,10 @@ function StoriesPage() {
   function aplicarPlano(validation: PlanValidation) {
     setPlanoAberto(false);
     mutate.mutate(async () => {
-      await applyPlan(validation.blocos, stories, sequenceId);
-      toast.success(`Plano aplicado: ${validation.blocos.length} blocos`);
+      await applyPlan(validation, stories, sequenceId);
+      toast.success(
+        `Plano aplicado: ${validation.blocos.length} bloco(s) e ${validation.sobras.length} arte(s) não utilizada(s)`,
+      );
     });
   }
 
@@ -282,7 +330,7 @@ function StoriesPage() {
   function handleDragEnd(event: DragEndEvent) {
     setDragging(null);
     const active = event.active.data.current as
-      | { type: string; storyId: string; frameId?: string; index?: number }
+      | { type: string; storyId: string; frameId?: string; index?: number; descartado?: boolean }
       | undefined;
     const over = event.over?.data.current as
       | { type: string; storyId?: string; frameId?: string; index?: number }
@@ -291,13 +339,36 @@ function StoriesPage() {
 
     const byId = (id?: string) => stories.find((s) => s.id === id);
 
+    if (active.type === "story" && over.type === "descartar") {
+      const story = byId(active.storyId);
+      if (!story || story.descartado) return;
+      mutate.mutate(() => setDescartado(story.id, true));
+      return;
+    }
+
     if (active.type === "story" && over.type === "storyslot" && active.storyId !== over.storyId) {
-      const ids = stories.map((s) => s.id);
+      const story = byId(active.storyId);
+      if (!story) return;
+
+      if (story.descartado) {
+        // Volta para a fila principal na posição escolhida.
+        const ids = fila.map((s) => s.id);
+        const to = ids.indexOf(over.storyId ?? "");
+        if (to < 0) return;
+        ids.splice(to, 0, story.id);
+        mutate.mutate(async () => {
+          await setDescartado(story.id, false);
+          await reorderStories(ids);
+        });
+        return;
+      }
+
+      const ids = fila.map((s) => s.id);
       const from = ids.indexOf(active.storyId);
       const to = ids.indexOf(over.storyId ?? "");
       if (from < 0 || to < 0) return;
       ids.splice(from, 1);
-      ids.splice(ids.indexOf(over.storyId ?? "") , 0, active.storyId);
+      ids.splice(ids.indexOf(over.storyId ?? ""), 0, active.storyId);
       mutate.mutate(() => reorderStories(ids));
       return;
     }
@@ -306,6 +377,7 @@ function StoriesPage() {
       const source = byId(active.storyId);
       const target = byId(over.storyId);
       if (!source || !target) return;
+      if (source.descartado !== target.descartado) return;
       if (source.frames.length + target.frames.length > MAX_FRAMES) {
         toast.error(`A fusão passaria do limite de ${MAX_FRAMES} frames`);
         return;
@@ -362,6 +434,25 @@ function StoriesPage() {
     }
   }
 
+  function cardProps(story: Story) {
+    return {
+      story,
+      editable,
+      onApprove: () => mutate.mutate(() => setStatus(story.id, "aprovado")),
+      onAdjust: (comment: string) => mutate.mutate(() => requestAdjust(story.id, comment)),
+      onEdit: () => setEditando(story),
+      onDelete: () =>
+        setConfirm({
+          title: `Apagar story #${story.position}?`,
+          description: "O story e suas imagens serão removidos de vez.",
+          action: () => mutate.mutate(() => deleteStory(story)),
+        }),
+      onAddFrames: (files: File[]) =>
+        mutate.mutate(() => addFramesToStory(story.id, files, story.frames.length)),
+      onOpenFrame: (index: number) => setLightbox(story.frames[index]?.url ?? null),
+    };
+  }
+
   if (!podeVer) {
     return (
       <AppShell>
@@ -379,9 +470,10 @@ function StoriesPage() {
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Stories</h1>
             <p className="text-sm text-muted-foreground">
-              {nomeAtual} ·{" "}
+              {nomeAtual}
+              {projetoAtual?.arquivado ? " (arquivado)" : ""} ·{" "}
               <span className="tabular font-medium text-foreground">{aprovados}</span> de{" "}
-              <span className="tabular">{stories.length}</span> aprovados
+              <span className="tabular">{fila.length}</span> aprovados
             </p>
           </div>
 
@@ -395,56 +487,78 @@ function StoriesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={AREA}>Área de trabalho</SelectItem>
-                {sequences.map((s) => (
+                {visiveisProjetos.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
                     {s.nome}
+                    {s.arquivado ? " (arquivado)" : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            {editable && !sequenceId && stories.length > 0 ? (
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Checkbox
+                checked={mostrarArquivados}
+                onCheckedChange={(v) => setMostrarArquivados(v === true)}
+              />
+              Mostrar arquivados
+            </label>
+
+            {editable && !sequenceId && fila.length > 0 ? (
               <Button
                 size="sm"
                 className="gap-1"
                 onClick={() => {
-                  setNomeSequencia("");
+                  setNomeProjeto("");
                   setSalvarAberto(true);
                 }}
               >
-                <Save className="size-4" /> Salvar sequência
+                <Save className="size-4" /> Salvar projeto
               </Button>
             ) : null}
 
-            {editable && sequenciaAtual ? (
+            {editable && projetoAtual ? (
               <>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    setNomeSequencia(sequenciaAtual.nome);
+                    setNomeProjeto(projetoAtual.nome);
                     setRenomearAberto(true);
                   }}
                 >
-                  Renomear
+                  Renomear projeto
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1"
+                  onClick={() =>
+                    mutate.mutate(() =>
+                      setSequenceArquivado(projetoAtual.id, !projetoAtual.arquivado),
+                    )
+                  }
+                >
+                  {projetoAtual.arquivado ? (
+                    <>
+                      <ArchiveRestore className="size-4" /> Desarquivar projeto
+                    </>
+                  ) : (
+                    <>
+                      <Archive className="size-4" /> Arquivar projeto
+                    </>
+                  )}
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   className="text-destructive"
-                  onClick={() =>
-                    setConfirm({
-                      title: `Excluir "${sequenciaAtual.nome}"?`,
-                      description: `${stories.length} story(s) e suas imagens serão apagados junto.`,
-                      action: () => {
-                        const id = sequenciaAtual.id;
-                        setSequenceId(null);
-                        mutate.mutate(() => deleteSequence(id));
-                      },
-                    })
-                  }
+                  onClick={() => {
+                    setConfirmaNome("");
+                    setExcluirAberto(true);
+                  }}
                 >
-                  Excluir
+                  Excluir projeto
                 </Button>
               </>
             ) : null}
@@ -453,8 +567,11 @@ function StoriesPage() {
               size="sm"
               variant="outline"
               className="gap-1"
-              disabled={stories.length === 0 || exportando}
-              onClick={exportar}
+              disabled={fila.length === 0 || exportando}
+              onClick={() => {
+                setQuantidade(String(fila.length));
+                setExportAberto(true);
+              }}
             >
               {exportando ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -487,26 +604,12 @@ function StoriesPage() {
               onClick={() =>
                 setConfirm({
                   title: "Aprovar todos os pendentes?",
-                  description: `Vale só para ${nomeAtual}.`,
-                  action: () => mutate.mutate(() => approveAllPending(stories)),
+                  description: `Vale só para a fila principal de ${nomeAtual}.`,
+                  action: () => mutate.mutate(() => approveAllPending(fila)),
                 })
               }
             >
               <CheckCheck className="size-4" /> Aprovar pendentes
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1 text-destructive"
-              onClick={() =>
-                setConfirm({
-                  title: "Limpar aprovados?",
-                  description: `Os stories aprovados de ${nomeAtual} e suas imagens serão apagados de vez.`,
-                  action: () => mutate.mutate(() => clearApproved(stories)),
-                })
-              }
-            >
-              <Trash2 className="size-4" /> Limpar aprovados
             </Button>
           </div>
         ) : null}
@@ -538,7 +641,13 @@ function StoriesPage() {
           onDragEnd={handleDragEnd}
           onDragCancel={() => setDragging(null)}
         >
-          <NewStoryZone visible={dragging?.type === "frame"} />
+          <DropZone
+            id="new-story"
+            type="new-story"
+            visible={dragging?.type === "frame"}
+            label="Solte aqui para criar um story novo"
+            icon={<Layers className="size-4" />}
+          />
 
           {isLoading ? (
             <div className="grid place-items-center p-10">
@@ -554,27 +663,44 @@ function StoriesPage() {
               {visiveis.map((story) => (
                 <StoryCard
                   key={story.id}
-                  story={story}
-                  editable={editable}
+                  {...cardProps(story)}
                   showSlot={dragging?.type === "story" && filtro === "todos"}
-                  onApprove={() => mutate.mutate(() => setStatus(story.id, "aprovado"))}
-                  onAdjust={(comment) => mutate.mutate(() => requestAdjust(story.id, comment))}
-                  onEdit={() => setEditando(story)}
-                  onDelete={() =>
-                    setConfirm({
-                      title: `Apagar story #${story.position}?`,
-                      description: "O story e suas imagens serão removidos de vez.",
-                      action: () => mutate.mutate(() => deleteStory(story)),
-                    })
-                  }
-                  onAddFrames={(files) =>
-                    mutate.mutate(() => addFramesToStory(story.id, files, story.frames.length))
-                  }
-                  onOpenFrame={(index) => setLightbox(story.frames[index]?.url ?? null)}
                 />
               ))}
             </div>
           )}
+
+          <div className="mt-4 space-y-3">
+            <DropZone
+              id="descartar"
+              type="descartar"
+              visible={dragging?.type === "story"}
+              label="Solte aqui para marcar como não utilizada"
+              icon={<Inbox className="size-4" />}
+            />
+
+            {descartadas.length > 0 ? (
+              <div className="rounded-xl border border-border bg-card">
+                <button
+                  type="button"
+                  onClick={() => setNaoUsadasAberto((v) => !v)}
+                  className="flex w-full items-center justify-between gap-2 px-4 py-3 text-sm font-medium"
+                >
+                  <span>Não utilizadas ({descartadas.length})</span>
+                  <ChevronDown
+                    className={cn("size-4 transition-transform", naoUsadasAberto && "rotate-180")}
+                  />
+                </button>
+                {naoUsadasAberto ? (
+                  <div className="grid grid-cols-1 gap-3 border-t border-border p-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {descartadas.map((story) => (
+                      <StoryCard key={story.id} {...cardProps(story)} showSlot={false} />
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
 
           <DragOverlay dropAnimation={null} />
         </DndContext>
@@ -595,20 +721,55 @@ function StoriesPage() {
         onApply={aplicarPlano}
       />
 
-      <Dialog open={salvarAberto} onOpenChange={setSalvarAberto}>
+      <Dialog open={exportAberto} onOpenChange={setExportAberto}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Salvar sequência</DialogTitle>
+            <DialogTitle>Quantos stories você quer no plano?</DialogTitle>
             <DialogDescription>
-              Os {stories.length} story(s) da área de trabalho vão para esta sequência.
+              O PDF leva as {fila.length} arte(s) da fila principal. As não utilizadas ficam de fora.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5">
-            <Label htmlFor="nome-seq">Nome</Label>
+            <Label htmlFor="qtd">Quantidade de stories</Label>
             <Input
-              id="nome-seq"
-              value={nomeSequencia}
-              onChange={(e) => setNomeSequencia(e.target.value)}
+              id="qtd"
+              type="number"
+              min={1}
+              value={quantidade}
+              onChange={(e) => setQuantidade(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setExportAberto(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                const qtd = Math.max(1, Number.parseInt(quantidade, 10) || fila.length);
+                setExportAberto(false);
+                void exportar(qtd);
+              }}
+            >
+              Gerar PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={salvarAberto} onOpenChange={setSalvarAberto}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Salvar projeto</DialogTitle>
+            <DialogDescription>
+              Os {fila.length} story(s) da área de trabalho vão para este projeto.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="nome-proj">Nome</Label>
+            <Input
+              id="nome-proj"
+              value={nomeProjeto}
+              onChange={(e) => setNomeProjeto(e.target.value)}
               placeholder="Semana 1 de outubro"
             />
           </div>
@@ -617,11 +778,11 @@ function StoriesPage() {
               Cancelar
             </Button>
             <Button
-              disabled={!nomeSequencia.trim()}
+              disabled={!nomeProjeto.trim()}
               onClick={() => {
-                const nome = nomeSequencia.trim();
+                const nome = nomeProjeto.trim();
                 setSalvarAberto(false);
-                void salvarSequencia(nome);
+                void salvarProjeto(nome);
               }}
             >
               Salvar
@@ -633,19 +794,19 @@ function StoriesPage() {
       <Dialog open={renomearAberto} onOpenChange={setRenomearAberto}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Renomear sequência</DialogTitle>
-            <DialogDescription>Escolha um nome novo para esta sequência.</DialogDescription>
+            <DialogTitle>Renomear projeto</DialogTitle>
+            <DialogDescription>Escolha um nome novo para este projeto.</DialogDescription>
           </DialogHeader>
-          <Input value={nomeSequencia} onChange={(e) => setNomeSequencia(e.target.value)} />
+          <Input value={nomeProjeto} onChange={(e) => setNomeProjeto(e.target.value)} />
           <DialogFooter>
             <Button variant="ghost" onClick={() => setRenomearAberto(false)}>
               Cancelar
             </Button>
             <Button
-              disabled={!nomeSequencia.trim() || !sequenciaAtual}
+              disabled={!nomeProjeto.trim() || !projetoAtual}
               onClick={() => {
-                const nome = nomeSequencia.trim();
-                const id = sequenciaAtual?.id;
+                const nome = nomeProjeto.trim();
+                const id = projetoAtual?.id;
                 setRenomearAberto(false);
                 if (id) mutate.mutate(() => renameSequence(id, nome));
               }}
@@ -656,20 +817,60 @@ function StoriesPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={excluirAberto} onOpenChange={setExcluirAberto}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir projeto "{projetoAtual?.nome}"?</DialogTitle>
+            <DialogDescription>
+              {stories.reduce((acc, s) => acc + s.frames.length, 0)} arte(s) serão perdidas, junto
+              com as imagens. Esta é a única ação que apaga alguma coisa e não tem volta.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="confirma">Digite o nome do projeto para confirmar</Label>
+            <Input
+              id="confirma"
+              value={confirmaNome}
+              onChange={(e) => setConfirmaNome(e.target.value)}
+              placeholder={projetoAtual?.nome}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setExcluirAberto(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={confirmaNome.trim() !== (projetoAtual?.nome ?? "")}
+              onClick={() => {
+                const id = projetoAtual?.id;
+                setExcluirAberto(false);
+                setConfirmaNome("");
+                if (!id) return;
+                setSequenceId(null);
+                mutate.mutate(() => deleteSequence(id));
+              }}
+            >
+              Excluir de vez
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={pendentes !== null} onOpenChange={(open) => !open && setPendentes(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Onde colocar estas artes?</DialogTitle>
             <DialogDescription>
-              {pendentes?.length ?? 0} arquivo(s) com a sequência "{nomeAtual}" aberta.
+              {pendentes?.length ?? 0} arquivo(s) com o projeto "{nomeAtual}" aberto.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5">
-            <Label htmlFor="nome-nova">Nome da sequência nova (opcional)</Label>
+            <Label htmlFor="nome-novo">Nome do projeto novo (opcional)</Label>
             <Input
-              id="nome-nova"
-              value={nomeSequencia}
-              onChange={(e) => setNomeSequencia(e.target.value)}
+              id="nome-novo"
+              value={nomeProjeto}
+              onChange={(e) => setNomeProjeto(e.target.value)}
               placeholder="Semana 2 de outubro"
             />
           </div>
@@ -682,19 +883,19 @@ function StoriesPage() {
                 void enviarPara(files, sequenceId);
               }}
             >
-              Adicionar nesta sequência
+              Adicionar neste projeto
             </Button>
             <Button
-              disabled={!nomeSequencia.trim()}
+              disabled={!nomeProjeto.trim()}
               onClick={() => {
                 const files = pendentes ?? [];
-                const nome = nomeSequencia.trim();
+                const nome = nomeProjeto.trim();
                 setPendentes(null);
-                setNomeSequencia("");
-                void criarSequenciaComArquivos(nome, files);
+                setNomeProjeto("");
+                void criarProjetoComArquivos(nome, files);
               }}
             >
-              Criar sequência nova
+              Criar projeto novo
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -47,6 +47,7 @@ export function PlanDialog({
 
   const campanhas = validation?.blocos.filter((b) => b.artes.length > 1).length ?? 0;
   const solos = (validation?.blocos.length ?? 0) - campanhas;
+  const sobras = validation?.sobras ?? [];
 
   return (
     <Dialog
@@ -92,7 +93,7 @@ export function PlanDialog({
           <Textarea
             rows={8}
             value={texto}
-            placeholder={"BLOCO | 1 | SOLO | DESACELERAR\nARTE | prancheta 4 | ... | ... | Nenhum"}
+            placeholder={"BLOCO | 1 | SOLO | DESACELERAR\nARTE | prancheta 4 | ... | ... | Nenhum\nSOBRA | prancheta 5 | motivo curto"}
             onChange={(e) => {
               setTexto(e.target.value);
               setValidation(null);
@@ -120,12 +121,27 @@ export function PlanDialog({
                     </li>
                   ))}
                 </ol>
+                {sobras.length > 0 ? (
+                  <div className="border-t border-border pt-2">
+                    <p className="text-xs font-medium">Ficam de fora: {sobras.length} arte(s)</p>
+                    <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                      {sobras.map((s) => (
+                        <li key={s.nome_arquivo} className="truncate">
+                          {s.nome_arquivo} — {s.motivo || "sem motivo informado"}
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Elas vão para "Não utilizadas". Nada é apagado.
+                    </p>
+                  </div>
+                ) : null}
               </div>
             ) : (
               <div className="space-y-2 rounded-xl border border-destructive/60 bg-destructive/5 p-3 text-sm">
                 <p className="font-medium">O plano tem problemas e nada será aplicado.</p>
                 {validation.blocos.length === 0 ? (
-                  <p className="text-xs">Nenhuma linha BLOCO ou ARTE foi reconhecida.</p>
+                  <p className="text-xs">Nenhuma linha BLOCO, ARTE ou SOBRA foi reconhecida.</p>
                 ) : null}
                 {validation.faltando.length > 0 ? (
                   <p className="text-xs">Faltando: {validation.faltando.join(", ")}</p>
@@ -139,6 +155,11 @@ export function PlanDialog({
                 {validation.recursosInvalidos.length > 0 ? (
                   <p className="text-xs">
                     Recursos inválidos: {validation.recursosInvalidos.join(", ")}
+                  </p>
+                ) : null}
+                {validation.blocosCheios.length > 0 ? (
+                  <p className="text-xs">
+                    Blocos acima do limite: {validation.blocosCheios.join(", ")}
                   </p>
                 ) : null}
               </div>
