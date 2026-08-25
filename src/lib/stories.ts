@@ -196,7 +196,7 @@ export async function createStoriesFromFiles(
   sequenceId: string | null,
 ): Promise<void> {
   let position = await nextPosition(sequenceId);
-  for (const file of files) {
+  for (const file of ordenarArquivos(files)) {
     const nome = nomeDoArquivo(file);
     const path = await uploadImage(file);
     const { data: story, error } = await supabase
@@ -219,7 +219,7 @@ export async function addFramesToStory(
   currentCount: number,
 ): Promise<void> {
   let ordem = currentCount;
-  for (const file of files) {
+  for (const file of ordenarArquivos(files)) {
     if (ordem >= MAX_FRAMES) throw new Error(`Cada story aceita no máximo ${MAX_FRAMES} frames`);
     const nome = nomeDoArquivo(file);
     const path = await uploadImage(file);
@@ -427,6 +427,17 @@ export async function reorderStories(storyIds: string[]): Promise<void> {
       .eq("id", id);
     if (error) throw error;
   }
+}
+
+/** Reordena a fila principal do projeto pela ordem natural do nome do primeiro frame. */
+export async function sortStoriesByName(sequenceId: string | null): Promise<void> {
+  const stories = (await fetchStories(sequenceId)).filter(
+    (s) => !s.descartado && s.frames.length > 0,
+  );
+  const ordenados = [...stories].sort((a, b) =>
+    compararNatural(a.frames[0]?.nome_arquivo ?? "", b.frames[0]?.nome_arquivo ?? ""),
+  );
+  await reorderStories(ordenados.map((s) => s.id));
 }
 
 export async function moveFrame(
