@@ -183,7 +183,7 @@ function StoriesPage() {
   const [exportando, setExportando] = useState(false);
   const [dragging, setDragging] = useState<{ type: string; descartado?: boolean } | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
-  const [editando, setEditando] = useState<Story | null>(null);
+  
   const [planoAberto, setPlanoAberto] = useState(false);
   const [salvarAberto, setSalvarAberto] = useState(false);
   const [renomearAberto, setRenomearAberto] = useState(false);
