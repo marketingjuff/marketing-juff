@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import juffLogo from "@/assets/juff-logo.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -51,9 +52,7 @@ function AuthPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-lift">
         <div className="mb-5 flex items-center gap-2">
-          <span className="grid size-8 place-items-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
-            MJ
-          </span>
+          <img src={juffLogo.url} alt="Logotipo Juff" className="size-8 rounded-md object-cover" />
           <div>
             <h1 className="text-lg font-semibold leading-tight">Marketing Juff</h1>
             <p className="text-xs text-muted-foreground">Acesso restrito</p>
