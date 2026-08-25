@@ -313,21 +313,38 @@ function StoriesPage() {
     });
   }
 
-  function salvarTextos(values: StoryEditValues) {
-    const story = editando;
-    if (!story) return;
-    setEditando(null);
-    mutate.mutate(async () => {
-      await updateStoryBloco(story.id, values.nome_bloco);
-      for (const frame of values.frames) {
-        await updateFrameTexts(frame.id, {
-          texto_principal: frame.texto_principal,
-          observacao: frame.observacao,
-          recurso: frame.recurso,
-        });
-      }
-    });
+  /** Atualiza só o dado local, sem remontar os cards enquanto a pessoa digita. */
+  function patchLocal(fn: (story: Story) => Story) {
+    queryClient.setQueryData<Story[]>(["stories", sequenceId], (old) => old?.map(fn));
   }
+
+  async function salvarBloco(storyId: string, nome: string) {
+    try {
+      await updateStoryBloco(storyId, nome);
+      patchLocal((s) => (s.id === storyId ? { ...s, nome_bloco: nome } : s));
+    } catch (error) {
+      toast.error((error as Error).message);
+    }
+  }
+
+  async function salvarFrame(frameId: string, values: Partial<Frame>) {
+    const frame = stories.flatMap((s) => s.frames).find((f) => f.id === frameId);
+    if (!frame) return;
+    try {
+      await updateFrameTexts(frameId, {
+        texto_principal: values.texto_principal ?? frame.texto_principal,
+        observacao: values.observacao ?? frame.observacao,
+        recurso: values.recurso ?? frame.recurso,
+      });
+      patchLocal((s) => ({
+        ...s,
+        frames: s.frames.map((f) => (f.id === frameId ? { ...f, ...values } : f)),
+      }));
+    } catch (error) {
+      toast.error((error as Error).message);
+    }
+  }
+
 
   function handleDragStart(event: DragStartEvent) {
     setDragging((event.active.data.current as { type: string }) ?? null);
