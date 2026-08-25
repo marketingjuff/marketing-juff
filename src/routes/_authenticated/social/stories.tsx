@@ -32,7 +32,6 @@ import {
   deleteStory,
   mergeStories,
   moveFrame,
-  moveStoriesToSequence,
   normalize,
   renameSequence,
   reorderFrames,
