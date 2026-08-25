@@ -49,6 +49,7 @@ export type Database = {
           adjust_comment: string | null
           adjust_comment_at: string | null
           created_at: string
+          descartado: boolean
           id: string
           nome_bloco: string
           position: number
@@ -59,6 +60,7 @@ export type Database = {
           adjust_comment?: string | null
           adjust_comment_at?: string | null
           created_at?: string
+          descartado?: boolean
           id?: string
           nome_bloco?: string
           position?: number
@@ -69,6 +71,7 @@ export type Database = {
           adjust_comment?: string | null
           adjust_comment_at?: string | null
           created_at?: string
+          descartado?: boolean
           id?: string
           nome_bloco?: string
           position?: number
@@ -131,16 +134,19 @@ export type Database = {
       }
       story_sequences: {
         Row: {
+          arquivado: boolean
           created_at: string
           id: string
           nome: string
         }
         Insert: {
+          arquivado?: boolean
           created_at?: string
           id?: string
           nome: string
         }
         Update: {
+          arquivado?: boolean
           created_at?: string
           id?: string
           nome?: string
