@@ -16,6 +16,9 @@ export type Recurso = (typeof RECURSOS)[number];
 
 export type StoryStatus = "pendente" | "aprovado" | "ajustar";
 
+/** Status por arte. 'refeito' = imagem trocada, aguardando novo aval. */
+export type FrameStatus = "pendente" | "ajustar" | "refeito" | "aprovado";
+
 export type Frame = {
   id: string;
   story_id: string;
@@ -26,7 +29,14 @@ export type Frame = {
   observacao: string;
   recurso: Recurso;
   url: string;
+  status: FrameStatus;
+  adjust_comment: string | null;
+  adjust_comment_at: string | null;
+  image_path_anterior: string | null;
+  trocado_em: string | null;
+  url_anterior: string;
 };
+
 
 export type Story = {
   id: string;
