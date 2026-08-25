@@ -402,7 +402,11 @@ export async function deleteSequence(id: string): Promise<void> {
   const stories = await fetchStories(id);
   const { error } = await supabase.from("story_sequences").delete().eq("id", id);
   if (error) throw error;
-  await removeImages(stories.flatMap((s) => s.frames.map((f) => f.image_path)));
+  await removeImages(
+    stories.flatMap((s) =>
+      s.frames.flatMap((f) => [f.image_path, f.image_path_anterior]).filter((p): p is string => Boolean(p)),
+    ),
+  );
 }
 
 /* ---------------- arraste ---------------- */
