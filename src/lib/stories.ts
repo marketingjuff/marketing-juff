@@ -103,12 +103,19 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
     texto_principal: string;
     observacao: string;
     recurso: string;
+    status: string;
+    adjust_comment: string | null;
+    adjust_comment_at: string | null;
+    image_path_anterior: string | null;
+    trocado_em: string | null;
   }[] = [];
 
   if (ids.length > 0) {
     const { data, error: framesError } = await supabase
       .from("story_frames")
-      .select("id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, recurso")
+      .select(
+        "id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, recurso, status, adjust_comment, adjust_comment_at, image_path_anterior, trocado_em",
+      )
       .in("story_id", ids)
       .order("ordem", { ascending: true });
     if (framesError) throw framesError;
@@ -116,7 +123,10 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
   }
 
   const urls = new Map<string, string>();
-  const paths = frames.map((f) => f.image_path);
+  const paths = [
+    ...frames.map((f) => f.image_path),
+    ...frames.map((f) => f.image_path_anterior).filter((p): p is string => Boolean(p)),
+  ];
   if (paths.length > 0) {
     const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrls(paths, 3600);
     for (const item of signed ?? []) {
@@ -145,8 +155,15 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
         observacao: f.observacao ?? "",
         recurso: (f.recurso ?? "Nenhum") as Recurso,
         url: urls.get(f.image_path) ?? "",
+        status: (f.status ?? "pendente") as FrameStatus,
+        adjust_comment: f.adjust_comment,
+        adjust_comment_at: f.adjust_comment_at,
+        image_path_anterior: f.image_path_anterior,
+        trocado_em: f.trocado_em,
+        url_anterior: f.image_path_anterior ? (urls.get(f.image_path_anterior) ?? "") : "",
       })),
   }));
+
 }
 
 /** Nome do arquivo sem extensão, aparado em 60 caracteres. */
