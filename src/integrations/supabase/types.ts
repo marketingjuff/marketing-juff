@@ -50,7 +50,9 @@ export type Database = {
           adjust_comment_at: string | null
           created_at: string
           id: string
+          nome_bloco: string
           position: number
+          sequence_id: string | null
           status: string
         }
         Insert: {
@@ -58,7 +60,9 @@ export type Database = {
           adjust_comment_at?: string | null
           created_at?: string
           id?: string
+          nome_bloco?: string
           position?: number
+          sequence_id?: string | null
           status?: string
         }
         Update: {
@@ -66,32 +70,54 @@ export type Database = {
           adjust_comment_at?: string | null
           created_at?: string
           id?: string
+          nome_bloco?: string
           position?: number
+          sequence_id?: string | null
           status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "stories_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "story_sequences"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       story_frames: {
         Row: {
           created_at: string
           id: string
           image_path: string
+          nome_arquivo: string
+          observacao: string
           ordem: number
+          recurso: string
           story_id: string
+          texto_principal: string
         }
         Insert: {
           created_at?: string
           id?: string
           image_path: string
+          nome_arquivo?: string
+          observacao?: string
           ordem?: number
+          recurso?: string
           story_id: string
+          texto_principal?: string
         }
         Update: {
           created_at?: string
           id?: string
           image_path?: string
+          nome_arquivo?: string
+          observacao?: string
           ordem?: number
+          recurso?: string
           story_id?: string
+          texto_principal?: string
         }
         Relationships: [
           {
@@ -102,6 +128,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      story_sequences: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
       }
     }
     Views: {
