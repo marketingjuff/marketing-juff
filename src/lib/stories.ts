@@ -36,12 +36,14 @@ export type Story = {
   adjust_comment_at: string | null;
   nome_bloco: string;
   sequence_id: string | null;
+  descartado: boolean;
   frames: Frame[];
 };
 
 export type Sequence = {
   id: string;
   nome: string;
+  arquivado: boolean;
   created_at: string;
 };
 
@@ -65,7 +67,7 @@ export const sequencesQueryOptions = queryOptions({
 export async function fetchSequences(): Promise<Sequence[]> {
   const { data, error } = await supabase
     .from("story_sequences")
-    .select("id, nome, created_at")
+    .select("id, nome, arquivado, created_at")
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data ?? [];
@@ -74,7 +76,7 @@ export async function fetchSequences(): Promise<Sequence[]> {
 export async function fetchStories(sequenceId: string | null): Promise<Story[]> {
   let query = supabase
     .from("stories")
-    .select("id, position, status, adjust_comment, adjust_comment_at, nome_bloco, sequence_id")
+    .select("id, position, status, adjust_comment, adjust_comment_at, nome_bloco, sequence_id, descartado")
     .order("position", { ascending: true });
   query = sequenceId ? query.eq("sequence_id", sequenceId) : query.is("sequence_id", null);
 
@@ -120,6 +122,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
     adjust_comment_at: s.adjust_comment_at,
     nome_bloco: s.nome_bloco ?? "",
     sequence_id: s.sequence_id ?? null,
+    descartado: s.descartado ?? false,
     frames: frames
       .filter((f) => f.story_id === s.id)
       .map((f) => ({
@@ -278,27 +281,13 @@ export async function approveAllPending(stories: Story[]): Promise<void> {
   if (error) throw error;
 }
 
-export async function clearApproved(stories: Story[]): Promise<void> {
-  const approved = stories.filter((s) => s.status === "aprovado");
-  if (approved.length === 0) return;
-  const { error } = await supabase
-    .from("stories")
-    .delete()
-    .in(
-      "id",
-      approved.map((s) => s.id),
-    );
-  if (error) throw error;
-  await removeImages(approved.flatMap((s) => s.frames.map((f) => f.image_path)));
-}
-
 /* ---------------- sequências ---------------- */
 
 export async function createSequence(nome: string): Promise<Sequence> {
   const { data, error } = await supabase
     .from("story_sequences")
     .insert({ nome })
-    .select("id, nome, created_at")
+    .select("id, nome, arquivado, created_at")
     .single();
   if (error) throw error;
   return data;
@@ -306,6 +295,17 @@ export async function createSequence(nome: string): Promise<Sequence> {
 
 export async function renameSequence(id: string, nome: string): Promise<void> {
   const { error } = await supabase.from("story_sequences").update({ nome }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function setSequenceArquivado(id: string, arquivado: boolean): Promise<void> {
+  const { error } = await supabase.from("story_sequences").update({ arquivado }).eq("id", id);
+  if (error) throw error;
+}
+
+/** Marca ou desmarca um story como arte nao utilizada. */
+export async function setDescartado(storyId: string, descartado: boolean): Promise<void> {
+  const { error } = await supabase.from("stories").update({ descartado }).eq("id", storyId);
   if (error) throw error;
 }
 
@@ -374,6 +374,7 @@ export async function undoMerge(source: Story, target: Story): Promise<void> {
       adjust_comment_at: source.adjust_comment_at,
       nome_bloco: source.nome_bloco,
       sequence_id: source.sequence_id,
+      descartado: source.descartado,
     })
     .select("id")
     .single();
@@ -453,7 +454,7 @@ export async function splitFrame(frameId: string, sequenceId: string | null): Pr
   if (moveError) throw moveError;
 }
 
-/** Remove stories sem frames e renumera a fila da sequência em sequência. */
+/** Remove stories sem frames e renumera a fila principal e a lista de nao utilizadas. */
 export async function normalize(sequenceId: string | null): Promise<void> {
   const stories = await fetchStories(sequenceId);
   const empty = stories.filter((s) => s.frames.length === 0);
@@ -467,16 +468,22 @@ export async function normalize(sequenceId: string | null): Promise<void> {
       );
   }
   const remaining = stories.filter((s) => s.frames.length > 0);
-  for (const [i, story] of remaining.entries()) {
-    if (story.position !== i + 1) {
-      await supabase
-        .from("stories")
-        .update({ position: i + 1 })
-        .eq("id", story.id);
-    }
-    for (const [j, frame] of story.frames.entries()) {
-      if (frame.ordem !== j) {
-        await supabase.from("story_frames").update({ ordem: j }).eq("id", frame.id);
+  const grupos = [
+    remaining.filter((s) => !s.descartado),
+    remaining.filter((s) => s.descartado),
+  ];
+  for (const grupo of grupos) {
+    for (const [i, story] of grupo.entries()) {
+      if (story.position !== i + 1) {
+        await supabase
+          .from("stories")
+          .update({ position: i + 1 })
+          .eq("id", story.id);
+      }
+      for (const [j, frame] of story.frames.entries()) {
+        if (frame.ordem !== j) {
+          await supabase.from("story_frames").update({ ordem: j }).eq("id", frame.id);
+        }
       }
     }
   }
