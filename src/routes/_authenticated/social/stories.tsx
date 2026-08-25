@@ -461,9 +461,14 @@ function StoriesPage() {
     return {
       story,
       editable,
-      onApprove: () => mutate.mutate(() => setStatus(story.id, "aprovado")),
-      onAdjust: (comment: string) => mutate.mutate(() => requestAdjust(story.id, comment)),
-      onEdit: () => setEditando(story),
+      canApprove,
+      onSaveBloco: salvarBloco,
+      onSaveFrame: salvarFrame,
+      onApproveFrame: (frameId: string) => mutate.mutate(() => approveFrame(frameId)),
+      onAdjustFrame: (frameId: string, comment: string) =>
+        mutate.mutate(() => requestFrameAdjust(frameId, comment)),
+      onReplaceImage: (frame: Frame, file: File) =>
+        mutate.mutate(() => replaceFrameImage(frame, file)),
       onDelete: () =>
         setConfirm({
           title: `Apagar story #${story.position}?`,
@@ -475,6 +480,7 @@ function StoriesPage() {
       onOpenFrame: (index: number) => setLightbox(story.frames[index]?.url ?? null),
     };
   }
+
 
   if (!podeVer) {
     return (
