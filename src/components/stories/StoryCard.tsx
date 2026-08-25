@@ -1,44 +1,138 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { GripVertical, Check, MessageSquare, Trash2, Plus, Pencil } from "lucide-react";
+import { GripVertical, Check, MessageSquare, Trash2, Plus, ImageUp } from "lucide-react";
 
-import type { Story, StoryStatus } from "@/lib/stories";
-import { MAX_FRAMES, blocoTipo } from "@/lib/stories";
+import type { Frame as FrameType, FrameStatus, Recurso, Story } from "@/lib/stories";
+import { MAX_FRAMES, RECURSOS, blocoTipo } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-const STATUS_LABEL: Record<StoryStatus, string> = {
+const FRAME_STATUS_LABEL: Record<FrameStatus, string> = {
   pendente: "Pendente",
-  aprovado: "Aprovado",
   ajustar: "Ajustar",
+  refeito: "Refeito",
+  aprovado: "Aprovado",
 };
 
-const STATUS_BADGE: Record<StoryStatus, string> = {
-  pendente: "bg-warning/20 text-foreground border-warning",
-  aprovado: "bg-success/15 text-foreground border-success",
-  ajustar: "bg-destructive/10 text-foreground border-destructive",
+const FRAME_STATUS_BADGE: Record<FrameStatus, string> = {
+  pendente: "bg-muted text-muted-foreground border-border",
+  ajustar: "bg-warning/25 text-foreground border-warning",
+  refeito: "bg-success/15 text-foreground border-success/50",
+  aprovado: "bg-success text-background border-success",
 };
 
-const STATUS_BORDER: Record<StoryStatus, string> = {
+const STATUS_BORDER: Record<Story["status"], string> = {
   pendente: "border-warning/60",
   aprovado: "border-success/60",
   ajustar: "border-destructive/60",
 };
 
-function Frame({
+/** Impede que digitar ou selecionar texto inicie o arraste do dnd-kit. */
+const stopDrag = {
+  onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
+  onMouseDown: (e: React.MouseEvent) => e.stopPropagation(),
+  onTouchStart: (e: React.TouchEvent) => e.stopPropagation(),
+};
+
+function Salvo({ visivel }: { visivel: boolean }) {
+  if (!visivel) return null;
+  return <span className="text-[10px] font-medium text-success">Salvo</span>;
+}
+
+/** Campo de várias linhas que cresce sozinho e grava só quando perde o foco. */
+function AutoTextarea({
+  label,
+  value,
+  disabled,
+  onCommit,
+}: {
+  label: string;
+  value: string;
+  disabled: boolean;
+  onCommit: (v: string) => Promise<void>;
+}) {
+  const [local, setLocal] = useState(value);
+  const [salvo, setSalvo] = useState(false);
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => setLocal(value), [value]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [local]);
+
+  return (
+    <div className="space-y-1" {...stopDrag}>
+      <div className="flex items-center gap-2">
+        <span className="text-[11px] text-muted-foreground">{label}</span>
+        <Salvo visivel={salvo} />
+      </div>
+      <Textarea
+        ref={ref}
+        rows={2}
+        value={local}
+        disabled={disabled}
+        className="min-h-0 resize-y text-sm"
+        onChange={(e) => setLocal(e.target.value)}
+        onBlur={async () => {
+          if (local === value) return;
+          await onCommit(local);
+          setSalvo(true);
+          setTimeout(() => setSalvo(false), 2000);
+        }}
+      />
+    </div>
+  );
+}
+
+function ArteBloco({
   frame,
   index,
   total,
-  onOpen,
   editable,
+  canApprove,
+  onOpen,
+  onSaveFrame,
+  onApproveFrame,
+  onAdjustFrame,
+  onReplaceImage,
 }: {
-  frame: Story["frames"][number];
+  frame: FrameType;
   index: number;
   total: number;
-  onOpen: () => void;
   editable: boolean;
+  canApprove: boolean;
+  onOpen: () => void;
+  onSaveFrame: (frameId: string, values: Partial<FrameType>) => Promise<void>;
+  onApproveFrame: (frameId: string) => void;
+  onAdjustFrame: (frameId: string, comment: string) => void;
+  onReplaceImage: (frame: FrameType, file: File) => void;
 }) {
+  const [ajusteAberto, setAjusteAberto] = useState(false);
+  const [comentario, setComentario] = useState("");
+  const [anteriorAberto, setAnteriorAberto] = useState(false);
+  const [recursoSalvo, setRecursoSalvo] = useState(false);
+  const trocaRef = useRef<HTMLInputElement>(null);
+
   const draggable = useDraggable({
     id: `frame:${frame.id}`,
     data: { type: "frame", frameId: frame.id, storyId: frame.story_id, index },
@@ -50,11 +144,11 @@ function Frame({
   });
 
   return (
-    <div className="flex flex-1 flex-col gap-1">
+    <div className="space-y-2 border-t border-border pt-3 first:border-t-0 first:pt-0">
       <div
         ref={droppable.setNodeRef}
         className={cn(
-          "relative aspect-[9/16] overflow-hidden rounded-lg border border-border bg-muted",
+          "relative mx-auto aspect-[9/16] w-32 overflow-hidden rounded-lg border border-border bg-muted",
           droppable.isOver && "ring-2 ring-primary",
           draggable.isDragging && "opacity-40",
         )}
@@ -66,21 +160,195 @@ function Frame({
           {...draggable.listeners}
           onClick={onOpen}
           className="size-full touch-none"
-          aria-label={`Abrir frame ${index + 1}`}
+          aria-label={`Abrir arte ${index + 1}`}
         >
           {frame.url ? (
-            <img src={frame.url} alt={`Frame ${index + 1}`} className="size-full object-cover" />
+            <img src={frame.url} alt={`Arte ${index + 1}`} className="size-full object-cover" />
           ) : null}
         </button>
-        <span className="pointer-events-none absolute bottom-1 left-1 rounded bg-foreground/70 px-1 text-[10px] font-medium text-background">
-          {index + 1}
+        <span
+          className={cn(
+            "pointer-events-none absolute right-1 top-1 rounded-full border px-1.5 py-0.5 text-[10px] font-medium",
+            FRAME_STATUS_BADGE[frame.status],
+          )}
+        >
+          {FRAME_STATUS_LABEL[frame.status]}
         </span>
       </div>
-      {total > 1 ? (
-        <p className="truncate text-[10px] text-muted-foreground" title={frame.nome_arquivo}>
-          {frame.nome_arquivo || "Sem nome"}
-        </p>
+
+      <p className="truncate text-[11px] text-muted-foreground" title={frame.nome_arquivo}>
+        {frame.nome_arquivo || "Sem nome"} · {index + 1}/{total}
+      </p>
+
+      {frame.adjust_comment ? (
+        <div className="rounded-lg bg-warning/20 p-2 text-xs">
+          <p className="whitespace-pre-wrap">{frame.adjust_comment}</p>
+          {frame.adjust_comment_at ? (
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {new Date(frame.adjust_comment_at).toLocaleString("pt-BR")}
+            </p>
+          ) : null}
+        </div>
       ) : null}
+
+      {frame.image_path_anterior ? (
+        <button
+          type="button"
+          className="text-[11px] text-primary underline underline-offset-2"
+          onClick={() => setAnteriorAberto(true)}
+        >
+          Ver versão anterior
+        </button>
+      ) : null}
+
+      <AutoTextarea
+        label="Texto principal"
+        value={frame.texto_principal}
+        disabled={!editable}
+        onCommit={(v) => onSaveFrame(frame.id, { texto_principal: v })}
+      />
+      <AutoTextarea
+        label="Observação"
+        value={frame.observacao}
+        disabled={!editable}
+        onCommit={(v) => onSaveFrame(frame.id, { observacao: v })}
+      />
+
+      <div className="space-y-1" {...stopDrag}>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-muted-foreground">Recurso</span>
+          <Salvo visivel={recursoSalvo} />
+        </div>
+        <Select
+          value={frame.recurso}
+          disabled={!editable}
+          onValueChange={async (v) => {
+            if (v === frame.recurso) return;
+            await onSaveFrame(frame.id, { recurso: v as Recurso });
+            setRecursoSalvo(true);
+            setTimeout(() => setRecursoSalvo(false), 2000);
+          }}
+        >
+          <SelectTrigger className="h-8 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {RECURSOS.map((r) => (
+              <SelectItem key={r} value={r}>
+                {r}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {editable ? (
+        ajusteAberto ? (
+          <div className="space-y-2" {...stopDrag}>
+            <Textarea
+              value={comentario}
+              onChange={(e) => setComentario(e.target.value)}
+              placeholder="O que precisa ser ajustado?"
+              rows={3}
+              className="text-sm"
+            />
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                className="flex-1"
+                disabled={comentario.trim().length === 0}
+                onClick={() => {
+                  onAdjustFrame(frame.id, comentario.trim());
+                  setComentario("");
+                  setAjusteAberto(false);
+                }}
+              >
+                Confirmar ajuste
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setAjusteAberto(false)}>
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {canApprove ? (
+              <>
+                <Button
+                  size="sm"
+                  variant={frame.status === "aprovado" ? "secondary" : "default"}
+                  className="gap-1"
+                  onClick={() => onApproveFrame(frame.id)}
+                >
+                  <Check className="size-3.5" /> Aprovar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1"
+                  onClick={() => setAjusteAberto(true)}
+                >
+                  <MessageSquare className="size-3.5" /> Ajuste
+                </Button>
+              </>
+            ) : null}
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1"
+              onClick={() => trocaRef.current?.click()}
+            >
+              <ImageUp className="size-3.5" /> Trocar imagem
+            </Button>
+            <input
+              ref={trocaRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file && file.type.startsWith("image/")) onReplaceImage(frame, file);
+              }}
+            />
+          </div>
+        )
+      ) : null}
+
+      <Dialog open={anteriorAberto} onOpenChange={setAnteriorAberto}>
+        <DialogContent className="max-w-[min(96vw,44rem)]">
+          <DialogHeader>
+            <DialogTitle>Versão anterior de {frame.nome_arquivo || "arte"}</DialogTitle>
+            <DialogDescription>
+              {frame.trocado_em
+                ? `Trocada em ${new Date(frame.trocado_em).toLocaleString("pt-BR")}`
+                : "Imagem trocada"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <p className="text-[11px] text-muted-foreground">Antes</p>
+              {frame.url_anterior ? (
+                <img
+                  src={frame.url_anterior}
+                  alt="Versão anterior"
+                  className="w-full rounded-lg object-contain"
+                />
+              ) : null}
+            </div>
+            <div className="space-y-1">
+              <p className="text-[11px] text-muted-foreground">Depois</p>
+              {frame.url ? (
+                <img
+                  src={frame.url}
+                  alt="Versão atual"
+                  className="w-full rounded-lg object-contain"
+                />
+              ) : null}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -88,27 +356,35 @@ function Frame({
 export function StoryCard({
   story,
   editable,
+  canApprove,
   showSlot,
-  onApprove,
-  onAdjust,
   onDelete,
   onAddFrames,
   onOpenFrame,
-  onEdit,
+  onSaveBloco,
+  onSaveFrame,
+  onApproveFrame,
+  onAdjustFrame,
+  onReplaceImage,
 }: {
   story: Story;
   editable: boolean;
+  canApprove: boolean;
   showSlot?: boolean;
-  onApprove: () => void;
-  onAdjust: (comment: string) => void;
   onDelete: () => void;
   onAddFrames: (files: File[]) => void;
   onOpenFrame: (index: number) => void;
-  onEdit: () => void;
+  onSaveBloco: (storyId: string, nome: string) => Promise<void>;
+  onSaveFrame: (frameId: string, values: Partial<FrameType>) => Promise<void>;
+  onApproveFrame: (frameId: string) => void;
+  onAdjustFrame: (frameId: string, comment: string) => void;
+  onReplaceImage: (frame: FrameType, file: File) => void;
 }) {
-  const [adjustOpen, setAdjustOpen] = useState(false);
-  const [comment, setComment] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const [nomeBloco, setNomeBloco] = useState(story.nome_bloco);
+  const [blocoSalvo, setBlocoSalvo] = useState(false);
+
+  useEffect(() => setNomeBloco(story.nome_bloco), [story.nome_bloco]);
 
   const draggable = useDraggable({
     id: `story:${story.id}`,
@@ -129,6 +405,11 @@ export function StoryCard({
   const titulo = campanha
     ? story.nome_bloco || "Sem nome do bloco"
     : story.frames[0]?.nome_arquivo || "Sem nome";
+
+  const total = story.frames.length;
+  const aprovadas = story.frames.filter((f) => f.status === "aprovado").length;
+  const emAjuste = story.frames.filter((f) => f.status === "ajustar").length;
+  const tudoAprovado = total > 0 && aprovadas === total;
 
   return (
     <div className="relative">
@@ -166,148 +447,95 @@ export function StoryCard({
             <GripVertical className="size-4" />
           </button>
 
-          <button
-            type="button"
-            onClick={onEdit}
-            className="min-w-0 flex-1 text-left"
-            title={titulo}
-          >
+          <div className="min-w-0 flex-1" title={titulo}>
             <span className="block truncate text-sm font-semibold">{titulo}</span>
             <span className="block text-[11px] text-muted-foreground">
-              {campanha ? `CAMPANHA • ${story.frames.length} artes` : "SOLO"}
+              {campanha ? `CAMPANHA • ${total} artes` : "SOLO"}
             </span>
-          </button>
+          </div>
 
           <span className="tabular rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
             {story.position}
           </span>
-          <span
-            className={cn(
-              "rounded-full border px-2 py-0.5 text-[11px] font-medium",
-              STATUS_BADGE[story.status],
-            )}
-          >
-            {STATUS_LABEL[story.status]}
-          </span>
         </div>
 
-        <div className="flex gap-1.5">
-          {story.frames.map((frame, index) => (
-            <Frame
-              key={frame.id}
-              frame={frame}
-              index={index}
-              total={story.frames.length}
-              editable={editable}
-              onOpen={() => onOpenFrame(index)}
-            />
-          ))}
-          {editable && !full ? (
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              className="grid aspect-[9/16] flex-1 place-items-center rounded-lg border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-              aria-label="Adicionar frame"
-            >
-              <Plus className="size-4" />
-            </button>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {tudoAprovado ? (
+            <span className="rounded-full border border-success bg-success px-2 py-0.5 text-[11px] font-medium text-background">
+              Aprovado
+            </span>
+          ) : (
+            <span className="rounded-full border border-border bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground">
+              {aprovadas} de {total} aprovadas
+            </span>
+          )}
+          {emAjuste > 0 ? (
+            <span className="rounded-full border border-warning bg-warning/25 px-2 py-0.5 text-[11px] font-medium">
+              {emAjuste} em ajuste
+            </span>
           ) : null}
         </div>
 
-        {campanha && story.frames.some((f) => f.texto_principal) ? (
-          <ul className="space-y-0.5 text-[11px] text-muted-foreground">
-            {story.frames.map((f, i) =>
-              f.texto_principal ? (
-                <li key={f.id} className="truncate">
-                  <span className="font-medium text-foreground">
-                    {(story.nome_bloco || "BLOCO").toUpperCase()} • {i + 1}/{story.frames.length}
-                  </span>{" "}
-                  {f.texto_principal}
-                </li>
-              ) : null,
-            )}
-          </ul>
-        ) : null}
-
-        {!campanha && story.frames[0]?.texto_principal ? (
-          <p className="line-clamp-2 text-[11px] text-muted-foreground">
-            {story.frames[0].texto_principal}
-          </p>
-        ) : null}
-
-        {story.adjust_comment ? (
-          <div className="rounded-lg bg-destructive/5 p-2 text-xs">
-            <p className="whitespace-pre-wrap">{story.adjust_comment}</p>
-            {story.adjust_comment_at ? (
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                {new Date(story.adjust_comment_at).toLocaleString("pt-BR")}
-              </p>
-            ) : null}
+        <div className="space-y-1" {...stopDrag}>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-muted-foreground">Nome do bloco</span>
+            <Salvo visivel={blocoSalvo} />
           </div>
-        ) : null}
+          <Input
+            value={nomeBloco}
+            disabled={!editable}
+            placeholder="Nome do bloco"
+            className="h-8 text-sm"
+            onChange={(e) => setNomeBloco(e.target.value)}
+            onBlur={async () => {
+              if (nomeBloco === story.nome_bloco) return;
+              await onSaveBloco(story.id, nomeBloco);
+              setBlocoSalvo(true);
+              setTimeout(() => setBlocoSalvo(false), 2000);
+            }}
+          />
+        </div>
+
+        <div className="space-y-3">
+          {story.frames.map((frame, index) => (
+            <ArteBloco
+              key={frame.id}
+              frame={frame}
+              index={index}
+              total={total}
+              editable={editable}
+              canApprove={canApprove}
+              onOpen={() => onOpenFrame(index)}
+              onSaveFrame={onSaveFrame}
+              onApproveFrame={onApproveFrame}
+              onAdjustFrame={onAdjustFrame}
+              onReplaceImage={onReplaceImage}
+            />
+          ))}
+        </div>
 
         {editable ? (
-          <>
-            {adjustOpen ? (
-              <div className="space-y-2">
-                <Textarea
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="O que precisa ser ajustado?"
-                  rows={3}
-                  className="text-sm"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    className="flex-1"
-                    disabled={comment.trim().length === 0}
-                    onClick={() => {
-                      onAdjust(comment.trim());
-                      setComment("");
-                      setAdjustOpen(false);
-                    }}
-                  >
-                    Confirmar ajuste
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setAdjustOpen(false)}>
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5">
-                <Button
-                  size="sm"
-                  variant={story.status === "aprovado" ? "secondary" : "default"}
-                  className="flex-1 gap-1"
-                  onClick={onApprove}
-                >
-                  <Check className="size-3.5" /> Aprovar
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-1 gap-1"
-                  onClick={() => setAdjustOpen(true)}
-                >
-                  <MessageSquare className="size-3.5" /> Ajuste
-                </Button>
-                <Button size="icon" variant="ghost" onClick={onEdit} aria-label="Editar textos">
-                  <Pencil className="size-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-destructive"
-                  onClick={onDelete}
-                  aria-label="Apagar story"
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              </div>
-            )}
-          </>
+          <div className="flex items-center gap-1.5">
+            {!full ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 gap-1"
+                onClick={() => inputRef.current?.click()}
+              >
+                <Plus className="size-4" /> Adicionar arte
+              </Button>
+            ) : null}
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-destructive"
+              onClick={onDelete}
+              aria-label="Apagar story"
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
         ) : null}
 
         <input
