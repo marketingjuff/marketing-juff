@@ -144,6 +144,16 @@ export function nomeDoArquivo(file: File): string {
   return file.name.replace(/\.[^.]+$/, "").trim().slice(0, 60);
 }
 
+/** Comparação natural: números como números, sem diferenciar maiúsculas/acentos. */
+export function compararNatural(a: string, b: string): number {
+  return a.localeCompare(b, "pt-BR", { numeric: true, sensitivity: "base" });
+}
+
+/** Ordena arquivos pela ordem natural do nome (Prancheta 2 antes de Prancheta 10). */
+export function ordenarArquivos(files: File[]): File[] {
+  return [...files].sort((a, b) => compararNatural(a.name, b.name));
+}
+
 /** Comprime a imagem no navegador: ~900px de largura, jpeg qualidade 0.7. */
 export async function compressImage(file: File): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
