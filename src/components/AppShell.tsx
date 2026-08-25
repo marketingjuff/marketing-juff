@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import juffLogo from "@/assets/juff-logo.png.asset.json";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
@@ -33,9 +34,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4">
           <div className="flex items-center gap-2">
-            <span className="grid size-7 place-items-center rounded-md bg-primary text-[11px] font-bold text-primary-foreground">
-              MJ
-            </span>
+            <img
+              src={juffLogo.url}
+              alt="Logotipo Juff"
+              className="size-7 rounded-md object-cover"
+            />
             <span className="text-base font-semibold tracking-tight">Marketing Juff</span>
           </div>
 
