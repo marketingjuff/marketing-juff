@@ -90,37 +90,52 @@ export type Database = {
       }
       story_frames: {
         Row: {
+          adjust_comment: string | null
+          adjust_comment_at: string | null
           created_at: string
           id: string
           image_path: string
+          image_path_anterior: string | null
           nome_arquivo: string
           observacao: string
           ordem: number
           recurso: string
+          status: string
           story_id: string
           texto_principal: string
+          trocado_em: string | null
         }
         Insert: {
+          adjust_comment?: string | null
+          adjust_comment_at?: string | null
           created_at?: string
           id?: string
           image_path: string
+          image_path_anterior?: string | null
           nome_arquivo?: string
           observacao?: string
           ordem?: number
           recurso?: string
+          status?: string
           story_id: string
           texto_principal?: string
+          trocado_em?: string | null
         }
         Update: {
+          adjust_comment?: string | null
+          adjust_comment_at?: string | null
           created_at?: string
           id?: string
           image_path?: string
+          image_path_anterior?: string | null
           nome_arquivo?: string
           observacao?: string
           ordem?: number
           recurso?: string
+          status?: string
           story_id?: string
           texto_principal?: string
+          trocado_em?: string | null
         }
         Relationships: [
           {
@@ -164,6 +179,7 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      recalc_story_status: { Args: { _story_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "gestor" | "operador"
