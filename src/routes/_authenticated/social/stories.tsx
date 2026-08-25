@@ -626,20 +626,23 @@ function StoriesPage() {
 
         {editable ? (
           <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1"
-              onClick={() =>
-                setConfirm({
-                  title: "Aprovar todos os pendentes?",
-                  description: `Vale só para a fila principal de ${nomeAtual}.`,
-                  action: () => mutate.mutate(() => approveAllPending(fila)),
-                })
-              }
-            >
-              <CheckCheck className="size-4" /> Aprovar pendentes
-            </Button>
+            {canApprove ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1"
+                onClick={() =>
+                  setConfirm({
+                    title: "Aprovar todos os pendentes?",
+                    description: `Aprova as artes em pendente e em refeito da fila principal de ${nomeAtual}. Artes em ajuste não são tocadas.`,
+                    action: () => mutate.mutate(() => approveAllPending(fila)),
+                  })
+                }
+              >
+                <CheckCheck className="size-4" /> Aprovar pendentes
+              </Button>
+            ) : null}
+
             <Button
               size="sm"
               variant="outline"
