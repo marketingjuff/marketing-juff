@@ -108,16 +108,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_edit: { Args: { _perm: string; _user_id: string }; Returns: boolean }
-      has_permission: {
-        Args: { _perm: string; _user_id: string }
-        Returns: boolean
-      }
+      can_edit: { Args: { _perm: string }; Returns: boolean }
+      has_permission: { Args: { _perm: string }; Returns: boolean }
       has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
     }
