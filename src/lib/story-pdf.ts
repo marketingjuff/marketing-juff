@@ -1,19 +1,21 @@
 import type { Story } from "@/lib/stories";
 
-const CAPA = `INSTRUÇÕES PARA MONTAR O PLANO DE STORIES
+function capa(totalArtes: number, quantidade: number): string {
+  return `INSTRUÇÕES PARA MONTAR O PLANO DE STORIES
 
 Este PDF contém as artes de stories da Juff Store. Cada página traz uma arte e o nome exato do arquivo dela.
 
-Monte o plano editorial definindo a ordem de publicação e agrupando as artes que devem ser publicadas juntas.
+Este PDF tem ${totalArtes} artes. Monte um plano com aproximadamente ${quantidade} stories, selecionando as melhores. Você não precisa usar todas.
 
-Um bloco pode ser SOLO, com uma arte só, ou CAMPANHA, com duas ou três artes publicadas no mesmo momento e na ordem indicada.
+Defina a ordem de publicação e agrupe as artes que devem ser publicadas juntas. Um bloco pode ser SOLO, com uma arte só, ou CAMPANHA, com duas ou três artes publicadas no mesmo momento e na ordem indicada. Um bloco nunca pode ter mais de cinco artes.
 
 Alterne produto, benefício, vida real, marca, interação e venda. Evite sequência longa de frases conceituais parecidas.
 
-Devolva a resposta em um documento Word seguindo EXATAMENTE o formato abaixo. Não use tabelas. Não use marcadores. Não escreva nenhum texto fora do formato. Cada linha começa com a palavra BLOCO ou com a palavra ARTE, e os campos são separados por barra vertical.
+Devolva a resposta em um documento Word seguindo EXATAMENTE o formato abaixo. Não use tabelas. Não use marcadores. Não escreva nenhum texto fora do formato. Cada linha começa com BLOCO, ARTE ou SOBRA, e os campos são separados por barra vertical.
 
 BLOCO | numero | SOLO ou CAMPANHA | nome do bloco
 ARTE | nome exato do arquivo | texto principal | observação | recurso
+SOBRA | nome exato do arquivo | motivo curto
 
 O campo recurso aceita apenas um destes valores.
 Nenhum, Link, Enquete, Menção, Slider, Caixa de pergunta.
@@ -25,8 +27,11 @@ ARTE | prancheta 2 | AQUELA QUE VOCÊ REPETE. | Arte limpa, sem CTA. | Nenhum
 ARTE | prancheta 3 | THERMOAIR. VOCÊ VAI ENTENDER QUANDO VESTIR. | Leve, respirável e feita para acompanhar. CTA CONHEÇA A JUFF | Link
 BLOCO | 2 | SOLO | DESACELERAR
 ARTE | prancheta 4 | HOJE O MOVIMENTO É DESACELERAR. | Sem CTA. | Nenhum
+SOBRA | prancheta 5 | Repete a mesma ideia da prancheta 4.
+SOBRA | prancheta 6 | Texto pouco legível sobre a foto.
 
-Toda arte deste PDF deve aparecer uma vez e apenas uma vez. Não invente artes que não estão aqui. Não deixe nenhuma de fora.`;
+Depois das linhas do plano, escreva uma linha SOBRA para CADA arte que você decidiu não usar. Toda arte deste PDF precisa aparecer uma vez, ou como ARTE ou como SOBRA. Nenhuma pode ficar de fora das duas listas. Não invente artes que não estão no PDF.`;
+}
 
 async function prepararImagem(
   url: string,
@@ -50,18 +55,24 @@ async function prepararImagem(
   };
 }
 
-export async function exportPlanPdf(stories: Story[], nomeSequencia: string): Promise<void> {
+/** Só entram as artes da fila principal; as não utilizadas ficam de fora. */
+export async function exportPlanPdf(
+  stories: Story[],
+  nomeProjeto: string,
+  quantidade: number,
+): Promise<void> {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const margem = 15;
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(11);
-  doc.text(doc.splitTextToSize(CAPA, pageW - margem * 2), margem, margem + 5);
+  const frames = stories.filter((s) => !s.descartado).flatMap((s) => s.frames);
 
-  const frames = stories.flatMap((s) => s.frames);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text(doc.splitTextToSize(capa(frames.length, quantidade), pageW - margem * 2), margem, margem + 5);
+
   for (const frame of frames) {
     if (!frame.url) continue;
     doc.addPage();
@@ -93,7 +104,7 @@ export async function exportPlanPdf(stories: Story[], nomeSequencia: string): Pr
     }
   }
 
-  const slug = nomeSequencia
+  const slug = nomeProjeto
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9]+/g, "-")
