@@ -167,6 +167,8 @@ function StoriesPage() {
 
   const podeVer = hasPermission(profile, "social.stories");
   const editable = canEdit(profile, "social.stories");
+  const canApprove = editable && (profile?.role === "admin" || profile?.role === "gestor");
+
 
   const [sequenceId, setSequenceId] = useState<string | null>(null);
   const { data: sequences = [] } = useQuery(sequencesQueryOptions);
