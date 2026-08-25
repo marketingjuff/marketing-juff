@@ -32,13 +32,13 @@ import {
 import { AppShell } from "@/components/AppShell";
 import { StoryCard } from "@/components/stories/StoryCard";
 import { UploadArea } from "@/components/stories/UploadArea";
-import { StoryEditor, type StoryEditValues } from "@/components/stories/StoryEditor";
 import { PlanDialog } from "@/components/stories/PlanDialog";
 import { canEdit, profileQueryOptions, hasPermission } from "@/lib/auth";
 import {
   MAX_FRAMES,
   addFramesToStory,
   approveAllPending,
+  approveFrame,
   createStoriesFromFiles,
   deleteSequence,
   deleteStory,
@@ -48,21 +48,23 @@ import {
   renameSequence,
   reorderFrames,
   reorderStories,
-  requestAdjust,
+  replaceFrameImage,
+  requestFrameAdjust,
   saveAsSequence,
   sequencesQueryOptions,
   setDescartado,
   setSequenceArquivado,
-  setStatus,
   sortStoriesByName,
   splitFrame,
   storiesQueryOptions,
   undoMerge,
   updateFrameTexts,
   updateStoryBloco,
+  type Frame,
   type Story,
   type StoryStatus,
 } from "@/lib/stories";
+
 import { applyPlan, type PlanValidation } from "@/lib/story-plan";
 import { exportPlanPdf } from "@/lib/story-pdf";
 import { cn } from "@/lib/utils";
