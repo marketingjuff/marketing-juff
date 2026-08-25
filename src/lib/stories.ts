@@ -16,6 +16,9 @@ export type Recurso = (typeof RECURSOS)[number];
 
 export type StoryStatus = "pendente" | "aprovado" | "ajustar";
 
+/** Status por arte. 'refeito' = imagem trocada, aguardando novo aval. */
+export type FrameStatus = "pendente" | "ajustar" | "refeito" | "aprovado";
+
 export type Frame = {
   id: string;
   story_id: string;
@@ -26,6 +29,12 @@ export type Frame = {
   observacao: string;
   recurso: Recurso;
   url: string;
+  status: FrameStatus;
+  adjust_comment: string | null;
+  adjust_comment_at: string | null;
+  image_path_anterior: string | null;
+  trocado_em: string | null;
+  url_anterior: string;
 };
 
 export type Story = {
@@ -76,7 +85,9 @@ export async function fetchSequences(): Promise<Sequence[]> {
 export async function fetchStories(sequenceId: string | null): Promise<Story[]> {
   let query = supabase
     .from("stories")
-    .select("id, position, status, adjust_comment, adjust_comment_at, nome_bloco, sequence_id, descartado")
+    .select(
+      "id, position, status, adjust_comment, adjust_comment_at, nome_bloco, sequence_id, descartado",
+    )
     .order("position", { ascending: true });
   query = sequenceId ? query.eq("sequence_id", sequenceId) : query.is("sequence_id", null);
 
@@ -93,12 +104,19 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
     texto_principal: string;
     observacao: string;
     recurso: string;
+    status: string;
+    adjust_comment: string | null;
+    adjust_comment_at: string | null;
+    image_path_anterior: string | null;
+    trocado_em: string | null;
   }[] = [];
 
   if (ids.length > 0) {
     const { data, error: framesError } = await supabase
       .from("story_frames")
-      .select("id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, recurso")
+      .select(
+        "id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, recurso, status, adjust_comment, adjust_comment_at, image_path_anterior, trocado_em",
+      )
       .in("story_id", ids)
       .order("ordem", { ascending: true });
     if (framesError) throw framesError;
@@ -106,7 +124,10 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
   }
 
   const urls = new Map<string, string>();
-  const paths = frames.map((f) => f.image_path);
+  const paths = [
+    ...frames.map((f) => f.image_path),
+    ...frames.map((f) => f.image_path_anterior).filter((p): p is string => Boolean(p)),
+  ];
   if (paths.length > 0) {
     const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrls(paths, 3600);
     for (const item of signed ?? []) {
@@ -135,13 +156,22 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
         observacao: f.observacao ?? "",
         recurso: (f.recurso ?? "Nenhum") as Recurso,
         url: urls.get(f.image_path) ?? "",
+        status: (f.status ?? "pendente") as FrameStatus,
+        adjust_comment: f.adjust_comment,
+        adjust_comment_at: f.adjust_comment_at,
+        image_path_anterior: f.image_path_anterior,
+        trocado_em: f.trocado_em,
+        url_anterior: f.image_path_anterior ? (urls.get(f.image_path_anterior) ?? "") : "",
       })),
   }));
 }
 
 /** Nome do arquivo sem extensão, aparado em 60 caracteres. */
 export function nomeDoArquivo(file: File): string {
-  return file.name.replace(/\.[^.]+$/, "").trim().slice(0, 60);
+  return file.name
+    .replace(/\.[^.]+$/, "")
+    .trim()
+    .slice(0, 60);
 }
 
 /** Comparação natural: números como números, sem diferenciar maiúsculas/acentos. */
@@ -231,26 +261,43 @@ export async function addFramesToStory(
   }
 }
 
-export async function setStatus(storyId: string, status: StoryStatus): Promise<void> {
+/** Aprova uma arte. O status do bloco é recalculado pelo gatilho do banco. */
+export async function approveFrame(frameId: string): Promise<void> {
   const { error } = await supabase
-    .from("stories")
-    .update({
-      status,
-      ...(status === "aprovado" ? { adjust_comment: null, adjust_comment_at: null } : {}),
-    })
-    .eq("id", storyId);
+    .from("story_frames")
+    .update({ status: "aprovado" })
+    .eq("id", frameId);
   if (error) throw error;
 }
 
-export async function requestAdjust(storyId: string, comment: string): Promise<void> {
+/** Pede ajuste em uma arte, guardando o comentário e a data na própria arte. */
+export async function requestFrameAdjust(frameId: string, comment: string): Promise<void> {
   const { error } = await supabase
-    .from("stories")
+    .from("story_frames")
     .update({
       status: "ajustar",
       adjust_comment: comment,
       adjust_comment_at: new Date().toISOString(),
     })
-    .eq("id", storyId);
+    .eq("id", frameId);
+  if (error) throw error;
+}
+
+/**
+ * Troca a imagem de uma arte. Guarda a imagem anterior, marca como refeito e
+ * preserva nome, ordem, textos e o comentário de ajuste. Nada é apagado.
+ */
+export async function replaceFrameImage(frame: Frame, file: File): Promise<void> {
+  const path = await uploadImage(file);
+  const { error } = await supabase
+    .from("story_frames")
+    .update({
+      image_path: path,
+      image_path_anterior: frame.image_path,
+      trocado_em: new Date().toISOString(),
+      status: "refeito",
+    })
+    .eq("id", frame.id);
   if (error) throw error;
 }
 
@@ -278,15 +325,22 @@ async function removeImages(paths: string[]): Promise<void> {
 export async function deleteStory(story: Story): Promise<void> {
   const { error } = await supabase.from("stories").delete().eq("id", story.id);
   if (error) throw error;
-  await removeImages(story.frames.map((f) => f.image_path));
+  await removeImages([
+    ...story.frames.map((f) => f.image_path),
+    ...story.frames.map((f) => f.image_path_anterior).filter((p): p is string => Boolean(p)),
+  ]);
 }
 
+/** Aprova todas as artes em pendente e refeito. Artes em ajustar não são tocadas. */
 export async function approveAllPending(stories: Story[]): Promise<void> {
-  const ids = stories.filter((s) => s.status === "pendente").map((s) => s.id);
+  const ids = stories
+    .flatMap((s) => s.frames)
+    .filter((f) => f.status === "pendente" || f.status === "refeito")
+    .map((f) => f.id);
   if (ids.length === 0) return;
   const { error } = await supabase
-    .from("stories")
-    .update({ status: "aprovado", adjust_comment: null, adjust_comment_at: null })
+    .from("story_frames")
+    .update({ status: "aprovado" })
     .in("id", ids);
   if (error) throw error;
 }
@@ -350,7 +404,13 @@ export async function deleteSequence(id: string): Promise<void> {
   const stories = await fetchStories(id);
   const { error } = await supabase.from("story_sequences").delete().eq("id", id);
   if (error) throw error;
-  await removeImages(stories.flatMap((s) => s.frames.map((f) => f.image_path)));
+  await removeImages(
+    stories.flatMap((s) =>
+      s.frames
+        .flatMap((f) => [f.image_path, f.image_path_anterior])
+        .filter((p): p is string => Boolean(p)),
+    ),
+  );
 }
 
 /* ---------------- arraste ---------------- */
@@ -440,11 +500,7 @@ export async function sortStoriesByName(sequenceId: string | null): Promise<void
   await reorderStories(ordenados.map((s) => s.id));
 }
 
-export async function moveFrame(
-  frameId: string,
-  targetStory: Story,
-  index: number,
-): Promise<void> {
+export async function moveFrame(frameId: string, targetStory: Story, index: number): Promise<void> {
   if (targetStory.frames.length >= MAX_FRAMES) {
     throw new Error(`Cada story aceita no máximo ${MAX_FRAMES} frames`);
   }
@@ -489,10 +545,7 @@ export async function normalize(sequenceId: string | null): Promise<void> {
       );
   }
   const remaining = stories.filter((s) => s.frames.length > 0);
-  const grupos = [
-    remaining.filter((s) => !s.descartado),
-    remaining.filter((s) => s.descartado),
-  ];
+  const grupos = [remaining.filter((s) => !s.descartado), remaining.filter((s) => s.descartado)];
   for (const grupo of grupos) {
     for (const [i, story] of grupo.entries()) {
       if (story.position !== i + 1) {

@@ -32,13 +32,13 @@ import {
 import { AppShell } from "@/components/AppShell";
 import { StoryCard } from "@/components/stories/StoryCard";
 import { UploadArea } from "@/components/stories/UploadArea";
-import { StoryEditor, type StoryEditValues } from "@/components/stories/StoryEditor";
 import { PlanDialog } from "@/components/stories/PlanDialog";
 import { canEdit, profileQueryOptions, hasPermission } from "@/lib/auth";
 import {
   MAX_FRAMES,
   addFramesToStory,
   approveAllPending,
+  approveFrame,
   createStoriesFromFiles,
   deleteSequence,
   deleteStory,
@@ -48,21 +48,23 @@ import {
   renameSequence,
   reorderFrames,
   reorderStories,
-  requestAdjust,
+  replaceFrameImage,
+  requestFrameAdjust,
   saveAsSequence,
   sequencesQueryOptions,
   setDescartado,
   setSequenceArquivado,
-  setStatus,
   sortStoriesByName,
   splitFrame,
   storiesQueryOptions,
   undoMerge,
   updateFrameTexts,
   updateStoryBloco,
+  type Frame,
   type Story,
   type StoryStatus,
 } from "@/lib/stories";
+
 import { applyPlan, type PlanValidation } from "@/lib/story-plan";
 import { exportPlanPdf } from "@/lib/story-pdf";
 import { cn } from "@/lib/utils";
@@ -165,6 +167,7 @@ function StoriesPage() {
 
   const podeVer = hasPermission(profile, "social.stories");
   const editable = canEdit(profile, "social.stories");
+  const canApprove = editable && (profile?.role === "admin" || profile?.role === "gestor");
 
   const [sequenceId, setSequenceId] = useState<string | null>(null);
   const { data: sequences = [] } = useQuery(sequencesQueryOptions);
@@ -179,7 +182,7 @@ function StoriesPage() {
   const [exportando, setExportando] = useState(false);
   const [dragging, setDragging] = useState<{ type: string; descartado?: boolean } | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
-  const [editando, setEditando] = useState<Story | null>(null);
+
   const [planoAberto, setPlanoAberto] = useState(false);
   const [salvarAberto, setSalvarAberto] = useState(false);
   const [renomearAberto, setRenomearAberto] = useState(false);
@@ -309,20 +312,36 @@ function StoriesPage() {
     });
   }
 
-  function salvarTextos(values: StoryEditValues) {
-    const story = editando;
-    if (!story) return;
-    setEditando(null);
-    mutate.mutate(async () => {
-      await updateStoryBloco(story.id, values.nome_bloco);
-      for (const frame of values.frames) {
-        await updateFrameTexts(frame.id, {
-          texto_principal: frame.texto_principal,
-          observacao: frame.observacao,
-          recurso: frame.recurso,
-        });
-      }
-    });
+  /** Atualiza só o dado local, sem remontar os cards enquanto a pessoa digita. */
+  function patchLocal(fn: (story: Story) => Story) {
+    queryClient.setQueryData<Story[]>(["stories", sequenceId], (old) => old?.map(fn));
+  }
+
+  async function salvarBloco(storyId: string, nome: string) {
+    try {
+      await updateStoryBloco(storyId, nome);
+      patchLocal((s) => (s.id === storyId ? { ...s, nome_bloco: nome } : s));
+    } catch (error) {
+      toast.error((error as Error).message);
+    }
+  }
+
+  async function salvarFrame(frameId: string, values: Partial<Frame>) {
+    const frame = stories.flatMap((s) => s.frames).find((f) => f.id === frameId);
+    if (!frame) return;
+    try {
+      await updateFrameTexts(frameId, {
+        texto_principal: values.texto_principal ?? frame.texto_principal,
+        observacao: values.observacao ?? frame.observacao,
+        recurso: values.recurso ?? frame.recurso,
+      });
+      patchLocal((s) => ({
+        ...s,
+        frames: s.frames.map((f) => (f.id === frameId ? { ...f, ...values } : f)),
+      }));
+    } catch (error) {
+      toast.error((error as Error).message);
+    }
   }
 
   function handleDragStart(event: DragStartEvent) {
@@ -335,8 +354,7 @@ function StoriesPage() {
       | { type: string; storyId: string; frameId?: string; index?: number; descartado?: boolean }
       | undefined;
     const over = event.over?.data.current as
-      | { type: string; storyId?: string; frameId?: string; index?: number }
-      | undefined;
+      { type: string; storyId?: string; frameId?: string; index?: number } | undefined;
     if (!active || !over || !editable) return;
 
     const byId = (id?: string) => stories.find((s) => s.id === id);
@@ -440,9 +458,14 @@ function StoriesPage() {
     return {
       story,
       editable,
-      onApprove: () => mutate.mutate(() => setStatus(story.id, "aprovado")),
-      onAdjust: (comment: string) => mutate.mutate(() => requestAdjust(story.id, comment)),
-      onEdit: () => setEditando(story),
+      canApprove,
+      onSaveBloco: salvarBloco,
+      onSaveFrame: salvarFrame,
+      onApproveFrame: (frameId: string) => mutate.mutate(() => approveFrame(frameId)),
+      onAdjustFrame: (frameId: string, comment: string) =>
+        mutate.mutate(() => requestFrameAdjust(frameId, comment)),
+      onReplaceImage: (frame: Frame, file: File) =>
+        mutate.mutate(() => replaceFrameImage(frame, file)),
       onDelete: () =>
         setConfirm({
           title: `Apagar story #${story.position}?`,
@@ -599,20 +622,23 @@ function StoriesPage() {
 
         {editable ? (
           <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1"
-              onClick={() =>
-                setConfirm({
-                  title: "Aprovar todos os pendentes?",
-                  description: `Vale só para a fila principal de ${nomeAtual}.`,
-                  action: () => mutate.mutate(() => approveAllPending(fila)),
-                })
-              }
-            >
-              <CheckCheck className="size-4" /> Aprovar pendentes
-            </Button>
+            {canApprove ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1"
+                onClick={() =>
+                  setConfirm({
+                    title: "Aprovar todos os pendentes?",
+                    description: `Aprova as artes em pendente e em refeito da fila principal de ${nomeAtual}. Artes em ajuste não são tocadas.`,
+                    action: () => mutate.mutate(() => approveAllPending(fila)),
+                  })
+                }
+              >
+                <CheckCheck className="size-4" /> Aprovar pendentes
+              </Button>
+            ) : null}
+
             <Button
               size="sm"
               variant="outline"
@@ -727,14 +753,6 @@ function StoriesPage() {
         </DndContext>
       </div>
 
-      <StoryEditor
-        story={editando}
-        open={editando !== null}
-        editable={editable}
-        onOpenChange={(open) => !open && setEditando(null)}
-        onSave={salvarTextos}
-      />
-
       <PlanDialog
         open={planoAberto}
         stories={stories}
@@ -747,7 +765,8 @@ function StoriesPage() {
           <DialogHeader>
             <DialogTitle>Quantos stories você quer no plano?</DialogTitle>
             <DialogDescription>
-              O PDF leva as {fila.length} arte(s) da fila principal. As não utilizadas ficam de fora.
+              O PDF leva as {fila.length} arte(s) da fila principal. As não utilizadas ficam de
+              fora.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5">
