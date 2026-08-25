@@ -754,13 +754,6 @@ function StoriesPage() {
         </DndContext>
       </div>
 
-      <StoryEditor
-        story={editando}
-        open={editando !== null}
-        editable={editable}
-        onOpenChange={(open) => !open && setEditando(null)}
-        onSave={salvarTextos}
-      />
 
       <PlanDialog
         open={planoAberto}
