@@ -1,9 +1,9 @@
 import { useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { GripVertical, Check, MessageSquare, Trash2, Plus } from "lucide-react";
+import { GripVertical, Check, MessageSquare, Trash2, Plus, Pencil } from "lucide-react";
 
 import type { Story, StoryStatus } from "@/lib/stories";
-import { MAX_FRAMES } from "@/lib/stories";
+import { MAX_FRAMES, blocoTipo } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,11 +29,13 @@ const STATUS_BORDER: Record<StoryStatus, string> = {
 function Frame({
   frame,
   index,
+  total,
   onOpen,
   editable,
 }: {
   frame: Story["frames"][number];
   index: number;
+  total: number;
   onOpen: () => void;
   editable: boolean;
 }) {
@@ -48,30 +50,37 @@ function Frame({
   });
 
   return (
-    <div
-      ref={droppable.setNodeRef}
-      className={cn(
-        "relative aspect-[9/16] flex-1 overflow-hidden rounded-lg border border-border bg-muted",
-        droppable.isOver && "ring-2 ring-primary",
-        draggable.isDragging && "opacity-40",
-      )}
-    >
-      <button
-        type="button"
-        ref={draggable.setNodeRef}
-        {...draggable.attributes}
-        {...draggable.listeners}
-        onClick={onOpen}
-        className="size-full touch-none"
-        aria-label={`Abrir frame ${index + 1}`}
+    <div className="flex flex-1 flex-col gap-1">
+      <div
+        ref={droppable.setNodeRef}
+        className={cn(
+          "relative aspect-[9/16] overflow-hidden rounded-lg border border-border bg-muted",
+          droppable.isOver && "ring-2 ring-primary",
+          draggable.isDragging && "opacity-40",
+        )}
       >
-        {frame.url ? (
-          <img src={frame.url} alt={`Frame ${index + 1}`} className="size-full object-cover" />
-        ) : null}
-      </button>
-      <span className="pointer-events-none absolute bottom-1 left-1 rounded bg-foreground/70 px-1 text-[10px] font-medium text-background">
-        {index + 1}
-      </span>
+        <button
+          type="button"
+          ref={draggable.setNodeRef}
+          {...draggable.attributes}
+          {...draggable.listeners}
+          onClick={onOpen}
+          className="size-full touch-none"
+          aria-label={`Abrir frame ${index + 1}`}
+        >
+          {frame.url ? (
+            <img src={frame.url} alt={`Frame ${index + 1}`} className="size-full object-cover" />
+          ) : null}
+        </button>
+        <span className="pointer-events-none absolute bottom-1 left-1 rounded bg-foreground/70 px-1 text-[10px] font-medium text-background">
+          {index + 1}
+        </span>
+      </div>
+      {total > 1 ? (
+        <p className="truncate text-[10px] text-muted-foreground" title={frame.nome_arquivo}>
+          {frame.nome_arquivo || "Sem nome"}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -79,19 +88,23 @@ function Frame({
 export function StoryCard({
   story,
   editable,
+  showSlot,
   onApprove,
   onAdjust,
   onDelete,
   onAddFrames,
   onOpenFrame,
+  onEdit,
 }: {
   story: Story;
   editable: boolean;
+  showSlot?: boolean;
   onApprove: () => void;
   onAdjust: (comment: string) => void;
   onDelete: () => void;
   onAddFrames: (files: File[]) => void;
   onOpenFrame: (index: number) => void;
+  onEdit: () => void;
 }) {
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [comment, setComment] = useState("");
@@ -106,152 +119,212 @@ export function StoryCard({
     id: `card:${story.id}`,
     data: { type: "card", storyId: story.id },
   });
+  const slot = useDroppable({
+    id: `storyslot:${story.id}`,
+    data: { type: "storyslot", storyId: story.id },
+  });
 
   const full = story.frames.length >= MAX_FRAMES;
+  const campanha = blocoTipo(story) === "CAMPANHA";
+  const titulo = campanha
+    ? story.nome_bloco || "Sem nome do bloco"
+    : story.frames[0]?.nome_arquivo || "Sem nome";
 
   return (
-    <div
-      ref={droppable.setNodeRef}
-      className={cn(
-        "flex flex-col gap-3 rounded-xl border-2 bg-card p-3 shadow-soft transition-shadow",
-        STATUS_BORDER[story.status],
-        droppable.isOver && "ring-2 ring-primary ring-offset-2",
-        draggable.isDragging && "opacity-50",
-      )}
-    >
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          ref={draggable.setNodeRef}
-          {...draggable.attributes}
-          {...draggable.listeners}
+    <div className="relative">
+      {showSlot ? (
+        <div
+          ref={slot.setNodeRef}
           className={cn(
-            "touch-none rounded-md p-1 text-muted-foreground",
-            editable ? "cursor-grab hover:bg-secondary" : "cursor-not-allowed opacity-40",
+            "absolute -left-2 top-0 z-10 h-full w-4 rounded-full transition-colors",
+            slot.isOver ? "bg-primary" : "bg-primary/10",
           )}
-          aria-label="Arrastar story"
-        >
-          <GripVertical className="size-4" />
-        </button>
-        <span className="tabular text-sm font-semibold">#{story.position}</span>
-        <span
-          className={cn(
-            "ml-auto rounded-full border px-2 py-0.5 text-[11px] font-medium",
-            STATUS_BADGE[story.status],
-          )}
-        >
-          {STATUS_LABEL[story.status]}
-        </span>
-      </div>
-
-      <div className="flex gap-1.5">
-        {story.frames.map((frame, index) => (
-          <Frame
-            key={frame.id}
-            frame={frame}
-            index={index}
-            editable={editable}
-            onOpen={() => onOpenFrame(index)}
-          />
-        ))}
-        {editable && !full ? (
+          aria-label="Mover para antes deste story"
+        />
+      ) : null}
+      <div
+        ref={droppable.setNodeRef}
+        className={cn(
+          "flex flex-col gap-3 rounded-xl border-2 bg-card p-3 shadow-soft transition-shadow",
+          STATUS_BORDER[story.status],
+          droppable.isOver && "ring-2 ring-primary ring-offset-2",
+          draggable.isDragging && "opacity-50",
+        )}
+      >
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => inputRef.current?.click()}
-            className="grid aspect-[9/16] flex-1 place-items-center rounded-lg border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-            aria-label="Adicionar frame"
+            ref={draggable.setNodeRef}
+            {...draggable.attributes}
+            {...draggable.listeners}
+            className={cn(
+              "touch-none rounded-md p-1 text-muted-foreground",
+              editable ? "cursor-grab hover:bg-secondary" : "cursor-not-allowed opacity-40",
+            )}
+            aria-label="Arrastar story"
           >
-            <Plus className="size-4" />
+            <GripVertical className="size-4" />
           </button>
-        ) : null}
-      </div>
 
-      {story.adjust_comment ? (
-        <div className="rounded-lg bg-destructive/5 p-2 text-xs">
-          <p className="whitespace-pre-wrap">{story.adjust_comment}</p>
-          {story.adjust_comment_at ? (
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              {new Date(story.adjust_comment_at).toLocaleString("pt-BR")}
-            </p>
+          <button
+            type="button"
+            onClick={onEdit}
+            className="min-w-0 flex-1 text-left"
+            title={titulo}
+          >
+            <span className="block truncate text-sm font-semibold">{titulo}</span>
+            <span className="block text-[11px] text-muted-foreground">
+              {campanha ? `CAMPANHA • ${story.frames.length} artes` : "SOLO"}
+            </span>
+          </button>
+
+          <span className="tabular rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+            {story.position}
+          </span>
+          <span
+            className={cn(
+              "rounded-full border px-2 py-0.5 text-[11px] font-medium",
+              STATUS_BADGE[story.status],
+            )}
+          >
+            {STATUS_LABEL[story.status]}
+          </span>
+        </div>
+
+        <div className="flex gap-1.5">
+          {story.frames.map((frame, index) => (
+            <Frame
+              key={frame.id}
+              frame={frame}
+              index={index}
+              total={story.frames.length}
+              editable={editable}
+              onOpen={() => onOpenFrame(index)}
+            />
+          ))}
+          {editable && !full ? (
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="grid aspect-[9/16] flex-1 place-items-center rounded-lg border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+              aria-label="Adicionar frame"
+            >
+              <Plus className="size-4" />
+            </button>
           ) : null}
         </div>
-      ) : null}
 
-      {editable ? (
-        <>
-          {adjustOpen ? (
-            <div className="space-y-2">
-              <Textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="O que precisa ser ajustado?"
-                rows={3}
-                className="text-sm"
-              />
-              <div className="flex gap-2">
+        {campanha && story.frames.some((f) => f.texto_principal) ? (
+          <ul className="space-y-0.5 text-[11px] text-muted-foreground">
+            {story.frames.map((f, i) =>
+              f.texto_principal ? (
+                <li key={f.id} className="truncate">
+                  <span className="font-medium text-foreground">
+                    {(story.nome_bloco || "BLOCO").toUpperCase()} • {i + 1}/{story.frames.length}
+                  </span>{" "}
+                  {f.texto_principal}
+                </li>
+              ) : null,
+            )}
+          </ul>
+        ) : null}
+
+        {!campanha && story.frames[0]?.texto_principal ? (
+          <p className="line-clamp-2 text-[11px] text-muted-foreground">
+            {story.frames[0].texto_principal}
+          </p>
+        ) : null}
+
+        {story.adjust_comment ? (
+          <div className="rounded-lg bg-destructive/5 p-2 text-xs">
+            <p className="whitespace-pre-wrap">{story.adjust_comment}</p>
+            {story.adjust_comment_at ? (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {new Date(story.adjust_comment_at).toLocaleString("pt-BR")}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {editable ? (
+          <>
+            {adjustOpen ? (
+              <div className="space-y-2">
+                <Textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="O que precisa ser ajustado?"
+                  rows={3}
+                  className="text-sm"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="flex-1"
+                    disabled={comment.trim().length === 0}
+                    onClick={() => {
+                      onAdjust(comment.trim());
+                      setComment("");
+                      setAdjustOpen(false);
+                    }}
+                  >
+                    Confirmar ajuste
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setAdjustOpen(false)}>
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
                 <Button
                   size="sm"
-                  className="flex-1"
-                  disabled={comment.trim().length === 0}
-                  onClick={() => {
-                    onAdjust(comment.trim());
-                    setComment("");
-                    setAdjustOpen(false);
-                  }}
+                  variant={story.status === "aprovado" ? "secondary" : "default"}
+                  className="flex-1 gap-1"
+                  onClick={onApprove}
                 >
-                  Confirmar ajuste
+                  <Check className="size-3.5" /> Aprovar
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => setAdjustOpen(false)}>
-                  Cancelar
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 gap-1"
+                  onClick={() => setAdjustOpen(true)}
+                >
+                  <MessageSquare className="size-3.5" /> Ajuste
+                </Button>
+                <Button size="icon" variant="ghost" onClick={onEdit} aria-label="Editar textos">
+                  <Pencil className="size-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-destructive"
+                  onClick={onDelete}
+                  aria-label="Apagar story"
+                >
+                  <Trash2 className="size-4" />
                 </Button>
               </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5">
-              <Button
-                size="sm"
-                variant={story.status === "aprovado" ? "secondary" : "default"}
-                className="flex-1 gap-1"
-                onClick={onApprove}
-              >
-                <Check className="size-3.5" /> Aprovar
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1 gap-1"
-                onClick={() => setAdjustOpen(true)}
-              >
-                <MessageSquare className="size-3.5" /> Ajuste
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-destructive"
-                onClick={onDelete}
-                aria-label="Apagar story"
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            </div>
-          )}
-        </>
-      ) : null}
+            )}
+          </>
+        ) : null}
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        multiple
-        className="hidden"
-        onChange={(e) => {
-          const files = Array.from(e.target.files ?? []).filter((f) =>
-            f.type.startsWith("image/"),
-          );
-          if (files.length > 0) onAddFrames(files);
-          e.target.value = "";
-        }}
-      />
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            const files = Array.from(e.target.files ?? []).filter((f) =>
+              f.type.startsWith("image/"),
+            );
+            if (files.length > 0) onAddFrames(files);
+            e.target.value = "";
+          }}
+        />
+      </div>
     </div>
   );
 }
