@@ -8,6 +8,8 @@ import {
   Trash2,
   Plus,
   ImageUp,
+  Copy,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -458,6 +460,8 @@ export function StoryCard({
   onAdjustFrame,
   onReplaceImage,
   onSetObjective,
+  onReplicarBloco,
+  onReplicarProximo,
 }: {
   story: Story;
   editable: boolean;
@@ -476,6 +480,10 @@ export function StoryCard({
   onAdjustFrame: (frameId: string, comment: string) => void;
   onReplaceImage: (frame: FrameType, file: File) => void;
   onSetObjective: (storyId: string, objectiveId: string | null) => void;
+  /** Replica a formatação de fonte da arte 1 em todas as artes do bloco. */
+  onReplicarBloco?: () => void;
+  /** Aplica a formatação de fonte da arte 1 em todas as artes do próximo bloco. */
+  onReplicarProximo?: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [nomeBloco, setNomeBloco] = useState(story.nome_bloco);
