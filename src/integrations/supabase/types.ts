@@ -113,6 +113,7 @@ export type Database = {
           comp_texto_alinhamento: string
           comp_texto_cor: string
           comp_texto_fonte: string
+          comp_texto_largura: number
           comp_texto_peso: number
           comp_texto_tamanho: number
           comp_texto_x: number
@@ -145,6 +146,7 @@ export type Database = {
           comp_texto_alinhamento?: string
           comp_texto_cor?: string
           comp_texto_fonte?: string
+          comp_texto_largura?: number
           comp_texto_peso?: number
           comp_texto_tamanho?: number
           comp_texto_x?: number
@@ -177,6 +179,7 @@ export type Database = {
           comp_texto_alinhamento?: string
           comp_texto_cor?: string
           comp_texto_fonte?: string
+          comp_texto_largura?: number
           comp_texto_peso?: number
           comp_texto_tamanho?: number
           comp_texto_x?: number

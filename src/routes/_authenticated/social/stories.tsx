@@ -391,6 +391,7 @@ function StoriesPage() {
       texto_tamanho: origem.texto_tamanho,
       texto_cor: origem.texto_cor,
       texto_alinhamento: origem.texto_alinhamento,
+      texto_largura: origem.texto_largura,
       sombra_cor: origem.sombra_cor,
       sombra_opacidade: origem.sombra_opacidade,
     };

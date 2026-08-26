@@ -772,22 +772,57 @@ function TextoEditavel({
   comp,
   editable,
   fontePx,
-  larguraMax,
+  larguraContainer,
   iniciarArraste,
   onSaveTexto,
+  onLargura,
 }: {
   frame: Frame;
   comp: Composicao;
   editable: boolean;
   fontePx: number;
-  larguraMax?: number | undefined;
+  /** Largura da arte em px, base para converter a largura da caixa em %. */
+  larguraContainer: number;
   iniciarArraste: (e: React.PointerEvent) => void;
   onSaveTexto: (frameId: string, texto: string) => Promise<void> | void;
+  onLargura: (pct: number) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [editando, setEditando] = useState(false);
   const [sobre, setSobre] = useState(false);
   const [vazio, setVazio] = useState(frame.texto_principal.length === 0);
+  const [larguraPct, setLarguraPct] = useState(comp.texto_largura);
+  const redimensionando = useRef(false);
+
+  useEffect(() => {
+    if (!redimensionando.current) setLarguraPct(comp.texto_largura);
+  }, [comp.texto_largura]);
+
+  /** Arrasta a borda da caixa e ajusta a largura, como no Canva. */
+  const iniciarResize = (e: React.PointerEvent, lado: "esq" | "dir") => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!editable || larguraContainer <= 0) return;
+    redimensionando.current = true;
+    const x0 = e.clientX;
+    const base = larguraPct;
+    const fator = comp.texto_alinhamento === "center" ? 2 : 1;
+    const calcular = (ev: PointerEvent) => {
+      const delta = ((ev.clientX - x0) / larguraContainer) * 100 * (lado === "dir" ? 1 : -1);
+      return Math.max(10, Math.min(100, base + delta * fator));
+    };
+    const mover = (ev: PointerEvent) => setLarguraPct(calcular(ev));
+    const soltar = (ev: PointerEvent) => {
+      window.removeEventListener("pointermove", mover);
+      window.removeEventListener("pointerup", soltar);
+      redimensionando.current = false;
+      const valor = Math.round(calcular(ev));
+      setLarguraPct(valor);
+      onLargura(valor);
+    };
+    window.addEventListener("pointermove", mover);
+    window.addEventListener("pointerup", soltar);
+  };
 
   // Só escreve de fora quando o usuário não está digitando ali.
   useEffect(() => {
@@ -913,7 +948,8 @@ function TextoEditavel({
           fontSize: fontePx,
           lineHeight: 1.2,
           color: comp.texto_cor,
-          maxWidth: larguraMax,
+          width: larguraContainer > 0 ? (larguraContainer * larguraPct) / 100 : "auto",
+          textAlign: comp.texto_alinhamento,
           minWidth: mostrarPista ? "5em" : "0.5em",
           touchAction: editando ? "auto" : "none",
           textShadow:
@@ -922,6 +958,23 @@ function TextoEditavel({
               : "none",
         }}
       />
+      {editable && (editando || sobre) ? (
+        <>
+          {(["esq", "dir"] as const).map((lado) => (
+            <span
+              key={lado}
+              role="separator"
+              aria-label={`Ajustar a largura da caixa de texto (${lado === "esq" ? "esquerda" : "direita"})`}
+              title="Ajustar a largura da caixa de texto"
+              className={cn(
+                "absolute top-1/2 z-10 h-6 w-2 -translate-y-1/2 cursor-ew-resize rounded-full border border-background bg-primary shadow",
+                lado === "esq" ? "-left-1" : "-right-1",
+              )}
+              onPointerDown={(e) => iniciarResize(e, lado)}
+            />
+          ))}
+        </>
+      ) : null}
       {mostrarPista ? (
         <span
           aria-hidden
@@ -1033,9 +1086,10 @@ export function ArteEditor({
                 comp={comp}
                 editable={editable}
                 fontePx={fontePx}
-                larguraMax={largura > 0 ? largura * 0.8 : undefined}
+                larguraContainer={largura}
                 iniciarArraste={iniciarArraste}
                 onSaveTexto={onSaveTexto}
+                onLargura={(pct) => salvar({ texto_largura: pct })}
               />
             )}
           </Camada>

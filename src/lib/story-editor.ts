@@ -397,7 +397,7 @@ export async function montarArtePng(frame: Frame, logoSvg: string | null): Promi
       ctx.shadowOffsetY = fs * 0.04;
       ctx.shadowBlur = fs * 0.12;
     }
-    const linhas = quebrarLinhas(ctx, texto, canvas.width * 0.8);
+    const linhas = quebrarLinhas(ctx, texto, canvas.width * (c.texto_largura / 100));
     const alturaLinha = fs * 1.2;
     const cx = (c.texto_x / 100) * canvas.width;
     const cy = (c.texto_y / 100) * canvas.height;
