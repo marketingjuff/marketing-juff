@@ -26,7 +26,8 @@ import {
   excluirPreset,
   exportarArteMontada,
   grudarNaGrade,
-  larguraLogoPx,
+  dimensoesLogo,
+  normalizarHex,
   logosQueryOptions,
   presetsQueryOptions,
   proporcaoDoSvg,
@@ -597,7 +598,7 @@ function Camada({
         "absolute -translate-y-1/2 select-none",
         alinhamento === "center" && "-translate-x-1/2",
         alinhamento === "right" && "-translate-x-full",
-        editable ? "cursor-move" : "pointer-events-none",
+        editable ? "pointer-events-auto cursor-move touch-none" : "pointer-events-none",
       )}
       style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
       {...semArraste}
@@ -676,8 +677,8 @@ export function ArteEditor({
     : null;
 
   const fontePx = tamanhoFontePx(altura || 1, comp.texto_tamanho);
-  const logoLargura = larguraLogoPx(largura || 1, comp.logo_tamanho);
   const logoProporcao = logo?.svg ? proporcaoDoSvg(logo.svg) : (logo?.proporcao ?? 1);
+  const logoDim = dimensoesLogo(largura || 1, altura || 1, comp.logo_tamanho, logoProporcao);
 
   return (
     <div ref={caixaRef} className="pointer-events-none absolute inset-0">
@@ -694,7 +695,7 @@ export function ArteEditor({
       ) : null}
 
       {comp.logo_ativo && logo?.svg ? (
-        <div className="pointer-events-auto absolute inset-0">
+        <div className="pointer-events-none absolute inset-0">
           <Camada
             x={comp.logo_x}
             y={comp.logo_y}
@@ -702,11 +703,12 @@ export function ArteEditor({
             onCommit={(x, y) => salvar({ logo_x: x, logo_y: y })}
           >
             <div
-              style={{ width: logoLargura, height: logoLargura / (logoProporcao || 1) }}
+              className="[&_svg]:pointer-events-none [&_svg_*]:pointer-events-none"
+              style={{ width: logoDim.largura, height: logoDim.altura }}
               dangerouslySetInnerHTML={{
                 __html: svgColorido(logo.svg, comp.logo_cor).replace(
                   /<svg\b/i,
-                  '<svg style="width:100%;height:100%"',
+                  '<svg style="width:100%;height:100%;pointer-events:none"',
                 ),
               }}
             />
@@ -715,7 +717,7 @@ export function ArteEditor({
       ) : null}
 
       {frame.texto_principal.trim().length > 0 ? (
-        <div className="pointer-events-auto absolute inset-0">
+        <div className="pointer-events-none absolute inset-0">
           <Camada
             x={comp.texto_x}
             y={comp.texto_y}
