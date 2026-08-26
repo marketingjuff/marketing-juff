@@ -974,7 +974,8 @@ function StoriesPage() {
                 objetivosAtivos.length > 0 && objetivosPdf !== null && objetivosPdf.length === 0
               }
               onClick={() => {
-                const qtd = Math.max(1, Number.parseInt(quantidade, 10) || fila.length);
+                const bruto = Number.parseInt(quantidade.trim(), 10);
+                const qtd = Number.isFinite(bruto) && bruto > 0 ? bruto : 0;
                 const todos = objetivosPdf === null || objetivosPdf.length === objetivosAtivos.length;
                 const escolhidos =
                   objetivosPdf === null
