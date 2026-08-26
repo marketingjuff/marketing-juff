@@ -62,12 +62,15 @@ import {
   splitFrame,
   storiesQueryOptions,
   undoMerge,
+  updateFrameComposicao,
   updateFrameTexts,
   updateStoryBloco,
+  type Composicao,
   type Frame,
   type Story,
   type StoryStatus,
 } from "@/lib/stories";
+
 
 import { objectivesQueryOptions, type Objective } from "@/lib/objectives";
 import { applyPlan, precisaPerfil, type PlanValidation } from "@/lib/story-plan";
