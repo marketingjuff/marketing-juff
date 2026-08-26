@@ -102,6 +102,22 @@ export type Database = {
         Row: {
           adjust_comment: string | null
           adjust_comment_at: string | null
+          comp_logo_ativo: boolean
+          comp_logo_cor: string
+          comp_logo_id: string | null
+          comp_logo_tamanho: number
+          comp_logo_x: number
+          comp_logo_y: number
+          comp_sombra_cor: string
+          comp_sombra_opacidade: number
+          comp_texto_ativo: boolean
+          comp_texto_conteudo: string
+          comp_texto_cor: string
+          comp_texto_fonte: string
+          comp_texto_peso: number
+          comp_texto_tamanho: number
+          comp_texto_x: number
+          comp_texto_y: number
           created_at: string
           id: string
           image_path: string
@@ -119,6 +135,22 @@ export type Database = {
         Insert: {
           adjust_comment?: string | null
           adjust_comment_at?: string | null
+          comp_logo_ativo?: boolean
+          comp_logo_cor?: string
+          comp_logo_id?: string | null
+          comp_logo_tamanho?: number
+          comp_logo_x?: number
+          comp_logo_y?: number
+          comp_sombra_cor?: string
+          comp_sombra_opacidade?: number
+          comp_texto_ativo?: boolean
+          comp_texto_conteudo?: string
+          comp_texto_cor?: string
+          comp_texto_fonte?: string
+          comp_texto_peso?: number
+          comp_texto_tamanho?: number
+          comp_texto_x?: number
+          comp_texto_y?: number
           created_at?: string
           id?: string
           image_path: string
@@ -136,6 +168,22 @@ export type Database = {
         Update: {
           adjust_comment?: string | null
           adjust_comment_at?: string | null
+          comp_logo_ativo?: boolean
+          comp_logo_cor?: string
+          comp_logo_id?: string | null
+          comp_logo_tamanho?: number
+          comp_logo_x?: number
+          comp_logo_y?: number
+          comp_sombra_cor?: string
+          comp_sombra_opacidade?: number
+          comp_texto_ativo?: boolean
+          comp_texto_conteudo?: string
+          comp_texto_cor?: string
+          comp_texto_fonte?: string
+          comp_texto_peso?: number
+          comp_texto_tamanho?: number
+          comp_texto_x?: number
+          comp_texto_y?: number
           created_at?: string
           id?: string
           image_path?: string
@@ -159,6 +207,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      story_logos: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          file_path: string
+          id: string
+          nome: string
+          proporcao: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          file_path: string
+          id?: string
+          nome: string
+          proporcao?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          file_path?: string
+          id?: string
+          nome?: string
+          proporcao?: number
+        }
+        Relationships: []
       }
       story_objectives: {
         Row: {
@@ -205,6 +280,45 @@ export type Database = {
           created_at?: string
           id?: string
           nome?: string
+        }
+        Relationships: []
+      }
+      story_text_presets: {
+        Row: {
+          cor_sombra: string
+          cor_texto: string
+          created_at: string
+          created_by: string | null
+          fonte: string
+          id: string
+          nome: string
+          opacidade_sombra: number
+          peso: number
+          tamanho: number
+        }
+        Insert: {
+          cor_sombra?: string
+          cor_texto?: string
+          created_at?: string
+          created_by?: string | null
+          fonte?: string
+          id?: string
+          nome: string
+          opacidade_sombra?: number
+          peso?: number
+          tamanho?: number
+        }
+        Update: {
+          cor_sombra?: string
+          cor_texto?: string
+          created_at?: string
+          created_by?: string | null
+          fonte?: string
+          id?: string
+          nome?: string
+          opacidade_sombra?: number
+          peso?: number
+          tamanho?: number
         }
         Relationships: []
       }
