@@ -30,6 +30,8 @@ export type Frame = {
   texto_principal: string;
   observacao: string;
   recurso: Recurso;
+  /** Perfil da menção (@perfil). Só usado quando o recurso é Menção. */
+  recurso_detalhe: string;
   url: string;
   status: FrameStatus;
   adjust_comment: string | null;
@@ -109,6 +111,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
     texto_principal: string;
     observacao: string;
     recurso: string;
+    recurso_detalhe: string;
     status: string;
     adjust_comment: string | null;
     adjust_comment_at: string | null;
@@ -119,7 +122,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
     const { data, error: framesError } = await supabase
       .from("story_frames")
       .select(
-        "id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, recurso, status, adjust_comment, adjust_comment_at, image_path_anterior",
+        "id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, recurso, recurso_detalhe, status, adjust_comment, adjust_comment_at, image_path_anterior",
       )
       .in("story_id", ids)
       .order("ordem", { ascending: true });
@@ -158,6 +161,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
         texto_principal: f.texto_principal ?? "",
         observacao: f.observacao ?? "",
         recurso: (f.recurso ?? "Nenhum") as Recurso,
+        recurso_detalhe: f.recurso_detalhe ?? "",
         url: urls.get(f.image_path) ?? "",
         status: (f.status ?? "pendente") as FrameStatus,
         adjust_comment: f.adjust_comment,
@@ -345,7 +349,12 @@ export async function setStoryObjective(
 
 export async function updateFrameTexts(
   frameId: string,
-  values: { texto_principal?: string; observacao?: string; recurso?: Recurso },
+  values: {
+    texto_principal?: string;
+    observacao?: string;
+    recurso?: Recurso;
+    recurso_detalhe?: string;
+  },
 ): Promise<void> {
   const { error } = await supabase.from("story_frames").update(values).eq("id", frameId);
   if (error) throw error;
