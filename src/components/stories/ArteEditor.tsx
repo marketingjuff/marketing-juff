@@ -766,7 +766,7 @@ function Camada({
   );
 }
 
-/** Texto desenhado sobre a arte, editável no próprio lugar. */
+/** Texto desenhado sobre a arte: 1 clique move, 2 cliques edita. */
 function TextoEditavel({
   frame,
   comp,
@@ -785,25 +785,75 @@ function TextoEditavel({
   onSaveTexto: (frameId: string, texto: string) => Promise<void> | void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [focado, setFocado] = useState(false);
+  const [editando, setEditando] = useState(false);
   const [sobre, setSobre] = useState(false);
   const [vazio, setVazio] = useState(frame.texto_principal.length === 0);
 
   // Só escreve de fora quando o usuário não está digitando ali.
   useEffect(() => {
     const el = ref.current;
-    if (!el || focado) return;
+    if (!el || editando) return;
     if (el.innerText.replace(/\n$/, "") !== frame.texto_principal) {
       el.innerText = frame.texto_principal;
     }
     setVazio(frame.texto_principal.length === 0);
-  }, [frame.texto_principal, focado]);
+  }, [frame.texto_principal, editando]);
 
-  const mostrarPista = !focado && vazio && editable;
+  const mostrarPista = !editando && vazio && editable;
+
+  const salvarSaindo = () => {
+    const el = ref.current;
+    setEditando(false);
+    if (!el) return;
+    const novo = el.innerText.replace(/\r/g, "").replace(/\n$/, "");
+    setVazio(novo.length === 0);
+    if (novo !== frame.texto_principal) void onSaveTexto(frame.id, novo);
+  };
+
+  const entrarEmEdicao = (e: React.MouseEvent) => {
+    if (!editable) return;
+    e.stopPropagation();
+    e.preventDefault();
+    setEditando(true);
+    const el = ref.current;
+    if (!el) return;
+    const x = e.clientX;
+    const y = e.clientY;
+    requestAnimationFrame(() => {
+      el.focus();
+      const doc = document as Document & {
+        caretRangeFromPoint?: (x: number, y: number) => Range | null;
+        caretPositionFromPoint?: (
+          x: number,
+          y: number,
+        ) => { offsetNode: Node; offset: number } | null;
+      };
+      const sel = window.getSelection();
+      if (!sel) return;
+      let range: Range | null = null;
+      if (typeof doc.caretRangeFromPoint === "function") {
+        range = doc.caretRangeFromPoint(x, y);
+      } else if (typeof doc.caretPositionFromPoint === "function") {
+        const pos = doc.caretPositionFromPoint(x, y);
+        if (pos) {
+          range = document.createRange();
+          range.setStart(pos.offsetNode, pos.offset);
+        }
+      }
+      if (!range) {
+        range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+      }
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    });
+  };
 
   return (
     <>
-      {editable && (focado || sobre) ? (
+      {editable && (editando || sobre) ? (
         <button
           type="button"
           aria-label="Mover o texto"
@@ -817,31 +867,41 @@ function TextoEditavel({
       <div
         ref={ref}
         lang="pt-BR"
-        contentEditable={editable}
+        contentEditable={editable && editando}
         suppressContentEditableWarning
         spellCheck={false}
+        draggable={false}
+        onDragStart={(e) => e.preventDefault()}
         onMouseEnter={() => setSobre(true)}
         onMouseLeave={() => setSobre(false)}
-        onFocus={() => setFocado(true)}
+        onPointerDown={(e) => {
+          if (!editable || editando) {
+            e.stopPropagation();
+            return;
+          }
+          e.preventDefault();
+          iniciarArraste(e);
+        }}
+        onDoubleClick={entrarEmEdicao}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            e.preventDefault();
+            e.currentTarget.blur();
+          }
+        }}
         onInput={(e) => setVazio(e.currentTarget.innerText.replace(/\n$/, "").length === 0)}
         onPaste={(e) => {
           e.preventDefault();
           const texto = e.clipboardData.getData("text/plain");
           document.execCommand("insertText", false, texto);
         }}
-        onBlur={(e) => {
-          setFocado(false);
-          const novo = e.currentTarget.innerText.replace(/\r/g, "").replace(/\n$/, "");
-          setVazio(novo.length === 0);
-          if (novo !== frame.texto_principal) void onSaveTexto(frame.id, novo);
-        }}
+        onBlur={salvarSaindo}
         className={cn(
           "block whitespace-pre-wrap break-normal outline-none",
           "border border-dashed",
-          focado ? "border-primary" : "border-transparent",
-          comp.texto_alinhamento === "left" && "text-left",
-          comp.texto_alinhamento === "center" && "text-center",
-          comp.texto_alinhamento === "right" && "text-right",
+          editando ? "cursor-text select-text border-primary border-solid" : "select-none",
+          editable && !editando && "cursor-move",
+          !editando && (sobre ? "border-primary/60" : "border-transparent"),
         )}
         style={{
           fontFamily: `"${comp.texto_fonte}", sans-serif`,
@@ -855,6 +915,7 @@ function TextoEditavel({
           color: comp.texto_cor,
           maxWidth: larguraMax,
           minWidth: mostrarPista ? "5em" : "0.5em",
+          touchAction: editando ? "auto" : "none",
           textShadow:
             comp.sombra_opacidade > 0
               ? `${fontePx * 0.04}px ${fontePx * 0.04}px ${fontePx * 0.12}px ${corComOpacidade(comp.sombra_cor, comp.sombra_opacidade)}`
@@ -873,6 +934,7 @@ function TextoEditavel({
     </>
   );
 }
+
 
 export function ArteEditor({
   frame,
