@@ -21,7 +21,26 @@ ${lista}
 `;
 }
 
-function capa(totalArtes: number, quantidade: number, objetivos: Objective[], todos: boolean): string {
+function blocoDirecionamento(direcionamento: string): string {
+  const texto = (direcionamento ?? "").trim();
+  if (!texto) return "";
+  return `
+
+DIRECIONAMENTO DESTA LEVA
+
+As orientações abaixo foram escritas por quem exportou este PDF e valem especificamente para este plano. Elas têm prioridade sobre a distribuição livre, mas nunca sobre o formato de resposta exigido acima. Se alguma orientação for impossível com as artes disponíveis, cumpra o que der e explique o que não deu em uma linha SOBRA.
+
+${texto}
+`;
+}
+
+function capa(
+  totalArtes: number,
+  quantidade: number,
+  objetivos: Objective[],
+  todos: boolean,
+  direcionamento = "",
+): string {
   return `INSTRUÇÕES PARA MONTAR O PLANO DE STORIES
 
 Este PDF contém as artes de stories da Juff Store. Cada página traz uma arte e o nome exato do arquivo dela.
