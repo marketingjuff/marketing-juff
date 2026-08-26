@@ -112,6 +112,11 @@ export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobr
   return { blocos: blocos.filter((b) => b.artes.length > 0), sobras };
 }
 
+/** Arte com recurso Menção e perfil vazio não pode ser aprovada. */
+export function precisaPerfil(frame: { recurso: Recurso; recurso_detalhe: string }): boolean {
+  return frame.recurso === "Menção" && (frame.recurso_detalhe ?? "").trim().length === 0;
+}
+
 export function validatePlan(
   parsed: { blocos: PlanBloco[]; sobras: PlanSobra[] },
   stories: Story[],

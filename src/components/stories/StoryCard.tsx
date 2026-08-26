@@ -20,6 +20,7 @@ import {
   useAlturaCompartilhada,
   type SlotAltura,
 } from "@/components/stories/AlturasCompartilhadas";
+import { normalizaPerfil, precisaPerfil } from "@/lib/story-plan";
 
 const FRAME_STATUS_LABEL: Record<FrameStatus, string> = {
   pendente: "Pendente",
@@ -368,7 +369,13 @@ function ArteBloco({
                   className="flex-1 px-0"
                   title="Aprovar"
                   aria-label="Aprovar arte"
-                  onClick={() => onApproveFrame(frame.id)}
+                  onClick={() => {
+                    if (precisaPerfil(frame)) {
+                      toast.error("Informe o perfil da menção antes de aprovar");
+                      return;
+                    }
+                    onApproveFrame(frame.id);
+                  }}
                 >
                   <Check className="size-4" />
                 </Button>
@@ -476,7 +483,7 @@ export function StoryCard({
   const full = story.frames.length >= MAX_FRAMES;
   const campanha = blocoTipo(story) === "CAMPANHA";
   const titulo = campanha
-    ? story.nome_bloco || "Sem nome do bloco"
+    ? story.nome_bloco || "Sem nome do story"
     : story.frames[0]?.nome_arquivo || "Sem nome";
 
   const total = story.frames.length;
@@ -532,7 +539,7 @@ export function StoryCard({
                 value={nomeBloco}
                 placeholder={titulo}
                 className="h-8 min-w-0 flex-1 text-sm font-semibold"
-                aria-label="Nome do bloco"
+                aria-label="Nome do story"
                 onChange={(e) => setNomeBloco(e.target.value)}
                 onBlur={async () => {
                   if (nomeBloco === story.nome_bloco) return;
@@ -551,7 +558,7 @@ export function StoryCard({
 
           {canApprove && total > 0 && !tudoAprovado ? (
             <Button size="sm" className="shrink-0 gap-1" onClick={onApproveStory} {...stopDrag}>
-              <CheckCheck className="size-3.5" /> Aprovar bloco
+              <CheckCheck className="size-3.5" /> Aprovar stories
             </Button>
           ) : null}
         </div>
