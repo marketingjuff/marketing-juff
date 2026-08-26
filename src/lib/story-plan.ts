@@ -1,4 +1,5 @@
 import { MAX_FRAMES, RECURSOS, type Recurso, type Story } from "@/lib/stories";
+import type { Objective } from "@/lib/objectives";
 import { supabase } from "@/integrations/supabase/client";
 
 export type PlanArte = {
@@ -12,6 +13,10 @@ export type PlanBloco = {
   numero: number;
   tipo: "SOLO" | "CAMPANHA";
   nome: string;
+  /** Texto do objetivo como veio no arquivo. Pode ser vazio. */
+  objetivo: string;
+  /** Id do objetivo cadastrado, quando o nome bate. */
+  objective_id: string | null;
   artes: PlanArte[];
 };
 
@@ -28,12 +33,24 @@ export type PlanValidation = {
   desconhecidos: string[];
   recursosInvalidos: string[];
   blocosCheios: string[];
+  /** Objetivos citados no arquivo que não existem no cadastro. Não bloqueia. */
+  objetivosDesconhecidos: string[];
   ok: boolean;
 };
 
 function normalizaNome(value: string): string {
   return value.trim().toLowerCase();
 }
+
+/** Compara ignorando maiúsculas, minúsculas e acentos. */
+function chaveObjetivo(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
 
 /** Lê apenas as linhas que começam com BLOCO, ARTE ou SOBRA e ignora o resto. */
 export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobra[] } {
