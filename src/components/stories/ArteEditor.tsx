@@ -810,6 +810,7 @@ function TextoEditavel({
   const [sobre, setSobre] = useState(false);
   const [vazio, setVazio] = useState(frame.texto_principal.length === 0);
   const [larguraPct, setLarguraPct] = useState(comp.texto_largura);
+  const [ajustando, setAjustando] = useState(false);
   const redimensionando = useRef(false);
 
   useEffect(() => {
@@ -822,6 +823,13 @@ function TextoEditavel({
     e.stopPropagation();
     if (!editable || larguraContainer <= 0) return;
     redimensionando.current = true;
+    setAjustando(true);
+    const alvo = e.currentTarget as HTMLElement;
+    try {
+      alvo.setPointerCapture(e.pointerId);
+    } catch {
+      /* navegador sem captura de ponteiro: segue no listener global */
+    }
     const x0 = e.clientX;
     const base = larguraPct;
     const fator = comp.texto_alinhamento === "center" ? 2 : 1;
@@ -834,6 +842,7 @@ function TextoEditavel({
       window.removeEventListener("pointermove", mover);
       window.removeEventListener("pointerup", soltar);
       redimensionando.current = false;
+      setAjustando(false);
       const valor = Math.round(calcular(ev));
       setLarguraPct(valor);
       onLargura(valor);
@@ -904,9 +913,15 @@ function TextoEditavel({
     });
   };
 
+  const mostrarAlcas = editable && (editando || sobre || ajustando);
+
   return (
-    <>
-      {editable && (editando || sobre) ? (
+    <div
+      className="relative inline-block"
+      onMouseEnter={() => setSobre(true)}
+      onMouseLeave={() => setSobre(false)}
+    >
+      {mostrarAlcas ? (
         <button
           type="button"
           aria-label="Mover o texto"
@@ -925,8 +940,6 @@ function TextoEditavel({
         spellCheck={false}
         draggable={false}
         onDragStart={(e) => e.preventDefault()}
-        onMouseEnter={() => setSobre(true)}
-        onMouseLeave={() => setSobre(false)}
         onPointerDown={(e) => {
           if (!editable || editando) {
             e.stopPropagation();
@@ -976,7 +989,7 @@ function TextoEditavel({
               : "none",
         }}
       />
-      {editable && (editando || sobre) ? (
+      {mostrarAlcas ? (
         <>
           {(["esq", "dir"] as const).map((lado) => (
             <span
@@ -985,11 +998,13 @@ function TextoEditavel({
               aria-label={`Ajustar a largura da caixa de texto (${lado === "esq" ? "esquerda" : "direita"})`}
               title="Ajustar a largura da caixa de texto"
               className={cn(
-                "absolute top-1/2 z-10 h-6 w-2 -translate-y-1/2 cursor-ew-resize rounded-full border border-background bg-primary shadow",
-                lado === "esq" ? "-left-1" : "-right-1",
+                "absolute inset-y-0 z-20 flex w-4 cursor-ew-resize touch-none items-center justify-center",
+                lado === "esq" ? "-left-2" : "-right-2",
               )}
               onPointerDown={(e) => iniciarResize(e, lado)}
-            />
+            >
+              <span className="h-6 w-1.5 rounded-full border border-background bg-primary shadow" />
+            </span>
           ))}
         </>
       ) : null}
@@ -1002,7 +1017,7 @@ function TextoEditavel({
           Escrever
         </span>
       ) : null}
-    </>
+    </div>
   );
 }
 
