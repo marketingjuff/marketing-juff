@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { GripVertical, Check, CheckCheck, MessageSquare, Trash2, Plus, ImageUp } from "lucide-react";
+import { toast } from "sonner";
 
 import type { Frame as FrameType, FrameStatus, Recurso, Story } from "@/lib/stories";
-import { MAX_FRAMES, RECURSOS, blocoTipo } from "@/lib/stories";
+import { MAX_FRAMES, RECURSOS, blocoTipo, ehImagemAceita } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -303,7 +304,12 @@ function ArteBloco({
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 e.target.value = "";
-                if (file && file.type.startsWith("image/")) onReplaceImage(frame, file);
+                if (!file) return;
+                if (!ehImagemAceita(file)) {
+                  toast.error("Arquivo não é uma imagem. Use jpg, jpeg, png ou webp.");
+                  return;
+                }
+                onReplaceImage(frame, file);
               }}
             />
           </div>
@@ -545,9 +551,11 @@ export function StoryCard({
           multiple
           className="hidden"
           onChange={(e) => {
-            const files = Array.from(e.target.files ?? []).filter((f) =>
-              f.type.startsWith("image/"),
-            );
+            const todos = Array.from(e.target.files ?? []);
+            const files = todos.filter(ehImagemAceita);
+            if (files.length < todos.length) {
+              toast.error("Alguns arquivos não são imagens. Use jpg, jpeg, png ou webp.");
+            }
             if (files.length > 0) onAddFrames(files);
             e.target.value = "";
           }}
