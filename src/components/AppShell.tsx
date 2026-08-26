@@ -18,7 +18,15 @@ import {
 import { Button } from "@/components/ui/button";
 import juffLogo from "@/assets/juff-logo.png.asset.json";
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({
+  children,
+  largura = "padrao",
+}: {
+  children: ReactNode;
+  /** "ampla" aproveita melhor monitores grandes. */
+  largura?: "padrao" | "ampla";
+}) {
+  const larguraClasse = largura === "ampla" ? "max-w-[110rem]" : "max-w-7xl";
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
   const router = useRouter();
 
@@ -32,7 +40,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4">
+        <div className={cn("mx-auto flex h-14 items-center justify-between gap-3 px-4", larguraClasse)}>
           <div className="flex items-center gap-2">
             <img
               src={juffLogo.url}
@@ -76,7 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </DropdownMenu>
         </div>
 
-        <nav className="mx-auto max-w-7xl overflow-x-auto px-4">
+        <nav className={cn("mx-auto overflow-x-auto px-4", larguraClasse)}>
           <ul className="flex items-end gap-1">
             {NAVIGATION.map((master) => {
               const enabled = master.subTabs.some(
@@ -102,7 +110,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </ul>
         </nav>
 
-        <div className="mx-auto max-w-7xl overflow-x-auto border-t border-border px-4">
+        <div className={cn("mx-auto overflow-x-auto border-t border-border px-4", larguraClasse)}>
           <ul className="flex items-center gap-1 py-2">
             {NAVIGATION.flatMap((master) => master.subTabs).map((sub) => {
               const roleOk = !sub.roles || (profile ? sub.roles.includes(profile.role) : false);
@@ -133,7 +141,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-5">{children}</main>
+      <main className={cn("mx-auto px-4 py-5", larguraClasse)}>{children}</main>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { MAX_FRAMES, RECURSOS, type Recurso, type Story } from "@/lib/stories";
+import { MAX_FRAMES, RECURSO_VALUES, type Recurso, type Story } from "@/lib/stories";
 import type { Objective } from "@/lib/objectives";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -7,7 +7,16 @@ export type PlanArte = {
   texto_principal: string;
   observacao: string;
   recurso: Recurso;
+  /** Perfil da menção. Vazio em planos antigos, que não têm este campo. */
+  recurso_detalhe: string;
 };
+
+/** Apara e garante o arroba na frente do perfil. */
+export function normalizaPerfil(value: string): string {
+  const texto = (value ?? "").trim();
+  if (!texto) return "";
+  return texto.startsWith("@") ? texto : `@${texto}`;
+}
 
 export type PlanBloco = {
   numero: number;
@@ -83,6 +92,7 @@ export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobr
         texto_principal: partes[2] ?? "",
         observacao: partes[3] ?? "",
         recurso: (partes[4] ?? "Nenhum") as Recurso,
+        recurso_detalhe: normalizaPerfil(partes[5] ?? ""),
       };
       if (!arte.nome_arquivo) continue;
       if (blocos.length === 0) {
@@ -145,7 +155,7 @@ export function validatePlan(
     }
     for (const arte of bloco.artes) {
       conta(arte.nome_arquivo);
-      if (!RECURSOS.includes(arte.recurso)) {
+      if (!RECURSO_VALUES.includes(arte.recurso)) {
         recursosInvalidos.push(`${arte.nome_arquivo}: ${arte.recurso}`);
       }
     }
@@ -243,6 +253,7 @@ export async function applyPlan(
           texto_principal: arte.texto_principal,
           observacao: arte.observacao,
           recurso: arte.recurso,
+          recurso_detalhe: arte.recurso === "Menção" ? normalizaPerfil(arte.recurso_detalhe) : "",
         })
         .eq("id", frame.id);
       if (error) throw error;
