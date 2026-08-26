@@ -208,7 +208,7 @@ function StoriesPage() {
   const [excluirAberto, setExcluirAberto] = useState(false);
   const [confirmaNome, setConfirmaNome] = useState("");
   const [exportAberto, setExportAberto] = useState(false);
-  const [quantidade, setQuantidade] = useState("0");
+  const [quantidade, setQuantidade] = useState("");
   const [direcionamento, setDirecionamento] = useState("");
   /** Objetivos marcados na exportação. null = todos marcados. */
   const [objetivosPdf, setObjetivosPdf] = useState<string[] | null>(null);
@@ -678,7 +678,7 @@ function StoriesPage() {
               className="gap-1"
               disabled={fila.length === 0 || exportando}
               onClick={() => {
-                setQuantidade(String(fila.length));
+                setQuantidade("");
                 setObjetivosPdf(null);
                 setExportAberto(true);
               }}
@@ -894,10 +894,15 @@ function StoriesPage() {
             <Input
               id="qtd"
               type="number"
-              min={1}
+              min={0}
+              placeholder="Em branco, o ChatGPT decide"
               value={quantidade}
               onChange={(e) => setQuantidade(e.target.value)}
             />
+            <p className="text-xs text-muted-foreground">
+              Deixe em branco ou coloque zero para liberar. Assim quem decide quantos stories montar
+              é o ChatGPT, olhando as artes.
+            </p>
           </div>
 
           <div className="space-y-1.5">
