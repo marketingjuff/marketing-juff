@@ -454,6 +454,7 @@ export function StoryCard({
   onOpenFrame,
   onSaveBloco,
   onSaveFrame,
+  onSaveComp,
   onApproveFrame,
   onApproveStory,
   onAdjustFrame,
@@ -471,6 +472,7 @@ export function StoryCard({
   onOpenFrame: (index: number) => void;
   onSaveBloco: (storyId: string, nome: string) => Promise<void>;
   onSaveFrame: (frameId: string, values: Partial<FrameType>) => Promise<void>;
+  onSaveComp: (frameId: string, patch: Partial<Composicao>) => void;
   onApproveFrame: (frameId: string) => void;
   onApproveStory: () => void;
   onAdjustFrame: (frameId: string, comment: string) => void;
@@ -480,8 +482,11 @@ export function StoryCard({
   const inputRef = useRef<HTMLInputElement>(null);
   const [nomeBloco, setNomeBloco] = useState(story.nome_bloco);
   const [blocoSalvo, setBlocoSalvo] = useState(false);
+  const [exportandoBloco, setExportandoBloco] = useState(false);
+  const { data: logos = [] } = useQuery(logosQueryOptions);
 
   useEffect(() => setNomeBloco(story.nome_bloco), [story.nome_bloco]);
+
 
   const draggable = useDraggable({
     id: `story:${story.id}`,
