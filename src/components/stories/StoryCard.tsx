@@ -53,30 +53,45 @@ function Salvo({ visivel }: { visivel: boolean }) {
   return <span className="text-[10px] font-medium text-success">Salvo</span>;
 }
 
+/** Altura mínima equivalente a duas linhas. */
+const MIN_DUAS_LINHAS = 44;
+
 /** Campo de várias linhas que cresce sozinho e grava só quando perde o foco. */
 function AutoTextarea({
   label,
   value,
   disabled,
   onCommit,
+  slot,
+  frameId,
+  compacto,
 }: {
   label: string;
   value: string;
   disabled: boolean;
   onCommit: (v: string) => Promise<void>;
+  slot: SlotAltura;
+  frameId: string;
+  compacto?: boolean;
 }) {
   const [local, setLocal] = useState(value);
   const [salvo, setSalvo] = useState(false);
+  const [natural, setNatural] = useState(MIN_DUAS_LINHAS);
   const ref = useRef<HTMLTextAreaElement>(null);
+
+  const compartilhada = useAlturaCompartilhada(slot, frameId, natural);
 
   useEffect(() => setLocal(value), [value]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Sempre medir a partir do zero, para a altura aplicada não contaminar a medição.
     el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  }, [local]);
+    const medida = Math.max(el.scrollHeight, MIN_DUAS_LINHAS);
+    setNatural((atual) => (atual === medida ? atual : medida));
+    el.style.height = `${Math.max(medida, compartilhada)}px`;
+  }, [local, compartilhada]);
 
   return (
     <div className="space-y-1" {...stopDrag}>
@@ -89,7 +104,10 @@ function AutoTextarea({
         rows={2}
         value={local}
         disabled={disabled}
-        className="min-h-0 resize-y text-sm"
+        className={cn(
+          "min-h-0 resize-y text-sm",
+          compacto && "py-1.5 text-[13px] leading-[1.3]",
+        )}
         onChange={(e) => setLocal(e.target.value)}
         onBlur={async () => {
           if (local === value) return;
@@ -98,6 +116,32 @@ function AutoTextarea({
           setTimeout(() => setSalvo(false), 2000);
         }}
       />
+    </div>
+  );
+}
+
+/** Container que reserva espaço na grade, medindo o filho e aplicando minHeight fora. */
+function SlotCompartilhado({
+  slot,
+  frameId,
+  children,
+}: {
+  slot: SlotAltura;
+  frameId: string;
+  children: React.ReactNode;
+}) {
+  const filhoRef = useRef<HTMLDivElement>(null);
+  const [natural, setNatural] = useState(0);
+  const altura = useAlturaCompartilhada(slot, frameId, natural);
+
+  useLayoutEffect(() => {
+    const medida = filhoRef.current?.offsetHeight ?? 0;
+    setNatural((atual) => (atual === medida ? atual : medida));
+  });
+
+  return (
+    <div style={{ minHeight: altura }}>
+      <div ref={filhoRef}>{children}</div>
     </div>
   );
 }
