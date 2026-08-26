@@ -70,7 +70,7 @@ ARTE | prancheta 4 | HOJE O MOVIMENTO É DESACELERAR. | Sem CTA. | Nenhum
 SOBRA | prancheta 5 | Repete a mesma ideia da prancheta 4.
 SOBRA | prancheta 6 | Texto pouco legível sobre a foto.
 
-Depois das linhas do plano, escreva uma linha SOBRA para CADA arte que você decidiu não usar. Toda arte deste PDF precisa aparecer uma vez, ou como ARTE ou como SOBRA. Nenhuma pode ficar de fora das duas listas. Não invente artes que não estão no PDF.${blocoObjetivos(objetivos, todos)}`;
+Depois das linhas do plano, escreva uma linha SOBRA para CADA arte que você decidiu não usar. Toda arte deste PDF precisa aparecer uma vez, ou como ARTE ou como SOBRA. Nenhuma pode ficar de fora das duas listas. Não invente artes que não estão no PDF.${blocoObjetivos(objetivos, todos)}${blocoDirecionamento(direcionamento)}`;
 }
 
 
@@ -103,6 +103,7 @@ export async function exportPlanPdf(
   quantidade: number,
   objetivos: Objective[] = [],
   todosObjetivos = true,
+  direcionamento = "",
 ): Promise<void> {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -117,7 +118,7 @@ export async function exportPlanPdf(
 
   // As instruções podem passar de uma página; quebra automática por linha.
   const linhas: string[] = doc.splitTextToSize(
-    capa(frames.length, quantidade, objetivos, todosObjetivos),
+    capa(frames.length, quantidade, objetivos, todosObjetivos, direcionamento),
     pageW - margem * 2,
   );
   const alturaLinha = 5;
