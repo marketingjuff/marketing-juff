@@ -1,0 +1,1 @@
+ALTER TABLE public.story_frames ADD COLUMN IF NOT EXISTS recurso_detalhe text NOT NULL DEFAULT '';
