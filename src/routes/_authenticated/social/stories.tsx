@@ -598,7 +598,7 @@ function StoriesPage() {
               value={sequenceId ?? AREA}
               onValueChange={(v) => setSequenceId(v === AREA ? null : v)}
             >
-              <SelectTrigger className="w-56">
+              <SelectTrigger className="w-auto max-w-full min-w-56 whitespace-normal text-left">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
