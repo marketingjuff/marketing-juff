@@ -147,6 +147,33 @@ export type Database = {
           },
         ]
       }
+      story_objectives: {
+        Row: {
+          arquivado: boolean
+          created_at: string
+          id: string
+          instrucao: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          arquivado?: boolean
+          created_at?: string
+          id?: string
+          instrucao?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          arquivado?: boolean
+          created_at?: string
+          id?: string
+          instrucao?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       story_sequences: {
         Row: {
           arquivado: boolean
