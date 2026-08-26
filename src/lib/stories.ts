@@ -324,6 +324,20 @@ export async function updateStoryBloco(storyId: string, nomeBloco: string): Prom
   if (error) throw error;
 }
 
+/** Define (ou limpa) o objetivo do story inteiro. */
+export async function setStoryObjective(
+  storyId: string,
+  objectiveId: string | null,
+): Promise<void> {
+  const { error } = await supabase
+    .from("stories")
+    .update({ objective_id: objectiveId })
+    .eq("id", storyId);
+  if (error) throw error;
+}
+
+
+
 export async function updateFrameTexts(
   frameId: string,
   values: { texto_principal?: string; observacao?: string; recurso?: Recurso },
@@ -460,6 +474,8 @@ export async function undoMerge(source: Story, target: Story): Promise<void> {
       nome_bloco: source.nome_bloco,
       sequence_id: source.sequence_id,
       descartado: source.descartado,
+      objective_id: source.objective_id,
+
     })
     .select("id")
     .single();
