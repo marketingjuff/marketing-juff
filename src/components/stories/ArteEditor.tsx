@@ -673,7 +673,7 @@ function TextoEditavel({
   comp: Composicao;
   editable: boolean;
   fontePx: number;
-  larguraMax?: number;
+  larguraMax?: number | undefined;
   iniciarArraste: (e: React.PointerEvent) => void;
   onSaveTexto: (frameId: string, texto: string) => Promise<void> | void;
 }) {
