@@ -171,9 +171,16 @@ function ArteBloco({
 }) {
   const [ajusteAberto, setAjusteAberto] = useState(false);
   const [comentario, setComentario] = useState("");
-  
+
   const [recursoSalvo, setRecursoSalvo] = useState(false);
+  const [perfil, setPerfil] = useState(frame.recurso_detalhe);
+  const [perfilSalvo, setPerfilSalvo] = useState(false);
   const trocaRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => setPerfil(frame.recurso_detalhe), [frame.recurso_detalhe]);
+
+  const perfilVazio = frame.recurso === "Menção" && perfil.trim().length === 0;
+
 
   const draggable = useDraggable({
     id: `frame:${frame.id}`,
