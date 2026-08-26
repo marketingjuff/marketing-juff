@@ -727,36 +727,27 @@ export function ArteEditor({
         </div>
       ) : null}
 
-      {frame.texto_principal.trim().length > 0 ? (
+      {frame.texto_principal.trim().length > 0 || editable ? (
         <div className="pointer-events-none absolute inset-0">
           <Camada
             x={comp.texto_x}
             y={comp.texto_y}
             editable={editable}
             alinhamento={comp.texto_alinhamento}
+            arrasteSoPelaAlca
             onCommit={(x, y) => salvar({ texto_x: x, texto_y: y })}
           >
-            <span
-              className={cn(
-                "block whitespace-pre",
-                comp.texto_alinhamento === "left" && "text-left",
-                comp.texto_alinhamento === "center" && "text-center",
-                comp.texto_alinhamento === "right" && "text-right",
-              )}
-              style={{
-                fontFamily: `"${comp.texto_fonte}", sans-serif`,
-                fontWeight: comp.texto_peso,
-                fontSize: fontePx,
-                lineHeight: 1.2,
-                color: comp.texto_cor,
-                textShadow:
-                  comp.sombra_opacidade > 0
-                    ? `${fontePx * 0.04}px ${fontePx * 0.04}px ${fontePx * 0.12}px ${corComOpacidade(comp.sombra_cor, comp.sombra_opacidade)}`
-                    : "none",
-              }}
-            >
-              {frame.texto_principal}
-            </span>
+            {(iniciarArraste) => (
+              <TextoEditavel
+                frame={frame}
+                comp={comp}
+                editable={editable}
+                fontePx={fontePx}
+                larguraMax={largura > 0 ? largura * 0.8 : undefined}
+                iniciarArraste={iniciarArraste}
+                onSaveTexto={onSaveTexto}
+              />
+            )}
           </Camada>
         </div>
       ) : null}
