@@ -69,9 +69,43 @@ export function tamanhoFontePx(alturaPx: number, tamanho: number): number {
   return alturaPx * (0.018 + tamanho * 0.008);
 }
 
-/** Largura real do logo em função da largura da imagem. */
-export function larguraLogoPx(larguraPx: number, tamanho: number): number {
-  return larguraPx * (0.06 + tamanho * 0.012);
+/** Fração máxima da largura da imagem que o logo pode ocupar. */
+export const LOGO_LARGURA_MAXIMA = 0.85;
+
+/**
+ * Dimensões do logo calculadas pela altura da imagem, com a largura derivada
+ * da proporção do SVG. Nunca deforma e nunca passa de 85% da largura.
+ */
+export function dimensoesLogo(
+  larguraImagem: number,
+  alturaImagem: number,
+  tamanho: number,
+  proporcao: number,
+): { largura: number; altura: number } {
+  const prop = proporcao > 0 ? proporcao : 1;
+  let altura = alturaImagem * (0.02 + tamanho * 0.008);
+  let largura = altura * prop;
+  const limite = larguraImagem * LOGO_LARGURA_MAXIMA;
+  if (largura > limite) {
+    const fator = limite / largura;
+    largura = limite;
+    altura = altura * fator;
+  }
+  return { largura, altura };
+}
+
+/** Normaliza para hexadecimal minúsculo de seis dígitos. Devolve null se inválido. */
+export function normalizarHex(valor: string): string | null {
+  const limpo = valor.trim().replace(/^#/, "");
+  if (/^[0-9a-fA-F]{3}$/.test(limpo)) {
+    return `#${limpo
+      .split("")
+      .map((c) => c + c)
+      .join("")
+      .toLowerCase()}`;
+  }
+  if (/^[0-9a-fA-F]{6}$/.test(limpo)) return `#${limpo.toLowerCase()}`;
+  return null;
 }
 
 export function corComOpacidade(hex: string, opacidade: number): string {
@@ -304,9 +338,13 @@ export async function montarArtePng(frame: Frame, logoSvg: string | null): Promi
   const c = frame.comp;
 
   if (c.logo_ativo && logoSvg) {
-    const largura = larguraLogoPx(canvas.width, c.logo_tamanho);
     const proporcao = proporcaoDoSvg(logoSvg) || 1;
-    const altura = largura / proporcao;
+    const { largura, altura } = dimensoesLogo(
+      canvas.width,
+      canvas.height,
+      c.logo_tamanho,
+      proporcao,
+    );
     const svg = svgDimensionado(svgColorido(logoSvg, c.logo_cor), largura * 2, altura * 2);
     const logoImg = await carregarSvgComoImagem(svg);
     const cx = (c.logo_x / 100) * canvas.width;
