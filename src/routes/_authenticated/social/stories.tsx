@@ -798,6 +798,8 @@ function StoriesPage() {
       <PlanDialog
         open={planoAberto}
         stories={stories}
+        objetivos={objetivosAtivos}
+
         onOpenChange={setPlanoAberto}
         onApply={aplicarPlano}
       />
