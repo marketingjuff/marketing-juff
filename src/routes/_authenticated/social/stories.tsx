@@ -19,6 +19,8 @@ import {
   CheckCheck,
   Layers,
   FileDown,
+  ImageDown,
+
   FileUp,
   Save,
   Loader2,
@@ -235,6 +237,30 @@ function StoriesPage() {
     await queryClient.invalidateQueries({ queryKey: ["stories"] });
     await queryClient.invalidateQueries({ queryKey: ["story-sequences"] });
   };
+
+  const exportarZip = async () => {
+    setExportandoZip(true);
+    try {
+      const total = await exportStoriesZip(fila, nomeAtual, objetivosAtivos);
+      if (total === 0) {
+        toast.error("Não há artes na fila principal para exportar.");
+        return;
+      }
+      toast.success(`Zip gerado com ${total} ${total === 1 ? "arte" : "artes"}.`);
+    } catch (error) {
+      if (error instanceof ExportZipError) {
+        toast.error(
+          `Exportação cancelada. ${error.falhas.length} ${error.falhas.length === 1 ? "imagem falhou" : "imagens falharam"}: ${error.falhas.join("; ")}`,
+          { duration: 12000 },
+        );
+      } else {
+        toast.error("Não foi possível gerar o zip.");
+      }
+    } finally {
+      setExportandoZip(false);
+    }
+  };
+
 
   const mutate = useMutation({
     mutationFn: async (fn: () => Promise<void>) => {
