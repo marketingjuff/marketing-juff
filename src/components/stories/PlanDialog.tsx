@@ -170,6 +170,14 @@ export function PlanDialog({
               </div>
             )
           ) : null}
+
+          {validation && validation.objetivosDesconhecidos.length > 0 ? (
+            <p className="rounded-xl border border-warning/50 bg-warning/10 p-3 text-xs">
+              Objetivos não cadastrados (os blocos ficam sem objetivo):{" "}
+              {validation.objetivosDesconhecidos.join(", ")}
+            </p>
+          ) : null}
+
         </div>
 
         <DialogFooter>
