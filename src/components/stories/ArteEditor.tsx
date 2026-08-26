@@ -132,7 +132,7 @@ function ControleTamanho({
         min={1}
         max={10}
         step={1}
-        disabled={disabled}
+        disabled={disabled ?? false}
         value={[local]}
         onValueChange={(v) => setLocal(v[0] ?? local)}
         onValueCommit={(v) => onCommit(v[0] ?? local)}
