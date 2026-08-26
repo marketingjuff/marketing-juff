@@ -183,34 +183,37 @@ export function ordenarArquivos(files: File[]): File[] {
   return [...files].sort((a, b) => compararNatural(a.name, b.name));
 }
 
-/** Comprime a imagem no navegador: ~900px de largura, jpeg qualidade 0.7. */
-export async function compressImage(file: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(file);
-  const targetWidth = Math.min(900, bitmap.width);
-  const scale = targetWidth / bitmap.width;
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Não foi possível processar a imagem");
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close?.();
-  const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob(resolve, "image/jpeg", 0.7),
-  );
-  if (!blob) throw new Error("Não foi possível comprimir a imagem");
-  return blob;
+const EXTENSOES_IMAGEM = ["jpg", "jpeg", "png", "webp", "gif", "bmp", "avif", "heic", "heif"];
+
+function extensaoArquivo(file: File): string {
+  const doNome = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (doNome && EXTENSOES_IMAGEM.includes(doNome)) return doNome;
+  const doTipo = file.type.split("/").pop()?.toLowerCase() ?? "";
+  if (doTipo === "jpeg") return "jpg";
+  if (doTipo && EXTENSOES_IMAGEM.includes(doTipo)) return doTipo;
+  return "";
+}
+
+/** Valida se o arquivo é uma imagem aceita. */
+export function ehImagemAceita(file: File): boolean {
+  return file.type.startsWith("image/") && extensaoArquivo(file) !== "";
 }
 
 async function uploadImage(file: File): Promise<string> {
-  const blob = await compressImage(file);
-  const path = `${crypto.randomUUID()}.jpg`;
+  if (!ehImagemAceita(file)) {
+    throw new Error(
+      `"${file.name}" não é uma imagem aceita. Envie arquivos jpg, jpeg, png ou webp.`,
+    );
+  }
+  const ext = extensaoArquivo(file);
+  const path = `${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage
     .from(BUCKET)
-    .upload(path, blob, { contentType: "image/jpeg" });
+    .upload(path, file, { contentType: file.type || `image/${ext}` });
   if (error) throw error;
   return path;
 }
+
 
 async function nextPosition(sequenceId: string | null): Promise<number> {
   let query = supabase.from("stories").select("position").order("position", { ascending: false });
