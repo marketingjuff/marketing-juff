@@ -240,7 +240,14 @@ function ArteBloco({
             <img src={frame.url} alt={`Arte ${index + 1}`} className="size-full object-cover" />
           ) : null}
         </button>
+        <ArteEditor
+          frame={frame}
+          editable={editable}
+          podeGerir={canApprove}
+          onSaveComp={onSaveComp}
+        />
       </div>
+
 
       <p className="truncate text-[11px] text-muted-foreground" title={frame.nome_arquivo}>
         {frame.nome_arquivo || "Sem nome"}
