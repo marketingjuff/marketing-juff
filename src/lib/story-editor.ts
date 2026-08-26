@@ -324,6 +324,37 @@ export async function garantirFontes(
   }
 }
 
+/**
+ * Quebra o texto igual ao preview: respeita as quebras manuais e, dentro de
+ * cada trecho, quebra por palavra medindo até caber na largura máxima.
+ */
+function quebrarLinhas(
+  ctx: CanvasRenderingContext2D,
+  texto: string,
+  larguraMax: number,
+): string[] {
+  const saida: string[] = [];
+  for (const parte of texto.split("\n")) {
+    const palavras = parte.split(/\s+/).filter((p) => p.length > 0);
+    if (palavras.length === 0) {
+      saida.push("");
+      continue;
+    }
+    let linha = palavras[0] as string;
+    for (const palavra of palavras.slice(1)) {
+      const tentativa = `${linha} ${palavra}`;
+      if (ctx.measureText(tentativa).width <= larguraMax) {
+        linha = tentativa;
+      } else {
+        saida.push(linha);
+        linha = palavra;
+      }
+    }
+    saida.push(linha);
+  }
+  return saida;
+}
+
 /** Desenha a arte com texto e logo na resolução original e devolve um PNG. */
 export async function montarArtePng(frame: Frame, logoSvg: string | null): Promise<Blob> {
   const img = await carregarImagemOriginal(frame.url);
@@ -366,7 +397,7 @@ export async function montarArtePng(frame: Frame, logoSvg: string | null): Promi
       ctx.shadowOffsetY = fs * 0.04;
       ctx.shadowBlur = fs * 0.12;
     }
-    const linhas = texto.split("\n");
+    const linhas = quebrarLinhas(ctx, texto, canvas.width * 0.8);
     const alturaLinha = fs * 1.2;
     const cx = (c.texto_x / 100) * canvas.width;
     const cy = (c.texto_y / 100) * canvas.height;
