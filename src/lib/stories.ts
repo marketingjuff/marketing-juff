@@ -4,15 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 export const MAX_FRAMES = 5;
 export const BUCKET = "stories";
 
+/** Valor gravado no banco e rótulo mostrado na tela. */
 export const RECURSOS = [
-  "Nenhum",
-  "Link",
-  "Enquete",
-  "Menção",
-  "Slider",
-  "Caixa de pergunta",
+  { value: "Nenhum", label: "Nenhum" },
+  { value: "Link", label: "Link" },
+  { value: "Enquete", label: "Enquete" },
+  { value: "Menção", label: "Menção" },
+  { value: "Slider", label: "Slider de emoji" },
+  { value: "Caixa de pergunta", label: "Caixa de pergunta" },
 ] as const;
-export type Recurso = (typeof RECURSOS)[number];
+export type Recurso = (typeof RECURSOS)[number]["value"];
+export const RECURSO_VALUES = RECURSOS.map((r) => r.value) as readonly Recurso[];
 
 export type StoryStatus = "pendente" | "aprovado" | "ajustar";
 
