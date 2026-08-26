@@ -426,7 +426,7 @@ export function FileiraPresets({
   const outraFonte = FONTES[(FONTES.indexOf(comp.texto_fonte as never) + 1) % FONTES.length]!;
 
   return (
-    <div className="flex items-center gap-2" {...semArraste}>
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1" {...semArraste}>
       <div className="flex items-center gap-0.5">
         {PESOS.map((p) => (
           <button
