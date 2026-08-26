@@ -803,7 +803,7 @@ function StoriesPage() {
       />
 
       <Dialog open={exportAberto} onOpenChange={setExportAberto}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Quantos stories você quer no plano?</DialogTitle>
             <DialogDescription>
@@ -821,15 +821,68 @@ function StoriesPage() {
               onChange={(e) => setQuantidade(e.target.value)}
             />
           </div>
+
+          {objetivosAtivos.length > 0 ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <Label>Objetivos permitidos</Label>
+                <button
+                  type="button"
+                  className="text-xs text-primary underline-offset-2 hover:underline"
+                  onClick={() => setObjetivosPdf(null)}
+                >
+                  Marcar todos
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Com todos marcados, o PDF pede distribuição livre entre os objetivos. Marcando
+                apenas alguns, o PDF pede para usar somente esses.
+              </p>
+              <div className="space-y-1.5 rounded-xl border border-border p-3">
+                {objetivosAtivos.map((o) => {
+                  const marcado = objetivosPdf === null || objetivosPdf.includes(o.id);
+                  return (
+                    <label key={o.id} className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={marcado}
+                        onCheckedChange={(v) => {
+                          const atuais =
+                            objetivosPdf === null ? objetivosAtivos.map((x) => x.id) : objetivosPdf;
+                          setObjetivosPdf(
+                            v === true ? [...new Set([...atuais, o.id])] : atuais.filter((id) => id !== o.id),
+                          );
+                        }}
+                      />
+                      {o.nome}
+                    </label>
+                  );
+                })}
+              </div>
+              {objetivosPdf !== null && objetivosPdf.length === 0 ? (
+                <p className="text-xs text-destructive">
+                  Mantenha pelo menos um objetivo marcado para exportar.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
           <DialogFooter>
             <Button variant="ghost" onClick={() => setExportAberto(false)}>
               Cancelar
             </Button>
             <Button
+              disabled={
+                objetivosAtivos.length > 0 && objetivosPdf !== null && objetivosPdf.length === 0
+              }
               onClick={() => {
                 const qtd = Math.max(1, Number.parseInt(quantidade, 10) || fila.length);
+                const todos = objetivosPdf === null || objetivosPdf.length === objetivosAtivos.length;
+                const escolhidos =
+                  objetivosPdf === null
+                    ? objetivosAtivos
+                    : objetivosAtivos.filter((o) => objetivosPdf.includes(o.id));
                 setExportAberto(false);
-                void exportar(qtd);
+                void exportar(qtd, escolhidos, todos);
               }}
             >
               Gerar PDF
@@ -837,6 +890,7 @@ function StoriesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       <Dialog open={salvarAberto} onOpenChange={setSalvarAberto}>
         <DialogContent>
