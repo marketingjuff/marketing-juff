@@ -1,4 +1,4 @@
-import { MAX_FRAMES, RECURSOS, type Recurso, type Story } from "@/lib/stories";
+import { MAX_FRAMES, RECURSO_VALUES, type Recurso, type Story } from "@/lib/stories";
 import type { Objective } from "@/lib/objectives";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -7,7 +7,16 @@ export type PlanArte = {
   texto_principal: string;
   observacao: string;
   recurso: Recurso;
+  /** Perfil da menção. Vazio em planos antigos, que não têm este campo. */
+  recurso_detalhe: string;
 };
+
+/** Apara e garante o arroba na frente do perfil. */
+export function normalizaPerfil(value: string): string {
+  const texto = (value ?? "").trim();
+  if (!texto) return "";
+  return texto.startsWith("@") ? texto : `@${texto}`;
+}
 
 export type PlanBloco = {
   numero: number;
@@ -51,7 +60,6 @@ function chaveObjetivo(value: string): string {
     .toLowerCase();
 }
 
-
 /** Lê apenas as linhas que começam com BLOCO, ARTE ou SOBRA e ignora o resto. */
 export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobra[] } {
   const blocos: PlanBloco[] = [];
@@ -83,10 +91,18 @@ export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobr
         texto_principal: partes[2] ?? "",
         observacao: partes[3] ?? "",
         recurso: (partes[4] ?? "Nenhum") as Recurso,
+        recurso_detalhe: normalizaPerfil(partes[5] ?? ""),
       };
       if (!arte.nome_arquivo) continue;
       if (blocos.length === 0) {
-        blocos.push({ numero: 1, tipo: "SOLO", nome: "", objetivo: "", objective_id: null, artes: [] });
+        blocos.push({
+          numero: 1,
+          tipo: "SOLO",
+          nome: "",
+          objetivo: "",
+          objective_id: null,
+          artes: [],
+        });
       }
       blocos[blocos.length - 1]!.artes.push(arte);
       continue;
@@ -100,6 +116,11 @@ export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobr
   }
 
   return { blocos: blocos.filter((b) => b.artes.length > 0), sobras };
+}
+
+/** Arte com recurso Menção e perfil vazio não pode ser aprovada. */
+export function precisaPerfil(frame: { recurso: Recurso; recurso_detalhe: string }): boolean {
+  return frame.recurso === "Menção" && (frame.recurso_detalhe ?? "").trim().length === 0;
 }
 
 export function validatePlan(
@@ -145,7 +166,7 @@ export function validatePlan(
     }
     for (const arte of bloco.artes) {
       conta(arte.nome_arquivo);
-      if (!RECURSOS.includes(arte.recurso)) {
+      if (!RECURSO_VALUES.includes(arte.recurso)) {
         recursosInvalidos.push(`${arte.nome_arquivo}: ${arte.recurso}`);
       }
     }
@@ -172,7 +193,6 @@ export function validatePlan(
     objetivosDesconhecidos,
     ok:
       blocos.length > 0 &&
-
       faltando.length === 0 &&
       repetidos.length === 0 &&
       desconhecidos.length === 0 &&
@@ -243,6 +263,7 @@ export async function applyPlan(
           texto_principal: arte.texto_principal,
           observacao: arte.observacao,
           recurso: arte.recurso,
+          recurso_detalhe: arte.recurso === "Menção" ? normalizaPerfil(arte.recurso_detalhe) : "",
         })
         .eq("id", frame.id);
       if (error) throw error;

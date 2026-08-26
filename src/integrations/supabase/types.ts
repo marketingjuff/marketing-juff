@@ -110,6 +110,7 @@ export type Database = {
           observacao: string
           ordem: number
           recurso: string
+          recurso_detalhe: string
           status: string
           story_id: string
           texto_principal: string
@@ -126,6 +127,7 @@ export type Database = {
           observacao?: string
           ordem?: number
           recurso?: string
+          recurso_detalhe?: string
           status?: string
           story_id: string
           texto_principal?: string
@@ -142,6 +144,7 @@ export type Database = {
           observacao?: string
           ordem?: number
           recurso?: string
+          recurso_detalhe?: string
           status?: string
           story_id?: string
           texto_principal?: string

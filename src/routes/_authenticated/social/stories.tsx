@@ -20,7 +20,6 @@ import {
   Layers,
   FileDown,
   ImageDown,
-
   FileUp,
   Save,
   Loader2,
@@ -30,7 +29,6 @@ import {
   Inbox,
   ArrowDownAZ,
   Target,
-
 } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
@@ -72,11 +70,11 @@ import {
 } from "@/lib/stories";
 
 import { objectivesQueryOptions, type Objective } from "@/lib/objectives";
-import { applyPlan, type PlanValidation } from "@/lib/story-plan";
+import { applyPlan, precisaPerfil, type PlanValidation } from "@/lib/story-plan";
+import { AlturasCompartilhadasProvider } from "@/components/stories/AlturasCompartilhadas";
 import { exportPlanPdf } from "@/lib/story-pdf";
 import { Textarea } from "@/components/ui/textarea";
 import { exportStoriesZip, ExportZipError } from "@/lib/story-zip";
-
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -189,7 +187,6 @@ function StoriesPage() {
     [objetivos],
   );
 
-
   const projetoAtual = sequences.find((s) => s.id === sequenceId) ?? null;
   const nomeAtual = projetoAtual?.nome ?? "Área de trabalho";
 
@@ -262,7 +259,6 @@ function StoriesPage() {
       setExportandoZip(false);
     }
   };
-
 
   const mutate = useMutation({
     mutationFn: async (fn: () => Promise<void>) => {
@@ -358,13 +354,12 @@ function StoriesPage() {
     });
   }
 
-
   function aplicarPlano(validation: PlanValidation) {
     setPlanoAberto(false);
     mutate.mutate(async () => {
       await applyPlan(validation, stories, sequenceId);
       toast.success(
-        `Plano aplicado: ${validation.blocos.length} bloco(s) e ${validation.sobras.length} arte(s) não utilizada(s)`,
+        `Plano aplicado: ${validation.blocos.length} story(s) e ${validation.sobras.length} arte(s) não utilizada(s)`,
       );
     });
   }
@@ -524,10 +519,14 @@ function StoriesPage() {
 
       onApproveFrame: (frameId: string) => mutate.mutate(() => approveFrame(frameId)),
       onApproveStory: () => {
+        if (story.frames.some(precisaPerfil)) {
+          toast.error("Informe o perfil da menção antes de aprovar");
+          return;
+        }
         const total = story.frames.length;
         const ajustes = story.frames.filter((f) => f.status === "ajustar").length;
         setConfirm({
-          title: `Aprovar bloco #${story.position}?`,
+          title: `Aprovar stories #${story.position}?`,
           description:
             `${total} ${total === 1 ? "arte" : "artes"} serão aprovadas, sem exceção.` +
             (ajustes > 0
@@ -554,7 +553,7 @@ function StoriesPage() {
 
   if (!podeVer) {
     return (
-      <AppShell>
+      <AppShell largura="ampla">
         <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
           Você não tem permissão para ver esta aba.
         </div>
@@ -563,7 +562,7 @@ function StoriesPage() {
   }
 
   return (
-    <AppShell>
+    <AppShell largura="ampla">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -670,8 +669,6 @@ function StoriesPage() {
               </Button>
             ) : null}
 
-
-
             <Button
               size="sm"
               variant="outline"
@@ -682,7 +679,6 @@ function StoriesPage() {
                 setObjetivosPdf(null);
                 setExportAberto(true);
               }}
-
             >
               {exportando ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -722,7 +718,6 @@ function StoriesPage() {
               )}
               Exportar imagens
             </Button>
-
 
             {editable ? (
               <Button
@@ -799,76 +794,78 @@ function StoriesPage() {
 
         {editable ? <UploadArea onFiles={receberArquivos} busy={uploading} /> : null}
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onDragCancel={() => setDragging(null)}
-        >
-          <DropZone
-            id="new-story"
-            type="new-story"
-            visible={dragging?.type === "frame"}
-            label="Solte aqui para criar um story novo"
-            icon={<Layers className="size-4" />}
-          />
-
-          {isLoading ? (
-            <div className="grid place-items-center p-10">
-              <Loader2 className="size-5 animate-spin text-primary" />
-            </div>
-          ) : visiveis.length === 0 ? (
-            <div className="grid place-items-center gap-2 rounded-xl border border-border bg-card p-10 text-center">
-              <Sparkles className="size-5 text-primary" />
-              <p className="text-sm text-muted-foreground">Nenhum story neste filtro.</p>
-            </div>
-          ) : (
-            <div className="flex flex-wrap items-start gap-3">
-              {visiveis.map((story) => (
-                <StoryCard
-                  key={story.id}
-                  {...cardProps(story)}
-                  showSlot={dragging?.type === "story" && filtro === "todos"}
-                />
-              ))}
-            </div>
-          )}
-
-          <div className="mt-4 space-y-3">
+        <AlturasCompartilhadasProvider>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragCancel={() => setDragging(null)}
+          >
             <DropZone
-              id="descartar"
-              type="descartar"
-              visible={dragging?.type === "story"}
-              label="Solte aqui para marcar como não utilizada"
-              icon={<Inbox className="size-4" />}
+              id="new-story"
+              type="new-story"
+              visible={dragging?.type === "frame"}
+              label="Solte aqui para criar um story novo"
+              icon={<Layers className="size-4" />}
             />
 
-            {descartadas.length > 0 ? (
-              <div className="rounded-xl border border-border bg-card">
-                <button
-                  type="button"
-                  onClick={() => setNaoUsadasAberto((v) => !v)}
-                  className="flex w-full items-center justify-between gap-2 px-4 py-3 text-sm font-medium"
-                >
-                  <span>Não utilizadas ({descartadas.length})</span>
-                  <ChevronDown
-                    className={cn("size-4 transition-transform", naoUsadasAberto && "rotate-180")}
-                  />
-                </button>
-                {naoUsadasAberto ? (
-                  <div className="flex flex-wrap items-start gap-3 border-t border-border p-3">
-                    {descartadas.map((story) => (
-                      <StoryCard key={story.id} {...cardProps(story)} showSlot={false} />
-                    ))}
-                  </div>
-                ) : null}
+            {isLoading ? (
+              <div className="grid place-items-center p-10">
+                <Loader2 className="size-5 animate-spin text-primary" />
               </div>
-            ) : null}
-          </div>
+            ) : visiveis.length === 0 ? (
+              <div className="grid place-items-center gap-2 rounded-xl border border-border bg-card p-10 text-center">
+                <Sparkles className="size-5 text-primary" />
+                <p className="text-sm text-muted-foreground">Nenhum story neste filtro.</p>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-start gap-3">
+                {visiveis.map((story) => (
+                  <StoryCard
+                    key={story.id}
+                    {...cardProps(story)}
+                    showSlot={dragging?.type === "story" && filtro === "todos"}
+                  />
+                ))}
+              </div>
+            )}
 
-          <DragOverlay dropAnimation={null} />
-        </DndContext>
+            <div className="mt-4 space-y-3">
+              <DropZone
+                id="descartar"
+                type="descartar"
+                visible={dragging?.type === "story"}
+                label="Solte aqui para marcar como não utilizada"
+                icon={<Inbox className="size-4" />}
+              />
+
+              {descartadas.length > 0 ? (
+                <div className="rounded-xl border border-border bg-card">
+                  <button
+                    type="button"
+                    onClick={() => setNaoUsadasAberto((v) => !v)}
+                    className="flex w-full items-center justify-between gap-2 px-4 py-3 text-sm font-medium"
+                  >
+                    <span>Não utilizadas ({descartadas.length})</span>
+                    <ChevronDown
+                      className={cn("size-4 transition-transform", naoUsadasAberto && "rotate-180")}
+                    />
+                  </button>
+                  {naoUsadasAberto ? (
+                    <div className="flex flex-wrap items-start gap-3 border-t border-border p-3">
+                      {descartadas.map((story) => (
+                        <StoryCard key={story.id} {...cardProps(story)} showSlot={false} />
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+
+            <DragOverlay dropAnimation={null} />
+          </DndContext>
+        </AlturasCompartilhadasProvider>
       </div>
 
       <PlanDialog
@@ -948,7 +945,9 @@ function StoriesPage() {
                           const atuais =
                             objetivosPdf === null ? objetivosAtivos.map((x) => x.id) : objetivosPdf;
                           setObjetivosPdf(
-                            v === true ? [...new Set([...atuais, o.id])] : atuais.filter((id) => id !== o.id),
+                            v === true
+                              ? [...new Set([...atuais, o.id])]
+                              : atuais.filter((id) => id !== o.id),
                           );
                         }}
                       />
@@ -976,7 +975,8 @@ function StoriesPage() {
               onClick={() => {
                 const bruto = Number.parseInt(quantidade.trim(), 10);
                 const qtd = Number.isFinite(bruto) && bruto > 0 ? bruto : 0;
-                const todos = objetivosPdf === null || objetivosPdf.length === objetivosAtivos.length;
+                const todos =
+                  objetivosPdf === null || objetivosPdf.length === objetivosAtivos.length;
                 const escolhidos =
                   objetivosPdf === null
                     ? objetivosAtivos
@@ -990,7 +990,6 @@ function StoriesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
 
       <Dialog open={salvarAberto} onOpenChange={setSalvarAberto}>
         <DialogContent>

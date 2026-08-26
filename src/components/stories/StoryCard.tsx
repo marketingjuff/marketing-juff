@@ -1,6 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { GripVertical, Check, CheckCheck, MessageSquare, Trash2, Plus, ImageUp } from "lucide-react";
+import {
+  GripVertical,
+  Check,
+  CheckCheck,
+  MessageSquare,
+  Trash2,
+  Plus,
+  ImageUp,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import type { Frame as FrameType, FrameStatus, Recurso, Story } from "@/lib/stories";
@@ -16,6 +24,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  useAlturaCompartilhada,
+  type SlotAltura,
+} from "@/components/stories/AlturasCompartilhadas";
+import { normalizaPerfil, precisaPerfil } from "@/lib/story-plan";
 
 const FRAME_STATUS_LABEL: Record<FrameStatus, string> = {
   pendente: "Pendente",
@@ -49,30 +62,45 @@ function Salvo({ visivel }: { visivel: boolean }) {
   return <span className="text-[10px] font-medium text-success">Salvo</span>;
 }
 
+/** Altura mínima equivalente a duas linhas. */
+const MIN_DUAS_LINHAS = 44;
+
 /** Campo de várias linhas que cresce sozinho e grava só quando perde o foco. */
 function AutoTextarea({
   label,
   value,
   disabled,
   onCommit,
+  slot,
+  frameId,
+  compacto,
 }: {
   label: string;
   value: string;
   disabled: boolean;
   onCommit: (v: string) => Promise<void>;
+  slot: SlotAltura;
+  frameId: string;
+  compacto?: boolean;
 }) {
   const [local, setLocal] = useState(value);
   const [salvo, setSalvo] = useState(false);
+  const [natural, setNatural] = useState(MIN_DUAS_LINHAS);
   const ref = useRef<HTMLTextAreaElement>(null);
+
+  const compartilhada = useAlturaCompartilhada(slot, frameId, natural);
 
   useEffect(() => setLocal(value), [value]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Sempre medir a partir do zero, para a altura aplicada não contaminar a medição.
     el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  }, [local]);
+    const medida = Math.max(el.scrollHeight, MIN_DUAS_LINHAS);
+    setNatural((atual) => (atual === medida ? atual : medida));
+    el.style.height = `${Math.max(medida, compartilhada)}px`;
+  }, [local, compartilhada]);
 
   return (
     <div className="space-y-1" {...stopDrag}>
@@ -85,7 +113,7 @@ function AutoTextarea({
         rows={2}
         value={local}
         disabled={disabled}
-        className="min-h-0 resize-y text-sm"
+        className={cn("min-h-0 resize-y text-sm", compacto && "py-1.5 text-[13px] leading-[1.3]")}
         onChange={(e) => setLocal(e.target.value)}
         onBlur={async () => {
           if (local === value) return;
@@ -94,6 +122,32 @@ function AutoTextarea({
           setTimeout(() => setSalvo(false), 2000);
         }}
       />
+    </div>
+  );
+}
+
+/** Container que reserva espaço na grade, medindo o filho e aplicando minHeight fora. */
+function SlotCompartilhado({
+  slot,
+  frameId,
+  children,
+}: {
+  slot: SlotAltura;
+  frameId: string;
+  children: React.ReactNode;
+}) {
+  const filhoRef = useRef<HTMLDivElement>(null);
+  const [natural, setNatural] = useState(0);
+  const altura = useAlturaCompartilhada(slot, frameId, natural);
+
+  useLayoutEffect(() => {
+    const medida = filhoRef.current?.offsetHeight ?? 0;
+    setNatural((atual) => (atual === medida ? atual : medida));
+  });
+
+  return (
+    <div style={{ minHeight: altura }}>
+      <div ref={filhoRef}>{children}</div>
     </div>
   );
 }
@@ -123,9 +177,15 @@ function ArteBloco({
 }) {
   const [ajusteAberto, setAjusteAberto] = useState(false);
   const [comentario, setComentario] = useState("");
-  
+
   const [recursoSalvo, setRecursoSalvo] = useState(false);
+  const [perfil, setPerfil] = useState(frame.recurso_detalhe);
+  const [perfilSalvo, setPerfilSalvo] = useState(false);
   const trocaRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => setPerfil(frame.recurso_detalhe), [frame.recurso_detalhe]);
+
+  const perfilVazio = frame.recurso === "Menção" && perfil.trim().length === 0;
 
   const draggable = useDraggable({
     id: `frame:${frame.id}`,
@@ -184,12 +244,17 @@ function ArteBloco({
         label="Texto da arte"
         value={frame.texto_principal}
         disabled={!editable}
+        slot="texto_principal"
+        frameId={frame.id}
         onCommit={(v) => onSaveFrame(frame.id, { texto_principal: v })}
       />
       <AutoTextarea
         label="Observação"
         value={frame.observacao}
         disabled={!editable}
+        slot="observacao"
+        frameId={frame.id}
+        compacto
         onCommit={(v) => onSaveFrame(frame.id, { observacao: v })}
       />
 
@@ -203,7 +268,11 @@ function ArteBloco({
           disabled={!editable}
           onValueChange={async (v) => {
             if (v === frame.recurso) return;
-            await onSaveFrame(frame.id, { recurso: v as Recurso });
+            const virouMencao = v === "Menção";
+            await onSaveFrame(frame.id, {
+              recurso: v as Recurso,
+              ...(virouMencao ? {} : { recurso_detalhe: "" }),
+            });
             setRecursoSalvo(true);
             setTimeout(() => setRecursoSalvo(false), 2000);
           }}
@@ -213,24 +282,60 @@ function ArteBloco({
           </SelectTrigger>
           <SelectContent>
             {RECURSOS.map((r) => (
-              <SelectItem key={r} value={r}>
-                {r}
+              <SelectItem key={r.value} value={r.value}>
+                {r.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {frame.adjust_comment ? (
-        <div className="rounded-lg bg-warning/20 p-2 text-xs">
-          <p className="whitespace-pre-wrap">{frame.adjust_comment}</p>
-          {frame.adjust_comment_at ? (
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              {new Date(frame.adjust_comment_at).toLocaleString("pt-BR")}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
+      <SlotCompartilhado slot="recurso_detalhe" frameId={frame.id}>
+        {frame.recurso === "Menção" ? (
+          <div className="space-y-1" {...stopDrag}>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-muted-foreground">Perfil da menção</span>
+              <Salvo visivel={perfilSalvo} />
+            </div>
+            <Input
+              value={perfil}
+              disabled={!editable}
+              placeholder="@perfil"
+              className={cn(
+                "h-8 text-sm",
+                perfilVazio && "border-warning focus-visible:ring-warning",
+              )}
+              onChange={(e) => setPerfil(e.target.value)}
+              onBlur={async () => {
+                const normalizado = normalizaPerfil(perfil);
+                if (normalizado !== perfil) setPerfil(normalizado);
+                if (normalizado === frame.recurso_detalhe) return;
+                await onSaveFrame(frame.id, { recurso_detalhe: normalizado });
+                setPerfilSalvo(true);
+                setTimeout(() => setPerfilSalvo(false), 2000);
+              }}
+            />
+            {perfilVazio ? (
+              <p className="text-[10px] font-medium text-warning-foreground">
+                Informe o perfil da menção
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </SlotCompartilhado>
+
+      <SlotCompartilhado slot="adjust_comment" frameId={frame.id}>
+        {frame.adjust_comment ? (
+          <div className="rounded-lg bg-warning/20 p-2 text-xs">
+            <p className="whitespace-pre-wrap">{frame.adjust_comment}</p>
+            {frame.adjust_comment_at ? (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {new Date(frame.adjust_comment_at).toLocaleString("pt-BR")}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </SlotCompartilhado>
 
       {editable ? (
         ajusteAberto ? (
@@ -270,7 +375,13 @@ function ArteBloco({
                   className="flex-1 px-0"
                   title="Aprovar"
                   aria-label="Aprovar arte"
-                  onClick={() => onApproveFrame(frame.id)}
+                  onClick={() => {
+                    if (precisaPerfil(frame)) {
+                      toast.error("Informe o perfil da menção antes de aprovar");
+                      return;
+                    }
+                    onApproveFrame(frame.id);
+                  }}
                 >
                   <Check className="size-4" />
                 </Button>
@@ -315,7 +426,6 @@ function ArteBloco({
           </div>
         )
       ) : null}
-
     </div>
   );
 }
@@ -354,7 +464,6 @@ export function StoryCard({
   onReplaceImage: (frame: FrameType, file: File) => void;
   onSetObjective: (storyId: string, objectiveId: string | null) => void;
 }) {
-
   const inputRef = useRef<HTMLInputElement>(null);
   const [nomeBloco, setNomeBloco] = useState(story.nome_bloco);
   const [blocoSalvo, setBlocoSalvo] = useState(false);
@@ -378,7 +487,7 @@ export function StoryCard({
   const full = story.frames.length >= MAX_FRAMES;
   const campanha = blocoTipo(story) === "CAMPANHA";
   const titulo = campanha
-    ? story.nome_bloco || "Sem nome do bloco"
+    ? story.nome_bloco || "Sem nome do story"
     : story.frames[0]?.nome_arquivo || "Sem nome";
 
   const total = story.frames.length;
@@ -386,7 +495,6 @@ export function StoryCard({
   const emAjuste = story.frames.filter((f) => f.status === "ajustar").length;
   const tudoAprovado = total > 0 && aprovadas === total;
   const objetivoAtual = objetivos.find((o) => o.id === story.objective_id) ?? null;
-
 
   return (
     <div className="relative w-fit max-w-full">
@@ -434,7 +542,7 @@ export function StoryCard({
                 value={nomeBloco}
                 placeholder={titulo}
                 className="h-8 min-w-0 flex-1 text-sm font-semibold"
-                aria-label="Nome do bloco"
+                aria-label="Nome do story"
                 onChange={(e) => setNomeBloco(e.target.value)}
                 onBlur={async () => {
                   if (nomeBloco === story.nome_bloco) return;
@@ -453,7 +561,7 @@ export function StoryCard({
 
           {canApprove && total > 0 && !tudoAprovado ? (
             <Button size="sm" className="shrink-0 gap-1" onClick={onApproveStory} {...stopDrag}>
-              <CheckCheck className="size-3.5" /> Aprovar bloco
+              <CheckCheck className="size-3.5" /> Aprovar stories
             </Button>
           ) : null}
         </div>
@@ -482,7 +590,10 @@ export function StoryCard({
                 value={story.objective_id ?? "__nenhum__"}
                 onValueChange={(v) => onSetObjective(story.id, v === "__nenhum__" ? null : v)}
               >
-                <SelectTrigger className="h-7 w-auto gap-1 rounded-full px-2 text-[11px]" aria-label="Objetivo do story">
+                <SelectTrigger
+                  className="h-7 w-auto gap-1 rounded-full px-2 text-[11px]"
+                  aria-label="Objetivo do story"
+                >
                   <SelectValue placeholder="Sem objetivo" />
                 </SelectTrigger>
                 <SelectContent>

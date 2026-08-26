@@ -4,15 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 export const MAX_FRAMES = 5;
 export const BUCKET = "stories";
 
+/** Valor gravado no banco e rótulo mostrado na tela. */
 export const RECURSOS = [
-  "Nenhum",
-  "Link",
-  "Enquete",
-  "Menção",
-  "Slider",
-  "Caixa de pergunta",
+  { value: "Nenhum", label: "Nenhum" },
+  { value: "Link", label: "Link" },
+  { value: "Enquete", label: "Enquete" },
+  { value: "Menção", label: "Menção" },
+  { value: "Slider", label: "Slider de emoji" },
+  { value: "Caixa de pergunta", label: "Caixa de pergunta" },
 ] as const;
-export type Recurso = (typeof RECURSOS)[number];
+export type Recurso = (typeof RECURSOS)[number]["value"];
+export const RECURSO_VALUES = RECURSOS.map((r) => r.value) as readonly Recurso[];
 
 export type StoryStatus = "pendente" | "aprovado" | "ajustar";
 
@@ -28,13 +30,14 @@ export type Frame = {
   texto_principal: string;
   observacao: string;
   recurso: Recurso;
+  /** Perfil da menção (@perfil). Só usado quando o recurso é Menção. */
+  recurso_detalhe: string;
   url: string;
   status: FrameStatus;
   adjust_comment: string | null;
   adjust_comment_at: string | null;
   /** Guardado só por segurança no bucket. Nunca exibido na interface. */
   image_path_anterior: string | null;
-
 };
 
 export type Story = {
@@ -50,7 +53,6 @@ export type Story = {
   objective_id: string | null;
   frames: Frame[];
 };
-
 
 export type Sequence = {
   id: string;
@@ -107,6 +109,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
     texto_principal: string;
     observacao: string;
     recurso: string;
+    recurso_detalhe: string;
     status: string;
     adjust_comment: string | null;
     adjust_comment_at: string | null;
@@ -117,7 +120,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
     const { data, error: framesError } = await supabase
       .from("story_frames")
       .select(
-        "id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, recurso, status, adjust_comment, adjust_comment_at, image_path_anterior",
+        "id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, recurso, recurso_detalhe, status, adjust_comment, adjust_comment_at, image_path_anterior",
       )
       .in("story_id", ids)
       .order("ordem", { ascending: true });
@@ -156,6 +159,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
         texto_principal: f.texto_principal ?? "",
         observacao: f.observacao ?? "",
         recurso: (f.recurso ?? "Nenhum") as Recurso,
+        recurso_detalhe: f.recurso_detalhe ?? "",
         url: urls.get(f.image_path) ?? "",
         status: (f.status ?? "pendente") as FrameStatus,
         adjust_comment: f.adjust_comment,
@@ -213,7 +217,6 @@ async function uploadImage(file: File): Promise<string> {
   if (error) throw error;
   return path;
 }
-
 
 async function nextPosition(sequenceId: string | null): Promise<number> {
   let query = supabase.from("stories").select("position").order("position", { ascending: false });
@@ -339,11 +342,14 @@ export async function setStoryObjective(
   if (error) throw error;
 }
 
-
-
 export async function updateFrameTexts(
   frameId: string,
-  values: { texto_principal?: string; observacao?: string; recurso?: Recurso },
+  values: {
+    texto_principal?: string;
+    observacao?: string;
+    recurso?: Recurso;
+    recurso_detalhe?: string;
+  },
 ): Promise<void> {
   const { error } = await supabase.from("story_frames").update(values).eq("id", frameId);
   if (error) throw error;
@@ -478,7 +484,6 @@ export async function undoMerge(source: Story, target: Story): Promise<void> {
       sequence_id: source.sequence_id,
       descartado: source.descartado,
       objective_id: source.objective_id,
-
     })
     .select("id")
     .single();

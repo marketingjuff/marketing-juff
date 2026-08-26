@@ -58,18 +58,20 @@ Alterne produto, benefício, vida real, marca, interação e venda. Evite sequê
 Devolva a resposta em um documento Word seguindo EXATAMENTE o formato abaixo. Não use tabelas. Não use marcadores. Não escreva nenhum texto fora do formato. Cada linha começa com BLOCO, ARTE ou SOBRA, e os campos são separados por barra vertical.
 
 BLOCO | numero | SOLO ou CAMPANHA | nome do bloco | objetivo
-ARTE | nome exato do arquivo | texto principal | observação | recurso${quantidade > 0 ? `\nSOBRA | nome exato do arquivo | motivo curto` : ""}
+ARTE | nome exato do arquivo | texto principal | observação | recurso | perfil da menção${quantidade > 0 ? `\nSOBRA | nome exato do arquivo | motivo curto` : ""}
 
 O campo recurso aceita apenas um destes valores.
 Nenhum, Link, Enquete, Menção, Slider, Caixa de pergunta.
+O campo perfil da menção só é preenchido quando o recurso for Menção, sempre começando com arroba. Nos demais casos o campo fica vazio.
 
 Exemplo.
 
 BLOCO | 1 | CAMPANHA | AQUELA QUE VOCÊ REPETE | Prova social
-ARTE | prancheta 2 | AQUELA QUE VOCÊ REPETE. | Arte limpa, sem CTA. | Nenhum
-ARTE | prancheta 3 | THERMOAIR. VOCÊ VAI ENTENDER QUANDO VESTIR. | Leve, respirável e feita para acompanhar. CTA CONHEÇA A JUFF | Link
+ARTE | prancheta 2 | AQUELA QUE VOCÊ REPETE. | Arte limpa, sem CTA. | Nenhum |
+ARTE | prancheta 3 | THERMOAIR. VOCÊ VAI ENTENDER QUANDO VESTIR. | Leve, respirável e feita para acompanhar. CTA CONHEÇA A JUFF | Link |
 BLOCO | 2 | SOLO | DESACELERAR | Marca
-ARTE | prancheta 4 | HOJE O MOVIMENTO É DESACELERAR. | Sem CTA. | Nenhum${quantidade > 0 ? `\nSOBRA | prancheta 5 | Repete a mesma ideia da prancheta 4.\nSOBRA | prancheta 6 | Texto pouco legível sobre a foto.` : ""}
+ARTE | prancheta 4 | HOJE O MOVIMENTO É DESACELERAR. | Sem CTA. | Nenhum |
+ARTE | prancheta 7 | QUEM VESTE, CONTA. | Repost do cliente. | Menção | @juffstore${quantidade > 0 ? `\nSOBRA | prancheta 5 | Repete a mesma ideia da prancheta 4.\nSOBRA | prancheta 6 | Texto pouco legível sobre a foto.` : ""}
 
 ${
     quantidade > 0
