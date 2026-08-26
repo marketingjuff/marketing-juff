@@ -239,7 +239,14 @@ function ArteBloco({
           aria-label={`Abrir arte ${index + 1}`}
         >
           {frame.url ? (
-            <img src={frame.url} alt={`Arte ${index + 1}`} className="size-full object-cover" />
+            <img
+              src={frame.url}
+              alt={`Arte ${index + 1}`}
+              draggable={false}
+              onDragStart={(e) => e.preventDefault()}
+              className="size-full select-none object-cover"
+            />
+
           ) : null}
         </button>
         <ArteEditor
