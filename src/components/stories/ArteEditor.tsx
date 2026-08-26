@@ -759,6 +759,7 @@ function TextoEditavel({
       ) : null}
       <div
         ref={ref}
+        lang="pt-BR"
         contentEditable={editable}
         suppressContentEditableWarning
         spellCheck={false}
@@ -778,7 +779,7 @@ function TextoEditavel({
           if (novo !== frame.texto_principal) void onSaveTexto(frame.id, novo);
         }}
         className={cn(
-          "block whitespace-pre-wrap break-words outline-none",
+          "block whitespace-pre-wrap break-normal outline-none",
           "border border-dashed",
           focado ? "border-primary" : "border-transparent",
           comp.texto_alinhamento === "left" && "text-left",
@@ -787,6 +788,10 @@ function TextoEditavel({
         )}
         style={{
           fontFamily: `"${comp.texto_fonte}", sans-serif`,
+          hyphens: "none",
+          WebkitHyphens: "none",
+          overflowWrap: "normal",
+          wordBreak: "normal",
           fontWeight: comp.texto_peso,
           fontSize: fontePx,
           lineHeight: 1.2,
