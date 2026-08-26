@@ -232,12 +232,17 @@ function ArteBloco({
         label="Texto da arte"
         value={frame.texto_principal}
         disabled={!editable}
+        slot="texto_principal"
+        frameId={frame.id}
         onCommit={(v) => onSaveFrame(frame.id, { texto_principal: v })}
       />
       <AutoTextarea
         label="Observação"
         value={frame.observacao}
         disabled={!editable}
+        slot="observacao"
+        frameId={frame.id}
+        compacto
         onCommit={(v) => onSaveFrame(frame.id, { observacao: v })}
       />
 
@@ -251,7 +256,11 @@ function ArteBloco({
           disabled={!editable}
           onValueChange={async (v) => {
             if (v === frame.recurso) return;
-            await onSaveFrame(frame.id, { recurso: v as Recurso });
+            const virouMencao = v === "Menção";
+            await onSaveFrame(frame.id, {
+              recurso: v as Recurso,
+              ...(virouMencao ? {} : { recurso_detalhe: "" }),
+            });
             setRecursoSalvo(true);
             setTimeout(() => setRecursoSalvo(false), 2000);
           }}
@@ -261,24 +270,58 @@ function ArteBloco({
           </SelectTrigger>
           <SelectContent>
             {RECURSOS.map((r) => (
-              <SelectItem key={r} value={r}>
-                {r}
+              <SelectItem key={r.value} value={r.value}>
+                {r.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {frame.adjust_comment ? (
-        <div className="rounded-lg bg-warning/20 p-2 text-xs">
-          <p className="whitespace-pre-wrap">{frame.adjust_comment}</p>
-          {frame.adjust_comment_at ? (
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              {new Date(frame.adjust_comment_at).toLocaleString("pt-BR")}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
+      <SlotCompartilhado slot="recurso_detalhe" frameId={frame.id}>
+        {frame.recurso === "Menção" ? (
+          <div className="space-y-1" {...stopDrag}>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-muted-foreground">Perfil da menção</span>
+              <Salvo visivel={perfilSalvo} />
+            </div>
+            <Input
+              value={perfil}
+              disabled={!editable}
+              placeholder="@perfil"
+              className={cn("h-8 text-sm", perfilVazio && "border-warning focus-visible:ring-warning")}
+              onChange={(e) => setPerfil(e.target.value)}
+              onBlur={async () => {
+                const normalizado = normalizaPerfil(perfil);
+                if (normalizado !== perfil) setPerfil(normalizado);
+                if (normalizado === frame.recurso_detalhe) return;
+                await onSaveFrame(frame.id, { recurso_detalhe: normalizado });
+                setPerfilSalvo(true);
+                setTimeout(() => setPerfilSalvo(false), 2000);
+              }}
+            />
+            {perfilVazio ? (
+              <p className="text-[10px] font-medium text-warning-foreground">
+                Informe o perfil da menção
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </SlotCompartilhado>
+
+      <SlotCompartilhado slot="adjust_comment" frameId={frame.id}>
+        {frame.adjust_comment ? (
+          <div className="rounded-lg bg-warning/20 p-2 text-xs">
+            <p className="whitespace-pre-wrap">{frame.adjust_comment}</p>
+            {frame.adjust_comment_at ? (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {new Date(frame.adjust_comment_at).toLocaleString("pt-BR")}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </SlotCompartilhado>
+
 
       {editable ? (
         ajusteAberto ? (
