@@ -226,7 +226,6 @@ function PainelTexto({
 
   return (
     <div className="max-h-[70vh] space-y-3 overflow-y-auto">
-      {true ? (
         <div className="space-y-3 rounded-lg border border-border p-2">
           <Select
             value={comp.texto_fonte}
