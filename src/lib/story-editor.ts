@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Composicao, Frame, Story } from "@/lib/stories";
+import type { AlinhamentoTexto, Frame, Story } from "@/lib/stories";
 
 export const LOGOS_BUCKET = "logos";
 
@@ -97,6 +97,7 @@ export type Preset = {
   fonte: string;
   peso: number;
   tamanho: number;
+  alinhamento: AlinhamentoTexto;
   cor_texto: string;
   cor_sombra: string;
   opacidade_sombra: number;
@@ -107,7 +108,7 @@ export const presetsQueryOptions = queryOptions({
   queryFn: async (): Promise<Preset[]> => {
     const { data, error } = await supabase
       .from("story_text_presets")
-      .select("id, nome, fonte, peso, tamanho, cor_texto, cor_sombra, opacidade_sombra")
+      .select("id, nome, fonte, peso, tamanho, alinhamento, cor_texto, cor_sombra, opacidade_sombra")
       .order("created_at", { ascending: true });
     if (error) throw error;
     return (data ?? []) as Preset[];
@@ -277,7 +278,10 @@ async function carregarSvgComoImagem(svg: string): Promise<HTMLImageElement> {
   }
 }
 
-export async function garantirFontes(comp: Composicao, tamanhoPx: number): Promise<void> {
+export async function garantirFontes(
+  comp: { texto_peso: number; texto_fonte: string },
+  tamanhoPx: number,
+): Promise<void> {
   try {
     await document.fonts.load(`${comp.texto_peso} ${Math.round(tamanhoPx)}px "${comp.texto_fonte}"`);
     await document.fonts.ready;
@@ -310,12 +314,12 @@ export async function montarArtePng(frame: Frame, logoSvg: string | null): Promi
     ctx.drawImage(logoImg, cx - largura / 2, cy - altura / 2, largura, altura);
   }
 
-  const texto = c.texto_conteudo.replace(/\r/g, "");
-  if (c.texto_ativo && texto.trim().length > 0) {
+  const texto = (frame.texto_principal ?? "").replace(/\r/g, "");
+  if (texto.trim().length > 0) {
     const fs = tamanhoFontePx(canvas.height, c.texto_tamanho);
     await garantirFontes(c, fs);
     ctx.font = `${c.texto_peso} ${fs}px "${c.texto_fonte}", sans-serif`;
-    ctx.textAlign = "center";
+    ctx.textAlign = c.texto_alinhamento;
     ctx.textBaseline = "middle";
     ctx.fillStyle = c.texto_cor;
     if (c.sombra_opacidade > 0) {
