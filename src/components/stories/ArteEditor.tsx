@@ -15,7 +15,6 @@ import {
   Plus,
   Type,
   Move,
-  ChevronRight,
 
 } from "lucide-react";
 import { toast } from "sonner";
