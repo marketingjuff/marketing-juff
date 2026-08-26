@@ -69,8 +69,11 @@ export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobr
         numero: Number.isFinite(numero) ? numero : blocos.length + 1,
         tipo,
         nome: partes[3] ?? "",
+        objetivo: partes[4] ?? "",
+        objective_id: null,
         artes: [],
       });
+
       continue;
     }
 
