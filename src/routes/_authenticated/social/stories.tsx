@@ -462,6 +462,19 @@ function StoriesPage() {
       onSaveBloco: salvarBloco,
       onSaveFrame: salvarFrame,
       onApproveFrame: (frameId: string) => mutate.mutate(() => approveFrame(frameId)),
+      onApproveStory: () => {
+        const total = story.frames.length;
+        const ajustes = story.frames.filter((f) => f.status === "ajustar").length;
+        setConfirm({
+          title: `Aprovar bloco #${story.position}?`,
+          description:
+            `${total} ${total === 1 ? "arte" : "artes"} serão aprovadas, sem exceção.` +
+            (ajustes > 0
+              ? ` ${ajustes} ${ajustes === 1 ? "arte tem" : "artes têm"} pedido de ajuste em aberto e o pedido será descartado.`
+              : ""),
+          action: () => mutate.mutate(() => approveStory(story)),
+        });
+      },
       onAdjustFrame: (frameId: string, comment: string) =>
         mutate.mutate(() => requestFrameAdjust(frameId, comment)),
       onReplaceImage: (frame: Frame, file: File) =>
