@@ -648,17 +648,122 @@ function Camada({
   );
 }
 
+/** Texto desenhado sobre a arte, editável no próprio lugar. */
+function TextoEditavel({
+  frame,
+  comp,
+  editable,
+  fontePx,
+  larguraMax,
+  iniciarArraste,
+  onSaveTexto,
+}: {
+  frame: Frame;
+  comp: Composicao;
+  editable: boolean;
+  fontePx: number;
+  larguraMax?: number;
+  iniciarArraste: (e: React.PointerEvent) => void;
+  onSaveTexto: (frameId: string, texto: string) => Promise<void> | void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [focado, setFocado] = useState(false);
+  const [sobre, setSobre] = useState(false);
+  const [vazio, setVazio] = useState(frame.texto_principal.length === 0);
+
+  // Só escreve de fora quando o usuário não está digitando ali.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || focado) return;
+    if (el.innerText.replace(/\n$/, "") !== frame.texto_principal) {
+      el.innerText = frame.texto_principal;
+    }
+    setVazio(frame.texto_principal.length === 0);
+  }, [frame.texto_principal, focado]);
+
+  const mostrarPista = !focado && vazio && editable;
+
+  return (
+    <>
+      {editable && (focado || sobre) ? (
+        <button
+          type="button"
+          aria-label="Mover o texto"
+          title="Mover o texto"
+          className="absolute -left-3 -top-3 z-10 cursor-move rounded-full bg-background/90 p-1 text-foreground shadow"
+          onPointerDown={iniciarArraste}
+        >
+          <Move className="size-3" />
+        </button>
+      ) : null}
+      <div
+        ref={ref}
+        contentEditable={editable}
+        suppressContentEditableWarning
+        spellCheck={false}
+        onMouseEnter={() => setSobre(true)}
+        onMouseLeave={() => setSobre(false)}
+        onFocus={() => setFocado(true)}
+        onInput={(e) => setVazio(e.currentTarget.innerText.replace(/\n$/, "").length === 0)}
+        onPaste={(e) => {
+          e.preventDefault();
+          const texto = e.clipboardData.getData("text/plain");
+          document.execCommand("insertText", false, texto);
+        }}
+        onBlur={(e) => {
+          setFocado(false);
+          const novo = e.currentTarget.innerText.replace(/\r/g, "").replace(/\n$/, "");
+          setVazio(novo.length === 0);
+          if (novo !== frame.texto_principal) void onSaveTexto(frame.id, novo);
+        }}
+        className={cn(
+          "block whitespace-pre-wrap break-words outline-none",
+          "border border-dashed",
+          focado ? "border-primary" : "border-transparent",
+          comp.texto_alinhamento === "left" && "text-left",
+          comp.texto_alinhamento === "center" && "text-center",
+          comp.texto_alinhamento === "right" && "text-right",
+        )}
+        style={{
+          fontFamily: `"${comp.texto_fonte}", sans-serif`,
+          fontWeight: comp.texto_peso,
+          fontSize: fontePx,
+          lineHeight: 1.2,
+          color: comp.texto_cor,
+          maxWidth: larguraMax,
+          minWidth: mostrarPista ? undefined : "0.5em",
+          textShadow:
+            comp.sombra_opacidade > 0
+              ? `${fontePx * 0.04}px ${fontePx * 0.04}px ${fontePx * 0.12}px ${corComOpacidade(comp.sombra_cor, comp.sombra_opacidade)}`
+              : "none",
+        }}
+      />
+      {mostrarPista ? (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 flex items-center justify-center whitespace-nowrap text-muted-foreground/60"
+          style={{ fontSize: fontePx, lineHeight: 1.2 }}
+        >
+          Escrever
+        </span>
+      ) : null}
+    </>
+  );
+}
+
 export function ArteEditor({
   frame,
   editable,
   podeGerir,
   onSaveComp,
+  onSaveTexto,
 }: {
   frame: Frame;
   editable: boolean;
   /** Admin e gestor: criam pré-formatações, enviam logos e exportam artes aprovadas. */
   podeGerir: boolean;
   onSaveComp: (frameId: string, patch: Partial<Composicao>) => void;
+  onSaveTexto: (frameId: string, texto: string) => Promise<void> | void;
 }) {
   const comp = frame.comp;
   const caixaRef = useRef<HTMLDivElement>(null);
