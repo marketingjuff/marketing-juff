@@ -369,6 +369,8 @@ export function StoryCard({
   const aprovadas = story.frames.filter((f) => f.status === "aprovado").length;
   const emAjuste = story.frames.filter((f) => f.status === "ajustar").length;
   const tudoAprovado = total > 0 && aprovadas === total;
+  const objetivoAtual = objetivos.find((o) => o.id === story.objective_id) ?? null;
+
 
   return (
     <div className="relative">
