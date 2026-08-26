@@ -26,6 +26,7 @@ const ZERO: Record<SlotAltura, number> = {
 };
 
 const AlturasContext = createContext<Ctx | null>(null);
+const AcoesContext = createContext<Pick<Ctx, "registrar" | "remover"> | null>(null);
 
 export function AlturasCompartilhadasProvider({ children }: { children: ReactNode }) {
   const mapa = useRef<Record<SlotAltura, Map<string, number>>>({
@@ -64,8 +65,15 @@ export function AlturasCompartilhadasProvider({ children }: { children: ReactNod
   );
 
   const value = useMemo(() => ({ maximos, registrar, remover }), [maximos, registrar, remover]);
+  // Ações com identidade estável: evita que mudanças de altura recriem os efeitos
+  // de registro/remoção (o que geraria um laço infinito de atualizações).
+  const acoes = useMemo(() => ({ registrar, remover }), [registrar, remover]);
 
-  return <AlturasContext.Provider value={value}>{children}</AlturasContext.Provider>;
+  return (
+    <AcoesContext.Provider value={acoes}>
+      <AlturasContext.Provider value={value}>{children}</AlturasContext.Provider>
+    </AcoesContext.Provider>
+  );
 }
 
 /**
@@ -78,14 +86,15 @@ export function useAlturaCompartilhada(
   alturaNatural: number,
 ): number {
   const ctx = useContext(AlturasContext);
+  const acoes = useContext(AcoesContext);
 
   useEffect(() => {
-    ctx?.registrar(slot, id, alturaNatural);
-  }, [ctx, slot, id, alturaNatural]);
+    acoes?.registrar(slot, id, alturaNatural);
+  }, [acoes, slot, id, alturaNatural]);
 
   useEffect(() => {
-    return () => ctx?.remover(slot, id);
-  }, [ctx, slot, id]);
+    return () => acoes?.remover(slot, id);
+  }, [acoes, slot, id]);
 
   return ctx?.maximos[slot] ?? 0;
 }
