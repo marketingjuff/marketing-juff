@@ -760,7 +760,7 @@ function StoriesPage() {
               <p className="text-sm text-muted-foreground">Nenhum story neste filtro.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="flex flex-wrap items-start gap-3">
               {visiveis.map((story) => (
                 <StoryCard
                   key={story.id}
@@ -793,7 +793,7 @@ function StoriesPage() {
                   />
                 </button>
                 {naoUsadasAberto ? (
-                  <div className="grid grid-cols-1 gap-3 border-t border-border p-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div className="flex flex-wrap items-start gap-3 border-t border-border p-3">
                     {descartadas.map((story) => (
                       <StoryCard key={story.id} {...cardProps(story)} showSlot={false} />
                     ))}

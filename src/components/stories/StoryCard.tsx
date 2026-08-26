@@ -137,12 +137,25 @@ function ArteBloco({
   });
 
   return (
-    <div className="space-y-2 rounded-lg border border-border p-2">
+    <div className="w-[clamp(9.5rem,14vw,12.5rem)] shrink-0 space-y-2 rounded-lg border border-border p-2">
+      <div className="flex items-center justify-between gap-1">
+        <span className="text-[11px] font-medium text-muted-foreground">
+          Arte {index + 1}/{total}
+        </span>
+        <span
+          className={cn(
+            "rounded-full border px-1.5 py-0.5 text-[10px] font-medium",
+            FRAME_STATUS_BADGE[frame.status],
+          )}
+        >
+          {FRAME_STATUS_LABEL[frame.status]}
+        </span>
+      </div>
+
       <div
         ref={droppable.setNodeRef}
         className={cn(
-          "relative mx-auto aspect-[9/16] w-full max-w-[13rem] overflow-hidden rounded-lg border border-border bg-muted",
-
+          "relative aspect-[9/16] w-full overflow-hidden rounded-lg border border-border bg-muted",
           droppable.isOver && "ring-2 ring-primary",
           draggable.isDragging && "opacity-40",
         )}
@@ -160,34 +173,14 @@ function ArteBloco({
             <img src={frame.url} alt={`Arte ${index + 1}`} className="size-full object-cover" />
           ) : null}
         </button>
-        <span
-          className={cn(
-            "pointer-events-none absolute right-1 top-1 rounded-full border px-1.5 py-0.5 text-[10px] font-medium",
-            FRAME_STATUS_BADGE[frame.status],
-          )}
-        >
-          {FRAME_STATUS_LABEL[frame.status]}
-        </span>
       </div>
 
       <p className="truncate text-[11px] text-muted-foreground" title={frame.nome_arquivo}>
-        {frame.nome_arquivo || "Sem nome"} · {index + 1}/{total}
+        {frame.nome_arquivo || "Sem nome"}
       </p>
 
-      {frame.adjust_comment ? (
-        <div className="rounded-lg bg-warning/20 p-2 text-xs">
-          <p className="whitespace-pre-wrap">{frame.adjust_comment}</p>
-          {frame.adjust_comment_at ? (
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              {new Date(frame.adjust_comment_at).toLocaleString("pt-BR")}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-
-
       <AutoTextarea
-        label="Texto principal"
+        label="Texto da arte"
         value={frame.texto_principal}
         disabled={!editable}
         onCommit={(v) => onSaveFrame(frame.id, { texto_principal: v })}
@@ -227,6 +220,17 @@ function ArteBloco({
         </Select>
       </div>
 
+      {frame.adjust_comment ? (
+        <div className="rounded-lg bg-warning/20 p-2 text-xs">
+          <p className="whitespace-pre-wrap">{frame.adjust_comment}</p>
+          {frame.adjust_comment_at ? (
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {new Date(frame.adjust_comment_at).toLocaleString("pt-BR")}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
       {editable ? (
         ajusteAberto ? (
           <div className="space-y-2" {...stopDrag}>
@@ -256,34 +260,40 @@ function ArteBloco({
             </div>
           </div>
         ) : (
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
             {canApprove ? (
               <>
                 <Button
                   size="sm"
                   variant={frame.status === "aprovado" ? "secondary" : "default"}
-                  className="gap-1"
+                  className="flex-1 px-0"
+                  title="Aprovar"
+                  aria-label="Aprovar arte"
                   onClick={() => onApproveFrame(frame.id)}
                 >
-                  <Check className="size-3.5" /> Aprovar
+                  <Check className="size-4" />
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="gap-1"
+                  className="flex-1 px-0"
+                  title="Pedir ajuste"
+                  aria-label="Pedir ajuste na arte"
                   onClick={() => setAjusteAberto(true)}
                 >
-                  <MessageSquare className="size-3.5" /> Ajuste
+                  <MessageSquare className="size-4" />
                 </Button>
               </>
             ) : null}
             <Button
               size="sm"
               variant="outline"
-              className="gap-1"
+              className="flex-1 px-0"
+              title="Trocar imagem"
+              aria-label="Trocar imagem da arte"
               onClick={() => trocaRef.current?.click()}
             >
-              <ImageUp className="size-3.5" /> Trocar imagem
+              <ImageUp className="size-4" />
             </Button>
             <input
               ref={trocaRef}
@@ -373,7 +383,7 @@ export function StoryCard({
 
 
   return (
-    <div className="relative">
+    <div className="relative w-fit max-w-full">
       {showSlot ? (
         <div
           ref={slot.setNodeRef}
@@ -408,91 +418,85 @@ export function StoryCard({
             <GripVertical className="size-4" />
           </button>
 
-          <div className="min-w-0 flex-1" title={titulo}>
-            <span className="block truncate text-sm font-semibold">{titulo}</span>
-            <span className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
-              {campanha ? `CAMPANHA • ${total} artes` : "SOLO"}
-              {objetivoAtual ? (
-                <span className="rounded-full border border-primary/40 bg-primary-soft px-2 py-0.5 text-[10px] font-medium text-primary">
-                  {objetivoAtual.nome}
-                </span>
-              ) : null}
-            </span>
-          </div>
-
-
-          <span className="tabular rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+          <span className="tabular shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
             {story.position}
           </span>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-1.5">
-          {tudoAprovado ? (
-            <span className="rounded-full border border-success bg-success px-2 py-0.5 text-[11px] font-medium text-background">
-              Aprovado
-            </span>
+          {editable ? (
+            <div className="flex min-w-0 flex-1 items-center gap-2" {...stopDrag}>
+              <Input
+                value={nomeBloco}
+                placeholder={titulo}
+                className="h-8 min-w-0 flex-1 text-sm font-semibold"
+                aria-label="Nome do bloco"
+                onChange={(e) => setNomeBloco(e.target.value)}
+                onBlur={async () => {
+                  if (nomeBloco === story.nome_bloco) return;
+                  await onSaveBloco(story.id, nomeBloco);
+                  setBlocoSalvo(true);
+                  setTimeout(() => setBlocoSalvo(false), 2000);
+                }}
+              />
+              <Salvo visivel={blocoSalvo} />
+            </div>
           ) : (
-            <span className="rounded-full border border-border bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground">
-              {aprovadas} de {total} aprovadas
+            <span className="min-w-0 flex-1 truncate text-sm font-semibold" title={titulo}>
+              {titulo}
             </span>
           )}
-          {emAjuste > 0 ? (
-            <span className="rounded-full border border-warning bg-warning/25 px-2 py-0.5 text-[11px] font-medium">
-              {emAjuste} em ajuste
-            </span>
-          ) : null}
+
           {canApprove && total > 0 && !tudoAprovado ? (
-            <Button size="sm" className="ml-auto gap-1" onClick={onApproveStory} {...stopDrag}>
+            <Button size="sm" className="shrink-0 gap-1" onClick={onApproveStory} {...stopDrag}>
               <CheckCheck className="size-3.5" /> Aprovar bloco
             </Button>
           ) : null}
         </div>
 
-        {canApprove ? (
-          <div className="space-y-1" {...stopDrag}>
-            <span className="text-[11px] text-muted-foreground">Objetivo do story</span>
-            <Select
-              value={story.objective_id ?? "__nenhum__"}
-              onValueChange={(v) => onSetObjective(story.id, v === "__nenhum__" ? null : v)}
-            >
-              <SelectTrigger className="h-8 text-sm">
-                <SelectValue placeholder="Sem objetivo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__nenhum__">Sem objetivo</SelectItem>
-                {objetivos.map((o) => (
-                  <SelectItem key={o.id} value={o.id}>
-                    {o.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ) : null}
-
-
-
-        <div className="space-y-1" {...stopDrag}>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-muted-foreground">Nome do bloco</span>
-            <Salvo visivel={blocoSalvo} />
-          </div>
-          <Input
-            value={nomeBloco}
-            disabled={!editable}
-            placeholder="Nome do bloco"
-            className="h-8 text-sm"
-            onChange={(e) => setNomeBloco(e.target.value)}
-            onBlur={async () => {
-              if (nomeBloco === story.nome_bloco) return;
-              await onSaveBloco(story.id, nomeBloco);
-              setBlocoSalvo(true);
-              setTimeout(() => setBlocoSalvo(false), 2000);
-            }}
-          />
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+          <span className="rounded-full border border-border bg-secondary px-2 py-0.5">
+            {campanha ? `CAMPANHA • ${total} artes` : "SOLO"}
+          </span>
+          {tudoAprovado ? (
+            <span className="rounded-full border border-success bg-success px-2 py-0.5 text-[11px] font-medium text-background">
+              Aprovado
+            </span>
+          ) : (
+            <span className="rounded-full border border-border bg-secondary px-2 py-0.5">
+              {aprovadas} de {total} aprovadas
+            </span>
+          )}
+          {emAjuste > 0 ? (
+            <span className="rounded-full border border-warning bg-warning/25 px-2 py-0.5 font-medium text-foreground">
+              {emAjuste} em ajuste
+            </span>
+          ) : null}
+          {canApprove ? (
+            <span {...stopDrag}>
+              <Select
+                value={story.objective_id ?? "__nenhum__"}
+                onValueChange={(v) => onSetObjective(story.id, v === "__nenhum__" ? null : v)}
+              >
+                <SelectTrigger className="h-7 w-auto gap-1 rounded-full px-2 text-[11px]" aria-label="Objetivo do story">
+                  <SelectValue placeholder="Sem objetivo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__nenhum__">Sem objetivo</SelectItem>
+                  {objetivos.map((o) => (
+                    <SelectItem key={o.id} value={o.id}>
+                      {o.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </span>
+          ) : objetivoAtual ? (
+            <span className="rounded-full border border-primary/40 bg-primary-soft px-2 py-0.5 text-[10px] font-medium text-primary">
+              {objetivoAtual.nome}
+            </span>
+          ) : null}
         </div>
 
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-3">
+        <div className="flex flex-nowrap gap-3 overflow-x-auto">
           {story.frames.map((frame, index) => (
             <ArteBloco
               key={frame.id}
