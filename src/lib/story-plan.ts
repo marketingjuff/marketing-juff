@@ -105,7 +105,21 @@ export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobr
 export function validatePlan(
   parsed: { blocos: PlanBloco[]; sobras: PlanSobra[] },
   stories: Story[],
+  objetivos: Objective[] = [],
 ): PlanValidation {
+  const porNome = new Map(objetivos.map((o) => [chaveObjetivo(o.nome), o.id]));
+  const objetivosDesconhecidos: string[] = [];
+  for (const bloco of parsed.blocos) {
+    const texto = bloco.objetivo.trim();
+    if (!texto) {
+      bloco.objective_id = null;
+      continue;
+    }
+    const id = porNome.get(chaveObjetivo(texto)) ?? null;
+    bloco.objective_id = id;
+    if (!id && !objetivosDesconhecidos.includes(texto)) objetivosDesconhecidos.push(texto);
+  }
+
   const { blocos, sobras } = parsed;
   const frames = stories.flatMap((s) => s.frames);
   const disponiveis = new Map<string, number>();
