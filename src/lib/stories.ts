@@ -22,15 +22,16 @@ export type StoryStatus = "pendente" | "aprovado" | "ajustar";
 export type FrameStatus = "pendente" | "ajustar" | "refeito" | "aprovado";
 
 /** Composição visual desenhada sobre a arte (camada de texto e camada de logo). */
+export type AlinhamentoTexto = "left" | "center" | "right";
+
 export type Composicao = {
-  texto_ativo: boolean;
-  texto_conteudo: string;
   texto_x: number;
   texto_y: number;
   texto_fonte: string;
   texto_peso: number;
   texto_tamanho: number;
   texto_cor: string;
+  texto_alinhamento: AlinhamentoTexto;
   sombra_cor: string;
   sombra_opacidade: number;
   logo_ativo: boolean;
@@ -42,14 +43,13 @@ export type Composicao = {
 };
 
 export const COMPOSICAO_PADRAO: Composicao = {
-  texto_ativo: false,
-  texto_conteudo: "",
   texto_x: 50,
   texto_y: 50,
   texto_fonte: "Nunito",
   texto_peso: 900,
   texto_tamanho: 6,
   texto_cor: "#ffffff",
+  texto_alinhamento: "center",
   sombra_cor: "#000000",
   sombra_opacidade: 50,
   logo_ativo: false,
@@ -62,14 +62,13 @@ export const COMPOSICAO_PADRAO: Composicao = {
 
 /** Colunas da composição no banco (prefixo comp_). */
 export const COLUNAS_COMPOSICAO = [
-  "comp_texto_ativo",
-  "comp_texto_conteudo",
   "comp_texto_x",
   "comp_texto_y",
   "comp_texto_fonte",
   "comp_texto_peso",
   "comp_texto_tamanho",
   "comp_texto_cor",
+  "comp_texto_alinhamento",
   "comp_sombra_cor",
   "comp_sombra_opacidade",
   "comp_logo_ativo",
@@ -95,14 +94,13 @@ export type FrameRow = {
   adjust_comment: unknown;
   adjust_comment_at: unknown;
   image_path_anterior: unknown;
-  comp_texto_ativo?: unknown;
-  comp_texto_conteudo?: unknown;
   comp_texto_x?: unknown;
   comp_texto_y?: unknown;
   comp_texto_fonte?: unknown;
   comp_texto_peso?: unknown;
   comp_texto_tamanho?: unknown;
   comp_texto_cor?: unknown;
+  comp_texto_alinhamento?: unknown;
   comp_sombra_cor?: unknown;
   comp_sombra_opacidade?: unknown;
   comp_logo_ativo?: unknown;
@@ -442,14 +440,17 @@ export async function updateFrameTexts(
 export function composicaoDaLinha(f: FrameRow): Composicao {
   const num = (v: unknown, padrao: number) => (v === null || v === undefined ? padrao : Number(v));
   return {
-    texto_ativo: Boolean(f.comp_texto_ativo ?? COMPOSICAO_PADRAO.texto_ativo),
-    texto_conteudo: (f.comp_texto_conteudo as string) ?? "",
     texto_x: num(f.comp_texto_x, COMPOSICAO_PADRAO.texto_x),
     texto_y: num(f.comp_texto_y, COMPOSICAO_PADRAO.texto_y),
     texto_fonte: (f.comp_texto_fonte as string) ?? COMPOSICAO_PADRAO.texto_fonte,
     texto_peso: num(f.comp_texto_peso, COMPOSICAO_PADRAO.texto_peso),
     texto_tamanho: num(f.comp_texto_tamanho, COMPOSICAO_PADRAO.texto_tamanho),
     texto_cor: (f.comp_texto_cor as string) ?? COMPOSICAO_PADRAO.texto_cor,
+    texto_alinhamento: ((["left", "center", "right"] as const).includes(
+      f.comp_texto_alinhamento as AlinhamentoTexto,
+    )
+      ? (f.comp_texto_alinhamento as AlinhamentoTexto)
+      : COMPOSICAO_PADRAO.texto_alinhamento),
     sombra_cor: (f.comp_sombra_cor as string) ?? COMPOSICAO_PADRAO.sombra_cor,
     sombra_opacidade: num(f.comp_sombra_opacidade, COMPOSICAO_PADRAO.sombra_opacidade),
     logo_ativo: Boolean(f.comp_logo_ativo ?? COMPOSICAO_PADRAO.logo_ativo),

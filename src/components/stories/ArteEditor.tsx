@@ -1,9 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Layers, Grid3X3, Trash2, Upload, Download, Loader2 } from "lucide-react";
+import {
+  Pencil,
+  Layers,
+  Grid3X3,
+  Trash2,
+  Upload,
+  Download,
+  Loader2,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+} from "lucide-react";
 import { toast } from "sonner";
 
-import type { Composicao, Frame } from "@/lib/stories";
+import type { AlinhamentoTexto, Composicao, Frame } from "@/lib/stories";
 import {
   CORES_MARCA,
   FONTES,
@@ -23,11 +34,11 @@ import {
   tamanhoFontePx,
   corComOpacidade,
   type LogoAsset,
+  type Preset,
 } from "@/lib/story-editor";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -45,6 +56,12 @@ const semArraste = {
   onTouchStart: (e: React.TouchEvent) => e.stopPropagation(),
   onClick: (e: React.MouseEvent) => e.stopPropagation(),
 };
+
+const ALINHAMENTOS: { value: AlinhamentoTexto; label: string; Icone: typeof AlignLeft }[] = [
+  { value: "left", label: "Alinhar à esquerda", Icone: AlignLeft },
+  { value: "center", label: "Centralizar", Icone: AlignCenter },
+  { value: "right", label: "Alinhar à direita", Icone: AlignRight },
+];
 
 function SeletorCor({
   cor,
@@ -158,62 +175,57 @@ function PainelTexto({
   const [nome, setNome] = useState("");
   const [erroNome, setErroNome] = useState(false);
   const [opacidade, setOpacidade] = useState(comp.sombra_opacidade);
-  const [texto, setTexto] = useState(comp.texto_conteudo);
 
   useEffect(() => setOpacidade(comp.sombra_opacidade), [comp.sombra_opacidade]);
-  useEffect(() => setTexto(comp.texto_conteudo), [comp.texto_conteudo]);
+
+  const aplicado = (p: Preset) =>
+    p.fonte === comp.texto_fonte &&
+    p.peso === comp.texto_peso &&
+    p.alinhamento === comp.texto_alinhamento &&
+    p.tamanho === comp.texto_tamanho &&
+    p.cor_texto.toLowerCase() === comp.texto_cor.toLowerCase() &&
+    p.cor_sombra.toLowerCase() === comp.sombra_cor.toLowerCase() &&
+    p.opacidade_sombra === comp.sombra_opacidade;
 
   return (
     <div className="max-h-[70vh] space-y-3 overflow-y-auto">
       <div className="space-y-1">
-        <span className="text-[11px] text-muted-foreground">Texto sobre a arte</span>
-        <Textarea
-          rows={2}
-          value={texto}
-          disabled={!editable}
-          className="text-sm"
-          placeholder="Escreva o texto da arte"
-          onChange={(e) => setTexto(e.target.value)}
-          onBlur={() => {
-            if (texto === comp.texto_conteudo) return;
-            salvar({ texto_conteudo: texto, texto_ativo: texto.trim().length > 0 });
-          }}
-        />
-      </div>
-
-      <div className="space-y-1">
         <span className="text-[11px] font-medium text-muted-foreground">Pré-formatações</span>
-        <div className="space-y-1">
+        <div className="grid max-h-56 grid-cols-3 gap-1 overflow-y-auto pr-1">
           {presets.map((p) => (
-            <div key={p.id} className="flex items-center gap-2">
+            <div key={p.id} className="relative">
               <button
                 type="button"
                 disabled={!editable}
-                className="flex flex-1 items-center gap-2 rounded-md border border-border px-2 py-1 text-left text-xs hover:bg-secondary disabled:opacity-50"
+                title={p.nome}
+                className={cn(
+                  "flex w-full items-center gap-1 rounded-md border border-border px-1.5 py-1 text-left text-[11px] hover:bg-secondary disabled:opacity-50",
+                  aplicado(p) && "ring-2 ring-primary",
+                )}
                 onClick={() =>
                   salvar({
                     texto_fonte: p.fonte,
                     texto_peso: p.peso,
+                    texto_alinhamento: p.alinhamento,
                     texto_tamanho: p.tamanho,
                     texto_cor: p.cor_texto,
                     sombra_cor: p.cor_sombra,
                     sombra_opacidade: p.opacidade_sombra,
-                    texto_ativo: true,
                   })
                 }
               >
                 <span
-                  className="size-4 shrink-0 rounded border border-border"
+                  className="size-3.5 shrink-0 rounded border border-border"
                   style={{ background: p.cor_texto }}
                 />
-                <span className="flex-1 truncate">{p.nome}</span>
+                <span className="min-w-0 flex-1 truncate">{p.nome}</span>
                 <span className="tabular text-muted-foreground">{p.tamanho}</span>
               </button>
               {podeGerir ? (
                 <button
                   type="button"
                   aria-label={`Excluir ${p.nome}`}
-                  className="text-muted-foreground hover:text-destructive"
+                  className="absolute -right-1 -top-1 rounded-full bg-background p-0.5 text-muted-foreground shadow hover:text-destructive"
                   onClick={async () => {
                     if (!window.confirm(`Excluir a pré-formatação "${p.nome}"?`)) return;
                     try {
@@ -224,13 +236,15 @@ function PainelTexto({
                     }
                   }}
                 >
-                  <Trash2 className="size-3.5" />
+                  <Trash2 className="size-3" />
                 </button>
               ) : null}
             </div>
           ))}
           {presets.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Nenhuma pré-formatação salva.</p>
+            <p className="col-span-3 text-xs text-muted-foreground">
+              Nenhuma pré-formatação salva.
+            </p>
           ) : null}
         </div>
       </div>
@@ -275,6 +289,23 @@ function PainelTexto({
                 onClick={() => salvar({ texto_peso: p.value })}
               >
                 {p.label}
+              </Button>
+            ))}
+          </div>
+
+          <div className="flex gap-1">
+            {ALINHAMENTOS.map((a) => (
+              <Button
+                key={a.value}
+                size="sm"
+                variant={comp.texto_alinhamento === a.value ? "default" : "outline"}
+                className="flex-1 px-1"
+                disabled={!editable}
+                title={a.label}
+                aria-label={a.label}
+                onClick={() => salvar({ texto_alinhamento: a.value })}
+              >
+                <a.Icone className="size-3.5" />
               </Button>
             ))}
           </div>
@@ -348,6 +379,7 @@ function PainelTexto({
                       nome: nome.trim(),
                       fonte: comp.texto_fonte,
                       peso: comp.texto_peso,
+                      alinhamento: comp.texto_alinhamento,
                       tamanho: comp.texto_tamanho,
                       cor_texto: comp.texto_cor,
                       cor_sombra: comp.sombra_cor,
@@ -497,12 +529,14 @@ function Camada({
   x,
   y,
   editable,
+  alinhamento = "center",
   onCommit,
   children,
 }: {
   x: number;
   y: number;
   editable: boolean;
+  alinhamento?: AlinhamentoTexto;
   onCommit: (x: number, y: number) => void;
   children: React.ReactNode;
 }) {
@@ -515,7 +549,9 @@ function Camada({
   return (
     <div
       className={cn(
-        "absolute -translate-x-1/2 -translate-y-1/2 select-none",
+        "absolute -translate-y-1/2 select-none",
+        alinhamento === "center" && "-translate-x-1/2",
+        alinhamento === "right" && "-translate-x-full",
         editable ? "cursor-move" : "pointer-events-none",
       )}
       style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
@@ -633,16 +669,22 @@ export function ArteEditor({
         </div>
       ) : null}
 
-      {comp.texto_ativo && comp.texto_conteudo.trim().length > 0 ? (
+      {frame.texto_principal.trim().length > 0 ? (
         <div className="pointer-events-auto absolute inset-0">
           <Camada
             x={comp.texto_x}
             y={comp.texto_y}
             editable={editable}
+            alinhamento={comp.texto_alinhamento}
             onCommit={(x, y) => salvar({ texto_x: x, texto_y: y })}
           >
             <span
-              className="block whitespace-pre text-center"
+              className={cn(
+                "block whitespace-pre",
+                comp.texto_alinhamento === "left" && "text-left",
+                comp.texto_alinhamento === "center" && "text-center",
+                comp.texto_alinhamento === "right" && "text-right",
+              )}
               style={{
                 fontFamily: `"${comp.texto_fonte}", sans-serif`,
                 fontWeight: comp.texto_peso,
@@ -655,7 +697,7 @@ export function ArteEditor({
                     : "none",
               }}
             >
-              {comp.texto_conteudo}
+              {frame.texto_principal}
             </span>
           </Camada>
         </div>
@@ -675,7 +717,10 @@ export function ArteEditor({
                   <Pencil className="size-3.5" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-72 p-3" align="end">
+              <PopoverContent
+                className="w-[min(26rem,calc(100vw-2rem))] p-3"
+                align="end"
+              >
                 <PainelTexto
                   comp={comp}
                   editable={editable}

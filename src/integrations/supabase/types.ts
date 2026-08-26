@@ -110,8 +110,7 @@ export type Database = {
           comp_logo_y: number
           comp_sombra_cor: string
           comp_sombra_opacidade: number
-          comp_texto_ativo: boolean
-          comp_texto_conteudo: string
+          comp_texto_alinhamento: string
           comp_texto_cor: string
           comp_texto_fonte: string
           comp_texto_peso: number
@@ -143,8 +142,7 @@ export type Database = {
           comp_logo_y?: number
           comp_sombra_cor?: string
           comp_sombra_opacidade?: number
-          comp_texto_ativo?: boolean
-          comp_texto_conteudo?: string
+          comp_texto_alinhamento?: string
           comp_texto_cor?: string
           comp_texto_fonte?: string
           comp_texto_peso?: number
@@ -176,8 +174,7 @@ export type Database = {
           comp_logo_y?: number
           comp_sombra_cor?: string
           comp_sombra_opacidade?: number
-          comp_texto_ativo?: boolean
-          comp_texto_conteudo?: string
+          comp_texto_alinhamento?: string
           comp_texto_cor?: string
           comp_texto_fonte?: string
           comp_texto_peso?: number
@@ -285,6 +282,7 @@ export type Database = {
       }
       story_text_presets: {
         Row: {
+          alinhamento: string
           cor_sombra: string
           cor_texto: string
           created_at: string
@@ -297,6 +295,7 @@ export type Database = {
           tamanho: number
         }
         Insert: {
+          alinhamento?: string
           cor_sombra?: string
           cor_texto?: string
           created_at?: string
@@ -309,6 +308,7 @@ export type Database = {
           tamanho?: number
         }
         Update: {
+          alinhamento?: string
           cor_sombra?: string
           cor_texto?: string
           created_at?: string
