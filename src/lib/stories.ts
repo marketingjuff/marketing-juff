@@ -32,6 +32,8 @@ export type Composicao = {
   texto_tamanho: number;
   texto_cor: string;
   texto_alinhamento: AlinhamentoTexto;
+  /** Largura da caixa de texto, em % da largura da arte. */
+  texto_largura: number;
   sombra_cor: string;
   sombra_opacidade: number;
   logo_ativo: boolean;
@@ -50,6 +52,7 @@ export const COMPOSICAO_PADRAO: Composicao = {
   texto_tamanho: 5,
   texto_cor: "#ffffff",
   texto_alinhamento: "left",
+  texto_largura: 80,
   sombra_cor: "#000000",
   sombra_opacidade: 50,
   logo_ativo: false,
@@ -69,6 +72,7 @@ export const COLUNAS_COMPOSICAO = [
   "comp_texto_tamanho",
   "comp_texto_cor",
   "comp_texto_alinhamento",
+  "comp_texto_largura",
   "comp_sombra_cor",
   "comp_sombra_opacidade",
   "comp_logo_ativo",
@@ -101,6 +105,7 @@ export type FrameRow = {
   comp_texto_tamanho?: unknown;
   comp_texto_cor?: unknown;
   comp_texto_alinhamento?: unknown;
+  comp_texto_largura?: unknown;
   comp_sombra_cor?: unknown;
   comp_sombra_opacidade?: unknown;
   comp_logo_ativo?: unknown;
@@ -451,6 +456,7 @@ export function composicaoDaLinha(f: FrameRow): Composicao {
     )
       ? (f.comp_texto_alinhamento as AlinhamentoTexto)
       : COMPOSICAO_PADRAO.texto_alinhamento),
+    texto_largura: num(f.comp_texto_largura, COMPOSICAO_PADRAO.texto_largura),
     sombra_cor: (f.comp_sombra_cor as string) ?? COMPOSICAO_PADRAO.sombra_cor,
     sombra_opacidade: num(f.comp_sombra_opacidade, COMPOSICAO_PADRAO.sombra_opacidade),
     logo_ativo: Boolean(f.comp_logo_ativo ?? COMPOSICAO_PADRAO.logo_ativo),
