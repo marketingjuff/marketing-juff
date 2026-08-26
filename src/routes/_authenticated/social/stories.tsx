@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import {
   DndContext,
@@ -27,6 +27,8 @@ import {
   ChevronDown,
   Inbox,
   ArrowDownAZ,
+  Target,
+
 } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
@@ -627,6 +629,16 @@ function StoriesPage() {
                 </Button>
               </>
             ) : null}
+
+            {canApprove ? (
+              <Button size="sm" variant="outline" className="gap-1" asChild>
+                <Link to="/objetivos">
+                  <Target className="size-4" /> Objetivos
+                </Link>
+              </Button>
+            ) : null}
+
+
 
             <Button
               size="sm"
