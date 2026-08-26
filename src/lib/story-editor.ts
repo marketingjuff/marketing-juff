@@ -338,9 +338,13 @@ export async function montarArtePng(frame: Frame, logoSvg: string | null): Promi
   const c = frame.comp;
 
   if (c.logo_ativo && logoSvg) {
-    const largura = larguraLogoPx(canvas.width, c.logo_tamanho);
     const proporcao = proporcaoDoSvg(logoSvg) || 1;
-    const altura = largura / proporcao;
+    const { largura, altura } = dimensoesLogo(
+      canvas.width,
+      canvas.height,
+      c.logo_tamanho,
+      proporcao,
+    );
     const svg = svgDimensionado(svgColorido(logoSvg, c.logo_cor), largura * 2, altura * 2);
     const logoImg = await carregarSvgComoImagem(svg);
     const cx = (c.logo_x / 100) * canvas.width;
