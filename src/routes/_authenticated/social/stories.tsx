@@ -635,8 +635,10 @@ function StoriesPage() {
               disabled={fila.length === 0 || exportando}
               onClick={() => {
                 setQuantidade(String(fila.length));
+                setObjetivosPdf(null);
                 setExportAberto(true);
               }}
+
             >
               {exportando ? (
                 <Loader2 className="size-4 animate-spin" />
