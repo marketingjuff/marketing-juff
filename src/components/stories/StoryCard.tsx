@@ -408,10 +408,16 @@ export function StoryCard({
 
           <div className="min-w-0 flex-1" title={titulo}>
             <span className="block truncate text-sm font-semibold">{titulo}</span>
-            <span className="block text-[11px] text-muted-foreground">
+            <span className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
               {campanha ? `CAMPANHA • ${total} artes` : "SOLO"}
+              {objetivoAtual ? (
+                <span className="rounded-full border border-primary/40 bg-primary-soft px-2 py-0.5 text-[10px] font-medium text-primary">
+                  {objetivoAtual.nome}
+                </span>
+              ) : null}
             </span>
           </div>
+
 
           <span className="tabular rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
             {story.position}
