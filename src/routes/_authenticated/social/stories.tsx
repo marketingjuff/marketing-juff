@@ -580,6 +580,8 @@ function StoriesPage() {
       onSaveBloco: salvarBloco,
       onSaveFrame: salvarFrame,
       onSaveComp: salvarComposicao,
+      onReplicarBloco: () => replicarNoBloco(story),
+      onReplicarProximo: () => aplicarNoProximoBloco(story),
 
 
 
