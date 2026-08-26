@@ -80,6 +80,39 @@ export const COLUNAS_COMPOSICAO = [
   "comp_logo_cor",
 ].join(", ");
 
+/** Linha crua de story_frames, incluindo as colunas de composição. */
+export type FrameRow = {
+  id: unknown;
+  story_id: unknown;
+  image_path: unknown;
+  ordem: unknown;
+  nome_arquivo: unknown;
+  texto_principal: unknown;
+  observacao: unknown;
+  recurso: unknown;
+  recurso_detalhe: unknown;
+  status: unknown;
+  adjust_comment: unknown;
+  adjust_comment_at: unknown;
+  image_path_anterior: unknown;
+  comp_texto_ativo?: unknown;
+  comp_texto_conteudo?: unknown;
+  comp_texto_x?: unknown;
+  comp_texto_y?: unknown;
+  comp_texto_fonte?: unknown;
+  comp_texto_peso?: unknown;
+  comp_texto_tamanho?: unknown;
+  comp_texto_cor?: unknown;
+  comp_sombra_cor?: unknown;
+  comp_sombra_opacidade?: unknown;
+  comp_logo_ativo?: unknown;
+  comp_logo_id?: unknown;
+  comp_logo_x?: unknown;
+  comp_logo_y?: unknown;
+  comp_logo_tamanho?: unknown;
+  comp_logo_cor?: unknown;
+};
+
 export type Frame = {
   id: string;
   story_id: string;
@@ -161,7 +194,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
   if (error) throw error;
 
   const ids = (stories ?? []).map((s) => s.id);
-  let frames: Record<string, unknown>[] = [];
+  let frames: FrameRow[] = [];
 
   if (ids.length > 0) {
     const { data, error: framesError } = await supabase
@@ -172,7 +205,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
       .in("story_id", ids)
       .order("ordem", { ascending: true });
     if (framesError) throw framesError;
-    frames = (data ?? []) as unknown as Record<string, unknown>[];
+    frames = (data ?? []) as unknown as FrameRow[];
   }
 
 
@@ -406,7 +439,7 @@ export async function updateFrameTexts(
 }
 
 /** Lê a composição de uma linha do banco, caindo no padrão quando vazia. */
-export function composicaoDaLinha(f: Record<string, unknown>): Composicao {
+export function composicaoDaLinha(f: FrameRow): Composicao {
   const num = (v: unknown, padrao: number) => (v === null || v === undefined ? padrao : Number(v));
   return {
     texto_ativo: Boolean(f.comp_texto_ativo ?? COMPOSICAO_PADRAO.texto_ativo),
