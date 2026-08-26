@@ -991,19 +991,27 @@ function TextoEditavel({
       />
       {mostrarAlcas ? (
         <>
-          {(["esq", "dir"] as const).map((lado) => (
+          {(
+            [
+              { id: "se", lado: "dir", pos: "-bottom-2 -right-2", cursor: "cursor-nwse-resize" },
+              { id: "ne", lado: "dir", pos: "-top-2 -right-2", cursor: "cursor-nesw-resize" },
+              { id: "so", lado: "esq", pos: "-bottom-2 -left-2", cursor: "cursor-nesw-resize" },
+              { id: "no", lado: "esq", pos: "-top-2 -left-2", cursor: "cursor-nwse-resize" },
+            ] as const
+          ).map((canto) => (
             <span
-              key={lado}
+              key={canto.id}
               role="separator"
-              aria-label={`Ajustar a largura da caixa de texto (${lado === "esq" ? "esquerda" : "direita"})`}
+              aria-label="Ajustar a largura da caixa de texto"
               title="Ajustar a largura da caixa de texto"
               className={cn(
-                "absolute inset-y-0 z-20 flex w-4 cursor-ew-resize touch-none items-center justify-center",
-                lado === "esq" ? "-left-2" : "-right-2",
+                "absolute z-20 flex size-4 touch-none items-center justify-center",
+                canto.pos,
+                canto.cursor,
               )}
-              onPointerDown={(e) => iniciarResize(e, lado)}
+              onPointerDown={(e) => iniciarResize(e, canto.lado)}
             >
-              <span className="h-6 w-1.5 rounded-full border border-background bg-primary shadow" />
+              <span className="size-2.5 rounded-[3px] border border-background bg-primary shadow" />
             </span>
           ))}
         </>
