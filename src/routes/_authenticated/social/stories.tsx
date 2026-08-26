@@ -460,8 +460,12 @@ function StoriesPage() {
       story,
       editable,
       canApprove,
+      objetivos: objetivosAtivos,
+      onSetObjective: (storyId: string, objectiveId: string | null) =>
+        definirObjetivo(storyId, objectiveId),
       onSaveBloco: salvarBloco,
       onSaveFrame: salvarFrame,
+
       onApproveFrame: (frameId: string) => mutate.mutate(() => approveFrame(frameId)),
       onApproveStory: () => {
         const total = story.frames.length;
