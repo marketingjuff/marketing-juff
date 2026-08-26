@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as AuthenticatedObjetivosRouteImport } from './routes/_authenticated/objetivos'
 import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
 import { Route as AuthenticatedSocialStoriesRouteImport } from './routes/_authenticated/social/stories'
 
@@ -36,6 +37,11 @@ const AuthenticatedConfiguracoesRoute =
     path: '/configuracoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedObjetivosRoute = AuthenticatedObjetivosRouteImport.update({
+  id: '/objetivos',
+  path: '/objetivos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTrocarSenhaRoute =
   AuthenticatedTrocarSenhaRouteImport.update({
     id: '/trocar-senha',
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/objetivos': typeof AuthenticatedObjetivosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/social/stories': typeof AuthenticatedSocialStoriesRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/objetivos': typeof AuthenticatedObjetivosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/social/stories': typeof AuthenticatedSocialStoriesRoute
 }
@@ -69,21 +77,34 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/_authenticated/objetivos': typeof AuthenticatedObjetivosRoute
   '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/_authenticated/social/stories': typeof AuthenticatedSocialStoriesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/configuracoes' | '/trocar-senha' | '/social/stories'
+    | '/'
+    | '/auth'
+    | '/configuracoes'
+    | '/objetivos'
+    | '/trocar-senha'
+    | '/social/stories'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/configuracoes' | '/trocar-senha' | '/social/stories'
+  to:
+    | '/'
+    | '/auth'
+    | '/configuracoes'
+    | '/objetivos'
+    | '/trocar-senha'
+    | '/social/stories'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/configuracoes'
+    | '/_authenticated/objetivos'
     | '/_authenticated/trocar-senha'
     | '/_authenticated/social/stories'
   fileRoutesById: FileRoutesById
@@ -124,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/objetivos': {
+      id: '/_authenticated/objetivos'
+      path: '/objetivos'
+      fullPath: '/objetivos'
+      preLoaderRoute: typeof AuthenticatedObjetivosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/trocar-senha': {
       id: '/_authenticated/trocar-senha'
       path: '/trocar-senha'
@@ -143,12 +171,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
+  AuthenticatedObjetivosRoute: typeof AuthenticatedObjetivosRoute
   AuthenticatedTrocarSenhaRoute: typeof AuthenticatedTrocarSenhaRoute
   AuthenticatedSocialStoriesRoute: typeof AuthenticatedSocialStoriesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
+  AuthenticatedObjetivosRoute: AuthenticatedObjetivosRoute,
   AuthenticatedTrocarSenhaRoute: AuthenticatedTrocarSenhaRoute,
   AuthenticatedSocialStoriesRoute: AuthenticatedSocialStoriesRoute,
 }

@@ -79,7 +79,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav className="mx-auto max-w-7xl overflow-x-auto px-4">
           <ul className="flex items-end gap-1">
             {NAVIGATION.map((master) => {
-              const enabled = master.subTabs.some((sub) => hasPermission(profile, sub.permission));
+              const enabled = master.subTabs.some(
+                (sub) =>
+                  (!sub.roles || (profile ? sub.roles.includes(profile.role) : false)) &&
+                  hasPermission(profile, sub.permission),
+              );
               return (
                 <li key={master.key}>
                   <span
@@ -101,7 +105,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto max-w-7xl overflow-x-auto border-t border-border px-4">
           <ul className="flex items-center gap-1 py-2">
             {NAVIGATION.flatMap((master) => master.subTabs).map((sub) => {
-              const allowed = hasPermission(profile, sub.permission);
+              const roleOk = !sub.roles || (profile ? sub.roles.includes(profile.role) : false);
+              const allowed = roleOk && hasPermission(profile, sub.permission);
+              if (!roleOk) return null;
               if (!allowed) {
                 return (
                   <li key={sub.key}>
