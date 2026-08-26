@@ -52,6 +52,7 @@ export type Database = {
           descartado: boolean
           id: string
           nome_bloco: string
+          objective_id: string | null
           position: number
           sequence_id: string | null
           status: string
@@ -63,6 +64,7 @@ export type Database = {
           descartado?: boolean
           id?: string
           nome_bloco?: string
+          objective_id?: string | null
           position?: number
           sequence_id?: string | null
           status?: string
@@ -74,11 +76,19 @@ export type Database = {
           descartado?: boolean
           id?: string
           nome_bloco?: string
+          objective_id?: string | null
           position?: number
           sequence_id?: string | null
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "stories_objective_id_fkey"
+            columns: ["objective_id"]
+            isOneToOne: false
+            referencedRelation: "story_objectives"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "stories_sequence_id_fkey"
             columns: ["sequence_id"]
