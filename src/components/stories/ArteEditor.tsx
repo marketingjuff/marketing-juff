@@ -158,62 +158,57 @@ function PainelTexto({
   const [nome, setNome] = useState("");
   const [erroNome, setErroNome] = useState(false);
   const [opacidade, setOpacidade] = useState(comp.sombra_opacidade);
-  const [texto, setTexto] = useState(comp.texto_conteudo);
 
   useEffect(() => setOpacidade(comp.sombra_opacidade), [comp.sombra_opacidade]);
-  useEffect(() => setTexto(comp.texto_conteudo), [comp.texto_conteudo]);
+
+  const aplicado = (p: Preset) =>
+    p.fonte === comp.texto_fonte &&
+    p.peso === comp.texto_peso &&
+    p.alinhamento === comp.texto_alinhamento &&
+    p.tamanho === comp.texto_tamanho &&
+    p.cor_texto.toLowerCase() === comp.texto_cor.toLowerCase() &&
+    p.cor_sombra.toLowerCase() === comp.sombra_cor.toLowerCase() &&
+    p.opacidade_sombra === comp.sombra_opacidade;
 
   return (
     <div className="max-h-[70vh] space-y-3 overflow-y-auto">
       <div className="space-y-1">
-        <span className="text-[11px] text-muted-foreground">Texto sobre a arte</span>
-        <Textarea
-          rows={2}
-          value={texto}
-          disabled={!editable}
-          className="text-sm"
-          placeholder="Escreva o texto da arte"
-          onChange={(e) => setTexto(e.target.value)}
-          onBlur={() => {
-            if (texto === comp.texto_conteudo) return;
-            salvar({ texto_conteudo: texto, texto_ativo: texto.trim().length > 0 });
-          }}
-        />
-      </div>
-
-      <div className="space-y-1">
         <span className="text-[11px] font-medium text-muted-foreground">Pré-formatações</span>
-        <div className="space-y-1">
+        <div className="grid max-h-56 grid-cols-3 gap-1 overflow-y-auto pr-1">
           {presets.map((p) => (
-            <div key={p.id} className="flex items-center gap-2">
+            <div key={p.id} className="relative">
               <button
                 type="button"
                 disabled={!editable}
-                className="flex flex-1 items-center gap-2 rounded-md border border-border px-2 py-1 text-left text-xs hover:bg-secondary disabled:opacity-50"
+                title={p.nome}
+                className={cn(
+                  "flex w-full items-center gap-1 rounded-md border border-border px-1.5 py-1 text-left text-[11px] hover:bg-secondary disabled:opacity-50",
+                  aplicado(p) && "ring-2 ring-primary",
+                )}
                 onClick={() =>
                   salvar({
                     texto_fonte: p.fonte,
                     texto_peso: p.peso,
+                    texto_alinhamento: p.alinhamento,
                     texto_tamanho: p.tamanho,
                     texto_cor: p.cor_texto,
                     sombra_cor: p.cor_sombra,
                     sombra_opacidade: p.opacidade_sombra,
-                    texto_ativo: true,
                   })
                 }
               >
                 <span
-                  className="size-4 shrink-0 rounded border border-border"
+                  className="size-3.5 shrink-0 rounded border border-border"
                   style={{ background: p.cor_texto }}
                 />
-                <span className="flex-1 truncate">{p.nome}</span>
+                <span className="min-w-0 flex-1 truncate">{p.nome}</span>
                 <span className="tabular text-muted-foreground">{p.tamanho}</span>
               </button>
               {podeGerir ? (
                 <button
                   type="button"
                   aria-label={`Excluir ${p.nome}`}
-                  className="text-muted-foreground hover:text-destructive"
+                  className="absolute -right-1 -top-1 rounded-full bg-background p-0.5 text-muted-foreground shadow hover:text-destructive"
                   onClick={async () => {
                     if (!window.confirm(`Excluir a pré-formatação "${p.nome}"?`)) return;
                     try {
@@ -224,13 +219,15 @@ function PainelTexto({
                     }
                   }}
                 >
-                  <Trash2 className="size-3.5" />
+                  <Trash2 className="size-3" />
                 </button>
               ) : null}
             </div>
           ))}
           {presets.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Nenhuma pré-formatação salva.</p>
+            <p className="col-span-3 text-xs text-muted-foreground">
+              Nenhuma pré-formatação salva.
+            </p>
           ) : null}
         </div>
       </div>
