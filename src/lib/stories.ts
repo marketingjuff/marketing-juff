@@ -21,6 +21,65 @@ export type StoryStatus = "pendente" | "aprovado" | "ajustar";
 /** Status por arte. 'refeito' = imagem trocada, aguardando novo aval. */
 export type FrameStatus = "pendente" | "ajustar" | "refeito" | "aprovado";
 
+/** Composição visual desenhada sobre a arte (camada de texto e camada de logo). */
+export type Composicao = {
+  texto_ativo: boolean;
+  texto_conteudo: string;
+  texto_x: number;
+  texto_y: number;
+  texto_fonte: string;
+  texto_peso: number;
+  texto_tamanho: number;
+  texto_cor: string;
+  sombra_cor: string;
+  sombra_opacidade: number;
+  logo_ativo: boolean;
+  logo_id: string | null;
+  logo_x: number;
+  logo_y: number;
+  logo_tamanho: number;
+  logo_cor: string;
+};
+
+export const COMPOSICAO_PADRAO: Composicao = {
+  texto_ativo: false,
+  texto_conteudo: "",
+  texto_x: 50,
+  texto_y: 50,
+  texto_fonte: "Nunito",
+  texto_peso: 900,
+  texto_tamanho: 6,
+  texto_cor: "#ffffff",
+  sombra_cor: "#000000",
+  sombra_opacidade: 50,
+  logo_ativo: false,
+  logo_id: null,
+  logo_x: 50,
+  logo_y: 85,
+  logo_tamanho: 4,
+  logo_cor: "#ffffff",
+};
+
+/** Colunas da composição no banco (prefixo comp_). */
+export const COLUNAS_COMPOSICAO = [
+  "comp_texto_ativo",
+  "comp_texto_conteudo",
+  "comp_texto_x",
+  "comp_texto_y",
+  "comp_texto_fonte",
+  "comp_texto_peso",
+  "comp_texto_tamanho",
+  "comp_texto_cor",
+  "comp_sombra_cor",
+  "comp_sombra_opacidade",
+  "comp_logo_ativo",
+  "comp_logo_id",
+  "comp_logo_x",
+  "comp_logo_y",
+  "comp_logo_tamanho",
+  "comp_logo_cor",
+].join(", ");
+
 export type Frame = {
   id: string;
   story_id: string;
@@ -38,7 +97,9 @@ export type Frame = {
   adjust_comment_at: string | null;
   /** Guardado só por segurança no bucket. Nunca exibido na interface. */
   image_path_anterior: string | null;
+  comp: Composicao;
 };
+
 
 export type Story = {
   id: string;
