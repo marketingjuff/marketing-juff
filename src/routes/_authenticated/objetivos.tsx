@@ -132,10 +132,16 @@ function ObjetivosPage() {
   return (
     <AppShell>
       <div className="mb-4 flex flex-wrap items-center gap-3">
+        <Button asChild size="sm" variant="ghost" className="gap-1">
+          <Link to="/social/stories">
+            <ArrowLeft className="size-4" /> Voltar para Stories
+          </Link>
+        </Button>
         <div className="flex items-center gap-2">
           <Target className="size-5 text-primary" />
           <h1 className="text-lg font-semibold">Objetivos de story</h1>
         </div>
+
         <div className="ml-auto flex items-center gap-2">
           <Button
             variant={mostrarArquivados ? "default" : "outline"}
