@@ -418,91 +418,85 @@ export function StoryCard({
             <GripVertical className="size-4" />
           </button>
 
-          <div className="min-w-0 flex-1" title={titulo}>
-            <span className="block truncate text-sm font-semibold">{titulo}</span>
-            <span className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
-              {campanha ? `CAMPANHA • ${total} artes` : "SOLO"}
-              {objetivoAtual ? (
-                <span className="rounded-full border border-primary/40 bg-primary-soft px-2 py-0.5 text-[10px] font-medium text-primary">
-                  {objetivoAtual.nome}
-                </span>
-              ) : null}
-            </span>
-          </div>
-
-
-          <span className="tabular rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+          <span className="tabular shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
             {story.position}
           </span>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-1.5">
-          {tudoAprovado ? (
-            <span className="rounded-full border border-success bg-success px-2 py-0.5 text-[11px] font-medium text-background">
-              Aprovado
-            </span>
+          {editable ? (
+            <div className="flex min-w-0 flex-1 items-center gap-2" {...stopDrag}>
+              <Input
+                value={nomeBloco}
+                placeholder={titulo}
+                className="h-8 min-w-0 flex-1 text-sm font-semibold"
+                aria-label="Nome do bloco"
+                onChange={(e) => setNomeBloco(e.target.value)}
+                onBlur={async () => {
+                  if (nomeBloco === story.nome_bloco) return;
+                  await onSaveBloco(story.id, nomeBloco);
+                  setBlocoSalvo(true);
+                  setTimeout(() => setBlocoSalvo(false), 2000);
+                }}
+              />
+              <Salvo visivel={blocoSalvo} />
+            </div>
           ) : (
-            <span className="rounded-full border border-border bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground">
-              {aprovadas} de {total} aprovadas
+            <span className="min-w-0 flex-1 truncate text-sm font-semibold" title={titulo}>
+              {titulo}
             </span>
           )}
-          {emAjuste > 0 ? (
-            <span className="rounded-full border border-warning bg-warning/25 px-2 py-0.5 text-[11px] font-medium">
-              {emAjuste} em ajuste
-            </span>
-          ) : null}
+
           {canApprove && total > 0 && !tudoAprovado ? (
-            <Button size="sm" className="ml-auto gap-1" onClick={onApproveStory} {...stopDrag}>
+            <Button size="sm" className="shrink-0 gap-1" onClick={onApproveStory} {...stopDrag}>
               <CheckCheck className="size-3.5" /> Aprovar bloco
             </Button>
           ) : null}
         </div>
 
-        {canApprove ? (
-          <div className="space-y-1" {...stopDrag}>
-            <span className="text-[11px] text-muted-foreground">Objetivo do story</span>
-            <Select
-              value={story.objective_id ?? "__nenhum__"}
-              onValueChange={(v) => onSetObjective(story.id, v === "__nenhum__" ? null : v)}
-            >
-              <SelectTrigger className="h-8 text-sm">
-                <SelectValue placeholder="Sem objetivo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__nenhum__">Sem objetivo</SelectItem>
-                {objetivos.map((o) => (
-                  <SelectItem key={o.id} value={o.id}>
-                    {o.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ) : null}
-
-
-
-        <div className="space-y-1" {...stopDrag}>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-muted-foreground">Nome do bloco</span>
-            <Salvo visivel={blocoSalvo} />
-          </div>
-          <Input
-            value={nomeBloco}
-            disabled={!editable}
-            placeholder="Nome do bloco"
-            className="h-8 text-sm"
-            onChange={(e) => setNomeBloco(e.target.value)}
-            onBlur={async () => {
-              if (nomeBloco === story.nome_bloco) return;
-              await onSaveBloco(story.id, nomeBloco);
-              setBlocoSalvo(true);
-              setTimeout(() => setBlocoSalvo(false), 2000);
-            }}
-          />
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+          <span className="rounded-full border border-border bg-secondary px-2 py-0.5">
+            {campanha ? `CAMPANHA • ${total} artes` : "SOLO"}
+          </span>
+          {tudoAprovado ? (
+            <span className="rounded-full border border-success bg-success px-2 py-0.5 text-[11px] font-medium text-background">
+              Aprovado
+            </span>
+          ) : (
+            <span className="rounded-full border border-border bg-secondary px-2 py-0.5">
+              {aprovadas} de {total} aprovadas
+            </span>
+          )}
+          {emAjuste > 0 ? (
+            <span className="rounded-full border border-warning bg-warning/25 px-2 py-0.5 font-medium text-foreground">
+              {emAjuste} em ajuste
+            </span>
+          ) : null}
+          {canApprove ? (
+            <span {...stopDrag}>
+              <Select
+                value={story.objective_id ?? "__nenhum__"}
+                onValueChange={(v) => onSetObjective(story.id, v === "__nenhum__" ? null : v)}
+              >
+                <SelectTrigger className="h-7 w-auto gap-1 rounded-full px-2 text-[11px]" aria-label="Objetivo do story">
+                  <SelectValue placeholder="Sem objetivo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__nenhum__">Sem objetivo</SelectItem>
+                  {objetivos.map((o) => (
+                    <SelectItem key={o.id} value={o.id}>
+                      {o.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </span>
+          ) : objetivoAtual ? (
+            <span className="rounded-full border border-primary/40 bg-primary-soft px-2 py-0.5 text-[10px] font-medium text-primary">
+              {objetivoAtual.nome}
+            </span>
+          ) : null}
         </div>
 
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-3">
+        <div className="flex flex-nowrap gap-3">
           {story.frames.map((frame, index) => (
             <ArteBloco
               key={frame.id}
