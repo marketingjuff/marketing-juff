@@ -75,8 +75,22 @@ function SeletorCor({
   titulo: string;
 }) {
   const [aberto, setAberto] = useState(false);
-  const [local, setLocal] = useState(cor);
-  useEffect(() => setLocal(cor), [cor]);
+  const [local, setLocal] = useState(normalizarHex(cor) ?? "#000000");
+  const [texto, setTexto] = useState(normalizarHex(cor) ?? "#000000");
+  const [erro, setErro] = useState(false);
+
+  useEffect(() => {
+    const hex = normalizarHex(cor) ?? "#000000";
+    setLocal(hex);
+    setTexto(hex);
+    setErro(false);
+  }, [cor]);
+
+  const aplicar = (hex: string) => {
+    setLocal(hex);
+    setTexto(hex);
+    setErro(false);
+  };
 
   return (
     <Popover
@@ -91,7 +105,7 @@ function SeletorCor({
           type="button"
           disabled={disabled}
           aria-label={titulo}
-          title={titulo}
+          title={`${titulo} (${local})`}
           className="size-6 shrink-0 rounded border border-border"
           style={{ background: local }}
         />
@@ -103,12 +117,12 @@ function SeletorCor({
             <button
               key={c.hex}
               type="button"
-              title={c.nome}
+              title={`${c.nome} ${c.hex}`}
               aria-label={c.nome}
-              onClick={() => setLocal(c.hex)}
+              onClick={() => aplicar(normalizarHex(c.hex) ?? c.hex)}
               className={cn(
                 "size-5 rounded border border-border",
-                local.toLowerCase() === c.hex && "ring-2 ring-primary",
+                local === (normalizarHex(c.hex) ?? c.hex) && "ring-2 ring-primary",
               )}
               style={{ background: c.hex }}
             />
@@ -117,10 +131,41 @@ function SeletorCor({
         <input
           type="color"
           value={local}
-          onChange={(e) => setLocal(e.target.value)}
+          onChange={(e) => aplicar(normalizarHex(e.target.value) ?? local)}
           className="h-8 w-full cursor-pointer rounded border border-border bg-background"
           aria-label="Escolha livre de cor"
         />
+        <Input
+          value={texto}
+          spellCheck={false}
+          placeholder="#000000"
+          aria-label="Código hexadecimal da cor"
+          className="h-8 font-mono text-xs"
+          onChange={(e) => {
+            const valor = e.target.value;
+            setTexto(valor);
+            const hex = normalizarHex(valor);
+            if (hex) {
+              setLocal(hex);
+              setErro(false);
+            } else {
+              setErro(true);
+            }
+          }}
+          onBlur={() => {
+            const hex = normalizarHex(texto);
+            if (hex) {
+              aplicar(hex);
+            } else {
+              setErro(true);
+            }
+          }}
+        />
+        {erro ? (
+          <p className="text-[11px] font-medium text-destructive">
+            Use um hexadecimal válido, como #1d2546
+          </p>
+        ) : null}
       </PopoverContent>
     </Popover>
   );
