@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Archive, ArchiveRestore, Pencil, Plus, Target, Trash2, X } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, Pencil, Plus, Target, Trash2, X } from "lucide-react";
+
 
 import { AppShell } from "@/components/AppShell";
 import { profileQueryOptions } from "@/lib/auth";
