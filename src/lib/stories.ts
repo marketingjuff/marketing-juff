@@ -32,9 +32,9 @@ export type Frame = {
   status: FrameStatus;
   adjust_comment: string | null;
   adjust_comment_at: string | null;
+  /** Guardado só por segurança no bucket. Nunca exibido na interface. */
   image_path_anterior: string | null;
-  trocado_em: string | null;
-  url_anterior: string;
+
 };
 
 export type Story = {
