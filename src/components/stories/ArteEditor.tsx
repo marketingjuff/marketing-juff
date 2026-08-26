@@ -11,6 +11,7 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
+  Move,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -731,7 +732,7 @@ function TextoEditavel({
           lineHeight: 1.2,
           color: comp.texto_cor,
           maxWidth: larguraMax,
-          minWidth: mostrarPista ? undefined : "0.5em",
+          minWidth: mostrarPista ? "5em" : "0.5em",
           textShadow:
             comp.sombra_opacidade > 0
               ? `${fontePx * 0.04}px ${fontePx * 0.04}px ${fontePx * 0.12}px ${corComOpacidade(comp.sombra_cor, comp.sombra_opacidade)}`
