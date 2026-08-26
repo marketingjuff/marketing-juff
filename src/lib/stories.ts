@@ -89,7 +89,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
   let query = supabase
     .from("stories")
     .select(
-      "id, position, status, adjust_comment, adjust_comment_at, nome_bloco, sequence_id, descartado",
+      "id, position, status, adjust_comment, adjust_comment_at, nome_bloco, sequence_id, descartado, objective_id",
     )
     .order("position", { ascending: true });
   query = sequenceId ? query.eq("sequence_id", sequenceId) : query.is("sequence_id", null);
@@ -143,6 +143,8 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
     nome_bloco: s.nome_bloco ?? "",
     sequence_id: s.sequence_id ?? null,
     descartado: s.descartado ?? false,
+    objective_id: s.objective_id ?? null,
+
     frames: frames
       .filter((f) => f.story_id === s.id)
       .map((f) => ({
