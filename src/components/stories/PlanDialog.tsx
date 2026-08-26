@@ -17,11 +17,13 @@ import { Textarea } from "@/components/ui/textarea";
 export function PlanDialog({
   open,
   stories,
+  objetivos = [],
   onOpenChange,
   onApply,
 }: {
   open: boolean;
   stories: Story[];
+  objetivos?: Objective[];
   onOpenChange: (open: boolean) => void;
   onApply: (validation: PlanValidation) => void;
 }) {
@@ -31,8 +33,9 @@ export function PlanDialog({
   const inputRef = useRef<HTMLInputElement>(null);
 
   function analisar(conteudo: string) {
-    setValidation(validatePlan(parsePlan(conteudo), stories));
+    setValidation(validatePlan(parsePlan(conteudo), stories, objetivos));
   }
+
 
   async function carregarArquivo(file: File) {
     setLendo(true);
