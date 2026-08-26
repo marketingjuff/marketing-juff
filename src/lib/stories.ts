@@ -405,6 +405,43 @@ export async function updateFrameTexts(
   if (error) throw error;
 }
 
+/** Lê a composição de uma linha do banco, caindo no padrão quando vazia. */
+export function composicaoDaLinha(f: Record<string, unknown>): Composicao {
+  const num = (v: unknown, padrao: number) => (v === null || v === undefined ? padrao : Number(v));
+  return {
+    texto_ativo: Boolean(f.comp_texto_ativo ?? COMPOSICAO_PADRAO.texto_ativo),
+    texto_conteudo: (f.comp_texto_conteudo as string) ?? "",
+    texto_x: num(f.comp_texto_x, COMPOSICAO_PADRAO.texto_x),
+    texto_y: num(f.comp_texto_y, COMPOSICAO_PADRAO.texto_y),
+    texto_fonte: (f.comp_texto_fonte as string) ?? COMPOSICAO_PADRAO.texto_fonte,
+    texto_peso: num(f.comp_texto_peso, COMPOSICAO_PADRAO.texto_peso),
+    texto_tamanho: num(f.comp_texto_tamanho, COMPOSICAO_PADRAO.texto_tamanho),
+    texto_cor: (f.comp_texto_cor as string) ?? COMPOSICAO_PADRAO.texto_cor,
+    sombra_cor: (f.comp_sombra_cor as string) ?? COMPOSICAO_PADRAO.sombra_cor,
+    sombra_opacidade: num(f.comp_sombra_opacidade, COMPOSICAO_PADRAO.sombra_opacidade),
+    logo_ativo: Boolean(f.comp_logo_ativo ?? COMPOSICAO_PADRAO.logo_ativo),
+    logo_id: (f.comp_logo_id as string | null) ?? null,
+    logo_x: num(f.comp_logo_x, COMPOSICAO_PADRAO.logo_x),
+    logo_y: num(f.comp_logo_y, COMPOSICAO_PADRAO.logo_y),
+    logo_tamanho: num(f.comp_logo_tamanho, COMPOSICAO_PADRAO.logo_tamanho),
+    logo_cor: (f.comp_logo_cor as string) ?? COMPOSICAO_PADRAO.logo_cor,
+  };
+}
+
+/** Salva só os campos alterados da composição, na arte informada. */
+export async function updateFrameComposicao(
+  frameId: string,
+  patch: Partial<Composicao>,
+): Promise<void> {
+  const values: Record<string, unknown> = {};
+  for (const [chave, valor] of Object.entries(patch)) values[`comp_${chave}`] = valor;
+  if (Object.keys(values).length === 0) return;
+  const { error } = await supabase.from("story_frames").update(values).eq("id", frameId);
+  if (error) throw error;
+}
+
+
+
 async function removeImages(paths: string[]): Promise<void> {
   if (paths.length === 0) return;
   await supabase.storage.from(BUCKET).remove(paths);
