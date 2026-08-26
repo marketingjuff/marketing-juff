@@ -304,16 +304,26 @@ function StoriesPage() {
     }
   }
 
-  async function exportar(qtd: number) {
+  async function exportar(qtd: number, escolhidos: Objective[], todos: boolean) {
     setExportando(true);
     try {
-      await exportPlanPdf(fila, nomeAtual, qtd);
+      await exportPlanPdf(fila, nomeAtual, qtd, escolhidos, todos);
     } catch (error) {
       toast.error((error as Error).message);
     } finally {
       setExportando(false);
     }
   }
+
+  function definirObjetivo(storyId: string, objectiveId: string | null) {
+    const anterior = stories.find((s) => s.id === storyId)?.objective_id ?? null;
+    patchLocal((s) => (s.id === storyId ? { ...s, objective_id: objectiveId } : s));
+    void setStoryObjective(storyId, objectiveId).catch((error: Error) => {
+      patchLocal((s) => (s.id === storyId ? { ...s, objective_id: anterior } : s));
+      toast.error(error.message);
+    });
+  }
+
 
   function aplicarPlano(validation: PlanValidation) {
     setPlanoAberto(false);
