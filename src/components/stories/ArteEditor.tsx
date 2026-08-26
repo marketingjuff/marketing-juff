@@ -11,7 +11,11 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
+  Minus,
+  Plus,
+  Type,
   Move,
+
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -413,52 +417,79 @@ export function FileiraPresets({
   editable: boolean;
   onAplicar: (patch: Partial<Composicao>) => void;
 }) {
-  const { data: presets = [] } = useQuery(presetsQueryOptions);
-  if (presets.length === 0) return null;
+  const btn = (ativo: boolean) =>
+    cn(
+      "flex size-6 shrink-0 items-center justify-center rounded-md border border-border text-[12px] hover:bg-secondary disabled:opacity-50",
+      ativo && "bg-primary text-primary-foreground hover:bg-primary",
+    );
 
-  const aplicado = (p: Preset) =>
-    p.fonte === comp.texto_fonte &&
-    p.peso === comp.texto_peso &&
-    p.alinhamento === comp.texto_alinhamento &&
-    p.tamanho === comp.texto_tamanho &&
-    p.cor_texto.toLowerCase() === comp.texto_cor.toLowerCase() &&
-    p.cor_sombra.toLowerCase() === comp.sombra_cor.toLowerCase() &&
-    p.opacidade_sombra === comp.sombra_opacidade;
+  const outraFonte = FONTES[(FONTES.indexOf(comp.texto_fonte as never) + 1) % FONTES.length]!;
 
   return (
-    <div className="flex gap-1 overflow-x-auto whitespace-nowrap pb-1" {...semArraste}>
-      {presets.map((p) => (
+    <div className="flex items-center gap-2" {...semArraste}>
+      <div className="flex items-center gap-0.5">
+        {PESOS.map((p) => (
+          <button
+            key={p.value}
+            type="button"
+            disabled={!editable}
+            className={btn(comp.texto_peso === p.value)}
+            style={{ fontWeight: p.value }}
+            onClick={() => onAplicar({ texto_peso: p.value })}
+          >
+            A
+          </button>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-0.5">
         <button
-          key={p.id}
           type="button"
-          disabled={!editable}
-          title={p.nome}
-          className={cn(
-            "flex shrink-0 items-center gap-1 rounded-md border border-border px-1.5 py-1 text-[11px] hover:bg-secondary disabled:opacity-50",
-            aplicado(p) && "ring-2 ring-primary",
-          )}
-          onClick={() =>
-            onAplicar({
-              texto_fonte: p.fonte,
-              texto_peso: p.peso,
-              texto_alinhamento: p.alinhamento,
-              texto_tamanho: p.tamanho,
-              texto_cor: p.cor_texto,
-              sombra_cor: p.cor_sombra,
-              sombra_opacidade: p.opacidade_sombra,
-            })
-          }
+          disabled={!editable || comp.texto_tamanho <= 1}
+          className={btn(false)}
+          onClick={() => onAplicar({ texto_tamanho: comp.texto_tamanho - 1 })}
         >
-          <span
-            className="size-3 shrink-0 rounded border border-border"
-            style={{ background: p.cor_texto }}
-          />
-          <span className="max-w-24 truncate">{p.nome}</span>
+          <Minus className="size-3" />
         </button>
-      ))}
+        <span className="w-4 text-center text-[11px] tabular-nums">{comp.texto_tamanho}</span>
+        <button
+          type="button"
+          disabled={!editable || comp.texto_tamanho >= 10}
+          className={btn(false)}
+          onClick={() => onAplicar({ texto_tamanho: comp.texto_tamanho + 1 })}
+        >
+          <Plus className="size-3" />
+        </button>
+      </div>
+
+      <div className="flex items-center gap-0.5">
+        {ALINHAMENTOS.map(({ value, label, Icone }) => (
+          <button
+            key={value}
+            type="button"
+            disabled={!editable}
+            title={label}
+            className={btn(comp.texto_alinhamento === value)}
+            onClick={() => onAplicar({ texto_alinhamento: value })}
+          >
+            <Icone className="size-3" />
+          </button>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        disabled={!editable}
+        title={comp.texto_fonte}
+        className={btn(false)}
+        onClick={() => onAplicar({ texto_fonte: outraFonte })}
+      >
+        <Type className="size-3" />
+      </button>
     </div>
   );
 }
+
 
 function PainelLogos({
   comp,
