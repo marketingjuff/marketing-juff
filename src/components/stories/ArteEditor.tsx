@@ -225,8 +225,10 @@ function PainelTexto({
   const [nome, setNome] = useState("");
   const [erroNome, setErroNome] = useState(false);
   const [opacidade, setOpacidade] = useState(comp.sombra_opacidade);
+  const [larguraCaixa, setLarguraCaixa] = useState(comp.texto_largura);
 
   useEffect(() => setOpacidade(comp.sombra_opacidade), [comp.sombra_opacidade]);
+  useEffect(() => setLarguraCaixa(comp.texto_largura), [comp.texto_largura]);
 
   return (
     <div className="max-h-[70vh] space-y-3 overflow-y-auto">
@@ -286,6 +288,22 @@ function PainelTexto({
             disabled={!editable}
             onCommit={(v) => salvar({ texto_tamanho: v })}
           />
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+              <span>Largura da caixa</span>
+              <span className="tabular font-medium text-foreground">{larguraCaixa}%</span>
+            </div>
+            <Slider
+              min={10}
+              max={100}
+              step={1}
+              disabled={!editable}
+              value={[larguraCaixa]}
+              onValueChange={(v) => setLarguraCaixa(v[0] ?? larguraCaixa)}
+              onValueCommit={(v) => salvar({ texto_largura: v[0] ?? larguraCaixa })}
+            />
+          </div>
 
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
             <span className="flex-1">Cor do texto</span>
@@ -792,6 +810,7 @@ function TextoEditavel({
   const [sobre, setSobre] = useState(false);
   const [vazio, setVazio] = useState(frame.texto_principal.length === 0);
   const [larguraPct, setLarguraPct] = useState(comp.texto_largura);
+  const [ajustando, setAjustando] = useState(false);
   const redimensionando = useRef(false);
 
   useEffect(() => {
@@ -804,6 +823,13 @@ function TextoEditavel({
     e.stopPropagation();
     if (!editable || larguraContainer <= 0) return;
     redimensionando.current = true;
+    setAjustando(true);
+    const alvo = e.currentTarget as HTMLElement;
+    try {
+      alvo.setPointerCapture(e.pointerId);
+    } catch {
+      /* navegador sem captura de ponteiro: segue no listener global */
+    }
     const x0 = e.clientX;
     const base = larguraPct;
     const fator = comp.texto_alinhamento === "center" ? 2 : 1;
@@ -816,6 +842,7 @@ function TextoEditavel({
       window.removeEventListener("pointermove", mover);
       window.removeEventListener("pointerup", soltar);
       redimensionando.current = false;
+      setAjustando(false);
       const valor = Math.round(calcular(ev));
       setLarguraPct(valor);
       onLargura(valor);
@@ -886,9 +913,15 @@ function TextoEditavel({
     });
   };
 
+  const mostrarAlcas = editable && (editando || sobre || ajustando);
+
   return (
-    <>
-      {editable && (editando || sobre) ? (
+    <div
+      className="relative inline-block"
+      onMouseEnter={() => setSobre(true)}
+      onMouseLeave={() => setSobre(false)}
+    >
+      {mostrarAlcas ? (
         <button
           type="button"
           aria-label="Mover o texto"
@@ -907,8 +940,6 @@ function TextoEditavel({
         spellCheck={false}
         draggable={false}
         onDragStart={(e) => e.preventDefault()}
-        onMouseEnter={() => setSobre(true)}
-        onMouseLeave={() => setSobre(false)}
         onPointerDown={(e) => {
           if (!editable || editando) {
             e.stopPropagation();
@@ -958,7 +989,7 @@ function TextoEditavel({
               : "none",
         }}
       />
-      {editable && (editando || sobre) ? (
+      {mostrarAlcas ? (
         <>
           {(["esq", "dir"] as const).map((lado) => (
             <span
@@ -967,11 +998,13 @@ function TextoEditavel({
               aria-label={`Ajustar a largura da caixa de texto (${lado === "esq" ? "esquerda" : "direita"})`}
               title="Ajustar a largura da caixa de texto"
               className={cn(
-                "absolute top-1/2 z-10 h-6 w-2 -translate-y-1/2 cursor-ew-resize rounded-full border border-background bg-primary shadow",
-                lado === "esq" ? "-left-1" : "-right-1",
+                "absolute inset-y-0 z-20 flex w-4 cursor-ew-resize touch-none items-center justify-center",
+                lado === "esq" ? "-left-2" : "-right-2",
               )}
               onPointerDown={(e) => iniciarResize(e, lado)}
-            />
+            >
+              <span className="h-6 w-1.5 rounded-full border border-background bg-primary shadow" />
+            </span>
           ))}
         </>
       ) : null}
@@ -984,7 +1017,7 @@ function TextoEditavel({
           Escrever
         </span>
       ) : null}
-    </>
+    </div>
   );
 }
 
