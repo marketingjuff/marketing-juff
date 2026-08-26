@@ -8,6 +8,8 @@ import {
   Trash2,
   Plus,
   ImageUp,
+  Copy,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -458,6 +460,8 @@ export function StoryCard({
   onAdjustFrame,
   onReplaceImage,
   onSetObjective,
+  onReplicarBloco,
+  onReplicarProximo,
 }: {
   story: Story;
   editable: boolean;
@@ -476,6 +480,10 @@ export function StoryCard({
   onAdjustFrame: (frameId: string, comment: string) => void;
   onReplaceImage: (frame: FrameType, file: File) => void;
   onSetObjective: (storyId: string, objectiveId: string | null) => void;
+  /** Replica a formatação de fonte da arte 1 em todas as artes do bloco. */
+  onReplicarBloco?: () => void;
+  /** Aplica a formatação de fonte da arte 1 em todas as artes do próximo bloco. */
+  onReplicarProximo?: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [nomeBloco, setNomeBloco] = useState(story.nome_bloco);
@@ -574,6 +582,34 @@ export function StoryCard({
               {titulo}
             </span>
           )}
+
+          {editable && total > 1 && onReplicarBloco ? (
+            <Button
+              size="icon"
+              variant="outline"
+              className="size-8 shrink-0"
+              title="Aplicar a formatação da arte 1 em todas as artes deste bloco"
+              aria-label="Replicar formatação da arte 1 para todo o bloco"
+              onClick={onReplicarBloco}
+              {...stopDrag}
+            >
+              <Copy className="size-3.5" />
+            </Button>
+          ) : null}
+
+          {editable && total > 0 && onReplicarProximo ? (
+            <Button
+              size="icon"
+              variant="outline"
+              className="size-8 shrink-0"
+              title="Aplicar a formatação da arte 1 em todas as artes do próximo bloco"
+              aria-label="Aplicar formatação da arte 1 no próximo bloco"
+              onClick={onReplicarProximo}
+              {...stopDrag}
+            >
+              <ArrowRight className="size-3.5" />
+            </Button>
+          ) : null}
 
           {canApprove && total > 0 && !tudoAprovado ? (
             <Button size="sm" className="shrink-0 gap-1" onClick={onApproveStory} {...stopDrag}>
