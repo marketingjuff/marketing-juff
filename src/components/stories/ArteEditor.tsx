@@ -1,9 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Layers, Grid3X3, Trash2, Upload, Download, Loader2 } from "lucide-react";
+import {
+  Pencil,
+  Layers,
+  Grid3X3,
+  Trash2,
+  Upload,
+  Download,
+  Loader2,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+} from "lucide-react";
 import { toast } from "sonner";
 
-import type { Composicao, Frame } from "@/lib/stories";
+import type { AlinhamentoTexto, Composicao, Frame } from "@/lib/stories";
 import {
   CORES_MARCA,
   FONTES,
@@ -23,11 +34,11 @@ import {
   tamanhoFontePx,
   corComOpacidade,
   type LogoAsset,
+  type Preset,
 } from "@/lib/story-editor";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -45,6 +56,12 @@ const semArraste = {
   onTouchStart: (e: React.TouchEvent) => e.stopPropagation(),
   onClick: (e: React.MouseEvent) => e.stopPropagation(),
 };
+
+const ALINHAMENTOS: { value: AlinhamentoTexto; label: string; Icone: typeof AlignLeft }[] = [
+  { value: "left", label: "Alinhar à esquerda", Icone: AlignLeft },
+  { value: "center", label: "Centralizar", Icone: AlignCenter },
+  { value: "right", label: "Alinhar à direita", Icone: AlignRight },
+];
 
 function SeletorCor({
   cor,
@@ -276,6 +293,23 @@ function PainelTexto({
             ))}
           </div>
 
+          <div className="flex gap-1">
+            {ALINHAMENTOS.map((a) => (
+              <Button
+                key={a.value}
+                size="sm"
+                variant={comp.texto_alinhamento === a.value ? "default" : "outline"}
+                className="flex-1 px-1"
+                disabled={!editable}
+                title={a.label}
+                aria-label={a.label}
+                onClick={() => salvar({ texto_alinhamento: a.value })}
+              >
+                <a.Icone className="size-3.5" />
+              </Button>
+            ))}
+          </div>
+
           <ControleTamanho
             label="Tamanho"
             valor={comp.texto_tamanho}
@@ -345,6 +379,7 @@ function PainelTexto({
                       nome: nome.trim(),
                       fonte: comp.texto_fonte,
                       peso: comp.texto_peso,
+                      alinhamento: comp.texto_alinhamento,
                       tamanho: comp.texto_tamanho,
                       cor_texto: comp.texto_cor,
                       cor_sombra: comp.sombra_cor,
@@ -494,12 +529,14 @@ function Camada({
   x,
   y,
   editable,
+  alinhamento = "center",
   onCommit,
   children,
 }: {
   x: number;
   y: number;
   editable: boolean;
+  alinhamento?: AlinhamentoTexto;
   onCommit: (x: number, y: number) => void;
   children: React.ReactNode;
 }) {
@@ -512,7 +549,9 @@ function Camada({
   return (
     <div
       className={cn(
-        "absolute -translate-x-1/2 -translate-y-1/2 select-none",
+        "absolute -translate-y-1/2 select-none",
+        alinhamento === "center" && "-translate-x-1/2",
+        alinhamento === "right" && "-translate-x-full",
         editable ? "cursor-move" : "pointer-events-none",
       )}
       style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
@@ -630,16 +669,22 @@ export function ArteEditor({
         </div>
       ) : null}
 
-      {comp.texto_ativo && comp.texto_conteudo.trim().length > 0 ? (
+      {frame.texto_principal.trim().length > 0 ? (
         <div className="pointer-events-auto absolute inset-0">
           <Camada
             x={comp.texto_x}
             y={comp.texto_y}
             editable={editable}
+            alinhamento={comp.texto_alinhamento}
             onCommit={(x, y) => salvar({ texto_x: x, texto_y: y })}
           >
             <span
-              className="block whitespace-pre text-center"
+              className={cn(
+                "block whitespace-pre",
+                comp.texto_alinhamento === "left" && "text-left",
+                comp.texto_alinhamento === "center" && "text-center",
+                comp.texto_alinhamento === "right" && "text-right",
+              )}
               style={{
                 fontFamily: `"${comp.texto_fonte}", sans-serif`,
                 fontWeight: comp.texto_peso,
@@ -652,7 +697,7 @@ export function ArteEditor({
                     : "none",
               }}
             >
-              {comp.texto_conteudo}
+              {frame.texto_principal}
             </span>
           </Camada>
         </div>
@@ -672,7 +717,10 @@ export function ArteEditor({
                   <Pencil className="size-3.5" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-72 p-3" align="end">
+              <PopoverContent
+                className="w-[min(26rem,calc(100vw-2rem))] p-3"
+                align="end"
+              >
                 <PainelTexto
                   comp={comp}
                   editable={editable}
