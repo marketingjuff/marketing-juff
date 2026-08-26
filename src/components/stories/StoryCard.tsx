@@ -220,6 +220,17 @@ function ArteBloco({
         </Select>
       </div>
 
+      {frame.adjust_comment ? (
+        <div className="rounded-lg bg-warning/20 p-2 text-xs">
+          <p className="whitespace-pre-wrap">{frame.adjust_comment}</p>
+          {frame.adjust_comment_at ? (
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {new Date(frame.adjust_comment_at).toLocaleString("pt-BR")}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
       {editable ? (
         ajusteAberto ? (
           <div className="space-y-2" {...stopDrag}>
