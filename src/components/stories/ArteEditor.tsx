@@ -481,15 +481,26 @@ export function FileiraPresets({
           ))}
         </div>
 
-        <button
-          type="button"
-          disabled={!editable}
-          title={comp.texto_fonte}
-          className={btn(false)}
-          onClick={() => onAplicar({ texto_fonte: outraFonte })}
-        >
-          <Type className="size-3" />
-        </button>
+        <div className="flex items-center gap-0">
+          <button
+            type="button"
+            disabled={!editable}
+            title={comp.texto_fonte}
+            className={cn(btn(false), "rounded-r-none border-r-0")}
+            onClick={() => onAplicar({ texto_fonte: outraFonte })}
+          >
+            <Type className="size-3" />
+          </button>
+          <button
+            type="button"
+            disabled={!editable}
+            title={`Próxima fonte: ${outraFonte}`}
+            className={cn(btn(false), "rounded-l-none pl-0.5 pr-1")}
+            onClick={() => onAplicar({ texto_fonte: outraFonte })}
+          >
+            <ChevronRight className="size-3" />
+          </button>
+        </div>
       </div>
 
       <div className="flex w-full items-center gap-2">
