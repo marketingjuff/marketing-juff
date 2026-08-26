@@ -82,6 +82,8 @@ export async function exportPlanPdf(
   stories: Story[],
   nomeProjeto: string,
   quantidade: number,
+  objetivos: Objective[] = [],
+  todosObjetivos = true,
 ): Promise<void> {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -93,7 +95,23 @@ export async function exportPlanPdf(
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.text(doc.splitTextToSize(capa(frames.length, quantidade), pageW - margem * 2), margem, margem + 5);
+
+  // As instruções podem passar de uma página; quebra automática por linha.
+  const linhas: string[] = doc.splitTextToSize(
+    capa(frames.length, quantidade, objetivos, todosObjetivos),
+    pageW - margem * 2,
+  );
+  const alturaLinha = 5;
+  let cy = margem + 5;
+  for (const linha of linhas) {
+    if (cy > pageH - margem) {
+      doc.addPage();
+      cy = margem + 5;
+    }
+    doc.text(linha, margem, cy);
+    cy += alturaLinha;
+  }
+
 
   for (const frame of frames) {
     if (!frame.url) continue;
