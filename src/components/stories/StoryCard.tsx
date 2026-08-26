@@ -11,8 +11,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import type { Frame as FrameType, FrameStatus, Recurso, Story } from "@/lib/stories";
+import type { Composicao, Frame as FrameType, FrameStatus, Recurso, Story } from "@/lib/stories";
 import { MAX_FRAMES, RECURSOS, blocoTipo, ehImagemAceita } from "@/lib/stories";
+import { ArteEditor } from "@/components/stories/ArteEditor";
+import { exportarBlocoMontado, logosQueryOptions } from "@/lib/story-editor";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
