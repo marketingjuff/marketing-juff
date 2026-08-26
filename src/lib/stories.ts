@@ -161,33 +161,20 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
   if (error) throw error;
 
   const ids = (stories ?? []).map((s) => s.id);
-  let frames: {
-    id: string;
-    story_id: string;
-    image_path: string;
-    ordem: number;
-    nome_arquivo: string;
-    texto_principal: string;
-    observacao: string;
-    recurso: string;
-    recurso_detalhe: string;
-    status: string;
-    adjust_comment: string | null;
-    adjust_comment_at: string | null;
-    image_path_anterior: string | null;
-  }[] = [];
+  let frames: Record<string, unknown>[] = [];
 
   if (ids.length > 0) {
     const { data, error: framesError } = await supabase
       .from("story_frames")
       .select(
-        "id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, recurso, recurso_detalhe, status, adjust_comment, adjust_comment_at, image_path_anterior",
+        `id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, recurso, recurso_detalhe, status, adjust_comment, adjust_comment_at, image_path_anterior, ${COLUNAS_COMPOSICAO}`,
       )
       .in("story_id", ids)
       .order("ordem", { ascending: true });
     if (framesError) throw framesError;
-    frames = data ?? [];
+    frames = (data ?? []) as unknown as Record<string, unknown>[];
   }
+
 
   const urls = new Map<string, string>();
   const paths = frames.map((f) => f.image_path);
