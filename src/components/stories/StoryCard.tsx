@@ -448,6 +448,30 @@ export function StoryCard({
           ) : null}
         </div>
 
+        {canApprove ? (
+          <div className="space-y-1" {...stopDrag}>
+            <span className="text-[11px] text-muted-foreground">Objetivo do story</span>
+            <Select
+              value={story.objective_id ?? "__nenhum__"}
+              onValueChange={(v) => onSetObjective(story.id, v === "__nenhum__" ? null : v)}
+            >
+              <SelectTrigger className="h-8 text-sm">
+                <SelectValue placeholder="Sem objetivo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__nenhum__">Sem objetivo</SelectItem>
+                {objetivos.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>
+                    {o.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
+
+
+
         <div className="space-y-1" {...stopDrag}>
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-muted-foreground">Nome do bloco</span>
