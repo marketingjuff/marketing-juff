@@ -642,12 +642,38 @@ export function StoryCard({
               canApprove={canApprove}
               onOpen={() => onOpenFrame(index)}
               onSaveFrame={onSaveFrame}
+              onSaveComp={onSaveComp}
               onApproveFrame={onApproveFrame}
               onAdjustFrame={onAdjustFrame}
               onReplaceImage={onReplaceImage}
             />
           ))}
         </div>
+
+        {aprovadas > 0 ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1"
+            disabled={exportandoBloco}
+            onClick={async () => {
+              setExportandoBloco(true);
+              try {
+                const n = await exportarBlocoMontado(
+                  story,
+                  (logoId) => logos.find((l) => l.id === logoId)?.svg ?? null,
+                );
+                toast.success(`${n} arte(s) exportada(s)`);
+              } catch (erro) {
+                toast.error(erro instanceof Error ? erro.message : "Falha ao exportar as artes");
+              } finally {
+                setExportandoBloco(false);
+              }
+            }}
+          >
+            <ImageUp className="size-4" /> Exportar artes aprovadas
+          </Button>
+        ) : null}
 
         {editable ? (
           <div className="flex items-center gap-1.5">
@@ -672,6 +698,7 @@ export function StoryCard({
             </Button>
           </div>
         ) : null}
+
 
         <input
           ref={inputRef}
