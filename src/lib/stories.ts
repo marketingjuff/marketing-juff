@@ -177,7 +177,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
 
 
   const urls = new Map<string, string>();
-  const paths = frames.map((f) => f.image_path);
+  const paths = frames.map((f) => String(f.image_path));
   if (paths.length > 0) {
     const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrls(paths, 3600);
     for (const item of signed ?? []) {
@@ -199,22 +199,24 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
     frames: frames
       .filter((f) => f.story_id === s.id)
       .map((f) => ({
-        id: f.id,
-        story_id: f.story_id,
-        image_path: f.image_path,
-        ordem: f.ordem,
-        nome_arquivo: f.nome_arquivo ?? "",
-        texto_principal: f.texto_principal ?? "",
-        observacao: f.observacao ?? "",
-        recurso: (f.recurso ?? "Nenhum") as Recurso,
-        recurso_detalhe: f.recurso_detalhe ?? "",
-        url: urls.get(f.image_path) ?? "",
-        status: (f.status ?? "pendente") as FrameStatus,
-        adjust_comment: f.adjust_comment,
-        adjust_comment_at: f.adjust_comment_at,
-        image_path_anterior: f.image_path_anterior,
+        id: String(f.id),
+        story_id: String(f.story_id),
+        image_path: String(f.image_path),
+        ordem: Number(f.ordem ?? 0),
+        nome_arquivo: (f.nome_arquivo as string) ?? "",
+        texto_principal: (f.texto_principal as string) ?? "",
+        observacao: (f.observacao as string) ?? "",
+        recurso: ((f.recurso as string) ?? "Nenhum") as Recurso,
+        recurso_detalhe: (f.recurso_detalhe as string) ?? "",
+        url: urls.get(String(f.image_path)) ?? "",
+        status: ((f.status as string) ?? "pendente") as FrameStatus,
+        adjust_comment: (f.adjust_comment as string | null) ?? null,
+        adjust_comment_at: (f.adjust_comment_at as string | null) ?? null,
+        image_path_anterior: (f.image_path_anterior as string | null) ?? null,
+        comp: composicaoDaLinha(f),
       })),
   }));
+
 }
 
 /** Nome do arquivo sem extensão, aparado em 60 caracteres. */
