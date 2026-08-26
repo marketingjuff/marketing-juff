@@ -38,14 +38,8 @@ export const NAVIGATION: MasterTab[] = [
         to: "/social/stories",
         permission: "social.stories",
       },
-      {
-        key: "objetivos",
-        label: "Objetivos",
-        to: "/objetivos",
-        permission: "social.stories",
-        roles: ["admin", "gestor"],
-      },
     ],
+
   },
 ];
 
