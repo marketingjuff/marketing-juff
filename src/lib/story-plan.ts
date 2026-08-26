@@ -224,6 +224,8 @@ export async function applyPlan(
       .from("stories")
       .update({
         nome_bloco: bloco.nome,
+        objective_id: bloco.objective_id,
+
         position: index + 1,
         sequence_id: sequenceId,
         descartado: false,
