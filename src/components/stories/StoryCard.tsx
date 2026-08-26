@@ -476,6 +476,11 @@ export function StoryCard({
               {emAjuste} em ajuste
             </span>
           ) : null}
+          {canApprove && total > 0 && !tudoAprovado ? (
+            <Button size="sm" className="ml-auto gap-1" onClick={onApproveStory} {...stopDrag}>
+              <CheckCheck className="size-3.5" /> Aprovar bloco
+            </Button>
+          ) : null}
         </div>
 
         <div className="space-y-1" {...stopDrag}>
