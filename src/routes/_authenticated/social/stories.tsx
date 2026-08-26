@@ -176,6 +176,12 @@ function StoriesPage() {
   const [sequenceId, setSequenceId] = useState<string | null>(null);
   const { data: sequences = [] } = useQuery(sequencesQueryOptions);
   const { data: stories = [], isLoading } = useQuery(storiesQueryOptions(sequenceId));
+  const { data: objetivos = [] } = useQuery(objectivesQueryOptions);
+  const objetivosAtivos = useMemo(
+    () => objetivos.filter((o: Objective) => !o.arquivado),
+    [objetivos],
+  );
+
 
   const projetoAtual = sequences.find((s) => s.id === sequenceId) ?? null;
   const nomeAtual = projetoAtual?.nome ?? "Área de trabalho";
