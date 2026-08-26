@@ -46,8 +46,11 @@ export type Story = {
   nome_bloco: string;
   sequence_id: string | null;
   descartado: boolean;
+  /** Objetivo do story inteiro. Pode ficar vazio. */
+  objective_id: string | null;
   frames: Frame[];
 };
+
 
 export type Sequence = {
   id: string;
@@ -86,7 +89,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
   let query = supabase
     .from("stories")
     .select(
-      "id, position, status, adjust_comment, adjust_comment_at, nome_bloco, sequence_id, descartado",
+      "id, position, status, adjust_comment, adjust_comment_at, nome_bloco, sequence_id, descartado, objective_id",
     )
     .order("position", { ascending: true });
   query = sequenceId ? query.eq("sequence_id", sequenceId) : query.is("sequence_id", null);
@@ -140,6 +143,8 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
     nome_bloco: s.nome_bloco ?? "",
     sequence_id: s.sequence_id ?? null,
     descartado: s.descartado ?? false,
+    objective_id: s.objective_id ?? null,
+
     frames: frames
       .filter((f) => f.story_id === s.id)
       .map((f) => ({
@@ -319,6 +324,20 @@ export async function updateStoryBloco(storyId: string, nomeBloco: string): Prom
   if (error) throw error;
 }
 
+/** Define (ou limpa) o objetivo do story inteiro. */
+export async function setStoryObjective(
+  storyId: string,
+  objectiveId: string | null,
+): Promise<void> {
+  const { error } = await supabase
+    .from("stories")
+    .update({ objective_id: objectiveId })
+    .eq("id", storyId);
+  if (error) throw error;
+}
+
+
+
 export async function updateFrameTexts(
   frameId: string,
   values: { texto_principal?: string; observacao?: string; recurso?: Recurso },
@@ -455,6 +474,8 @@ export async function undoMerge(source: Story, target: Story): Promise<void> {
       nome_bloco: source.nome_bloco,
       sequence_id: source.sequence_id,
       descartado: source.descartado,
+      objective_id: source.objective_id,
+
     })
     .select("id")
     .single();

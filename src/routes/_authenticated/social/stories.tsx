@@ -55,6 +55,7 @@ import {
   sequencesQueryOptions,
   setDescartado,
   setSequenceArquivado,
+  setStoryObjective,
   sortStoriesByName,
   splitFrame,
   storiesQueryOptions,
@@ -66,8 +67,10 @@ import {
   type StoryStatus,
 } from "@/lib/stories";
 
+import { objectivesQueryOptions, type Objective } from "@/lib/objectives";
 import { applyPlan, type PlanValidation } from "@/lib/story-plan";
 import { exportPlanPdf } from "@/lib/story-pdf";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -173,6 +176,12 @@ function StoriesPage() {
   const [sequenceId, setSequenceId] = useState<string | null>(null);
   const { data: sequences = [] } = useQuery(sequencesQueryOptions);
   const { data: stories = [], isLoading } = useQuery(storiesQueryOptions(sequenceId));
+  const { data: objetivos = [] } = useQuery(objectivesQueryOptions);
+  const objetivosAtivos = useMemo(
+    () => objetivos.filter((o: Objective) => !o.arquivado),
+    [objetivos],
+  );
+
 
   const projetoAtual = sequences.find((s) => s.id === sequenceId) ?? null;
   const nomeAtual = projetoAtual?.nome ?? "Área de trabalho";
@@ -191,7 +200,10 @@ function StoriesPage() {
   const [confirmaNome, setConfirmaNome] = useState("");
   const [exportAberto, setExportAberto] = useState(false);
   const [quantidade, setQuantidade] = useState("0");
+  /** Objetivos marcados na exportação. null = todos marcados. */
+  const [objetivosPdf, setObjetivosPdf] = useState<string[] | null>(null);
   const [nomeProjeto, setNomeProjeto] = useState("");
+
   const [pendentes, setPendentes] = useState<File[] | null>(null);
   const [naoUsadasAberto, setNaoUsadasAberto] = useState(false);
   const [confirm, setConfirm] = useState<{
@@ -292,16 +304,26 @@ function StoriesPage() {
     }
   }
 
-  async function exportar(qtd: number) {
+  async function exportar(qtd: number, escolhidos: Objective[], todos: boolean) {
     setExportando(true);
     try {
-      await exportPlanPdf(fila, nomeAtual, qtd);
+      await exportPlanPdf(fila, nomeAtual, qtd, escolhidos, todos);
     } catch (error) {
       toast.error((error as Error).message);
     } finally {
       setExportando(false);
     }
   }
+
+  function definirObjetivo(storyId: string, objectiveId: string | null) {
+    const anterior = stories.find((s) => s.id === storyId)?.objective_id ?? null;
+    patchLocal((s) => (s.id === storyId ? { ...s, objective_id: objectiveId } : s));
+    void setStoryObjective(storyId, objectiveId).catch((error: Error) => {
+      patchLocal((s) => (s.id === storyId ? { ...s, objective_id: anterior } : s));
+      toast.error(error.message);
+    });
+  }
+
 
   function aplicarPlano(validation: PlanValidation) {
     setPlanoAberto(false);
@@ -460,8 +482,12 @@ function StoriesPage() {
       story,
       editable,
       canApprove,
+      objetivos: objetivosAtivos,
+      onSetObjective: (storyId: string, objectiveId: string | null) =>
+        definirObjetivo(storyId, objectiveId),
       onSaveBloco: salvarBloco,
       onSaveFrame: salvarFrame,
+
       onApproveFrame: (frameId: string) => mutate.mutate(() => approveFrame(frameId)),
       onApproveStory: () => {
         const total = story.frames.length;
@@ -609,8 +635,10 @@ function StoriesPage() {
               disabled={fila.length === 0 || exportando}
               onClick={() => {
                 setQuantidade(String(fila.length));
+                setObjetivosPdf(null);
                 setExportAberto(true);
               }}
+
             >
               {exportando ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -770,12 +798,14 @@ function StoriesPage() {
       <PlanDialog
         open={planoAberto}
         stories={stories}
+        objetivos={objetivosAtivos}
+
         onOpenChange={setPlanoAberto}
         onApply={aplicarPlano}
       />
 
       <Dialog open={exportAberto} onOpenChange={setExportAberto}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Quantos stories você quer no plano?</DialogTitle>
             <DialogDescription>
@@ -793,15 +823,68 @@ function StoriesPage() {
               onChange={(e) => setQuantidade(e.target.value)}
             />
           </div>
+
+          {objetivosAtivos.length > 0 ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <Label>Objetivos permitidos</Label>
+                <button
+                  type="button"
+                  className="text-xs text-primary underline-offset-2 hover:underline"
+                  onClick={() => setObjetivosPdf(null)}
+                >
+                  Marcar todos
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Com todos marcados, o PDF pede distribuição livre entre os objetivos. Marcando
+                apenas alguns, o PDF pede para usar somente esses.
+              </p>
+              <div className="space-y-1.5 rounded-xl border border-border p-3">
+                {objetivosAtivos.map((o) => {
+                  const marcado = objetivosPdf === null || objetivosPdf.includes(o.id);
+                  return (
+                    <label key={o.id} className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={marcado}
+                        onCheckedChange={(v) => {
+                          const atuais =
+                            objetivosPdf === null ? objetivosAtivos.map((x) => x.id) : objetivosPdf;
+                          setObjetivosPdf(
+                            v === true ? [...new Set([...atuais, o.id])] : atuais.filter((id) => id !== o.id),
+                          );
+                        }}
+                      />
+                      {o.nome}
+                    </label>
+                  );
+                })}
+              </div>
+              {objetivosPdf !== null && objetivosPdf.length === 0 ? (
+                <p className="text-xs text-destructive">
+                  Mantenha pelo menos um objetivo marcado para exportar.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
           <DialogFooter>
             <Button variant="ghost" onClick={() => setExportAberto(false)}>
               Cancelar
             </Button>
             <Button
+              disabled={
+                objetivosAtivos.length > 0 && objetivosPdf !== null && objetivosPdf.length === 0
+              }
               onClick={() => {
                 const qtd = Math.max(1, Number.parseInt(quantidade, 10) || fila.length);
+                const todos = objetivosPdf === null || objetivosPdf.length === objetivosAtivos.length;
+                const escolhidos =
+                  objetivosPdf === null
+                    ? objetivosAtivos
+                    : objetivosAtivos.filter((o) => objetivosPdf.includes(o.id));
                 setExportAberto(false);
-                void exportar(qtd);
+                void exportar(qtd, escolhidos, todos);
               }}
             >
               Gerar PDF
@@ -809,6 +892,7 @@ function StoriesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
 
       <Dialog open={salvarAberto} onOpenChange={setSalvarAberto}>
         <DialogContent>

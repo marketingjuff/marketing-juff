@@ -309,6 +309,7 @@ export function StoryCard({
   editable,
   canApprove,
   showSlot,
+  objetivos,
   onDelete,
   onAddFrames,
   onOpenFrame,
@@ -318,11 +319,14 @@ export function StoryCard({
   onApproveStory,
   onAdjustFrame,
   onReplaceImage,
+  onSetObjective,
 }: {
   story: Story;
   editable: boolean;
   canApprove: boolean;
   showSlot?: boolean;
+  /** Objetivos ativos disponíveis para escolha. */
+  objetivos: { id: string; nome: string }[];
   onDelete: () => void;
   onAddFrames: (files: File[]) => void;
   onOpenFrame: (index: number) => void;
@@ -332,7 +336,9 @@ export function StoryCard({
   onApproveStory: () => void;
   onAdjustFrame: (frameId: string, comment: string) => void;
   onReplaceImage: (frame: FrameType, file: File) => void;
+  onSetObjective: (storyId: string, objectiveId: string | null) => void;
 }) {
+
   const inputRef = useRef<HTMLInputElement>(null);
   const [nomeBloco, setNomeBloco] = useState(story.nome_bloco);
   const [blocoSalvo, setBlocoSalvo] = useState(false);
@@ -363,6 +369,8 @@ export function StoryCard({
   const aprovadas = story.frames.filter((f) => f.status === "aprovado").length;
   const emAjuste = story.frames.filter((f) => f.status === "ajustar").length;
   const tudoAprovado = total > 0 && aprovadas === total;
+  const objetivoAtual = objetivos.find((o) => o.id === story.objective_id) ?? null;
+
 
   return (
     <div className="relative">
@@ -402,10 +410,16 @@ export function StoryCard({
 
           <div className="min-w-0 flex-1" title={titulo}>
             <span className="block truncate text-sm font-semibold">{titulo}</span>
-            <span className="block text-[11px] text-muted-foreground">
+            <span className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
               {campanha ? `CAMPANHA • ${total} artes` : "SOLO"}
+              {objetivoAtual ? (
+                <span className="rounded-full border border-primary/40 bg-primary-soft px-2 py-0.5 text-[10px] font-medium text-primary">
+                  {objetivoAtual.nome}
+                </span>
+              ) : null}
             </span>
           </div>
+
 
           <span className="tabular rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
             {story.position}
@@ -433,6 +447,30 @@ export function StoryCard({
             </Button>
           ) : null}
         </div>
+
+        {canApprove ? (
+          <div className="space-y-1" {...stopDrag}>
+            <span className="text-[11px] text-muted-foreground">Objetivo do story</span>
+            <Select
+              value={story.objective_id ?? "__nenhum__"}
+              onValueChange={(v) => onSetObjective(story.id, v === "__nenhum__" ? null : v)}
+            >
+              <SelectTrigger className="h-8 text-sm">
+                <SelectValue placeholder="Sem objetivo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__nenhum__">Sem objetivo</SelectItem>
+                {objetivos.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>
+                    {o.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
+
+
 
         <div className="space-y-1" {...stopDrag}>
           <div className="flex items-center gap-2">

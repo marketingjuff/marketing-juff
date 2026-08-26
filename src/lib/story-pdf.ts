@@ -1,6 +1,27 @@
 import type { Story } from "@/lib/stories";
+import type { Objective } from "@/lib/objectives";
 
-function capa(totalArtes: number, quantidade: number): string {
+function blocoObjetivos(objetivos: Objective[], todos: boolean): string {
+  if (objetivos.length === 0) return "";
+  const lista = objetivos
+    .map((o) => `${o.nome}\n${o.instrucao || "Sem instrução cadastrada."}`)
+    .join("\n\n");
+  const orientacao = todos
+    ? "Distribua os stories livremente entre todos os objetivos listados abaixo."
+    : "Use SOMENTE os objetivos listados abaixo. Não use nenhum outro objetivo.";
+  return `
+
+OBJETIVOS DOS STORIES
+
+${orientacao}
+
+Para cada bloco montado, identifique e informe o objetivo correspondente. O objetivo pertence ao story inteiro e entra na linha de BLOCO, como último campo, escrito exatamente com o nome do objetivo abaixo.
+
+${lista}
+`;
+}
+
+function capa(totalArtes: number, quantidade: number, objetivos: Objective[], todos: boolean): string {
   return `INSTRUÇÕES PARA MONTAR O PLANO DE STORIES
 
 Este PDF contém as artes de stories da Juff Store. Cada página traz uma arte e o nome exato do arquivo dela.
@@ -13,7 +34,7 @@ Alterne produto, benefício, vida real, marca, interação e venda. Evite sequê
 
 Devolva a resposta em um documento Word seguindo EXATAMENTE o formato abaixo. Não use tabelas. Não use marcadores. Não escreva nenhum texto fora do formato. Cada linha começa com BLOCO, ARTE ou SOBRA, e os campos são separados por barra vertical.
 
-BLOCO | numero | SOLO ou CAMPANHA | nome do bloco
+BLOCO | numero | SOLO ou CAMPANHA | nome do bloco | objetivo
 ARTE | nome exato do arquivo | texto principal | observação | recurso
 SOBRA | nome exato do arquivo | motivo curto
 
@@ -22,16 +43,17 @@ Nenhum, Link, Enquete, Menção, Slider, Caixa de pergunta.
 
 Exemplo.
 
-BLOCO | 1 | CAMPANHA | AQUELA QUE VOCÊ REPETE
+BLOCO | 1 | CAMPANHA | AQUELA QUE VOCÊ REPETE | Prova social
 ARTE | prancheta 2 | AQUELA QUE VOCÊ REPETE. | Arte limpa, sem CTA. | Nenhum
 ARTE | prancheta 3 | THERMOAIR. VOCÊ VAI ENTENDER QUANDO VESTIR. | Leve, respirável e feita para acompanhar. CTA CONHEÇA A JUFF | Link
-BLOCO | 2 | SOLO | DESACELERAR
+BLOCO | 2 | SOLO | DESACELERAR | Marca
 ARTE | prancheta 4 | HOJE O MOVIMENTO É DESACELERAR. | Sem CTA. | Nenhum
 SOBRA | prancheta 5 | Repete a mesma ideia da prancheta 4.
 SOBRA | prancheta 6 | Texto pouco legível sobre a foto.
 
-Depois das linhas do plano, escreva uma linha SOBRA para CADA arte que você decidiu não usar. Toda arte deste PDF precisa aparecer uma vez, ou como ARTE ou como SOBRA. Nenhuma pode ficar de fora das duas listas. Não invente artes que não estão no PDF.`;
+Depois das linhas do plano, escreva uma linha SOBRA para CADA arte que você decidiu não usar. Toda arte deste PDF precisa aparecer uma vez, ou como ARTE ou como SOBRA. Nenhuma pode ficar de fora das duas listas. Não invente artes que não estão no PDF.${blocoObjetivos(objetivos, todos)}`;
 }
+
 
 async function prepararImagem(
   url: string,
@@ -60,6 +82,8 @@ export async function exportPlanPdf(
   stories: Story[],
   nomeProjeto: string,
   quantidade: number,
+  objetivos: Objective[] = [],
+  todosObjetivos = true,
 ): Promise<void> {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -71,7 +95,23 @@ export async function exportPlanPdf(
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.text(doc.splitTextToSize(capa(frames.length, quantidade), pageW - margem * 2), margem, margem + 5);
+
+  // As instruções podem passar de uma página; quebra automática por linha.
+  const linhas: string[] = doc.splitTextToSize(
+    capa(frames.length, quantidade, objetivos, todosObjetivos),
+    pageW - margem * 2,
+  );
+  const alturaLinha = 5;
+  let cy = margem + 5;
+  for (const linha of linhas) {
+    if (cy > pageH - margem) {
+      doc.addPage();
+      cy = margem + 5;
+    }
+    doc.text(linha, margem, cy);
+    cy += alturaLinha;
+  }
+
 
   for (const frame of frames) {
     if (!frame.url) continue;

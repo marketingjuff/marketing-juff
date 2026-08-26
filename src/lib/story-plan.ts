@@ -1,4 +1,5 @@
 import { MAX_FRAMES, RECURSOS, type Recurso, type Story } from "@/lib/stories";
+import type { Objective } from "@/lib/objectives";
 import { supabase } from "@/integrations/supabase/client";
 
 export type PlanArte = {
@@ -12,6 +13,10 @@ export type PlanBloco = {
   numero: number;
   tipo: "SOLO" | "CAMPANHA";
   nome: string;
+  /** Texto do objetivo como veio no arquivo. Pode ser vazio. */
+  objetivo: string;
+  /** Id do objetivo cadastrado, quando o nome bate. */
+  objective_id: string | null;
   artes: PlanArte[];
 };
 
@@ -28,12 +33,24 @@ export type PlanValidation = {
   desconhecidos: string[];
   recursosInvalidos: string[];
   blocosCheios: string[];
+  /** Objetivos citados no arquivo que não existem no cadastro. Não bloqueia. */
+  objetivosDesconhecidos: string[];
   ok: boolean;
 };
 
 function normalizaNome(value: string): string {
   return value.trim().toLowerCase();
 }
+
+/** Compara ignorando maiúsculas, minúsculas e acentos. */
+function chaveObjetivo(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
 
 /** Lê apenas as linhas que começam com BLOCO, ARTE ou SOBRA e ignora o resto. */
 export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobra[] } {
@@ -52,8 +69,11 @@ export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobr
         numero: Number.isFinite(numero) ? numero : blocos.length + 1,
         tipo,
         nome: partes[3] ?? "",
+        objetivo: partes[4] ?? "",
+        objective_id: null,
         artes: [],
       });
+
       continue;
     }
 
@@ -66,7 +86,7 @@ export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobr
       };
       if (!arte.nome_arquivo) continue;
       if (blocos.length === 0) {
-        blocos.push({ numero: 1, tipo: "SOLO", nome: "", artes: [] });
+        blocos.push({ numero: 1, tipo: "SOLO", nome: "", objetivo: "", objective_id: null, artes: [] });
       }
       blocos[blocos.length - 1]!.artes.push(arte);
       continue;
@@ -85,7 +105,21 @@ export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobr
 export function validatePlan(
   parsed: { blocos: PlanBloco[]; sobras: PlanSobra[] },
   stories: Story[],
+  objetivos: Objective[] = [],
 ): PlanValidation {
+  const porNome = new Map(objetivos.map((o) => [chaveObjetivo(o.nome), o.id]));
+  const objetivosDesconhecidos: string[] = [];
+  for (const bloco of parsed.blocos) {
+    const texto = bloco.objetivo.trim();
+    if (!texto) {
+      bloco.objective_id = null;
+      continue;
+    }
+    const id = porNome.get(chaveObjetivo(texto)) ?? null;
+    bloco.objective_id = id;
+    if (!id && !objetivosDesconhecidos.includes(texto)) objetivosDesconhecidos.push(texto);
+  }
+
   const { blocos, sobras } = parsed;
   const frames = stories.flatMap((s) => s.frames);
   const disponiveis = new Map<string, number>();
@@ -135,8 +169,10 @@ export function validatePlan(
     desconhecidos,
     recursosInvalidos,
     blocosCheios,
+    objetivosDesconhecidos,
     ok:
       blocos.length > 0 &&
+
       faltando.length === 0 &&
       repetidos.length === 0 &&
       desconhecidos.length === 0 &&
@@ -188,6 +224,8 @@ export async function applyPlan(
       .from("stories")
       .update({
         nome_bloco: bloco.nome,
+        objective_id: bloco.objective_id,
+
         position: index + 1,
         sequence_id: sequenceId,
         descartado: false,

@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import { FileUp, Loader2 } from "lucide-react";
 
 import type { Story } from "@/lib/stories";
+import type { Objective } from "@/lib/objectives";
+
 import { parsePlan, readDocx, validatePlan, type PlanValidation } from "@/lib/story-plan";
 import {
   Dialog,
@@ -17,11 +19,13 @@ import { Textarea } from "@/components/ui/textarea";
 export function PlanDialog({
   open,
   stories,
+  objetivos = [],
   onOpenChange,
   onApply,
 }: {
   open: boolean;
   stories: Story[];
+  objetivos?: Objective[];
   onOpenChange: (open: boolean) => void;
   onApply: (validation: PlanValidation) => void;
 }) {
@@ -31,8 +35,9 @@ export function PlanDialog({
   const inputRef = useRef<HTMLInputElement>(null);
 
   function analisar(conteudo: string) {
-    setValidation(validatePlan(parsePlan(conteudo), stories));
+    setValidation(validatePlan(parsePlan(conteudo), stories, objetivos));
   }
+
 
   async function carregarArquivo(file: File) {
     setLendo(true);
@@ -165,6 +170,14 @@ export function PlanDialog({
               </div>
             )
           ) : null}
+
+          {validation && validation.objetivosDesconhecidos.length > 0 ? (
+            <p className="rounded-xl border border-warning/50 bg-warning/10 p-3 text-xs">
+              Objetivos não cadastrados (os blocos ficam sem objetivo):{" "}
+              {validation.objetivosDesconhecidos.join(", ")}
+            </p>
+          ) : null}
+
         </div>
 
         <DialogFooter>
