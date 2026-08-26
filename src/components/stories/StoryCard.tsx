@@ -13,7 +13,7 @@ import { toast } from "sonner";
 
 import type { Composicao, Frame as FrameType, FrameStatus, Recurso, Story } from "@/lib/stories";
 import { MAX_FRAMES, RECURSOS, blocoTipo, ehImagemAceita } from "@/lib/stories";
-import { ArteEditor } from "@/components/stories/ArteEditor";
+import { ArteEditor, FileiraPresets } from "@/components/stories/ArteEditor";
 import { exportarBlocoMontado, logosQueryOptions } from "@/lib/story-editor";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -245,6 +245,7 @@ function ArteBloco({
           editable={editable}
           podeGerir={canApprove}
           onSaveComp={onSaveComp}
+          onSaveTexto={(id, texto) => onSaveFrame(id, { texto_principal: texto })}
         />
       </div>
 
@@ -253,13 +254,10 @@ function ArteBloco({
         {frame.nome_arquivo || "Sem nome"}
       </p>
 
-      <AutoTextarea
-        label="Texto da arte"
-        value={frame.texto_principal}
-        disabled={!editable}
-        slot="texto_principal"
-        frameId={frame.id}
-        onCommit={(v) => onSaveFrame(frame.id, { texto_principal: v })}
+      <FileiraPresets
+        comp={frame.comp}
+        editable={editable}
+        onAplicar={(patch) => onSaveComp(frame.id, patch)}
       />
       <AutoTextarea
         label="Observação"
