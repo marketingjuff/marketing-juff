@@ -583,6 +583,34 @@ export function StoryCard({
             </span>
           )}
 
+          {editable && total > 1 && onReplicarBloco ? (
+            <Button
+              size="icon"
+              variant="outline"
+              className="size-8 shrink-0"
+              title="Aplicar a formatação da arte 1 em todas as artes deste bloco"
+              aria-label="Replicar formatação da arte 1 para todo o bloco"
+              onClick={onReplicarBloco}
+              {...stopDrag}
+            >
+              <Copy className="size-3.5" />
+            </Button>
+          ) : null}
+
+          {editable && total > 0 && onReplicarProximo ? (
+            <Button
+              size="icon"
+              variant="outline"
+              className="size-8 shrink-0"
+              title="Aplicar a formatação da arte 1 em todas as artes do próximo bloco"
+              aria-label="Aplicar formatação da arte 1 no próximo bloco"
+              onClick={onReplicarProximo}
+              {...stopDrag}
+            >
+              <ArrowRight className="size-3.5" />
+            </Button>
+          ) : null}
+
           {canApprove && total > 0 && !tudoAprovado ? (
             <Button size="sm" className="shrink-0 gap-1" onClick={onApproveStory} {...stopDrag}>
               <CheckCheck className="size-3.5" /> Aprovar stories
