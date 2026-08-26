@@ -46,8 +46,11 @@ export type Story = {
   nome_bloco: string;
   sequence_id: string | null;
   descartado: boolean;
+  /** Objetivo do story inteiro. Pode ficar vazio. */
+  objective_id: string | null;
   frames: Frame[];
 };
+
 
 export type Sequence = {
   id: string;
