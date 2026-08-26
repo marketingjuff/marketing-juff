@@ -576,6 +576,7 @@ function Camada({
   y,
   editable,
   alinhamento = "center",
+  arrasteSoPelaAlca,
   onCommit,
   children,
 }: {
@@ -583,56 +584,66 @@ function Camada({
   y: number;
   editable: boolean;
   alinhamento?: AlinhamentoTexto;
+  /** Quando ligado, o corpo não arrasta: só a alça devolvida ao children. */
+  arrasteSoPelaAlca?: boolean;
   onCommit: (x: number, y: number) => void;
-  children: React.ReactNode;
+  children: React.ReactNode | ((iniciar: (e: React.PointerEvent) => void) => React.ReactNode);
 }) {
   const [pos, setPos] = useState({ x, y });
   const arrastando = useRef(false);
+  const caixaRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!arrastando.current) setPos({ x, y });
   }, [x, y]);
 
+  const iniciarArraste = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    if (!editable) return;
+    const pai = caixaRef.current?.parentElement;
+    if (!pai) return;
+    const rect = pai.getBoundingClientRect();
+    arrastando.current = true;
+    const mover = (ev: PointerEvent) => {
+      setPos({
+        x: Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100)),
+        y: Math.max(0, Math.min(100, ((ev.clientY - rect.top) / rect.height) * 100)),
+      });
+    };
+    const soltar = (ev: PointerEvent) => {
+      window.removeEventListener("pointermove", mover);
+      window.removeEventListener("pointerup", soltar);
+      arrastando.current = false;
+      const bruto = {
+        x: Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100)),
+        y: Math.max(0, Math.min(100, ((ev.clientY - rect.top) / rect.height) * 100)),
+      };
+      const grudado = grudarNaGrade(bruto.x, bruto.y);
+      setPos(grudado);
+      onCommit(grudado.x, grudado.y);
+    };
+    window.addEventListener("pointermove", mover);
+    window.addEventListener("pointerup", soltar);
+  };
+
   return (
     <div
+      ref={caixaRef}
       className={cn(
         "absolute -translate-y-1/2 select-none",
         alinhamento === "center" && "-translate-x-1/2",
         alinhamento === "right" && "-translate-x-full",
-        editable ? "pointer-events-auto cursor-move touch-none" : "pointer-events-none",
+        editable ? "pointer-events-auto touch-none" : "pointer-events-none",
+        editable && !arrasteSoPelaAlca && "cursor-move",
       )}
       style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
       {...semArraste}
       onPointerDown={(e) => {
         e.stopPropagation();
-        if (!editable) return;
-        const pai = e.currentTarget.parentElement;
-        if (!pai) return;
-        const rect = pai.getBoundingClientRect();
-        arrastando.current = true;
-        e.currentTarget.setPointerCapture(e.pointerId);
-        const mover = (ev: PointerEvent) => {
-          setPos({
-            x: Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100)),
-            y: Math.max(0, Math.min(100, ((ev.clientY - rect.top) / rect.height) * 100)),
-          });
-        };
-        const soltar = (ev: PointerEvent) => {
-          window.removeEventListener("pointermove", mover);
-          window.removeEventListener("pointerup", soltar);
-          arrastando.current = false;
-          const bruto = {
-            x: Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100)),
-            y: Math.max(0, Math.min(100, ((ev.clientY - rect.top) / rect.height) * 100)),
-          };
-          const grudado = grudarNaGrade(bruto.x, bruto.y);
-          setPos(grudado);
-          onCommit(grudado.x, grudado.y);
-        };
-        window.addEventListener("pointermove", mover);
-        window.addEventListener("pointerup", soltar);
+        if (arrasteSoPelaAlca) return;
+        iniciarArraste(e);
       }}
     >
-      {children}
+      {typeof children === "function" ? children(iniciarArraste) : children}
     </div>
   );
 }
