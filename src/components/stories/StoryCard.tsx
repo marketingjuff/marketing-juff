@@ -160,6 +160,7 @@ function ArteBloco({
   canApprove,
   onOpen,
   onSaveFrame,
+  onSaveComp,
   onApproveFrame,
   onAdjustFrame,
   onReplaceImage,
@@ -171,10 +172,12 @@ function ArteBloco({
   canApprove: boolean;
   onOpen: () => void;
   onSaveFrame: (frameId: string, values: Partial<FrameType>) => Promise<void>;
+  onSaveComp: (frameId: string, patch: Partial<Composicao>) => void;
   onApproveFrame: (frameId: string) => void;
   onAdjustFrame: (frameId: string, comment: string) => void;
   onReplaceImage: (frame: FrameType, file: File) => void;
 }) {
+
   const [ajusteAberto, setAjusteAberto] = useState(false);
   const [comentario, setComentario] = useState("");
 
