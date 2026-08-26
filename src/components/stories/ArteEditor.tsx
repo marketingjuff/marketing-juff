@@ -363,8 +363,99 @@ function PainelTexto({
               </Button>
             </div>
           ) : null}
+
+          {podeGerir && presets.length > 0 ? (
+            <div className="space-y-1 border-t border-border pt-2">
+              <span className="text-[11px] font-medium text-muted-foreground">
+                Excluir pré-formatações
+              </span>
+              {presets.map((p) => (
+                <div key={p.id} className="flex items-center gap-2 text-[11px]">
+                  <span
+                    className="size-3.5 shrink-0 rounded border border-border"
+                    style={{ background: p.cor_texto }}
+                  />
+                  <span className="min-w-0 flex-1 truncate" title={p.nome}>
+                    {p.nome}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={`Excluir ${p.nome}`}
+                    className="rounded p-1 text-muted-foreground hover:text-destructive"
+                    onClick={async () => {
+                      if (!window.confirm(`Excluir a pré-formatação "${p.nome}"?`)) return;
+                      try {
+                        await excluirPreset(p.id);
+                        await queryClient.invalidateQueries({ queryKey: ["story-text-presets"] });
+                      } catch {
+                        toast.error("Não foi possível excluir a pré-formatação");
+                      }
+                    }}
+                  >
+                    <Trash2 className="size-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
-      ) : null}
+    </div>
+  );
+}
+
+/** Atalhos de pré-formatação exibidos abaixo da arte, no card. */
+export function FileiraPresets({
+  comp,
+  editable,
+  onAplicar,
+}: {
+  comp: Composicao;
+  editable: boolean;
+  onAplicar: (patch: Partial<Composicao>) => void;
+}) {
+  const { data: presets = [] } = useQuery(presetsQueryOptions);
+  if (presets.length === 0) return null;
+
+  const aplicado = (p: Preset) =>
+    p.fonte === comp.texto_fonte &&
+    p.peso === comp.texto_peso &&
+    p.alinhamento === comp.texto_alinhamento &&
+    p.tamanho === comp.texto_tamanho &&
+    p.cor_texto.toLowerCase() === comp.texto_cor.toLowerCase() &&
+    p.cor_sombra.toLowerCase() === comp.sombra_cor.toLowerCase() &&
+    p.opacidade_sombra === comp.sombra_opacidade;
+
+  return (
+    <div className="flex gap-1 overflow-x-auto whitespace-nowrap pb-1" {...semArraste}>
+      {presets.map((p) => (
+        <button
+          key={p.id}
+          type="button"
+          disabled={!editable}
+          title={p.nome}
+          className={cn(
+            "flex shrink-0 items-center gap-1 rounded-md border border-border px-1.5 py-1 text-[11px] hover:bg-secondary disabled:opacity-50",
+            aplicado(p) && "ring-2 ring-primary",
+          )}
+          onClick={() =>
+            onAplicar({
+              texto_fonte: p.fonte,
+              texto_peso: p.peso,
+              texto_alinhamento: p.alinhamento,
+              texto_tamanho: p.tamanho,
+              texto_cor: p.cor_texto,
+              sombra_cor: p.cor_sombra,
+              sombra_opacidade: p.opacidade_sombra,
+            })
+          }
+        >
+          <span
+            className="size-3 shrink-0 rounded border border-border"
+            style={{ background: p.cor_texto }}
+          />
+          <span className="max-w-24 truncate">{p.nome}</span>
+        </button>
+      ))}
     </div>
   );
 }
