@@ -516,6 +516,9 @@ function StoriesPage() {
         definirObjetivo(storyId, objectiveId),
       onSaveBloco: salvarBloco,
       onSaveFrame: salvarFrame,
+      onSaveComp: salvarComposicao,
+
+
 
       onApproveFrame: (frameId: string) => mutate.mutate(() => approveFrame(frameId)),
       onApproveStory: () => {
