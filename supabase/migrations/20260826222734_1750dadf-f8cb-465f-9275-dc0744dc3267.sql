@@ -1,0 +1,1 @@
+ALTER TABLE public.story_frames ADD COLUMN IF NOT EXISTS comp_texto_largura numeric NOT NULL DEFAULT 80;
