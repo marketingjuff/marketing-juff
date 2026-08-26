@@ -383,6 +383,54 @@ function StoriesPage() {
     );
   }
 
+  /** Aplica a formatação de fonte de uma arte em todas as artes de um bloco. */
+  function aplicarFormatacaoEmBloco(alvo: Story, origem: Composicao, rotulo: string) {
+    const patch: Partial<Composicao> = {
+      texto_fonte: origem.texto_fonte,
+      texto_peso: origem.texto_peso,
+      texto_tamanho: origem.texto_tamanho,
+      texto_cor: origem.texto_cor,
+      texto_alinhamento: origem.texto_alinhamento,
+      sombra_cor: origem.sombra_cor,
+      sombra_opacidade: origem.sombra_opacidade,
+    };
+    const ids = new Set(alvo.frames.map((f) => f.id));
+    patchLocal((s) => ({
+      ...s,
+      frames: s.frames.map((f) => (ids.has(f.id) ? { ...f, comp: { ...f.comp, ...patch } } : f)),
+    }));
+    void Promise.all(alvo.frames.map((f) => updateFrameComposicao(f.id, patch)))
+      .then(() => toast.success(rotulo))
+      .catch((error: Error) => toast.error(error.message));
+  }
+
+  /** Replica a formatação da arte 1 do bloco para todas as artes do mesmo bloco. */
+  function replicarNoBloco(story: Story) {
+    const primeira = story.frames[0];
+    if (!primeira || story.frames.length < 2) return;
+    aplicarFormatacaoEmBloco(
+      story,
+      primeira.comp,
+      "Formatação da arte 1 aplicada a todo o bloco",
+    );
+  }
+
+  /** Aplica a formatação da arte 1 do bloco atual em todas as artes do próximo bloco. */
+  function aplicarNoProximoBloco(story: Story) {
+    const primeira = story.frames[0];
+    if (!primeira) return;
+    const proximo = fila[fila.findIndex((s) => s.id === story.id) + 1];
+    if (!proximo) {
+      toast.error("Não há próximo bloco na fila.");
+      return;
+    }
+    aplicarFormatacaoEmBloco(
+      proximo,
+      primeira.comp,
+      `Formatação aplicada no bloco #${proximo.position}`,
+    );
+  }
+
 
   async function salvarBloco(storyId: string, nome: string) {
     try {
