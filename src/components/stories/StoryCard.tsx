@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { GripVertical, Check, MessageSquare, Trash2, Plus, ImageUp } from "lucide-react";
+import { GripVertical, Check, CheckCheck, MessageSquare, Trash2, Plus, ImageUp } from "lucide-react";
 
 import type { Frame as FrameType, FrameStatus, Recurso, Story } from "@/lib/stories";
 import { MAX_FRAMES, RECURSOS, blocoTipo } from "@/lib/stories";
