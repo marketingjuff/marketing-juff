@@ -19,6 +19,8 @@ import {
   CheckCheck,
   Layers,
   FileDown,
+  ImageDown,
+
   FileUp,
   Save,
   Loader2,
@@ -72,6 +74,8 @@ import {
 import { objectivesQueryOptions, type Objective } from "@/lib/objectives";
 import { applyPlan, type PlanValidation } from "@/lib/story-plan";
 import { exportPlanPdf } from "@/lib/story-pdf";
+import { exportStoriesZip, ExportZipError } from "@/lib/story-zip";
+
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -192,7 +196,9 @@ function StoriesPage() {
   const [mostrarArquivados, setMostrarArquivados] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [exportando, setExportando] = useState(false);
+  const [exportandoZip, setExportandoZip] = useState(false);
   const [dragging, setDragging] = useState<{ type: string; descartado?: boolean } | null>(null);
+
   const [lightbox, setLightbox] = useState<string | null>(null);
 
   const [planoAberto, setPlanoAberto] = useState(false);
@@ -231,6 +237,30 @@ function StoriesPage() {
     await queryClient.invalidateQueries({ queryKey: ["stories"] });
     await queryClient.invalidateQueries({ queryKey: ["story-sequences"] });
   };
+
+  const exportarZip = async () => {
+    setExportandoZip(true);
+    try {
+      const total = await exportStoriesZip(fila, nomeAtual, objetivosAtivos);
+      if (total === 0) {
+        toast.error("Não há artes na fila principal para exportar.");
+        return;
+      }
+      toast.success(`Zip gerado com ${total} ${total === 1 ? "arte" : "artes"}.`);
+    } catch (error) {
+      if (error instanceof ExportZipError) {
+        toast.error(
+          `Exportação cancelada. ${error.falhas.length} ${error.falhas.length === 1 ? "imagem falhou" : "imagens falharam"}: ${error.falhas.join("; ")}`,
+          { duration: 12000 },
+        );
+      } else {
+        toast.error("Não foi possível gerar o zip.");
+      }
+    } finally {
+      setExportandoZip(false);
+    }
+  };
+
 
   const mutate = useMutation({
     mutationFn: async (fn: () => Promise<void>) => {
@@ -659,6 +689,38 @@ function StoriesPage() {
               )}
               Exportar PDF
             </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1"
+              disabled={exportandoZip}
+              onClick={() => {
+                const framesFila = fila.flatMap((s) => s.frames);
+                if (framesFila.length === 0) {
+                  toast.error("Não há artes na fila principal para exportar.");
+                  return;
+                }
+                const naoAprovadas = framesFila.filter((f) => f.status !== "aprovado").length;
+                if (naoAprovadas > 0) {
+                  setConfirm({
+                    title: "Exportar mesmo assim?",
+                    description: `${naoAprovadas} ${naoAprovadas === 1 ? "arte não está aprovada" : "artes não estão aprovadas"} (pendente, em ajuste ou refeita). Deseja exportar todas assim mesmo?`,
+                    action: () => void exportarZip(),
+                  });
+                  return;
+                }
+                void exportarZip();
+              }}
+            >
+              {exportandoZip ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <ImageDown className="size-4" />
+              )}
+              Exportar imagens
+            </Button>
+
 
             {editable ? (
               <Button
