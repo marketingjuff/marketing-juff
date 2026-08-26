@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 /** Slots que participam da grade compartilhada de alturas. */
@@ -33,13 +33,13 @@ export function AlturasCompartilhadasProvider({ children }: { children: ReactNod
     for (const valor of mapa.current[slot].values()) {
       if (valor > maior) maior = valor;
     }
+    // Só mexe no estado quando o máximo do slot realmente muda.
     setMaximos((atual) => (atual[slot] === maior ? atual : { ...atual, [slot]: maior }));
   }, []);
 
   const registrar = useCallback(
     (slot: SlotAltura, id: string, altura: number) => {
-      const anterior = mapa.current[slot].get(id);
-      if (anterior === altura) return;
+      if (mapa.current[slot].get(id) === altura) return;
       mapa.current[slot].set(id, altura);
       recalcular(slot);
     },
@@ -61,54 +61,23 @@ export function AlturasCompartilhadasProvider({ children }: { children: ReactNod
 }
 
 /**
- * Registra a altura natural medida e devolve a maior altura daquele slot na página.
- * Fora do provider, devolve zero e não registra nada.
+ * Registra a altura natural medida da arte no slot e devolve a maior altura
+ * daquele slot em toda a página. Fora do provider devolve zero.
  */
-export function useAlturaCompartilhada(slot: SlotAltura, id: string, alturaNatural: number): number {
+export function useAlturaCompartilhada(
+  slot: SlotAltura,
+  id: string,
+  alturaNatural: number,
+): number {
   const ctx = useContext(AlturasContext);
-  const registrarRef = useRef<Ctx | null>(ctx);
-  registrarRef.current = ctx;
 
-  if (ctx) ctx.registrar(slot, id, alturaNatural);
+  useEffect(() => {
+    ctx?.registrar(slot, id, alturaNatural);
+  }, [ctx, slot, id, alturaNatural]);
 
-  // Remove o registro quando a arte sai da tela.
-  const cleanupRef = useRef<() => void>(() => {});
-  cleanupRef.current = () => registrarRef.current?.remover(slot, id);
-  useLimparNaDesmontagem(cleanupRef);
+  useEffect(() => {
+    return () => ctx?.remover(slot, id);
+  }, [ctx, slot, id]);
 
   return ctx?.maximos[slot] ?? 0;
 }
-
-function useLimparNaDesmontagem(ref: { current: () => void }) {
-  const efeito = useRef<(() => void) | null>(null);
-  if (!efeito.current) efeito.current = () => ref.current();
-  useOnUnmount(() => ref.current());
-}
-
-function useOnUnmount(fn: () => void) {
-  const ref = useRef(fn);
-  ref.current = fn;
-  useEffectOnce(() => () => ref.current());
-}
-
-function useEffectOnce(effect: () => () => void) {
-  const ref = useRef<null | (() => void)>(null);
-  if (ref.current === null) ref.current = effect();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useCleanup(ref);
-}
-
-function useCleanup(ref: { current: null | (() => void) }) {
-  const guard = useRef(false);
-  if (!guard.current) guard.current = true;
-  // Limpa de verdade na desmontagem.
-  useUnmountEffect(() => ref.current?.());
-}
-
-function useUnmountEffect(fn: () => void) {
-  const ref = useRef(fn);
-  ref.current = fn;
-  useReactEffect(() => () => ref.current(), []);
-}
-
-import { useEffect as useReactEffect } from "react";
