@@ -39,6 +39,7 @@ import {
   addFramesToStory,
   approveAllPending,
   approveFrame,
+  approveStory,
   createStoriesFromFiles,
   deleteSequence,
   deleteStory,
