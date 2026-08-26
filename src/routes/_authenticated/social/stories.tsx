@@ -55,6 +55,7 @@ import {
   sequencesQueryOptions,
   setDescartado,
   setSequenceArquivado,
+  setStoryObjective,
   sortStoriesByName,
   splitFrame,
   storiesQueryOptions,
@@ -66,8 +67,10 @@ import {
   type StoryStatus,
 } from "@/lib/stories";
 
+import { objectivesQueryOptions, type Objective } from "@/lib/objectives";
 import { applyPlan, type PlanValidation } from "@/lib/story-plan";
 import { exportPlanPdf } from "@/lib/story-pdf";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
