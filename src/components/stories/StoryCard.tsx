@@ -260,34 +260,40 @@ function ArteBloco({
             </div>
           </div>
         ) : (
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
             {canApprove ? (
               <>
                 <Button
                   size="sm"
                   variant={frame.status === "aprovado" ? "secondary" : "default"}
-                  className="gap-1"
+                  className="flex-1 px-0"
+                  title="Aprovar"
+                  aria-label="Aprovar arte"
                   onClick={() => onApproveFrame(frame.id)}
                 >
-                  <Check className="size-3.5" /> Aprovar
+                  <Check className="size-4" />
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="gap-1"
+                  className="flex-1 px-0"
+                  title="Pedir ajuste"
+                  aria-label="Pedir ajuste na arte"
                   onClick={() => setAjusteAberto(true)}
                 >
-                  <MessageSquare className="size-3.5" /> Ajuste
+                  <MessageSquare className="size-4" />
                 </Button>
               </>
             ) : null}
             <Button
               size="sm"
               variant="outline"
-              className="gap-1"
+              className="flex-1 px-0"
+              title="Trocar imagem"
+              aria-label="Trocar imagem da arte"
               onClick={() => trocaRef.current?.click()}
             >
-              <ImageUp className="size-3.5" /> Trocar imagem
+              <ImageUp className="size-4" />
             </Button>
             <input
               ref={trocaRef}
