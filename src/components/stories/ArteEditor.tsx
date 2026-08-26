@@ -225,8 +225,10 @@ function PainelTexto({
   const [nome, setNome] = useState("");
   const [erroNome, setErroNome] = useState(false);
   const [opacidade, setOpacidade] = useState(comp.sombra_opacidade);
+  const [larguraCaixa, setLarguraCaixa] = useState(comp.texto_largura);
 
   useEffect(() => setOpacidade(comp.sombra_opacidade), [comp.sombra_opacidade]);
+  useEffect(() => setLarguraCaixa(comp.texto_largura), [comp.texto_largura]);
 
   return (
     <div className="max-h-[70vh] space-y-3 overflow-y-auto">
@@ -286,6 +288,22 @@ function PainelTexto({
             disabled={!editable}
             onCommit={(v) => salvar({ texto_tamanho: v })}
           />
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+              <span>Largura da caixa</span>
+              <span className="tabular font-medium text-foreground">{larguraCaixa}%</span>
+            </div>
+            <Slider
+              min={10}
+              max={100}
+              step={1}
+              disabled={!editable}
+              value={[larguraCaixa]}
+              onValueChange={(v) => setLarguraCaixa(v[0] ?? larguraCaixa)}
+              onValueCommit={(v) => salvar({ texto_largura: v[0] ?? larguraCaixa })}
+            />
+          </div>
 
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
             <span className="flex-1">Cor do texto</span>
