@@ -364,6 +364,7 @@ export function StoryCard({
   onSaveBloco,
   onSaveFrame,
   onApproveFrame,
+  onApproveStory,
   onAdjustFrame,
   onReplaceImage,
 }: {
@@ -377,6 +378,7 @@ export function StoryCard({
   onSaveBloco: (storyId: string, nome: string) => Promise<void>;
   onSaveFrame: (frameId: string, values: Partial<FrameType>) => Promise<void>;
   onApproveFrame: (frameId: string) => void;
+  onApproveStory: () => void;
   onAdjustFrame: (frameId: string, comment: string) => void;
   onReplaceImage: (frame: FrameType, file: File) => void;
 }) {
