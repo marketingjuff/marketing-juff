@@ -32,9 +32,9 @@ export type Frame = {
   status: FrameStatus;
   adjust_comment: string | null;
   adjust_comment_at: string | null;
+  /** Guardado só por segurança no bucket. Nunca exibido na interface. */
   image_path_anterior: string | null;
-  trocado_em: string | null;
-  url_anterior: string;
+
 };
 
 export type Story = {
@@ -108,14 +108,13 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
     adjust_comment: string | null;
     adjust_comment_at: string | null;
     image_path_anterior: string | null;
-    trocado_em: string | null;
   }[] = [];
 
   if (ids.length > 0) {
     const { data, error: framesError } = await supabase
       .from("story_frames")
       .select(
-        "id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, recurso, status, adjust_comment, adjust_comment_at, image_path_anterior, trocado_em",
+        "id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, recurso, status, adjust_comment, adjust_comment_at, image_path_anterior",
       )
       .in("story_id", ids)
       .order("ordem", { ascending: true });
@@ -124,10 +123,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
   }
 
   const urls = new Map<string, string>();
-  const paths = [
-    ...frames.map((f) => f.image_path),
-    ...frames.map((f) => f.image_path_anterior).filter((p): p is string => Boolean(p)),
-  ];
+  const paths = frames.map((f) => f.image_path);
   if (paths.length > 0) {
     const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrls(paths, 3600);
     for (const item of signed ?? []) {
@@ -160,8 +156,6 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
         adjust_comment: f.adjust_comment,
         adjust_comment_at: f.adjust_comment_at,
         image_path_anterior: f.image_path_anterior,
-        trocado_em: f.trocado_em,
-        url_anterior: f.image_path_anterior ? (urls.get(f.image_path_anterior) ?? "") : "",
       })),
   }));
 }
@@ -298,8 +292,10 @@ export async function requestFrameAdjust(frameId: string, comment: string): Prom
 }
 
 /**
- * Troca a imagem de uma arte. Guarda a imagem anterior, marca como refeito e
- * preserva nome, ordem, textos e o comentário de ajuste. Nada é apagado.
+ * Troca a imagem de uma arte. O status volta obrigatoriamente para refeito,
+ * mesmo se a arte já estava aprovada. Nome, ordem, textos, recurso, posição e
+ * comentário de ajuste ficam como estavam. A imagem antiga fica parada no
+ * bucket, sem link e sem aparecer na interface.
  */
 export async function replaceFrameImage(frame: Frame, file: File): Promise<void> {
   const path = await uploadImage(file);
