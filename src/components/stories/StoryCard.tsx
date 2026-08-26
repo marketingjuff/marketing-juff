@@ -15,13 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 const FRAME_STATUS_LABEL: Record<FrameStatus, string> = {
   pendente: "Pendente",
@@ -129,7 +122,7 @@ function ArteBloco({
 }) {
   const [ajusteAberto, setAjusteAberto] = useState(false);
   const [comentario, setComentario] = useState("");
-  const [anteriorAberto, setAnteriorAberto] = useState(false);
+  
   const [recursoSalvo, setRecursoSalvo] = useState(false);
   const trocaRef = useRef<HTMLInputElement>(null);
 
@@ -191,15 +184,6 @@ function ArteBloco({
         </div>
       ) : null}
 
-      {frame.image_path_anterior ? (
-        <button
-          type="button"
-          className="text-[11px] text-primary underline underline-offset-2"
-          onClick={() => setAnteriorAberto(true)}
-        >
-          Ver versão anterior
-        </button>
-      ) : null}
 
       <AutoTextarea
         label="Texto principal"
@@ -315,40 +299,6 @@ function ArteBloco({
         )
       ) : null}
 
-      <Dialog open={anteriorAberto} onOpenChange={setAnteriorAberto}>
-        <DialogContent className="max-w-[min(96vw,44rem)]">
-          <DialogHeader>
-            <DialogTitle>Versão anterior de {frame.nome_arquivo || "arte"}</DialogTitle>
-            <DialogDescription>
-              {frame.trocado_em
-                ? `Trocada em ${new Date(frame.trocado_em).toLocaleString("pt-BR")}`
-                : "Imagem trocada"}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <p className="text-[11px] text-muted-foreground">Antes</p>
-              {frame.url_anterior ? (
-                <img
-                  src={frame.url_anterior}
-                  alt="Versão anterior"
-                  className="w-full rounded-lg object-contain"
-                />
-              ) : null}
-            </div>
-            <div className="space-y-1">
-              <p className="text-[11px] text-muted-foreground">Depois</p>
-              {frame.url ? (
-                <img
-                  src={frame.url}
-                  alt="Versão atual"
-                  className="w-full rounded-lg object-contain"
-                />
-              ) : null}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
