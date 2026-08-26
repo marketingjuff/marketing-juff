@@ -425,6 +425,8 @@ export function FileiraPresets({
 
   const outraFonte = FONTES[(FONTES.indexOf(comp.texto_fonte as never) + 1) % FONTES.length]!;
   const [sombra, setSombra] = useState(comp.sombra_opacidade);
+  const [abertoPresets, setAbertoPresets] = useState(false);
+  const { data: presets = [] } = useQuery(presetsQueryOptions);
   useEffect(() => setSombra(comp.sombra_opacidade), [comp.sombra_opacidade]);
 
   return (
