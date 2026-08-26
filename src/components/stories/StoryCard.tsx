@@ -453,7 +453,7 @@ export function StoryCard({
           />
         </div>
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-3">
           {story.frames.map((frame, index) => (
             <ArteBloco
               key={frame.id}
