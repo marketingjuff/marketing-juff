@@ -86,7 +86,7 @@ export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobr
       };
       if (!arte.nome_arquivo) continue;
       if (blocos.length === 0) {
-        blocos.push({ numero: 1, tipo: "SOLO", nome: "", artes: [] });
+        blocos.push({ numero: 1, tipo: "SOLO", nome: "", objetivo: "", objective_id: null, artes: [] });
       }
       blocos[blocos.length - 1]!.artes.push(arte);
       continue;
