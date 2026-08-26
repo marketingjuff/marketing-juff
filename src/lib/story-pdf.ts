@@ -21,7 +21,26 @@ ${lista}
 `;
 }
 
-function capa(totalArtes: number, quantidade: number, objetivos: Objective[], todos: boolean): string {
+function blocoDirecionamento(direcionamento: string): string {
+  const texto = (direcionamento ?? "").trim();
+  if (!texto) return "";
+  return `
+
+DIRECIONAMENTO DESTA LEVA
+
+As orientações abaixo foram escritas por quem exportou este PDF e valem especificamente para este plano. Elas têm prioridade sobre a distribuição livre, mas nunca sobre o formato de resposta exigido acima. Se alguma orientação for impossível com as artes disponíveis, cumpra o que der e explique o que não deu em uma linha SOBRA.
+
+${texto}
+`;
+}
+
+function capa(
+  totalArtes: number,
+  quantidade: number,
+  objetivos: Objective[],
+  todos: boolean,
+  direcionamento = "",
+): string {
   return `INSTRUÇÕES PARA MONTAR O PLANO DE STORIES
 
 Este PDF contém as artes de stories da Juff Store. Cada página traz uma arte e o nome exato do arquivo dela.
@@ -51,7 +70,7 @@ ARTE | prancheta 4 | HOJE O MOVIMENTO É DESACELERAR. | Sem CTA. | Nenhum
 SOBRA | prancheta 5 | Repete a mesma ideia da prancheta 4.
 SOBRA | prancheta 6 | Texto pouco legível sobre a foto.
 
-Depois das linhas do plano, escreva uma linha SOBRA para CADA arte que você decidiu não usar. Toda arte deste PDF precisa aparecer uma vez, ou como ARTE ou como SOBRA. Nenhuma pode ficar de fora das duas listas. Não invente artes que não estão no PDF.${blocoObjetivos(objetivos, todos)}`;
+Depois das linhas do plano, escreva uma linha SOBRA para CADA arte que você decidiu não usar. Toda arte deste PDF precisa aparecer uma vez, ou como ARTE ou como SOBRA. Nenhuma pode ficar de fora das duas listas. Não invente artes que não estão no PDF.${blocoObjetivos(objetivos, todos)}${blocoDirecionamento(direcionamento)}`;
 }
 
 
@@ -84,6 +103,7 @@ export async function exportPlanPdf(
   quantidade: number,
   objetivos: Objective[] = [],
   todosObjetivos = true,
+  direcionamento = "",
 ): Promise<void> {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -98,7 +118,7 @@ export async function exportPlanPdf(
 
   // As instruções podem passar de uma página; quebra automática por linha.
   const linhas: string[] = doc.splitTextToSize(
-    capa(frames.length, quantidade, objetivos, todosObjetivos),
+    capa(frames.length, quantidade, objetivos, todosObjetivos, direcionamento),
     pageW - margem * 2,
   );
   const alturaLinha = 5;

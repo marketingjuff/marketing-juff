@@ -74,6 +74,7 @@ import {
 import { objectivesQueryOptions, type Objective } from "@/lib/objectives";
 import { applyPlan, type PlanValidation } from "@/lib/story-plan";
 import { exportPlanPdf } from "@/lib/story-pdf";
+import { Textarea } from "@/components/ui/textarea";
 import { exportStoriesZip, ExportZipError } from "@/lib/story-zip";
 
 
@@ -208,6 +209,7 @@ function StoriesPage() {
   const [confirmaNome, setConfirmaNome] = useState("");
   const [exportAberto, setExportAberto] = useState(false);
   const [quantidade, setQuantidade] = useState("0");
+  const [direcionamento, setDirecionamento] = useState("");
   /** Objetivos marcados na exportação. null = todos marcados. */
   const [objetivosPdf, setObjetivosPdf] = useState<string[] | null>(null);
   const [nomeProjeto, setNomeProjeto] = useState("");
@@ -336,10 +338,10 @@ function StoriesPage() {
     }
   }
 
-  async function exportar(qtd: number, escolhidos: Objective[], todos: boolean) {
+  async function exportar(qtd: number, escolhidos: Objective[], todos: boolean, texto: string) {
     setExportando(true);
     try {
-      await exportPlanPdf(fila, nomeAtual, qtd, escolhidos, todos);
+      await exportPlanPdf(fila, nomeAtual, qtd, escolhidos, todos, texto);
     } catch (error) {
       toast.error((error as Error).message);
     } finally {
@@ -881,7 +883,7 @@ function StoriesPage() {
       <Dialog open={exportAberto} onOpenChange={setExportAberto}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Quantos stories você quer no plano?</DialogTitle>
+            <DialogTitle>Gerar PDF do plano</DialogTitle>
             <DialogDescription>
               O PDF leva as {fila.length} arte(s) da fila principal. As não utilizadas ficam de
               fora.
@@ -895,6 +897,22 @@ function StoriesPage() {
               min={1}
               value={quantidade}
               onChange={(e) => setQuantidade(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="direcionamento">Direcionamento (opcional)</Label>
+            <p className="text-xs text-muted-foreground">
+              Escreva aqui o que essa leva precisa ter, do jeito que você fala. Exemplo, preciso de
+              três stories solo falando de outubro rosa usando as fotos de camiseta rosa. Se não
+              tiver nada especial, deixe em branco.
+            </p>
+            <Textarea
+              id="direcionamento"
+              rows={4}
+              value={direcionamento}
+              onChange={(e) => setDirecionamento(e.target.value)}
+              placeholder="Escreva livremente o que essa leva precisa ter"
             />
           </div>
 
@@ -958,7 +976,7 @@ function StoriesPage() {
                     ? objetivosAtivos
                     : objetivosAtivos.filter((o) => objetivosPdf.includes(o.id));
                 setExportAberto(false);
-                void exportar(qtd, escolhidos, todos);
+                void exportar(qtd, escolhidos, todos, direcionamento.trim());
               }}
             >
               Gerar PDF
