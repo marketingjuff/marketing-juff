@@ -45,7 +45,11 @@ function capa(
 
 Este PDF contém as artes de stories da Juff Store. Cada página traz uma arte e o nome exato do arquivo dela.
 
-Este PDF tem ${totalArtes} artes. Monte um plano com aproximadamente ${quantidade} stories, selecionando as melhores. Você não precisa usar todas.
+${
+    quantidade > 0
+      ? `Este PDF tem ${totalArtes} artes. Monte um plano com aproximadamente ${quantidade} stories, selecionando as melhores. Você não precisa usar todas.`
+      : `Este PDF tem ${totalArtes} artes. Monte o plano com a quantidade de stories que você achar melhor, selecionando as melhores artes. Você não precisa usar todas.`
+  }
 
 Defina a ordem de publicação e agrupe as artes que devem ser publicadas juntas. Um bloco pode ser SOLO, com uma arte só, ou CAMPANHA, com duas ou três artes publicadas no mesmo momento e na ordem indicada. Um bloco nunca pode ter mais de cinco artes.
 
