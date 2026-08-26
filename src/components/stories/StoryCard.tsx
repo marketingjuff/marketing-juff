@@ -309,6 +309,7 @@ export function StoryCard({
   editable,
   canApprove,
   showSlot,
+  objetivos,
   onDelete,
   onAddFrames,
   onOpenFrame,
@@ -318,11 +319,14 @@ export function StoryCard({
   onApproveStory,
   onAdjustFrame,
   onReplaceImage,
+  onSetObjective,
 }: {
   story: Story;
   editable: boolean;
   canApprove: boolean;
   showSlot?: boolean;
+  /** Objetivos ativos disponíveis para escolha. */
+  objetivos: { id: string; nome: string }[];
   onDelete: () => void;
   onAddFrames: (files: File[]) => void;
   onOpenFrame: (index: number) => void;
@@ -332,7 +336,9 @@ export function StoryCard({
   onApproveStory: () => void;
   onAdjustFrame: (frameId: string, comment: string) => void;
   onReplaceImage: (frame: FrameType, file: File) => void;
+  onSetObjective: (storyId: string, objectiveId: string | null) => void;
 }) {
+
   const inputRef = useRef<HTMLInputElement>(null);
   const [nomeBloco, setNomeBloco] = useState(story.nome_bloco);
   const [blocoSalvo, setBlocoSalvo] = useState(false);
