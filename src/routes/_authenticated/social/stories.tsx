@@ -628,6 +628,16 @@ function StoriesPage() {
               </>
             ) : null}
 
+            {canApprove ? (
+              <Button size="sm" variant="outline" className="gap-1" asChild>
+                <Link to="/objetivos">
+                  <Target className="size-4" /> Objetivos
+                </Link>
+              </Button>
+            ) : null}
+
+
+
             <Button
               size="sm"
               variant="outline"
