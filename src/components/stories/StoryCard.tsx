@@ -383,7 +383,7 @@ export function StoryCard({
 
 
   return (
-    <div className="relative">
+    <div className="relative w-fit max-w-full">
       {showSlot ? (
         <div
           ref={slot.setNodeRef}
@@ -496,7 +496,7 @@ export function StoryCard({
           ) : null}
         </div>
 
-        <div className="flex flex-nowrap gap-3">
+        <div className="flex flex-nowrap gap-3 overflow-x-auto">
           {story.frames.map((frame, index) => (
             <ArteBloco
               key={frame.id}
