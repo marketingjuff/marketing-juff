@@ -1,6 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { GripVertical, Check, CheckCheck, MessageSquare, Trash2, Plus, ImageUp } from "lucide-react";
+import {
+  GripVertical,
+  Check,
+  CheckCheck,
+  MessageSquare,
+  Trash2,
+  Plus,
+  ImageUp,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import type { Frame as FrameType, FrameStatus, Recurso, Story } from "@/lib/stories";
@@ -105,10 +113,7 @@ function AutoTextarea({
         rows={2}
         value={local}
         disabled={disabled}
-        className={cn(
-          "min-h-0 resize-y text-sm",
-          compacto && "py-1.5 text-[13px] leading-[1.3]",
-        )}
+        className={cn("min-h-0 resize-y text-sm", compacto && "py-1.5 text-[13px] leading-[1.3]")}
         onChange={(e) => setLocal(e.target.value)}
         onBlur={async () => {
           if (local === value) return;
@@ -181,7 +186,6 @@ function ArteBloco({
   useEffect(() => setPerfil(frame.recurso_detalhe), [frame.recurso_detalhe]);
 
   const perfilVazio = frame.recurso === "Menção" && perfil.trim().length === 0;
-
 
   const draggable = useDraggable({
     id: `frame:${frame.id}`,
@@ -297,7 +301,10 @@ function ArteBloco({
               value={perfil}
               disabled={!editable}
               placeholder="@perfil"
-              className={cn("h-8 text-sm", perfilVazio && "border-warning focus-visible:ring-warning")}
+              className={cn(
+                "h-8 text-sm",
+                perfilVazio && "border-warning focus-visible:ring-warning",
+              )}
               onChange={(e) => setPerfil(e.target.value)}
               onBlur={async () => {
                 const normalizado = normalizaPerfil(perfil);
@@ -329,7 +336,6 @@ function ArteBloco({
           </div>
         ) : null}
       </SlotCompartilhado>
-
 
       {editable ? (
         ajusteAberto ? (
@@ -420,7 +426,6 @@ function ArteBloco({
           </div>
         )
       ) : null}
-
     </div>
   );
 }
@@ -459,7 +464,6 @@ export function StoryCard({
   onReplaceImage: (frame: FrameType, file: File) => void;
   onSetObjective: (storyId: string, objectiveId: string | null) => void;
 }) {
-
   const inputRef = useRef<HTMLInputElement>(null);
   const [nomeBloco, setNomeBloco] = useState(story.nome_bloco);
   const [blocoSalvo, setBlocoSalvo] = useState(false);
@@ -491,7 +495,6 @@ export function StoryCard({
   const emAjuste = story.frames.filter((f) => f.status === "ajustar").length;
   const tudoAprovado = total > 0 && aprovadas === total;
   const objetivoAtual = objetivos.find((o) => o.id === story.objective_id) ?? null;
-
 
   return (
     <div className="relative w-fit max-w-full">
@@ -587,7 +590,10 @@ export function StoryCard({
                 value={story.objective_id ?? "__nenhum__"}
                 onValueChange={(v) => onSetObjective(story.id, v === "__nenhum__" ? null : v)}
               >
-                <SelectTrigger className="h-7 w-auto gap-1 rounded-full px-2 text-[11px]" aria-label="Objetivo do story">
+                <SelectTrigger
+                  className="h-7 w-auto gap-1 rounded-full px-2 text-[11px]"
+                  aria-label="Objetivo do story"
+                >
                   <SelectValue placeholder="Sem objetivo" />
                 </SelectTrigger>
                 <SelectContent>

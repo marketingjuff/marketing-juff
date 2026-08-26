@@ -40,7 +40,9 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
-        <div className={cn("mx-auto flex h-14 items-center justify-between gap-3 px-4", larguraClasse)}>
+        <div
+          className={cn("mx-auto flex h-14 items-center justify-between gap-3 px-4", larguraClasse)}
+        >
           <div className="flex items-center gap-2">
             <img
               src={juffLogo.url}

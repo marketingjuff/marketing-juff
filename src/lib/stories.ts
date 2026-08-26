@@ -38,7 +38,6 @@ export type Frame = {
   adjust_comment_at: string | null;
   /** Guardado só por segurança no bucket. Nunca exibido na interface. */
   image_path_anterior: string | null;
-
 };
 
 export type Story = {
@@ -54,7 +53,6 @@ export type Story = {
   objective_id: string | null;
   frames: Frame[];
 };
-
 
 export type Sequence = {
   id: string;
@@ -220,7 +218,6 @@ async function uploadImage(file: File): Promise<string> {
   return path;
 }
 
-
 async function nextPosition(sequenceId: string | null): Promise<number> {
   let query = supabase.from("stories").select("position").order("position", { ascending: false });
   query = sequenceId ? query.eq("sequence_id", sequenceId) : query.is("sequence_id", null);
@@ -344,8 +341,6 @@ export async function setStoryObjective(
     .eq("id", storyId);
   if (error) throw error;
 }
-
-
 
 export async function updateFrameTexts(
   frameId: string,
@@ -489,7 +484,6 @@ export async function undoMerge(source: Story, target: Story): Promise<void> {
       sequence_id: source.sequence_id,
       descartado: source.descartado,
       objective_id: source.objective_id,
-
     })
     .select("id")
     .single();

@@ -60,7 +60,6 @@ function chaveObjetivo(value: string): string {
     .toLowerCase();
 }
 
-
 /** Lê apenas as linhas que começam com BLOCO, ARTE ou SOBRA e ignora o resto. */
 export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobra[] } {
   const blocos: PlanBloco[] = [];
@@ -96,7 +95,14 @@ export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobr
       };
       if (!arte.nome_arquivo) continue;
       if (blocos.length === 0) {
-        blocos.push({ numero: 1, tipo: "SOLO", nome: "", objetivo: "", objective_id: null, artes: [] });
+        blocos.push({
+          numero: 1,
+          tipo: "SOLO",
+          nome: "",
+          objetivo: "",
+          objective_id: null,
+          artes: [],
+        });
       }
       blocos[blocos.length - 1]!.artes.push(arte);
       continue;
@@ -187,7 +193,6 @@ export function validatePlan(
     objetivosDesconhecidos,
     ok:
       blocos.length > 0 &&
-
       faltando.length === 0 &&
       repetidos.length === 0 &&
       desconhecidos.length === 0 &&
