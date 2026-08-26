@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { GripVertical, Check, CheckCheck, MessageSquare, Trash2, Plus, ImageUp } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  useAlturaCompartilhada,
+  type SlotAltura,
+} from "@/components/stories/AlturasCompartilhadas";
 
 const FRAME_STATUS_LABEL: Record<FrameStatus, string> = {
   pendente: "Pendente",
