@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import { FileUp, Loader2 } from "lucide-react";
 
 import type { Story } from "@/lib/stories";
+import type { Objective } from "@/lib/objectives";
+
 import { parsePlan, readDocx, validatePlan, type PlanValidation } from "@/lib/story-plan";
 import {
   Dialog,
