@@ -469,7 +469,12 @@ export async function updateFrameComposicao(
   const values: Record<string, unknown> = {};
   for (const [chave, valor] of Object.entries(patch)) values[`comp_${chave}`] = valor;
   if (Object.keys(values).length === 0) return;
-  const { error } = await supabase.from("story_frames").update(values).eq("id", frameId);
+  const { error } = await supabase
+    .from("story_frames")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .update(values as any)
+    .eq("id", frameId);
+
   if (error) throw error;
 }
 
