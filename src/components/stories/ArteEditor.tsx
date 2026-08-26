@@ -482,25 +482,69 @@ export function FileiraPresets({
           ))}
         </div>
 
-        <div className="flex items-center gap-0">
+        <div className="flex items-center gap-0.5">
           <button
             type="button"
             disabled={!editable}
             title={comp.texto_fonte}
-            className={cn(btn(false), "rounded-r-none border-r-0")}
+            className={btn(false)}
             onClick={() => onAplicar({ texto_fonte: outraFonte })}
           >
             <Type className="size-3" />
           </button>
-          <button
-            type="button"
-            disabled={!editable}
-            title={`Próxima fonte: ${outraFonte}`}
-            className={cn(btn(false), "rounded-l-none pl-0.5 pr-1")}
-            onClick={() => onAplicar({ texto_fonte: outraFonte })}
-          >
-            <ChevronRight className="size-3" />
-          </button>
+
+          <Popover open={abertoPresets} onOpenChange={setAbertoPresets}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                disabled={!editable}
+                title="Pré-formatações salvas"
+                className={btn(false)}
+              >
+                <Layers className="size-3" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2" align="end" {...semArraste}>
+              <p className="mb-1.5 text-[11px] font-medium text-muted-foreground">
+                Pré-formatações
+              </p>
+              {presets.length === 0 ? (
+                <p className="py-2 text-center text-[11px] text-muted-foreground">
+                  Nenhuma pré-formatação salva
+                </p>
+              ) : (
+                <div className="max-h-48 space-y-1 overflow-y-auto">
+                  {presets.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className="flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-left text-[11px] hover:bg-secondary"
+                      onClick={() => {
+                        onAplicar({
+                          texto_fonte: p.fonte,
+                          texto_peso: p.peso,
+                          texto_tamanho: p.tamanho,
+                          texto_alinhamento: p.alinhamento,
+                          texto_cor: p.cor_texto,
+                          sombra_cor: p.cor_sombra,
+                          sombra_opacidade: p.opacidade_sombra,
+                        });
+                        setAbertoPresets(false);
+                      }}
+                    >
+                      <span
+                        className="size-3 shrink-0 rounded border border-border"
+                        style={{ background: p.cor_texto }}
+                      />
+                      <span className="min-w-0 flex-1 truncate" title={p.nome}>
+                        {p.nome}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
