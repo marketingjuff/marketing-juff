@@ -137,12 +137,25 @@ function ArteBloco({
   });
 
   return (
-    <div className="space-y-2 rounded-lg border border-border p-2">
+    <div className="w-[clamp(9.5rem,14vw,12.5rem)] shrink-0 space-y-2 rounded-lg border border-border p-2">
+      <div className="flex items-center justify-between gap-1">
+        <span className="text-[11px] font-medium text-muted-foreground">
+          Arte {index + 1}/{total}
+        </span>
+        <span
+          className={cn(
+            "rounded-full border px-1.5 py-0.5 text-[10px] font-medium",
+            FRAME_STATUS_BADGE[frame.status],
+          )}
+        >
+          {FRAME_STATUS_LABEL[frame.status]}
+        </span>
+      </div>
+
       <div
         ref={droppable.setNodeRef}
         className={cn(
-          "relative mx-auto aspect-[9/16] w-full max-w-[13rem] overflow-hidden rounded-lg border border-border bg-muted",
-
+          "relative aspect-[9/16] w-full overflow-hidden rounded-lg border border-border bg-muted",
           droppable.isOver && "ring-2 ring-primary",
           draggable.isDragging && "opacity-40",
         )}
@@ -160,34 +173,14 @@ function ArteBloco({
             <img src={frame.url} alt={`Arte ${index + 1}`} className="size-full object-cover" />
           ) : null}
         </button>
-        <span
-          className={cn(
-            "pointer-events-none absolute right-1 top-1 rounded-full border px-1.5 py-0.5 text-[10px] font-medium",
-            FRAME_STATUS_BADGE[frame.status],
-          )}
-        >
-          {FRAME_STATUS_LABEL[frame.status]}
-        </span>
       </div>
 
       <p className="truncate text-[11px] text-muted-foreground" title={frame.nome_arquivo}>
-        {frame.nome_arquivo || "Sem nome"} · {index + 1}/{total}
+        {frame.nome_arquivo || "Sem nome"}
       </p>
 
-      {frame.adjust_comment ? (
-        <div className="rounded-lg bg-warning/20 p-2 text-xs">
-          <p className="whitespace-pre-wrap">{frame.adjust_comment}</p>
-          {frame.adjust_comment_at ? (
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              {new Date(frame.adjust_comment_at).toLocaleString("pt-BR")}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-
-
       <AutoTextarea
-        label="Texto principal"
+        label="Texto da arte"
         value={frame.texto_principal}
         disabled={!editable}
         onCommit={(v) => onSaveFrame(frame.id, { texto_principal: v })}
