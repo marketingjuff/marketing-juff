@@ -364,7 +364,7 @@ function StoriesPage() {
     mutate.mutate(async () => {
       await applyPlan(validation, stories, sequenceId);
       toast.success(
-        `Plano aplicado: ${validation.blocos.length} bloco(s) e ${validation.sobras.length} arte(s) não utilizada(s)`,
+        `Plano aplicado: ${validation.blocos.length} story(s) e ${validation.sobras.length} arte(s) não utilizada(s)`,
       );
     });
   }
@@ -524,10 +524,14 @@ function StoriesPage() {
 
       onApproveFrame: (frameId: string) => mutate.mutate(() => approveFrame(frameId)),
       onApproveStory: () => {
+        if (story.frames.some(precisaPerfil)) {
+          toast.error("Informe o perfil da menção antes de aprovar");
+          return;
+        }
         const total = story.frames.length;
         const ajustes = story.frames.filter((f) => f.status === "ajustar").length;
         setConfirm({
-          title: `Aprovar bloco #${story.position}?`,
+          title: `Aprovar stories #${story.position}?`,
           description:
             `${total} ${total === 1 ? "arte" : "artes"} serão aprovadas, sem exceção.` +
             (ajustes > 0
@@ -554,7 +558,7 @@ function StoriesPage() {
 
   if (!podeVer) {
     return (
-      <AppShell>
+      <AppShell largura="ampla">
         <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
           Você não tem permissão para ver esta aba.
         </div>
@@ -563,7 +567,7 @@ function StoriesPage() {
   }
 
   return (
-    <AppShell>
+    <AppShell largura="ampla">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
