@@ -424,68 +424,87 @@ export function FileiraPresets({
     );
 
   const outraFonte = FONTES[(FONTES.indexOf(comp.texto_fonte as never) + 1) % FONTES.length]!;
+  const [sombra, setSombra] = useState(comp.sombra_opacidade);
+  useEffect(() => setSombra(comp.sombra_opacidade), [comp.sombra_opacidade]);
 
   return (
-    <div className="flex flex-wrap items-center gap-x-2 gap-y-1" {...semArraste}>
-      <div className="flex items-center gap-0.5">
-        {PESOS.map((p) => (
-          <button
-            key={p.value}
-            type="button"
-            disabled={!editable}
-            className={btn(comp.texto_peso === p.value)}
-            style={{ fontWeight: p.value }}
-            onClick={() => onAplicar({ texto_peso: p.value })}
-          >
-            A
-          </button>
-        ))}
-      </div>
+    <div className="flex flex-col gap-y-1" {...semArraste}>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <div className="flex items-center gap-0.5">
+          {PESOS.map((p) => (
+            <button
+              key={p.value}
+              type="button"
+              disabled={!editable}
+              className={btn(comp.texto_peso === p.value)}
+              style={{ fontWeight: p.value }}
+              onClick={() => onAplicar({ texto_peso: p.value })}
+            >
+              A
+            </button>
+          ))}
+        </div>
 
-      <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            disabled={!editable || comp.texto_tamanho <= 1}
+            className={btn(false)}
+            onClick={() => onAplicar({ texto_tamanho: comp.texto_tamanho - 1 })}
+          >
+            <Minus className="size-3" />
+          </button>
+          <span className="w-4 text-center text-[11px] tabular-nums">{comp.texto_tamanho}</span>
+          <button
+            type="button"
+            disabled={!editable || comp.texto_tamanho >= 10}
+            className={btn(false)}
+            onClick={() => onAplicar({ texto_tamanho: comp.texto_tamanho + 1 })}
+          >
+            <Plus className="size-3" />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-0.5">
+          {ALINHAMENTOS.map(({ value, label, Icone }) => (
+            <button
+              key={value}
+              type="button"
+              disabled={!editable}
+              title={label}
+              className={btn(comp.texto_alinhamento === value)}
+              onClick={() => onAplicar({ texto_alinhamento: value })}
+            >
+              <Icone className="size-3" />
+            </button>
+          ))}
+        </div>
+
         <button
           type="button"
-          disabled={!editable || comp.texto_tamanho <= 1}
+          disabled={!editable}
+          title={comp.texto_fonte}
           className={btn(false)}
-          onClick={() => onAplicar({ texto_tamanho: comp.texto_tamanho - 1 })}
+          onClick={() => onAplicar({ texto_fonte: outraFonte })}
         >
-          <Minus className="size-3" />
-        </button>
-        <span className="w-4 text-center text-[11px] tabular-nums">{comp.texto_tamanho}</span>
-        <button
-          type="button"
-          disabled={!editable || comp.texto_tamanho >= 10}
-          className={btn(false)}
-          onClick={() => onAplicar({ texto_tamanho: comp.texto_tamanho + 1 })}
-        >
-          <Plus className="size-3" />
+          <Type className="size-3" />
         </button>
       </div>
 
-      <div className="flex items-center gap-0.5">
-        {ALINHAMENTOS.map(({ value, label, Icone }) => (
-          <button
-            key={value}
-            type="button"
-            disabled={!editable}
-            title={label}
-            className={btn(comp.texto_alinhamento === value)}
-            onClick={() => onAplicar({ texto_alinhamento: value })}
-          >
-            <Icone className="size-3" />
-          </button>
-        ))}
+      <div className="flex w-full items-center gap-2">
+        <span className="shrink-0 text-[10px] text-muted-foreground">Sombra</span>
+        <Slider
+          className="flex-1"
+          min={0}
+          max={100}
+          step={1}
+          disabled={!editable}
+          value={[sombra]}
+          onValueChange={(v) => setSombra(v[0] ?? sombra)}
+          onValueCommit={(v) => onAplicar({ sombra_opacidade: v[0] ?? sombra, sombra_cor: "#000000" })}
+        />
+        <span className="w-6 text-center text-[10px] tabular-nums">{sombra}%</span>
       </div>
-
-      <button
-        type="button"
-        disabled={!editable}
-        title={comp.texto_fonte}
-        className={btn(false)}
-        onClick={() => onAplicar({ texto_fonte: outraFonte })}
-      >
-        <Type className="size-3" />
-      </button>
     </div>
   );
 }
