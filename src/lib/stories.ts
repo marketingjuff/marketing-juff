@@ -270,6 +270,20 @@ export async function approveFrame(frameId: string): Promise<void> {
   if (error) throw error;
 }
 
+/**
+ * Aprova o bloco inteiro em cascata: todas as artes viram aprovado, inclusive as
+ * que estavam em ajuste (o pedido de ajuste é descartado) ou refeito.
+ */
+export async function approveStory(story: Story): Promise<void> {
+  const ids = story.frames.map((f) => f.id);
+  if (ids.length === 0) return;
+  const { error } = await supabase
+    .from("story_frames")
+    .update({ status: "aprovado", adjust_comment: null, adjust_comment_at: null })
+    .in("id", ids);
+  if (error) throw error;
+}
+
 /** Pede ajuste em uma arte, guardando o comentário e a data na própria arte. */
 export async function requestFrameAdjust(frameId: string, comment: string): Promise<void> {
   const { error } = await supabase

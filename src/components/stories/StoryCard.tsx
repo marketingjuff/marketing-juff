@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { GripVertical, Check, MessageSquare, Trash2, Plus, ImageUp } from "lucide-react";
+import { GripVertical, Check, CheckCheck, MessageSquare, Trash2, Plus, ImageUp } from "lucide-react";
 
 import type { Frame as FrameType, FrameStatus, Recurso, Story } from "@/lib/stories";
 import { MAX_FRAMES, RECURSOS, blocoTipo } from "@/lib/stories";
@@ -364,6 +364,7 @@ export function StoryCard({
   onSaveBloco,
   onSaveFrame,
   onApproveFrame,
+  onApproveStory,
   onAdjustFrame,
   onReplaceImage,
 }: {
@@ -377,6 +378,7 @@ export function StoryCard({
   onSaveBloco: (storyId: string, nome: string) => Promise<void>;
   onSaveFrame: (frameId: string, values: Partial<FrameType>) => Promise<void>;
   onApproveFrame: (frameId: string) => void;
+  onApproveStory: () => void;
   onAdjustFrame: (frameId: string, comment: string) => void;
   onReplaceImage: (frame: FrameType, file: File) => void;
 }) {
@@ -473,6 +475,11 @@ export function StoryCard({
             <span className="rounded-full border border-warning bg-warning/25 px-2 py-0.5 text-[11px] font-medium">
               {emAjuste} em ajuste
             </span>
+          ) : null}
+          {canApprove && total > 0 && !tudoAprovado ? (
+            <Button size="sm" className="ml-auto gap-1" onClick={onApproveStory} {...stopDrag}>
+              <CheckCheck className="size-3.5" /> Aprovar bloco
+            </Button>
           ) : null}
         </div>
 
