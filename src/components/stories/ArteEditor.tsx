@@ -788,6 +788,10 @@ function TextoEditavel({
         )}
         style={{
           fontFamily: `"${comp.texto_fonte}", sans-serif`,
+          hyphens: "none",
+          WebkitHyphens: "none",
+          overflowWrap: "normal",
+          wordBreak: "normal",
           fontWeight: comp.texto_peso,
           fontSize: fontePx,
           lineHeight: 1.2,
