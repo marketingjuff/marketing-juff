@@ -170,8 +170,9 @@ export function validatePlan(
     recursosInvalidos,
     blocosCheios,
     objetivosDesconhecidos,
-
+    ok:
       blocos.length > 0 &&
+
       faltando.length === 0 &&
       repetidos.length === 0 &&
       desconhecidos.length === 0 &&
