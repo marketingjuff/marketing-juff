@@ -759,6 +759,7 @@ function TextoEditavel({
       ) : null}
       <div
         ref={ref}
+        lang="pt-BR"
         contentEditable={editable}
         suppressContentEditableWarning
         spellCheck={false}
