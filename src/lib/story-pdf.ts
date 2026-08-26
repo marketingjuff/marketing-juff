@@ -58,8 +58,7 @@ Alterne produto, benefício, vida real, marca, interação e venda. Evite sequê
 Devolva a resposta em um documento Word seguindo EXATAMENTE o formato abaixo. Não use tabelas. Não use marcadores. Não escreva nenhum texto fora do formato. Cada linha começa com BLOCO, ARTE ou SOBRA, e os campos são separados por barra vertical.
 
 BLOCO | numero | SOLO ou CAMPANHA | nome do bloco | objetivo
-ARTE | nome exato do arquivo | texto principal | observação | recurso
-SOBRA | nome exato do arquivo | motivo curto
+ARTE | nome exato do arquivo | texto principal | observação | recurso${quantidade > 0 ? `\nSOBRA | nome exato do arquivo | motivo curto` : ""}
 
 O campo recurso aceita apenas um destes valores.
 Nenhum, Link, Enquete, Menção, Slider, Caixa de pergunta.
@@ -70,11 +69,13 @@ BLOCO | 1 | CAMPANHA | AQUELA QUE VOCÊ REPETE | Prova social
 ARTE | prancheta 2 | AQUELA QUE VOCÊ REPETE. | Arte limpa, sem CTA. | Nenhum
 ARTE | prancheta 3 | THERMOAIR. VOCÊ VAI ENTENDER QUANDO VESTIR. | Leve, respirável e feita para acompanhar. CTA CONHEÇA A JUFF | Link
 BLOCO | 2 | SOLO | DESACELERAR | Marca
-ARTE | prancheta 4 | HOJE O MOVIMENTO É DESACELERAR. | Sem CTA. | Nenhum
-SOBRA | prancheta 5 | Repete a mesma ideia da prancheta 4.
-SOBRA | prancheta 6 | Texto pouco legível sobre a foto.
+ARTE | prancheta 4 | HOJE O MOVIMENTO É DESACELERAR. | Sem CTA. | Nenhum${quantidade > 0 ? `\nSOBRA | prancheta 5 | Repete a mesma ideia da prancheta 4.\nSOBRA | prancheta 6 | Texto pouco legível sobre a foto.` : ""}
 
-Depois das linhas do plano, escreva uma linha SOBRA para CADA arte que você decidiu não usar. Toda arte deste PDF precisa aparecer uma vez, ou como ARTE ou como SOBRA. Nenhuma pode ficar de fora das duas listas. Não invente artes que não estão no PDF.${blocoObjetivos(objetivos, todos)}${blocoDirecionamento(direcionamento)}`;
+${
+    quantidade > 0
+      ? `Depois das linhas do plano, escreva uma linha SOBRA para CADA arte que você decidiu não usar. Toda arte deste PDF precisa aparecer uma vez, ou como ARTE ou como SOBRA. Nenhuma pode ficar de fora das duas listas. Não invente artes que não estão no PDF.`
+      : `Toda arte deste PDF precisa aparecer no plano como uma linha ARTE, exatamente uma vez. Não escreva nenhuma linha SOBRA, porque nenhuma arte pode ficar de fora. Não invente artes que não estão no PDF.`
+  }${blocoObjetivos(objetivos, todos)}${blocoDirecionamento(direcionamento)}`;
 }
 
 
