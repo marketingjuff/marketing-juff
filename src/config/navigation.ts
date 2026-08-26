@@ -10,11 +10,15 @@ export const PERMISSION_CATALOG: { key: PermissionKey; label: string }[] = [
   { key: "config.usuarios", label: "Configurações · Usuários e permissões" },
 ];
 
+export type AppRoleKey = "admin" | "gestor" | "operador";
+
 export type SubTab = {
   key: string;
   label: string;
   to: string;
   permission: PermissionKey;
+  /** Quando definido, só estes papéis enxergam a aba. */
+  roles?: AppRoleKey[];
 };
 
 export type MasterTab = {
@@ -33,6 +37,13 @@ export const NAVIGATION: MasterTab[] = [
         label: "Stories",
         to: "/social/stories",
         permission: "social.stories",
+      },
+      {
+        key: "objetivos",
+        label: "Objetivos",
+        to: "/objetivos",
+        permission: "social.stories",
+        roles: ["admin", "gestor"],
       },
     ],
   },
