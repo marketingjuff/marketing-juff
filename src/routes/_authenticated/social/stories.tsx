@@ -200,7 +200,10 @@ function StoriesPage() {
   const [confirmaNome, setConfirmaNome] = useState("");
   const [exportAberto, setExportAberto] = useState(false);
   const [quantidade, setQuantidade] = useState("0");
+  /** Objetivos marcados na exportação. null = todos marcados. */
+  const [objetivosPdf, setObjetivosPdf] = useState<string[] | null>(null);
   const [nomeProjeto, setNomeProjeto] = useState("");
+
   const [pendentes, setPendentes] = useState<File[] | null>(null);
   const [naoUsadasAberto, setNaoUsadasAberto] = useState(false);
   const [confirm, setConfirm] = useState<{
