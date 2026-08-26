@@ -11,8 +11,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import type { Frame as FrameType, FrameStatus, Recurso, Story } from "@/lib/stories";
+import type { Composicao, Frame as FrameType, FrameStatus, Recurso, Story } from "@/lib/stories";
 import { MAX_FRAMES, RECURSOS, blocoTipo, ehImagemAceita } from "@/lib/stories";
+import { ArteEditor } from "@/components/stories/ArteEditor";
+import { exportarBlocoMontado, logosQueryOptions } from "@/lib/story-editor";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -160,6 +163,7 @@ function ArteBloco({
   canApprove,
   onOpen,
   onSaveFrame,
+  onSaveComp,
   onApproveFrame,
   onAdjustFrame,
   onReplaceImage,
@@ -171,10 +175,12 @@ function ArteBloco({
   canApprove: boolean;
   onOpen: () => void;
   onSaveFrame: (frameId: string, values: Partial<FrameType>) => Promise<void>;
+  onSaveComp: (frameId: string, patch: Partial<Composicao>) => void;
   onApproveFrame: (frameId: string) => void;
   onAdjustFrame: (frameId: string, comment: string) => void;
   onReplaceImage: (frame: FrameType, file: File) => void;
 }) {
+
   const [ajusteAberto, setAjusteAberto] = useState(false);
   const [comentario, setComentario] = useState("");
 
@@ -234,7 +240,14 @@ function ArteBloco({
             <img src={frame.url} alt={`Arte ${index + 1}`} className="size-full object-cover" />
           ) : null}
         </button>
+        <ArteEditor
+          frame={frame}
+          editable={editable}
+          podeGerir={canApprove}
+          onSaveComp={onSaveComp}
+        />
       </div>
+
 
       <p className="truncate text-[11px] text-muted-foreground" title={frame.nome_arquivo}>
         {frame.nome_arquivo || "Sem nome"}
@@ -441,6 +454,7 @@ export function StoryCard({
   onOpenFrame,
   onSaveBloco,
   onSaveFrame,
+  onSaveComp,
   onApproveFrame,
   onApproveStory,
   onAdjustFrame,
@@ -458,6 +472,7 @@ export function StoryCard({
   onOpenFrame: (index: number) => void;
   onSaveBloco: (storyId: string, nome: string) => Promise<void>;
   onSaveFrame: (frameId: string, values: Partial<FrameType>) => Promise<void>;
+  onSaveComp: (frameId: string, patch: Partial<Composicao>) => void;
   onApproveFrame: (frameId: string) => void;
   onApproveStory: () => void;
   onAdjustFrame: (frameId: string, comment: string) => void;
@@ -467,8 +482,11 @@ export function StoryCard({
   const inputRef = useRef<HTMLInputElement>(null);
   const [nomeBloco, setNomeBloco] = useState(story.nome_bloco);
   const [blocoSalvo, setBlocoSalvo] = useState(false);
+  const [exportandoBloco, setExportandoBloco] = useState(false);
+  const { data: logos = [] } = useQuery(logosQueryOptions);
 
   useEffect(() => setNomeBloco(story.nome_bloco), [story.nome_bloco]);
+
 
   const draggable = useDraggable({
     id: `story:${story.id}`,
@@ -624,12 +642,38 @@ export function StoryCard({
               canApprove={canApprove}
               onOpen={() => onOpenFrame(index)}
               onSaveFrame={onSaveFrame}
+              onSaveComp={onSaveComp}
               onApproveFrame={onApproveFrame}
               onAdjustFrame={onAdjustFrame}
               onReplaceImage={onReplaceImage}
             />
           ))}
         </div>
+
+        {aprovadas > 0 ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1"
+            disabled={exportandoBloco}
+            onClick={async () => {
+              setExportandoBloco(true);
+              try {
+                const n = await exportarBlocoMontado(
+                  story,
+                  (logoId) => logos.find((l) => l.id === logoId)?.svg ?? null,
+                );
+                toast.success(`${n} arte(s) exportada(s)`);
+              } catch (erro) {
+                toast.error(erro instanceof Error ? erro.message : "Falha ao exportar as artes");
+              } finally {
+                setExportandoBloco(false);
+              }
+            }}
+          >
+            <ImageUp className="size-4" /> Exportar artes aprovadas
+          </Button>
+        ) : null}
 
         {editable ? (
           <div className="flex items-center gap-1.5">
@@ -654,6 +698,7 @@ export function StoryCard({
             </Button>
           </div>
         ) : null}
+
 
         <input
           ref={inputRef}

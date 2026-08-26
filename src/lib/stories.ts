@@ -21,6 +21,98 @@ export type StoryStatus = "pendente" | "aprovado" | "ajustar";
 /** Status por arte. 'refeito' = imagem trocada, aguardando novo aval. */
 export type FrameStatus = "pendente" | "ajustar" | "refeito" | "aprovado";
 
+/** Composição visual desenhada sobre a arte (camada de texto e camada de logo). */
+export type Composicao = {
+  texto_ativo: boolean;
+  texto_conteudo: string;
+  texto_x: number;
+  texto_y: number;
+  texto_fonte: string;
+  texto_peso: number;
+  texto_tamanho: number;
+  texto_cor: string;
+  sombra_cor: string;
+  sombra_opacidade: number;
+  logo_ativo: boolean;
+  logo_id: string | null;
+  logo_x: number;
+  logo_y: number;
+  logo_tamanho: number;
+  logo_cor: string;
+};
+
+export const COMPOSICAO_PADRAO: Composicao = {
+  texto_ativo: false,
+  texto_conteudo: "",
+  texto_x: 50,
+  texto_y: 50,
+  texto_fonte: "Nunito",
+  texto_peso: 900,
+  texto_tamanho: 6,
+  texto_cor: "#ffffff",
+  sombra_cor: "#000000",
+  sombra_opacidade: 50,
+  logo_ativo: false,
+  logo_id: null,
+  logo_x: 50,
+  logo_y: 85,
+  logo_tamanho: 4,
+  logo_cor: "#ffffff",
+};
+
+/** Colunas da composição no banco (prefixo comp_). */
+export const COLUNAS_COMPOSICAO = [
+  "comp_texto_ativo",
+  "comp_texto_conteudo",
+  "comp_texto_x",
+  "comp_texto_y",
+  "comp_texto_fonte",
+  "comp_texto_peso",
+  "comp_texto_tamanho",
+  "comp_texto_cor",
+  "comp_sombra_cor",
+  "comp_sombra_opacidade",
+  "comp_logo_ativo",
+  "comp_logo_id",
+  "comp_logo_x",
+  "comp_logo_y",
+  "comp_logo_tamanho",
+  "comp_logo_cor",
+].join(", ");
+
+/** Linha crua de story_frames, incluindo as colunas de composição. */
+export type FrameRow = {
+  id: unknown;
+  story_id: unknown;
+  image_path: unknown;
+  ordem: unknown;
+  nome_arquivo: unknown;
+  texto_principal: unknown;
+  observacao: unknown;
+  recurso: unknown;
+  recurso_detalhe: unknown;
+  status: unknown;
+  adjust_comment: unknown;
+  adjust_comment_at: unknown;
+  image_path_anterior: unknown;
+  comp_texto_ativo?: unknown;
+  comp_texto_conteudo?: unknown;
+  comp_texto_x?: unknown;
+  comp_texto_y?: unknown;
+  comp_texto_fonte?: unknown;
+  comp_texto_peso?: unknown;
+  comp_texto_tamanho?: unknown;
+  comp_texto_cor?: unknown;
+  comp_sombra_cor?: unknown;
+  comp_sombra_opacidade?: unknown;
+  comp_logo_ativo?: unknown;
+  comp_logo_id?: unknown;
+  comp_logo_x?: unknown;
+  comp_logo_y?: unknown;
+  comp_logo_tamanho?: unknown;
+  comp_logo_cor?: unknown;
+};
+
 export type Frame = {
   id: string;
   story_id: string;
@@ -38,7 +130,9 @@ export type Frame = {
   adjust_comment_at: string | null;
   /** Guardado só por segurança no bucket. Nunca exibido na interface. */
   image_path_anterior: string | null;
+  comp: Composicao;
 };
+
 
 export type Story = {
   id: string;
@@ -100,36 +194,23 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
   if (error) throw error;
 
   const ids = (stories ?? []).map((s) => s.id);
-  let frames: {
-    id: string;
-    story_id: string;
-    image_path: string;
-    ordem: number;
-    nome_arquivo: string;
-    texto_principal: string;
-    observacao: string;
-    recurso: string;
-    recurso_detalhe: string;
-    status: string;
-    adjust_comment: string | null;
-    adjust_comment_at: string | null;
-    image_path_anterior: string | null;
-  }[] = [];
+  let frames: FrameRow[] = [];
 
   if (ids.length > 0) {
     const { data, error: framesError } = await supabase
       .from("story_frames")
       .select(
-        "id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, recurso, recurso_detalhe, status, adjust_comment, adjust_comment_at, image_path_anterior",
+        `id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, recurso, recurso_detalhe, status, adjust_comment, adjust_comment_at, image_path_anterior, ${COLUNAS_COMPOSICAO}`,
       )
       .in("story_id", ids)
       .order("ordem", { ascending: true });
     if (framesError) throw framesError;
-    frames = data ?? [];
+    frames = (data ?? []) as unknown as FrameRow[];
   }
 
+
   const urls = new Map<string, string>();
-  const paths = frames.map((f) => f.image_path);
+  const paths = frames.map((f) => String(f.image_path));
   if (paths.length > 0) {
     const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrls(paths, 3600);
     for (const item of signed ?? []) {
@@ -151,22 +232,24 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
     frames: frames
       .filter((f) => f.story_id === s.id)
       .map((f) => ({
-        id: f.id,
-        story_id: f.story_id,
-        image_path: f.image_path,
-        ordem: f.ordem,
-        nome_arquivo: f.nome_arquivo ?? "",
-        texto_principal: f.texto_principal ?? "",
-        observacao: f.observacao ?? "",
-        recurso: (f.recurso ?? "Nenhum") as Recurso,
-        recurso_detalhe: f.recurso_detalhe ?? "",
-        url: urls.get(f.image_path) ?? "",
-        status: (f.status ?? "pendente") as FrameStatus,
-        adjust_comment: f.adjust_comment,
-        adjust_comment_at: f.adjust_comment_at,
-        image_path_anterior: f.image_path_anterior,
+        id: String(f.id),
+        story_id: String(f.story_id),
+        image_path: String(f.image_path),
+        ordem: Number(f.ordem ?? 0),
+        nome_arquivo: (f.nome_arquivo as string) ?? "",
+        texto_principal: (f.texto_principal as string) ?? "",
+        observacao: (f.observacao as string) ?? "",
+        recurso: ((f.recurso as string) ?? "Nenhum") as Recurso,
+        recurso_detalhe: (f.recurso_detalhe as string) ?? "",
+        url: urls.get(String(f.image_path)) ?? "",
+        status: ((f.status as string) ?? "pendente") as FrameStatus,
+        adjust_comment: (f.adjust_comment as string | null) ?? null,
+        adjust_comment_at: (f.adjust_comment_at as string | null) ?? null,
+        image_path_anterior: (f.image_path_anterior as string | null) ?? null,
+        comp: composicaoDaLinha(f),
       })),
   }));
+
 }
 
 /** Nome do arquivo sem extensão, aparado em 60 caracteres. */
@@ -354,6 +437,48 @@ export async function updateFrameTexts(
   const { error } = await supabase.from("story_frames").update(values).eq("id", frameId);
   if (error) throw error;
 }
+
+/** Lê a composição de uma linha do banco, caindo no padrão quando vazia. */
+export function composicaoDaLinha(f: FrameRow): Composicao {
+  const num = (v: unknown, padrao: number) => (v === null || v === undefined ? padrao : Number(v));
+  return {
+    texto_ativo: Boolean(f.comp_texto_ativo ?? COMPOSICAO_PADRAO.texto_ativo),
+    texto_conteudo: (f.comp_texto_conteudo as string) ?? "",
+    texto_x: num(f.comp_texto_x, COMPOSICAO_PADRAO.texto_x),
+    texto_y: num(f.comp_texto_y, COMPOSICAO_PADRAO.texto_y),
+    texto_fonte: (f.comp_texto_fonte as string) ?? COMPOSICAO_PADRAO.texto_fonte,
+    texto_peso: num(f.comp_texto_peso, COMPOSICAO_PADRAO.texto_peso),
+    texto_tamanho: num(f.comp_texto_tamanho, COMPOSICAO_PADRAO.texto_tamanho),
+    texto_cor: (f.comp_texto_cor as string) ?? COMPOSICAO_PADRAO.texto_cor,
+    sombra_cor: (f.comp_sombra_cor as string) ?? COMPOSICAO_PADRAO.sombra_cor,
+    sombra_opacidade: num(f.comp_sombra_opacidade, COMPOSICAO_PADRAO.sombra_opacidade),
+    logo_ativo: Boolean(f.comp_logo_ativo ?? COMPOSICAO_PADRAO.logo_ativo),
+    logo_id: (f.comp_logo_id as string | null) ?? null,
+    logo_x: num(f.comp_logo_x, COMPOSICAO_PADRAO.logo_x),
+    logo_y: num(f.comp_logo_y, COMPOSICAO_PADRAO.logo_y),
+    logo_tamanho: num(f.comp_logo_tamanho, COMPOSICAO_PADRAO.logo_tamanho),
+    logo_cor: (f.comp_logo_cor as string) ?? COMPOSICAO_PADRAO.logo_cor,
+  };
+}
+
+/** Salva só os campos alterados da composição, na arte informada. */
+export async function updateFrameComposicao(
+  frameId: string,
+  patch: Partial<Composicao>,
+): Promise<void> {
+  const values: Record<string, unknown> = {};
+  for (const [chave, valor] of Object.entries(patch)) values[`comp_${chave}`] = valor;
+  if (Object.keys(values).length === 0) return;
+  const { error } = await supabase
+    .from("story_frames")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .update(values as any)
+    .eq("id", frameId);
+
+  if (error) throw error;
+}
+
+
 
 async function removeImages(paths: string[]): Promise<void> {
   if (paths.length === 0) return;

@@ -62,12 +62,15 @@ import {
   splitFrame,
   storiesQueryOptions,
   undoMerge,
+  updateFrameComposicao,
   updateFrameTexts,
   updateStoryBloco,
+  type Composicao,
   type Frame,
   type Story,
   type StoryStatus,
 } from "@/lib/stories";
+
 
 import { objectivesQueryOptions, type Objective } from "@/lib/objectives";
 import { applyPlan, precisaPerfil, type PlanValidation } from "@/lib/story-plan";
@@ -369,6 +372,18 @@ function StoriesPage() {
     queryClient.setQueryData<Story[]>(["stories", sequenceId], (old) => old?.map(fn));
   }
 
+  /** Salva a composição visual só da arte alterada, sem recarregar a lista. */
+  function salvarComposicao(frameId: string, patch: Partial<Composicao>) {
+    patchLocal((s) => ({
+      ...s,
+      frames: s.frames.map((f) => (f.id === frameId ? { ...f, comp: { ...f.comp, ...patch } } : f)),
+    }));
+    void updateFrameComposicao(frameId, patch).catch((error) =>
+      toast.error((error as Error).message),
+    );
+  }
+
+
   async function salvarBloco(storyId: string, nome: string) {
     try {
       await updateStoryBloco(storyId, nome);
@@ -516,6 +531,9 @@ function StoriesPage() {
         definirObjetivo(storyId, objectiveId),
       onSaveBloco: salvarBloco,
       onSaveFrame: salvarFrame,
+      onSaveComp: salvarComposicao,
+
+
 
       onApproveFrame: (frameId: string) => mutate.mutate(() => approveFrame(frameId)),
       onApproveStory: () => {
