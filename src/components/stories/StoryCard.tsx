@@ -137,11 +137,12 @@ function ArteBloco({
   });
 
   return (
-    <div className="space-y-2 border-t border-border pt-3 first:border-t-0 first:pt-0">
+    <div className="space-y-2 rounded-lg border border-border p-2">
       <div
         ref={droppable.setNodeRef}
         className={cn(
-          "relative mx-auto aspect-[9/16] w-32 overflow-hidden rounded-lg border border-border bg-muted",
+          "relative mx-auto aspect-[9/16] w-full max-w-[13rem] overflow-hidden rounded-lg border border-border bg-muted",
+
           droppable.isOver && "ring-2 ring-primary",
           draggable.isDragging && "opacity-40",
         )}
