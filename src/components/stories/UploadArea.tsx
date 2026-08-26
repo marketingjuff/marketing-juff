@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import { ImagePlus, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { ehImagemAceita } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 
 export function UploadArea({
@@ -16,7 +18,11 @@ export function UploadArea({
 
   function handle(list: FileList | null) {
     if (!list) return;
-    const files = Array.from(list).filter((f) => f.type.startsWith("image/"));
+    const todos = Array.from(list);
+    const files = todos.filter(ehImagemAceita);
+    if (files.length < todos.length) {
+      toast.error("Alguns arquivos não são imagens. Use jpg, jpeg, png ou webp.");
+    }
     if (files.length > 0) onFiles(files);
   }
 
@@ -50,12 +56,12 @@ export function UploadArea({
         {busy ? "Enviando imagens…" : "Arraste imagens aqui ou clique para escolher"}
       </p>
       <p className="text-xs text-muted-foreground">
-        Cada imagem cria um story novo. As fotos são comprimidas antes do envio.
+        Cada imagem cria um story novo. As imagens sobem no tamanho original, sem compressão.
       </p>
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
         multiple
         className="hidden"
         onChange={(e) => {
