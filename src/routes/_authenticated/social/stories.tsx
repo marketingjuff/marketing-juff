@@ -247,7 +247,10 @@ function StoriesPage() {
   const exportarZip = async () => {
     setExportandoZip(true);
     try {
-      const total = await exportStoriesZip(fila, nomeAtual, objetivosAtivos);
+      const total = await exportStoriesZip(fila, nomeAtual, objetivosAtivos, (logoId) =>
+        logos.find((l) => l.id === logoId)?.svg ?? null,
+      );
+
       if (total === 0) {
         toast.error("Não há artes na fila principal para exportar.");
         return;
