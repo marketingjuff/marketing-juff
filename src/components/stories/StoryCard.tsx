@@ -527,8 +527,8 @@ export function StoryCard({
         <div
           ref={slot.setNodeRef}
           className={cn(
-            "absolute -left-2 top-0 z-10 h-full w-4 rounded-full transition-colors",
-            slot.isOver ? "bg-primary" : "bg-primary/10",
+            "absolute -left-3 top-0 z-20 h-full w-6 rounded-full transition-colors",
+            slot.isOver ? "bg-primary" : "bg-primary/20",
           )}
           aria-label="Mover para antes deste story"
         />
