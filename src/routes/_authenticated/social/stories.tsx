@@ -78,6 +78,8 @@ import { AlturasCompartilhadasProvider } from "@/components/stories/AlturasCompa
 import { exportPlanPdf } from "@/lib/story-pdf";
 import { Textarea } from "@/components/ui/textarea";
 import { exportStoriesZip, ExportZipError } from "@/lib/story-zip";
+import { logosQueryOptions } from "@/lib/story-editor";
+
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
