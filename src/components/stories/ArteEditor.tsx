@@ -740,38 +740,51 @@ function Camada({
     const rect = pai.getBoundingClientRect();
     const startX = e.clientX;
     const startY = e.clientY;
+    const posInicial = { ...pos };
+    const inicioEm = performance.now();
     let comecou = false;
+
+    const calcularPosicao = (ev: PointerEvent) => ({
+      x: Math.max(0, Math.min(100, posInicial.x + ((ev.clientX - startX) / rect.width) * 100)),
+      y: Math.max(0, Math.min(100, posInicial.y + ((ev.clientY - startY) / rect.height) * 100)),
+    });
 
     const mover = (ev: PointerEvent) => {
       const dx = ev.clientX - startX;
       const dy = ev.clientY - startY;
-      if (!comecou && Math.hypot(dx, dy) < 4) return;
+      // Um clique ou o pequeno tremor natural da mão nunca reposiciona a caixa.
+      // O gesto só vira arraste após segurar brevemente e mover de verdade.
+      if (!comecou && (performance.now() - inicioEm < 120 || Math.hypot(dx, dy) < 8)) return;
       if (!comecou) {
         comecou = true;
         arrastando.current = true;
       }
-      setPos({
-        x: Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100)),
-        y: Math.max(0, Math.min(100, ((ev.clientY - rect.top) / rect.height) * 100)),
-      });
+      setPos(calcularPosicao(ev));
     };
 
     const soltar = (ev: PointerEvent) => {
       window.removeEventListener("pointermove", mover);
       window.removeEventListener("pointerup", soltar);
+      window.removeEventListener("pointercancel", cancelar);
       if (!comecou) return;
       arrastando.current = false;
-      const bruto = {
-        x: Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100)),
-        y: Math.max(0, Math.min(100, ((ev.clientY - rect.top) / rect.height) * 100)),
-      };
+      const bruto = calcularPosicao(ev);
       const grudado = grudarNaGrade(bruto.x, bruto.y);
       setPos(grudado);
       onCommit(grudado.x, grudado.y);
     };
 
+    const cancelar = () => {
+      window.removeEventListener("pointermove", mover);
+      window.removeEventListener("pointerup", soltar);
+      window.removeEventListener("pointercancel", cancelar);
+      arrastando.current = false;
+      setPos(posInicial);
+    };
+
     window.addEventListener("pointermove", mover);
     window.addEventListener("pointerup", soltar);
+    window.addEventListener("pointercancel", cancelar);
   };
 
   return (
