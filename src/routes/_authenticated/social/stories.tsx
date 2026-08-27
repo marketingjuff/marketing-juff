@@ -185,6 +185,8 @@ function StoriesPage() {
   const { data: sequences = [] } = useQuery(sequencesQueryOptions);
   const { data: stories = [], isLoading } = useQuery(storiesQueryOptions(sequenceId));
   const { data: objetivos = [] } = useQuery(objectivesQueryOptions);
+  const { data: logos = [] } = useQuery(logosQueryOptions);
+
   const objetivosAtivos = useMemo(
     () => objetivos.filter((o: Objective) => !o.arquivado),
     [objetivos],
