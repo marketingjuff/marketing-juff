@@ -19,11 +19,6 @@ function limpaNome(nome: string): string {
   return (limpo || "SEM-NOME").slice(0, 30).replace(/-$/, "") || "SEM-NOME";
 }
 
-function extensao(caminho: string, nomeArquivo: string): string {
-  const alvo = /\.[a-zA-Z0-9]+$/.exec(nomeArquivo)?.[0] ?? /\.[a-zA-Z0-9]+$/.exec(caminho)?.[0];
-  return (alvo ?? ".jpg").toLowerCase();
-}
-
 function nomeZip(nomeProjeto: string): string {
   const base = (nomeProjeto || "stories")
     .normalize("NFD")
@@ -34,20 +29,6 @@ function nomeZip(nomeProjeto: string): string {
   return `${base || "stories"}.zip`;
 }
 
-async function baixarComRetentativa(url: string): Promise<Blob> {
-  let ultimo: unknown;
-  for (let tentativa = 0; tentativa < 3; tentativa += 1) {
-    try {
-      const resp = await fetch(url);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      return await resp.blob();
-    } catch (e) {
-      ultimo = e;
-      if (tentativa < 2) await new Promise((r) => setTimeout(r, 600));
-    }
-  }
-  throw ultimo instanceof Error ? ultimo : new Error("Falha ao baixar imagem");
-}
 
 export class ExportZipError extends Error {
   falhas: string[];
