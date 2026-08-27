@@ -163,7 +163,6 @@ function ArteBloco({
   total,
   editable,
   canApprove,
-  onOpen,
   onSaveFrame,
   onSaveComp,
   onApproveFrame,
@@ -234,9 +233,8 @@ function ArteBloco({
           ref={draggable.setNodeRef}
           {...draggable.attributes}
           {...draggable.listeners}
-          onClick={onOpen}
           className="size-full touch-none"
-          aria-label={`Abrir arte ${index + 1}`}
+          aria-label={`Arte ${index + 1}`}
         >
           {frame.url ? (
             <img
@@ -246,7 +244,6 @@ function ArteBloco({
               onDragStart={(e) => e.preventDefault()}
               className="size-full select-none object-cover"
             />
-
           ) : null}
         </button>
         <ArteEditor
@@ -458,7 +455,6 @@ export function StoryCard({
   objetivos,
   onDelete,
   onAddFrames,
-  onOpenFrame,
   onSaveBloco,
   onSaveFrame,
   onSaveComp,
@@ -478,7 +474,6 @@ export function StoryCard({
   objetivos: { id: string; nome: string }[];
   onDelete: () => void;
   onAddFrames: (files: File[]) => void;
-  onOpenFrame: (index: number) => void;
   onSaveBloco: (storyId: string, nome: string) => Promise<void>;
   onSaveFrame: (frameId: string, values: Partial<FrameType>) => Promise<void>;
   onSaveComp: (frameId: string, patch: Partial<Composicao>) => void;
@@ -674,20 +669,19 @@ export function StoryCard({
 
         <div className="flex flex-nowrap gap-3 overflow-x-auto">
           {story.frames.map((frame, index) => (
-            <ArteBloco
-              key={frame.id}
-              frame={frame}
-              index={index}
-              total={total}
-              editable={editable}
-              canApprove={canApprove}
-              onOpen={() => onOpenFrame(index)}
-              onSaveFrame={onSaveFrame}
-              onSaveComp={onSaveComp}
-              onApproveFrame={onApproveFrame}
-              onAdjustFrame={onAdjustFrame}
-              onReplaceImage={onReplaceImage}
-            />
+          <ArteBloco
+            key={frame.id}
+            frame={frame}
+            index={index}
+            total={total}
+            editable={editable}
+            canApprove={canApprove}
+            onSaveFrame={onSaveFrame}
+            onSaveComp={onSaveComp}
+            onApproveFrame={onApproveFrame}
+            onAdjustFrame={onAdjustFrame}
+            onReplaceImage={onReplaceImage}
+          />
           ))}
         </div>
 
