@@ -738,16 +738,28 @@ function Camada({
     const pai = caixaRef.current?.parentElement;
     if (!pai) return;
     const rect = pai.getBoundingClientRect();
-    arrastando.current = true;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    let comecou = false;
+
     const mover = (ev: PointerEvent) => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      if (!comecou && Math.hypot(dx, dy) < 4) return;
+      if (!comecou) {
+        comecou = true;
+        arrastando.current = true;
+      }
       setPos({
         x: Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100)),
         y: Math.max(0, Math.min(100, ((ev.clientY - rect.top) / rect.height) * 100)),
       });
     };
+
     const soltar = (ev: PointerEvent) => {
       window.removeEventListener("pointermove", mover);
       window.removeEventListener("pointerup", soltar);
+      if (!comecou) return;
       arrastando.current = false;
       const bruto = {
         x: Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100)),
@@ -757,6 +769,7 @@ function Camada({
       setPos(grudado);
       onCommit(grudado.x, grudado.y);
     };
+
     window.addEventListener("pointermove", mover);
     window.addEventListener("pointerup", soltar);
   };
