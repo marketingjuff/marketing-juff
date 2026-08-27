@@ -1,5 +1,7 @@
 import type { Objective } from "@/lib/objectives";
 import type { Story } from "@/lib/stories";
+import { montarArtePng } from "@/lib/story-editor";
+
 
 /** Remove acentos, cedilha e caracteres fora de letra, número e hífen. */
 function limpaNome(nome: string): string {
