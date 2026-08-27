@@ -78,6 +78,8 @@ import { AlturasCompartilhadasProvider } from "@/components/stories/AlturasCompa
 import { exportPlanPdf } from "@/lib/story-pdf";
 import { Textarea } from "@/components/ui/textarea";
 import { exportStoriesZip, ExportZipError } from "@/lib/story-zip";
+import { logosQueryOptions } from "@/lib/story-editor";
+
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -185,6 +187,8 @@ function StoriesPage() {
   const { data: sequences = [] } = useQuery(sequencesQueryOptions);
   const { data: stories = [], isLoading } = useQuery(storiesQueryOptions(sequenceId));
   const { data: objetivos = [] } = useQuery(objectivesQueryOptions);
+  const { data: logos = [] } = useQuery(logosQueryOptions);
+
   const objetivosAtivos = useMemo(
     () => objetivos.filter((o: Objective) => !o.arquivado),
     [objetivos],
@@ -243,7 +247,10 @@ function StoriesPage() {
   const exportarZip = async () => {
     setExportandoZip(true);
     try {
-      const total = await exportStoriesZip(fila, nomeAtual, objetivosAtivos);
+      const total = await exportStoriesZip(fila, nomeAtual, objetivosAtivos, (logoId) =>
+        logos.find((l) => l.id === logoId)?.svg ?? null,
+      );
+
       if (total === 0) {
         toast.error("Não há artes na fila principal para exportar.");
         return;

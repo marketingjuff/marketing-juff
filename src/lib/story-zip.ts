@@ -1,5 +1,7 @@
 import type { Objective } from "@/lib/objectives";
 import type { Story } from "@/lib/stories";
+import { montarArtePng } from "@/lib/story-editor";
+
 
 /** Remove acentos, cedilha e caracteres fora de letra, número e hífen. */
 function limpaNome(nome: string): string {
@@ -17,11 +19,6 @@ function limpaNome(nome: string): string {
   return (limpo || "SEM-NOME").slice(0, 30).replace(/-$/, "") || "SEM-NOME";
 }
 
-function extensao(caminho: string, nomeArquivo: string): string {
-  const alvo = /\.[a-zA-Z0-9]+$/.exec(nomeArquivo)?.[0] ?? /\.[a-zA-Z0-9]+$/.exec(caminho)?.[0];
-  return (alvo ?? ".jpg").toLowerCase();
-}
-
 function nomeZip(nomeProjeto: string): string {
   const base = (nomeProjeto || "stories")
     .normalize("NFD")
@@ -32,20 +29,6 @@ function nomeZip(nomeProjeto: string): string {
   return `${base || "stories"}.zip`;
 }
 
-async function baixarComRetentativa(url: string): Promise<Blob> {
-  let ultimo: unknown;
-  for (let tentativa = 0; tentativa < 3; tentativa += 1) {
-    try {
-      const resp = await fetch(url);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      return await resp.blob();
-    } catch (e) {
-      ultimo = e;
-      if (tentativa < 2) await new Promise((r) => setTimeout(r, 600));
-    }
-  }
-  throw ultimo instanceof Error ? ultimo : new Error("Falha ao baixar imagem");
-}
 
 export class ExportZipError extends Error {
   falhas: string[];
@@ -56,11 +39,12 @@ export class ExportZipError extends Error {
   }
 }
 
-/** Gera e baixa o zip com as artes da fila principal do projeto. */
+/** Gera e baixa o zip com as artes montadas (texto e logo) da fila principal. */
 export async function exportStoriesZip(
   stories: Story[],
   nomeProjeto: string,
   objetivos: Objective[] = [],
+  svgPorLogo: (logoId: string | null) => string | null = () => null,
 ): Promise<number> {
   const JSZip = (await import("jszip")).default;
   const fila = stories.filter((s) => !s.descartado);
@@ -81,20 +65,21 @@ export async function exportStoriesZip(
       const frame = story.frames[i]!;
       ordem += 1;
       const prefixo = String(ordem).padStart(digitos, "0");
-      const ext = extensao(frame.image_path, frame.nome_arquivo);
+      const ext = ".png";
       let arquivo = `${prefixo}_${blocoNome}_${i + 1}de${story.frames.length}${ext}`;
       const vezes = usados.get(arquivo) ?? 0;
       usados.set(arquivo, vezes + 1);
       if (vezes > 0) arquivo = arquivo.replace(new RegExp(`${ext}$`), `-${vezes + 1}${ext}`);
 
       try {
-        const blob = await baixarComRetentativa(frame.url);
+        const blob = await montarArtePng(frame, svgPorLogo(frame.comp.logo_id));
         itens.push({ arquivo, blob, story, pos: i + 1, totalBloco: story.frames.length });
       } catch {
         falhas.push(`${story.nome_bloco || "Sem nome do bloco"} — arte ${i + 1} de ${story.frames.length}`);
       }
     }
   }
+
 
   if (falhas.length > 0) throw new ExportZipError(falhas);
 
