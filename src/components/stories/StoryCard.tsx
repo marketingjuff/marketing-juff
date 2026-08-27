@@ -174,7 +174,6 @@ function ArteBloco({
   total: number;
   editable: boolean;
   canApprove: boolean;
-  onOpen: () => void;
   onSaveFrame: (frameId: string, values: Partial<FrameType>) => Promise<void>;
   onSaveComp: (frameId: string, patch: Partial<Composicao>) => void;
   onApproveFrame: (frameId: string) => void;
