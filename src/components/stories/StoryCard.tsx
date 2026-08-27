@@ -180,7 +180,6 @@ function ArteBloco({
   onAdjustFrame: (frameId: string, comment: string) => void;
   onReplaceImage: (frame: FrameType, file: File) => void;
 }) {
-
   const [ajusteAberto, setAjusteAberto] = useState(false);
   const [comentario, setComentario] = useState("");
 
@@ -253,7 +252,6 @@ function ArteBloco({
           onSaveTexto={(id, texto) => onSaveFrame(id, { texto_principal: texto })}
         />
       </div>
-
 
       <p className="truncate text-[11px] text-muted-foreground" title={frame.nome_arquivo}>
         {frame.nome_arquivo || "Sem nome"}
@@ -494,7 +492,6 @@ export function StoryCard({
 
   useEffect(() => setNomeBloco(story.nome_bloco), [story.nome_bloco]);
 
-
   const draggable = useDraggable({
     id: `story:${story.id}`,
     data: { type: "story", storyId: story.id },
@@ -668,19 +665,19 @@ export function StoryCard({
 
         <div className="flex flex-nowrap gap-3 overflow-x-auto">
           {story.frames.map((frame, index) => (
-          <ArteBloco
-            key={frame.id}
-            frame={frame}
-            index={index}
-            total={total}
-            editable={editable}
-            canApprove={canApprove}
-            onSaveFrame={onSaveFrame}
-            onSaveComp={onSaveComp}
-            onApproveFrame={onApproveFrame}
-            onAdjustFrame={onAdjustFrame}
-            onReplaceImage={onReplaceImage}
-          />
+            <ArteBloco
+              key={frame.id}
+              frame={frame}
+              index={index}
+              total={total}
+              editable={editable}
+              canApprove={canApprove}
+              onSaveFrame={onSaveFrame}
+              onSaveComp={onSaveComp}
+              onApproveFrame={onApproveFrame}
+              onAdjustFrame={onAdjustFrame}
+              onReplaceImage={onReplaceImage}
+            />
           ))}
         </div>
 
@@ -732,7 +729,6 @@ export function StoryCard({
             </Button>
           </div>
         ) : null}
-
 
         <input
           ref={inputRef}

@@ -75,7 +75,6 @@ import {
   type StoryStatus,
 } from "@/lib/stories";
 
-
 import { objectivesQueryOptions, type Objective } from "@/lib/objectives";
 import { applyPlan, precisaPerfil, type PlanValidation } from "@/lib/story-plan";
 import { AlturasCompartilhadasProvider } from "@/components/stories/AlturasCompartilhadas";
@@ -83,7 +82,6 @@ import { exportPlanPdf } from "@/lib/story-pdf";
 import { Textarea } from "@/components/ui/textarea";
 import { exportStoriesZip, ExportZipError } from "@/lib/story-zip";
 import { logosQueryOptions } from "@/lib/story-editor";
-
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -157,8 +155,7 @@ const colisaoStories: CollisionDetection = (args) => {
   const tipo = (args.active.data.current as { type?: string } | undefined)?.type;
   if (tipo === "story") {
     const prioritarios = pointerWithin(args).filter(
-      (collision) =>
-        String(collision.id).startsWith("storyslot:") || collision.id === "descartar",
+      (collision) => String(collision.id).startsWith("storyslot:") || collision.id === "descartar",
     );
     if (prioritarios.length > 0) return prioritarios;
   }
@@ -285,8 +282,11 @@ function StoriesPage() {
   const exportarZip = async () => {
     setExportandoZip(true);
     try {
-      const total = await exportStoriesZip(fila, nomeAtual, objetivosAtivos, (logoId) =>
-        logos.find((l) => l.id === logoId)?.svg ?? null,
+      const total = await exportStoriesZip(
+        fila,
+        nomeAtual,
+        objetivosAtivos,
+        (logoId) => logos.find((l) => l.id === logoId)?.svg ?? null,
       );
 
       if (total === 0) {
@@ -454,11 +454,7 @@ function StoriesPage() {
   function replicarNoBloco(story: Story) {
     const primeira = story.frames[0];
     if (!primeira || story.frames.length < 2) return;
-    aplicarFormatacaoEmBloco(
-      story,
-      primeira.comp,
-      "Formatação da arte 1 aplicada a todo o bloco",
-    );
+    aplicarFormatacaoEmBloco(story, primeira.comp, "Formatação da arte 1 aplicada a todo o bloco");
   }
 
   /** Aplica a formatação da arte 1 do bloco atual em todas as artes do próximo bloco. */
@@ -476,7 +472,6 @@ function StoriesPage() {
       `Formatação aplicada no bloco #${proximo.position}`,
     );
   }
-
 
   async function salvarBloco(storyId: string, nome: string) {
     try {
@@ -625,8 +620,6 @@ function StoriesPage() {
       onSaveComp: salvarComposicao,
       onReplicarBloco: () => replicarNoBloco(story),
       onReplicarProximo: () => aplicarNoProximoBloco(story),
-
-
 
       onApproveFrame: (frameId: string) => mutate.mutate(() => approveFrame(frameId)),
       onApproveStory: () => {
