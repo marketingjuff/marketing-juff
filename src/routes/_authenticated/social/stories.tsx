@@ -6,9 +6,11 @@ import {
   PointerSensor,
   TouchSensor,
   closestCenter,
+  pointerWithin,
   useDroppable,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
@@ -29,12 +31,14 @@ import {
   Inbox,
   ArrowDownAZ,
   Target,
+  LayoutGrid,
 } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
 import { StoryCard } from "@/components/stories/StoryCard";
 import { UploadArea } from "@/components/stories/UploadArea";
 import { PlanDialog } from "@/components/stories/PlanDialog";
+import { ReorganizarDialog } from "@/components/stories/ReorganizarDialog";
 import { canEdit, profileQueryOptions, hasPermission } from "@/lib/auth";
 import {
   MAX_FRAMES,
@@ -71,7 +75,6 @@ import {
   type StoryStatus,
 } from "@/lib/stories";
 
-
 import { objectivesQueryOptions, type Objective } from "@/lib/objectives";
 import { applyPlan, precisaPerfil, type PlanValidation } from "@/lib/story-plan";
 import { AlturasCompartilhadasProvider } from "@/components/stories/AlturasCompartilhadas";
@@ -79,7 +82,6 @@ import { exportPlanPdf } from "@/lib/story-pdf";
 import { Textarea } from "@/components/ui/textarea";
 import { exportStoriesZip, ExportZipError } from "@/lib/story-zip";
 import { logosQueryOptions } from "@/lib/story-editor";
-
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -145,6 +147,40 @@ const FILTROS: { key: Filtro; label: string }[] = [
 
 const AREA = "__area__";
 
+/** Identificador do alvo de soltura que joga o story para o fim da fila. */
+const SLOT_FIM = "__fim__";
+
+/** Prioriza os alvos de reordenação e descarte sobre o corpo usado para fusão. */
+const colisaoStories: CollisionDetection = (args) => {
+  const tipo = (args.active.data.current as { type?: string } | undefined)?.type;
+  if (tipo === "story") {
+    const prioritarios = pointerWithin(args).filter(
+      (collision) => String(collision.id).startsWith("storyslot:") || collision.id === "descartar",
+    );
+    if (prioritarios.length > 0) return prioritarios;
+  }
+  return closestCenter(args);
+};
+
+/** Faixa de soltura depois do último card, para mover o story para o fim. */
+function SlotFim({ visible }: { visible: boolean }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `storyslot:${SLOT_FIM}`,
+    data: { type: "storyslot", storyId: SLOT_FIM },
+  });
+  if (!visible) return null;
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "min-h-[14rem] w-8 shrink-0 self-stretch rounded-full transition-colors",
+        isOver ? "bg-primary" : "bg-primary/20",
+      )}
+      aria-label="Mover para o fim da fila"
+    />
+  );
+}
+
 function DropZone({
   id,
   type,
@@ -205,6 +241,7 @@ function StoriesPage() {
   const [dragging, setDragging] = useState<{ type: string; descartado?: boolean } | null>(null);
 
   const [planoAberto, setPlanoAberto] = useState(false);
+  const [reorganizarAberto, setReorganizarAberto] = useState(false);
   const [salvarAberto, setSalvarAberto] = useState(false);
   const [renomearAberto, setRenomearAberto] = useState(false);
   const [excluirAberto, setExcluirAberto] = useState(false);
@@ -245,8 +282,11 @@ function StoriesPage() {
   const exportarZip = async () => {
     setExportandoZip(true);
     try {
-      const total = await exportStoriesZip(fila, nomeAtual, objetivosAtivos, (logoId) =>
-        logos.find((l) => l.id === logoId)?.svg ?? null,
+      const total = await exportStoriesZip(
+        fila,
+        nomeAtual,
+        objetivosAtivos,
+        (logoId) => logos.find((l) => l.id === logoId)?.svg ?? null,
       );
 
       if (total === 0) {
@@ -414,11 +454,7 @@ function StoriesPage() {
   function replicarNoBloco(story: Story) {
     const primeira = story.frames[0];
     if (!primeira || story.frames.length < 2) return;
-    aplicarFormatacaoEmBloco(
-      story,
-      primeira.comp,
-      "Formatação da arte 1 aplicada a todo o bloco",
-    );
+    aplicarFormatacaoEmBloco(story, primeira.comp, "Formatação da arte 1 aplicada a todo o bloco");
   }
 
   /** Aplica a formatação da arte 1 do bloco atual em todas as artes do próximo bloco. */
@@ -436,7 +472,6 @@ function StoriesPage() {
       `Formatação aplicada no bloco #${proximo.position}`,
     );
   }
-
 
   async function salvarBloco(storyId: string, nome: string) {
     try {
@@ -491,12 +526,13 @@ function StoriesPage() {
       const story = byId(active.storyId);
       if (!story) return;
 
+      const alvo = over.storyId ?? "";
+      const ids = fila.map((s) => s.id).filter((id) => id !== story.id);
+      const to = alvo === SLOT_FIM ? ids.length : ids.indexOf(alvo);
+      if (to < 0) return;
+      ids.splice(to, 0, story.id);
+
       if (story.descartado) {
-        // Volta para a fila principal na posição escolhida.
-        const ids = fila.map((s) => s.id);
-        const to = ids.indexOf(over.storyId ?? "");
-        if (to < 0) return;
-        ids.splice(to, 0, story.id);
         mutate.mutate(async () => {
           await setDescartado(story.id, false);
           await reorderStories(ids);
@@ -504,12 +540,8 @@ function StoriesPage() {
         return;
       }
 
-      const ids = fila.map((s) => s.id);
-      const from = ids.indexOf(active.storyId);
-      const to = ids.indexOf(over.storyId ?? "");
-      if (from < 0 || to < 0) return;
-      ids.splice(from, 1);
-      ids.splice(ids.indexOf(over.storyId ?? ""), 0, active.storyId);
+      const atual = fila.map((s) => s.id).join(",");
+      if (atual === ids.join(",")) return;
       mutate.mutate(() => reorderStories(ids));
       return;
     }
@@ -588,8 +620,6 @@ function StoriesPage() {
       onSaveComp: salvarComposicao,
       onReplicarBloco: () => replicarNoBloco(story),
       onReplicarProximo: () => aplicarNoProximoBloco(story),
-
-
 
       onApproveFrame: (frameId: string) => mutate.mutate(() => approveFrame(frameId)),
       onApproveStory: () => {
@@ -844,6 +874,16 @@ function StoriesPage() {
             >
               <ArrowDownAZ className="size-4" /> Ordenar por nome
             </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1"
+              disabled={fila.length < 2}
+              onClick={() => setReorganizarAberto(true)}
+            >
+              <LayoutGrid className="size-4" /> Reorganizar
+            </Button>
           </div>
         ) : null}
 
@@ -870,7 +910,7 @@ function StoriesPage() {
         <AlturasCompartilhadasProvider>
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCenter}
+            collisionDetection={colisaoStories}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onDragCancel={() => setDragging(null)}
@@ -901,6 +941,7 @@ function StoriesPage() {
                     showSlot={dragging?.type === "story" && filtro === "todos"}
                   />
                 ))}
+                <SlotFim visible={dragging?.type === "story" && filtro === "todos"} />
               </div>
             )}
 
@@ -948,6 +989,21 @@ function StoriesPage() {
 
         onOpenChange={setPlanoAberto}
         onApply={aplicarPlano}
+      />
+
+      <ReorganizarDialog
+        open={reorganizarAberto}
+        stories={fila}
+        salvando={mutate.isPending}
+        onOpenChange={setReorganizarAberto}
+        onSalvar={(ids) => {
+          mutate.mutate(() => reorderStories(ids), {
+            onSuccess: () => {
+              setReorganizarAberto(false);
+              toast.success("Ordem dos stories salva.");
+            },
+          });
+        }}
       />
 
       <Dialog open={exportAberto} onOpenChange={setExportAberto}>
