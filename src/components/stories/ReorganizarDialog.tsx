@@ -173,7 +173,9 @@ export function ReorganizarDialog({
             <ZoomIn className="size-4" /> Aumentar
           </Button>
           {mudou ? (
-            <span className="text-xs font-medium text-primary">Ordem alterada, ainda não salva</span>
+            <span className="text-xs font-medium text-primary">
+              Ordem alterada, ainda não salva
+            </span>
           ) : null}
         </div>
 
@@ -195,7 +197,7 @@ export function ReorganizarDialog({
                       key={story.id}
                       story={story}
                       indice={i}
-                      largura={NIVEIS_ZOOM[nivel] ?? NIVEIS_ZOOM[NIVEL_PADRAO]}
+                      largura={NIVEIS_ZOOM[nivel] ?? 160}
                     />
                   ))}
                 </div>
