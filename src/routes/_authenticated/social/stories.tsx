@@ -623,7 +623,6 @@ function StoriesPage() {
         }),
       onAddFrames: (files: File[]) =>
         mutate.mutate(() => addFramesToStory(story.id, files, story.frames.length)),
-      onOpenFrame: (index: number) => setLightbox(story.frames[index]?.url ?? null),
     };
   }
 
@@ -1209,18 +1208,6 @@ function StoriesPage() {
               Criar projeto novo
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={lightbox !== null} onOpenChange={(open) => !open && setLightbox(null)}>
-        <DialogContent className="max-w-[min(96vw,32rem)] border-none bg-transparent p-0 shadow-none">
-          {lightbox ? (
-            <img
-              src={lightbox}
-              alt="Frame do story"
-              className="max-h-[85vh] w-full rounded-xl object-contain"
-            />
-          ) : null}
         </DialogContent>
       </Dialog>
 
