@@ -35,6 +35,11 @@ export const CORES_MARCA: { nome: string; hex: string }[] = [
   { nome: "Branco", hex: "#f6f6fb" },
 ];
 
+/** Formato e qualidade da arte exportada. JPEG mantém o arquivo no tamanho do original. */
+export const EXPORT_MIME = "image/jpeg";
+export const EXPORT_QUALIDADE = 0.92;
+export const EXPORT_EXTENSAO = ".jpg";
+
 export const FONTES = ["Nunito", "Google Sans Flex"] as const;
 export const PESOS = [
   { value: 400, label: "Normal" },
@@ -355,8 +360,8 @@ function quebrarLinhas(
   return saida;
 }
 
-/** Desenha a arte com texto e logo na resolução original e devolve um PNG. */
-export async function montarArtePng(frame: Frame, logoSvg: string | null): Promise<Blob> {
+/** Desenha a arte com texto e logo na resolução original e devolve um JPEG. */
+export async function montarArteExport(frame: Frame, logoSvg: string | null): Promise<Blob> {
   const img = await carregarImagemOriginal(frame.url);
   const canvas = document.createElement("canvas");
   canvas.width = img.naturalWidth;
@@ -364,6 +369,10 @@ export async function montarArtePng(frame: Frame, logoSvg: string | null): Promi
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Não foi possível preparar a exportação");
 
+  // JPEG não tem transparência. O fundo branco evita área preta caso a imagem
+  // de origem tenha canal alfa.
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(img, 0, 0);
 
   const c = frame.comp;
@@ -407,8 +416,9 @@ export async function montarArtePng(frame: Frame, logoSvg: string | null): Promi
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("Falha ao gerar o PNG"))),
-      "image/png",
+      (blob) => (blob ? resolve(blob) : reject(new Error("Falha ao gerar a imagem"))),
+      EXPORT_MIME,
+      EXPORT_QUALIDADE,
     );
   });
 }
@@ -435,8 +445,8 @@ function nomeLimpo(nome: string): string {
 }
 
 export async function exportarArteMontada(frame: Frame, logoSvg: string | null): Promise<void> {
-  const blob = await montarArtePng(frame, logoSvg);
-  baixar(blob, `${nomeLimpo(frame.nome_arquivo)}.png`);
+  const blob = await montarArteExport(frame, logoSvg);
+  baixar(blob, `${nomeLimpo(frame.nome_arquivo)}${EXPORT_EXTENSAO}`);
 }
 
 /** Exporta em zip todas as artes aprovadas do bloco, na ordem da sequência. */
@@ -450,10 +460,14 @@ export async function exportarBlocoMontado(
   const zip = new JSZip();
   for (let i = 0; i < aprovadas.length; i += 1) {
     const frame = aprovadas[i]!;
-    const blob = await montarArtePng(frame, svgPorLogo(frame.comp.logo_id));
-    zip.file(`${String(i + 1).padStart(2, "0")}_${nomeLimpo(frame.nome_arquivo)}.png`, blob);
+    const blob = await montarArteExport(frame, svgPorLogo(frame.comp.logo_id));
+    zip.file(
+      `${String(i + 1).padStart(2, "0")}_${nomeLimpo(frame.nome_arquivo)}${EXPORT_EXTENSAO}`,
+      blob,
+    );
   }
-  const blob = await zip.generateAsync({ type: "blob" });
+  // Imagem JPEG já vem comprimida. Guardar sem recomprimir deixa o zip muito mais rápido.
+  const blob = await zip.generateAsync({ type: "blob", compression: "STORE" });
   baixar(blob, `${nomeLimpo(story.nome_bloco || "story")}-artes.zip`);
   return aprovadas.length;
 }

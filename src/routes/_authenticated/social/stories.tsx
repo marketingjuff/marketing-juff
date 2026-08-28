@@ -946,6 +946,7 @@ function StoriesPage() {
                   <StoryCard
                     key={story.id}
                     {...cardProps(story)}
+                    grupoAlturas="principal"
                     showSlot={dragging?.type === "story" && filtro === "todos"}
                   />
                 ))}
@@ -977,7 +978,12 @@ function StoriesPage() {
                   {naoUsadasAberto ? (
                     <div className="flex flex-wrap items-start gap-3 border-t border-border p-3">
                       {descartadas.map((story) => (
-                        <StoryCard key={story.id} {...cardProps(story)} showSlot={false} />
+                        <StoryCard
+                          key={story.id}
+                          {...cardProps(story)}
+                          grupoAlturas="descartadas"
+                          showSlot={false}
+                        />
                       ))}
                     </div>
                   ) : null}

@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  LinhaAlturasProvider,
   useAlturaCompartilhada,
   type SlotAltura,
 } from "@/components/stories/AlturasCompartilhadas";
@@ -485,6 +486,7 @@ export function StoryCard({
   editable,
   canApprove,
   showSlot,
+  grupoAlturas = "principal",
   objetivos,
   onDelete,
   onAddFrames,
@@ -503,6 +505,8 @@ export function StoryCard({
   editable: boolean;
   canApprove: boolean;
   showSlot?: boolean;
+  /** Separa listas independentes para que uma não influencie a altura da outra. */
+  grupoAlturas?: string;
   /** Objetivos ativos disponíveis para escolha. */
   objetivos: { id: string; nome: string }[];
   onDelete: () => void;
@@ -521,6 +525,14 @@ export function StoryCard({
   onReplicarProximo?: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const raizRef = useRef<HTMLDivElement>(null);
+  // Blocos que caem na mesma linha visual ficam alinhados pelo topo e têm a mesma
+  // posição vertical. Essa posição identifica a linha para o cálculo de alturas.
+  const [topoLinha, setTopoLinha] = useState(0);
+  useLayoutEffect(() => {
+    const medido = Math.round(raizRef.current?.offsetTop ?? 0);
+    setTopoLinha((atual) => (atual === medido ? atual : medido));
+  });
   const [nomeBloco, setNomeBloco] = useState(story.nome_bloco);
   const [blocoSalvo, setBlocoSalvo] = useState(false);
   const [exportandoBloco, setExportandoBloco] = useState(false);
@@ -555,7 +567,8 @@ export function StoryCard({
   const objetivoAtual = objetivos.find((o) => o.id === story.objective_id) ?? null;
 
   return (
-    <div className="relative w-fit max-w-full">
+    <div ref={raizRef} className="relative w-fit max-w-full">
+      <LinhaAlturasProvider linha={`${grupoAlturas}:${topoLinha}`}>
       {showSlot ? (
         <div
           ref={slot.setNodeRef}
@@ -783,6 +796,7 @@ export function StoryCard({
           }}
         />
       </div>
+      </LinhaAlturasProvider>
     </div>
   );
 }

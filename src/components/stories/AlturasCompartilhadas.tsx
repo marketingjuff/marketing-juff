@@ -12,42 +12,77 @@ import type { ReactNode } from "react";
 /** Slots que participam da grade compartilhada de alturas. */
 export type SlotAltura = "observacao" | "cta_link" | "adjust_comment";
 
+/** Cada registro guarda em que linha visual o campo está e qual a altura natural dele. */
+type Registro = { linha: string; altura: number };
+
 type Ctx = {
-  maximos: Record<SlotAltura, number>;
-  registrar: (slot: SlotAltura, id: string, altura: number) => void;
+  /** Para cada slot, o maior valor encontrado em cada linha visual. */
+  maximos: Record<SlotAltura, Record<string, number>>;
+  registrar: (slot: SlotAltura, id: string, linha: string, altura: number) => void;
   remover: (slot: SlotAltura, id: string) => void;
 };
 
-const ZERO: Record<SlotAltura, number> = {
-  observacao: 0,
-  cta_link: 0,
-  adjust_comment: 0,
+const VAZIO: Record<SlotAltura, Record<string, number>> = {
+  observacao: {},
+  cta_link: {},
+  adjust_comment: {},
 };
+
+/** Usado quando o campo está fora de qualquer bloco identificado. */
+const LINHA_PADRAO = "sem-linha";
 
 const AlturasContext = createContext<Ctx | null>(null);
 const AcoesContext = createContext<Pick<Ctx, "registrar" | "remover"> | null>(null);
+const LinhaContext = createContext<string>(LINHA_PADRAO);
+
+/**
+ * Marca todos os campos descendentes como pertencentes a uma mesma linha visual.
+ * Blocos de linhas diferentes recebem valores diferentes e não se influenciam.
+ */
+export function LinhaAlturasProvider({
+  linha,
+  children,
+}: {
+  linha: string;
+  children: ReactNode;
+}) {
+  return <LinhaContext.Provider value={linha}>{children}</LinhaContext.Provider>;
+}
 
 export function AlturasCompartilhadasProvider({ children }: { children: ReactNode }) {
-  const mapa = useRef<Record<SlotAltura, Map<string, number>>>({
+  const mapa = useRef<Record<SlotAltura, Map<string, Registro>>>({
     observacao: new Map(),
     cta_link: new Map(),
     adjust_comment: new Map(),
   });
-  const [maximos, setMaximos] = useState<Record<SlotAltura, number>>(ZERO);
+  const [maximos, setMaximos] = useState<Record<SlotAltura, Record<string, number>>>(VAZIO);
 
   const recalcular = useCallback((slot: SlotAltura) => {
-    let maior = 0;
-    for (const valor of mapa.current[slot].values()) {
-      if (valor > maior) maior = valor;
+    // Reconstrói o mapa de máximos do slot inteiro, para não sobrar linha antiga
+    // quando um bloco muda de linha por causa de uma quebra diferente.
+    const porLinha: Record<string, number> = {};
+    for (const reg of mapa.current[slot].values()) {
+      const atual = porLinha[reg.linha] ?? 0;
+      if (reg.altura > atual) porLinha[reg.linha] = reg.altura;
     }
-    // Só mexe no estado quando o máximo do slot realmente muda.
-    setMaximos((atual) => (atual[slot] === maior ? atual : { ...atual, [slot]: maior }));
+
+    setMaximos((estado) => {
+      const antes = estado[slot];
+      const chavesAntes = Object.keys(antes);
+      const chavesDepois = Object.keys(porLinha);
+      const igual =
+        chavesAntes.length === chavesDepois.length &&
+        chavesDepois.every((chave) => antes[chave] === porLinha[chave]);
+      // Só mexe no estado quando algum máximo realmente mudou.
+      return igual ? estado : { ...estado, [slot]: porLinha };
+    });
   }, []);
 
   const registrar = useCallback(
-    (slot: SlotAltura, id: string, altura: number) => {
-      if (mapa.current[slot].get(id) === altura) return;
-      mapa.current[slot].set(id, altura);
+    (slot: SlotAltura, id: string, linha: string, altura: number) => {
+      const anterior = mapa.current[slot].get(id);
+      if (anterior && anterior.linha === linha && anterior.altura === altura) return;
+      mapa.current[slot].set(id, { linha, altura });
       recalcular(slot);
     },
     [recalcular],
@@ -76,7 +111,8 @@ export function AlturasCompartilhadasProvider({ children }: { children: ReactNod
 
 /**
  * Registra a altura natural medida da arte no slot e devolve a maior altura
- * daquele slot em toda a página. Fora do provider devolve zero.
+ * daquele slot apenas entre as artes da mesma linha visual do grid.
+ * Fora do provider devolve zero.
  */
 export function useAlturaCompartilhada(
   slot: SlotAltura,
@@ -85,14 +121,15 @@ export function useAlturaCompartilhada(
 ): number {
   const ctx = useContext(AlturasContext);
   const acoes = useContext(AcoesContext);
+  const linha = useContext(LinhaContext);
 
   useEffect(() => {
-    acoes?.registrar(slot, id, alturaNatural);
-  }, [acoes, slot, id, alturaNatural]);
+    acoes?.registrar(slot, id, linha, alturaNatural);
+  }, [acoes, slot, id, linha, alturaNatural]);
 
   useEffect(() => {
     return () => acoes?.remover(slot, id);
   }, [acoes, slot, id]);
 
-  return ctx?.maximos[slot] ?? 0;
+  return ctx?.maximos[slot][linha] ?? 0;
 }
