@@ -54,6 +54,8 @@ export type Database = {
           nome_bloco: string
           objective_id: string | null
           position: number
+          publicado_em: string | null
+          publicado_por: string | null
           sequence_id: string | null
           status: string
         }
@@ -66,6 +68,8 @@ export type Database = {
           nome_bloco?: string
           objective_id?: string | null
           position?: number
+          publicado_em?: string | null
+          publicado_por?: string | null
           sequence_id?: string | null
           status?: string
         }
@@ -78,6 +82,8 @@ export type Database = {
           nome_bloco?: string
           objective_id?: string | null
           position?: number
+          publicado_em?: string | null
+          publicado_por?: string | null
           sequence_id?: string | null
           status?: string
         }
