@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  LinhaAlturasProvider,
   useAlturaCompartilhada,
   type SlotAltura,
 } from "@/components/stories/AlturasCompartilhadas";
