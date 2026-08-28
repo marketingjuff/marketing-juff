@@ -1011,7 +1011,7 @@ function TextoEditavel({
           touchAction: editando ? "auto" : "none",
           textShadow:
             comp.sombra_opacidade > 0
-              ? `${fontePx * 0.04}px ${fontePx * 0.04}px ${fontePx * 0.12}px ${corComOpacidade(comp.sombra_cor, comp.sombra_opacidade)}`
+              ? `${fontePx * 0.08}px ${fontePx * 0.08}px ${fontePx * 0.28}px ${corComOpacidade(comp.sombra_cor, comp.sombra_opacidade)}`
               : "none",
         }}
       />
