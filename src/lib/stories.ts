@@ -7,6 +7,9 @@ export const BUCKET = "stories";
 
 export type StoryStatus = "pendente" | "aprovado" | "ajustar";
 
+/** Estado escolhido no seletor do bloco. 'ajustar' aparece sozinho, não é escolhido. */
+export type StatusBloco = "pendente" | "ajustar" | "aprovado" | "publicado";
+
 /** Status por arte. 'refeito' = imagem trocada, aguardando novo aval. */
 export type FrameStatus = "pendente" | "ajustar" | "refeito" | "aprovado";
 
@@ -48,7 +51,7 @@ export const COMPOSICAO_PADRAO: Composicao = {
   logo_id: null,
   logo_x: 50,
   logo_y: 85,
-  logo_tamanho: 4,
+  logo_tamanho: 1,
   logo_cor: "#ffffff",
 };
 
@@ -138,6 +141,10 @@ export type Story = {
   descartado: boolean;
   /** Objetivo do story inteiro. Pode ficar vazio. */
   objective_id: string | null;
+  /** Data e hora em que o bloco foi marcado como publicado. Nulo quando não foi. */
+  publicado_em: string | null;
+  /** Quem marcou como publicado. */
+  publicado_por: string | null;
   frames: Frame[];
 };
 
@@ -178,7 +185,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
   let query = supabase
     .from("stories")
     .select(
-      "id, position, status, adjust_comment, adjust_comment_at, nome_bloco, sequence_id, descartado, objective_id",
+      "id, position, status, adjust_comment, adjust_comment_at, nome_bloco, sequence_id, descartado, objective_id, publicado_em, publicado_por",
     )
     .order("position", { ascending: true });
   query = sequenceId ? query.eq("sequence_id", sequenceId) : query.is("sequence_id", null);
@@ -221,6 +228,8 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
     sequence_id: s.sequence_id ?? null,
     descartado: s.descartado ?? false,
     objective_id: s.objective_id ?? null,
+    publicado_em: (s as { publicado_em?: string | null }).publicado_em ?? null,
+    publicado_por: (s as { publicado_por?: string | null }).publicado_por ?? null,
 
     frames: frames
       .filter((f) => f.story_id === s.id)
@@ -363,6 +372,66 @@ export async function approveStory(story: Story): Promise<void> {
     .update({ status: "aprovado", adjust_comment: null, adjust_comment_at: null })
     .in("id", ids);
   if (error) throw error;
+}
+
+/** Marca ou desmarca o bloco como publicado, sem tocar no status das artes. */
+export async function setPublicado(storyId: string, publicado: boolean): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  const values = publicado
+    ? { publicado_em: new Date().toISOString(), publicado_por: userData.user?.id ?? null }
+    : { publicado_em: null, publicado_por: null };
+  const { error } = await supabase
+    .from("stories")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .update(values as any)
+    .eq("id", storyId);
+  if (error) throw error;
+}
+
+/**
+ * Devolve todas as artes do bloco para pendente e apaga os pedidos de ajuste.
+ * A marcação de publicado cai sozinha pelo gatilho do banco.
+ */
+export async function reabrirStory(story: Story): Promise<void> {
+  const ids = story.frames.map((f) => f.id);
+  if (ids.length === 0) return;
+  const { error } = await supabase
+    .from("story_frames")
+    .update({ status: "pendente", adjust_comment: null, adjust_comment_at: null })
+    .in("id", ids);
+  if (error) throw error;
+}
+
+/** Devolve uma arte específica para pendente, sem mexer nas outras do bloco. */
+export async function reabrirFrame(frameId: string): Promise<void> {
+  const { error } = await supabase
+    .from("story_frames")
+    .update({ status: "pendente", adjust_comment: null, adjust_comment_at: null })
+    .eq("id", frameId);
+  if (error) throw error;
+}
+
+/**
+ * Leva o bloco para o estado escolhido no seletor.
+ * Pendente derruba aprovações. Aprovado aprova tudo e despublica.
+ * Publicado aprova o que falta e marca como publicado.
+ */
+export async function setStatusBloco(story: Story, alvo: StatusBloco): Promise<void> {
+  if (alvo === "pendente") {
+    await setPublicado(story.id, false);
+    await reabrirStory(story);
+    return;
+  }
+  if (alvo === "aprovado") {
+    await setPublicado(story.id, false);
+    await approveStory(story);
+    return;
+  }
+  if (alvo === "publicado") {
+    await approveStory(story);
+    await setPublicado(story.id, true);
+    return;
+  }
 }
 
 /** Pede ajuste em uma arte, guardando o comentário e a data na própria arte. */
@@ -606,6 +675,8 @@ export async function undoMerge(source: Story, target: Story): Promise<void> {
       sequence_id: source.sequence_id,
       descartado: source.descartado,
       objective_id: source.objective_id,
+      publicado_em: source.publicado_em,
+      publicado_por: source.publicado_por,
     })
     .select("id")
     .single();
