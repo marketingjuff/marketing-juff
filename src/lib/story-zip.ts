@@ -1,6 +1,7 @@
 import type { Objective } from "@/lib/objectives";
 import type { Story } from "@/lib/stories";
 import { EXPORT_EXTENSAO, montarArteExport } from "@/lib/story-editor";
+import { montarGuiaPdf, type ItemGuia } from "@/lib/story-guia-pdf";
 
 
 /** Remove acentos, cedilha e caracteres fora de letra, número e hífen. */
