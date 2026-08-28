@@ -1,6 +1,6 @@
 import type { Objective } from "@/lib/objectives";
 import type { Story } from "@/lib/stories";
-import { montarArtePng } from "@/lib/story-editor";
+import { EXPORT_EXTENSAO, montarArteExport } from "@/lib/story-editor";
 
 
 /** Remove acentos, cedilha e caracteres fora de letra, número e hífen. */
@@ -65,14 +65,14 @@ export async function exportStoriesZip(
       const frame = story.frames[i]!;
       ordem += 1;
       const prefixo = String(ordem).padStart(digitos, "0");
-      const ext = ".png";
+      const ext = EXPORT_EXTENSAO;
       let arquivo = `${prefixo}_${blocoNome}_${i + 1}de${story.frames.length}${ext}`;
       const vezes = usados.get(arquivo) ?? 0;
       usados.set(arquivo, vezes + 1);
       if (vezes > 0) arquivo = arquivo.replace(new RegExp(`${ext}$`), `-${vezes + 1}${ext}`);
 
       try {
-        const blob = await montarArtePng(frame, svgPorLogo(frame.comp.logo_id));
+        const blob = await montarArteExport(frame, svgPorLogo(frame.comp.logo_id));
         itens.push({ arquivo, blob, story, pos: i + 1, totalBloco: story.frames.length });
       } catch {
         falhas.push(`${story.nome_bloco || "Sem nome do bloco"} — arte ${i + 1} de ${story.frames.length}`);
@@ -111,7 +111,8 @@ export async function exportStoriesZip(
   }
   zip.file("roteiro.txt", linhas.join("\n"));
 
-  const blob = await zip.generateAsync({ type: "blob" });
+  // Imagem JPEG já vem comprimida. Guardar sem recomprimir deixa o zip muito mais rápido.
+  const blob = await zip.generateAsync({ type: "blob", compression: "STORE" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

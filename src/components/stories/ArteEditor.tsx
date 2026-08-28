@@ -1232,7 +1232,7 @@ export function ArteEditor({
           <button
             type="button"
             title="Exportar arte montada"
-            aria-label="Exportar arte montada em PNG"
+            aria-label="Exportar arte montada em JPEG"
             className="rounded-md bg-background/85 p-1 text-foreground shadow hover:bg-background"
             disabled={exportando}
             onClick={async () => {
