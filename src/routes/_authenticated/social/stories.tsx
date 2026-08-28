@@ -54,6 +54,7 @@ import {
   normalize,
   renameSequence,
   reorderFrames,
+  reabrirFrame,
   reorderStories,
   replaceFrameImage,
   requestFrameAdjust,
@@ -61,6 +62,7 @@ import {
   sequencesQueryOptions,
   setDescartado,
   setSequenceArquivado,
+  setStatusBloco,
   setStoryObjective,
   sortStoriesByName,
   splitFrame,
@@ -71,6 +73,7 @@ import {
   updateStoryBloco,
   type Composicao,
   type Frame,
+  type StatusBloco,
   type Story,
   type StoryStatus,
 } from "@/lib/stories";
@@ -137,13 +140,14 @@ export const Route = createFileRoute("/_authenticated/social/stories")({
   component: StoriesPage,
 });
 
-type Filtro = "todos" | StoryStatus;
+type Filtro = "todos" | StoryStatus | "publicado";
 
 const FILTROS: { key: Filtro; label: string }[] = [
   { key: "todos", label: "Todos" },
   { key: "pendente", label: "Pendentes" },
   { key: "aprovado", label: "Aprovados" },
   { key: "ajustar", label: "Ajustar" },
+  { key: "publicado", label: "Publicados" },
 ];
 
 const AREA = "__area__";
@@ -324,10 +328,14 @@ function StoriesPage() {
   });
 
   const aprovados = fila.filter((s) => s.status === "aprovado").length;
-  const visiveis = useMemo(
-    () => (filtro === "todos" ? fila : fila.filter((s) => s.status === filtro)),
-    [fila, filtro],
-  );
+  const visiveis = useMemo(() => {
+    if (filtro === "todos") return fila;
+    if (filtro === "publicado") return fila.filter((s) => Boolean(s.publicado_em));
+    if (filtro === "aprovado") {
+      return fila.filter((s) => s.status === "aprovado" && !s.publicado_em);
+    }
+    return fila.filter((s) => s.status === filtro);
+  }, [fila, filtro]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -647,6 +655,19 @@ function StoriesPage() {
           action: () => mutate.mutate(() => approveStory(story)),
         });
       },
+      onSetStatusBloco: (alvoStory: Story, alvo: StatusBloco) => {
+        if (alvo === "pendente") {
+          setConfirm({
+            title: "Voltar o bloco para pendente?",
+            description:
+              "Todas as artes deste bloco perdem a aprovação, os pedidos de ajuste são apagados e a marcação de publicado é retirada. As imagens e os textos continuam intactos.",
+            action: () => mutate.mutate(() => setStatusBloco(alvoStory, "pendente")),
+          });
+          return;
+        }
+        mutate.mutate(() => setStatusBloco(alvoStory, alvo));
+      },
+      onReabrirFrame: (frameId: string) => mutate.mutate(() => reabrirFrame(frameId)),
       onAdjustFrame: (frameId: string, comment: string) =>
         mutate.mutate(() => requestFrameAdjust(frameId, comment)),
       onReplaceImage: (frame: Frame, file: File) =>
