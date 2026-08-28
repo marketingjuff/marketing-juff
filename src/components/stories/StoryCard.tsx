@@ -337,7 +337,7 @@ function ArteBloco({
               <Salvo visivel={linkSalvo} />
             </div>
             <Select
-              value={frame.cta_link || undefined}
+              value={frame.cta_link}
               disabled={!editable}
               onValueChange={async (v) => {
                 if (v === frame.cta_link) return;
