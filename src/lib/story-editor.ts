@@ -393,9 +393,9 @@ export async function montarArtePng(frame: Frame, logoSvg: string | null): Promi
     ctx.fillStyle = c.texto_cor;
     if (c.sombra_opacidade > 0) {
       ctx.shadowColor = corComOpacidade(c.sombra_cor, c.sombra_opacidade);
-      ctx.shadowOffsetX = fs * 0.04;
-      ctx.shadowOffsetY = fs * 0.04;
-      ctx.shadowBlur = fs * 0.12;
+      ctx.shadowOffsetX = fs * 0.08;
+      ctx.shadowOffsetY = fs * 0.08;
+      ctx.shadowBlur = fs * 0.28;
     }
     const linhas = quebrarLinhas(ctx, texto, canvas.width * (c.texto_largura / 100));
     const alturaLinha = fs * 1.2;
