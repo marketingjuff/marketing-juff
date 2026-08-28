@@ -3,6 +3,7 @@ import { FileUp, Loader2 } from "lucide-react";
 
 import type { Story } from "@/lib/stories";
 import type { Objective } from "@/lib/objectives";
+import type { Cta, LinkCta } from "@/lib/story-ctas";
 
 import { parsePlan, readDocx, validatePlan, type PlanValidation } from "@/lib/story-plan";
 import {
@@ -20,12 +21,16 @@ export function PlanDialog({
   open,
   stories,
   objetivos = [],
+  ctas = [],
+  links = [],
   onOpenChange,
   onApply,
 }: {
   open: boolean;
   stories: Story[];
   objetivos?: Objective[];
+  ctas?: Cta[];
+  links?: LinkCta[];
   onOpenChange: (open: boolean) => void;
   onApply: (validation: PlanValidation) => void;
 }) {
@@ -35,7 +40,7 @@ export function PlanDialog({
   const inputRef = useRef<HTMLInputElement>(null);
 
   function analisar(conteudo: string) {
-    setValidation(validatePlan(parsePlan(conteudo), stories, objetivos));
+    setValidation(validatePlan(parsePlan(conteudo), stories, objetivos, ctas, links));
   }
 
 
@@ -157,11 +162,6 @@ export function PlanDialog({
                 {validation.desconhecidos.length > 0 ? (
                   <p className="text-xs">Não reconhecidos: {validation.desconhecidos.join(", ")}</p>
                 ) : null}
-                {validation.recursosInvalidos.length > 0 ? (
-                  <p className="text-xs">
-                    Recursos inválidos: {validation.recursosInvalidos.join(", ")}
-                  </p>
-                ) : null}
                 {validation.blocosCheios.length > 0 ? (
                   <p className="text-xs">
                     Blocos acima do limite: {validation.blocosCheios.join(", ")}
@@ -175,6 +175,27 @@ export function PlanDialog({
             <p className="rounded-xl border border-warning/50 bg-warning/10 p-3 text-xs">
               Objetivos não cadastrados (os blocos ficam sem objetivo):{" "}
               {validation.objetivosDesconhecidos.join(", ")}
+            </p>
+          ) : null}
+
+          {validation && validation.ctasDesconhecidos.length > 0 ? (
+            <p className="rounded-xl border border-warning/50 bg-warning/10 p-3 text-xs">
+              CTAs fora do cadastro (a frase entra do jeito que veio e pode ser trocada no card).{" "}
+              {validation.ctasDesconhecidos.join(", ")}
+            </p>
+          ) : null}
+
+          {validation && validation.linksDesconhecidos.length > 0 ? (
+            <p className="rounded-xl border border-warning/50 bg-warning/10 p-3 text-xs">
+              Links fora do cadastro (o endereço entra do jeito que veio e pode ser trocado no
+              card). {validation.linksDesconhecidos.join(", ")}
+            </p>
+          ) : null}
+
+          {validation && validation.ctasSemLink.length > 0 ? (
+            <p className="rounded-xl border border-warning/50 bg-warning/10 p-3 text-xs">
+              Artes com CTA e sem link (escolha o link no card antes de aprovar).{" "}
+              {validation.ctasSemLink.join(", ")}
             </p>
           ) : null}
 
