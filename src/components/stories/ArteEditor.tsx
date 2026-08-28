@@ -181,11 +181,15 @@ function ControleTamanho({
   label,
   valor,
   disabled,
+  minimo = 1,
+  maximo = 10,
   onCommit,
 }: {
   label: string;
   valor: number;
   disabled?: boolean;
+  minimo?: number;
+  maximo?: number;
   onCommit: (v: number) => void;
 }) {
   const [local, setLocal] = useState(valor);
@@ -197,8 +201,8 @@ function ControleTamanho({
         <span className="tabular font-medium text-foreground">{local}</span>
       </div>
       <Slider
-        min={1}
-        max={10}
+        min={minimo}
+        max={maximo}
         step={1}
         disabled={disabled ?? false}
         value={[local]}
@@ -640,7 +644,7 @@ function PainelLogos({
           </div>
         ))}
 
-        {podeGerir ? (
+        {editable ? (
           <button
             type="button"
             className="flex size-14 items-center justify-center rounded-md border-2 border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary"
@@ -680,6 +684,8 @@ function PainelLogos({
             label="Tamanho do logo"
             valor={comp.logo_tamanho}
             disabled={!editable}
+            minimo={0}
+            maximo={20}
             onCommit={(v) => salvar({ logo_tamanho: v })}
           />
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">

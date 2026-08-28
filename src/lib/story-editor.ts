@@ -88,7 +88,7 @@ export function dimensoesLogo(
   proporcao: number,
 ): { largura: number; altura: number } {
   const prop = proporcao > 0 ? proporcao : 1;
-  let altura = alturaImagem * (0.02 + tamanho * 0.008);
+  let altura = alturaImagem * (0.04 + tamanho * 0.011);
   let largura = altura * prop;
   const limite = larguraImagem * LOGO_LARGURA_MAXIMA;
   if (largura > limite) {
