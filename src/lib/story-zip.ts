@@ -112,6 +112,25 @@ export async function exportStoriesZip(
   }
   zip.file("roteiro.txt", linhas.join("\n"));
 
+  try {
+    const itensGuia: ItemGuia[] = itens.map((item) => {
+      const frame = item.story.frames[item.pos - 1]!;
+      return {
+        arquivo: item.arquivo,
+        blob: item.blob,
+        nomeBloco: item.story.nome_bloco || "",
+        posicaoNoBloco: item.pos,
+        totalDoBloco: item.totalBloco,
+        cta: frame.cta || "",
+        link: frame.cta_link || "",
+      };
+    });
+    const guia = await montarGuiaPdf(itensGuia, nomeProjeto);
+    zip.file("guia.pdf", guia);
+  } catch {
+    // O guia é um extra. Se ele falhar, o zip com as artes ainda precisa sair.
+  }
+
   // Imagem JPEG já vem comprimida. Guardar sem recomprimir deixa o zip muito mais rápido.
   const blob = await zip.generateAsync({ type: "blob", compression: "STORE" });
   const url = URL.createObjectURL(blob);
