@@ -1,22 +1,17 @@
-import { MAX_FRAMES, RECURSO_VALUES, type Recurso, type Story } from "@/lib/stories";
+import { MAX_FRAMES, type Story } from "@/lib/stories";
 import type { Objective } from "@/lib/objectives";
+import { chaveCta, chaveLink, type Cta, type LinkCta } from "@/lib/story-ctas";
 import { supabase } from "@/integrations/supabase/client";
 
 export type PlanArte = {
   nome_arquivo: string;
   texto_principal: string;
   observacao: string;
-  recurso: Recurso;
-  /** Perfil da menção. Vazio em planos antigos, que não têm este campo. */
-  recurso_detalhe: string;
+  /** Frase do CTA. Vazio quando a arte não leva CTA. */
+  cta: string;
+  /** Endereço de destino do CTA. Vazio quando não há CTA. */
+  cta_link: string;
 };
-
-/** Apara e garante o arroba na frente do perfil. */
-export function normalizaPerfil(value: string): string {
-  const texto = (value ?? "").trim();
-  if (!texto) return "";
-  return texto.startsWith("@") ? texto : `@${texto}`;
-}
 
 export type PlanBloco = {
   numero: number;
@@ -40,7 +35,12 @@ export type PlanValidation = {
   faltando: string[];
   repetidos: string[];
   desconhecidos: string[];
-  recursosInvalidos: string[];
+  /** CTAs que a IA escreveu e não batem com nenhum cadastrado. Não bloqueia. */
+  ctasDesconhecidos: string[];
+  /** Links que a IA escreveu e não batem com nenhum cadastrado. Não bloqueia. */
+  linksDesconhecidos: string[];
+  /** Artes que vieram com CTA e sem link. Não bloqueia, mas impede aprovar depois. */
+  ctasSemLink: string[];
   blocosCheios: string[];
   /** Objetivos citados no arquivo que não existem no cadastro. Não bloqueia. */
   objetivosDesconhecidos: string[];
@@ -90,8 +90,8 @@ export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobr
         nome_arquivo: partes[1] ?? "",
         texto_principal: partes[2] ?? "",
         observacao: partes[3] ?? "",
-        recurso: (partes[4] ?? "Nenhum") as Recurso,
-        recurso_detalhe: normalizaPerfil(partes[5] ?? ""),
+        cta: (partes[4] ?? "").trim(),
+        cta_link: (partes[5] ?? "").trim(),
       };
       if (!arte.nome_arquivo) continue;
       if (blocos.length === 0) {
@@ -118,15 +118,27 @@ export function parsePlan(text: string): { blocos: PlanBloco[]; sobras: PlanSobr
   return { blocos: blocos.filter((b) => b.artes.length > 0), sobras };
 }
 
-/** Arte com recurso Menção e perfil vazio não pode ser aprovada. */
-export function precisaPerfil(frame: { recurso: Recurso; recurso_detalhe: string }): boolean {
-  return frame.recurso === "Menção" && (frame.recurso_detalhe ?? "").trim().length === 0;
+/** Arte com CTA e sem link não pode ser aprovada. O Meta exige os dois juntos. */
+export function precisaLink(frame: { cta: string; cta_link: string }): boolean {
+  return (frame.cta ?? "").trim().length > 0 && (frame.cta_link ?? "").trim().length === 0;
+}
+
+/**
+ * Em bloco com mais de uma arte, a última arte precisa ter CTA.
+ * É ela que fecha a sequência e leva a pessoa para o destino.
+ */
+export function precisaCtaFinal(story: { frames: { cta: string }[] }): boolean {
+  if (story.frames.length < 2) return false;
+  const ultima = story.frames[story.frames.length - 1];
+  return (ultima?.cta ?? "").trim().length === 0;
 }
 
 export function validatePlan(
   parsed: { blocos: PlanBloco[]; sobras: PlanSobra[] },
   stories: Story[],
   objetivos: Objective[] = [],
+  ctas: Cta[] = [],
+  links: LinkCta[] = [],
 ): PlanValidation {
   const porNome = new Map(objetivos.map((o) => [chaveObjetivo(o.nome), o.id]));
   const objetivosDesconhecidos: string[] = [];
@@ -141,6 +153,30 @@ export function validatePlan(
     if (!id && !objetivosDesconhecidos.includes(texto)) objetivosDesconhecidos.push(texto);
   }
 
+  const ctaPorChave = new Map(ctas.map((c) => [chaveCta(c.texto), c.texto]));
+  const linkPorChave = new Map(links.map((l) => [chaveLink(l.url), l.url]));
+  const ctasDesconhecidos: string[] = [];
+  const linksDesconhecidos: string[] = [];
+  const ctasSemLink: string[] = [];
+
+  for (const bloco of parsed.blocos) {
+    for (const arte of bloco.artes) {
+      if (arte.cta) {
+        const oficial = ctaPorChave.get(chaveCta(arte.cta));
+        if (oficial) arte.cta = oficial;
+        else if (!ctasDesconhecidos.includes(arte.cta)) ctasDesconhecidos.push(arte.cta);
+      }
+      if (arte.cta_link) {
+        const oficial = linkPorChave.get(chaveLink(arte.cta_link));
+        if (oficial) arte.cta_link = oficial;
+        else if (!linksDesconhecidos.includes(arte.cta_link))
+          linksDesconhecidos.push(arte.cta_link);
+      }
+      if (!arte.cta) arte.cta_link = "";
+      else if (!arte.cta_link) ctasSemLink.push(arte.nome_arquivo);
+    }
+  }
+
   const { blocos, sobras } = parsed;
   const frames = stories.flatMap((s) => s.frames);
   const disponiveis = new Map<string, number>();
@@ -151,7 +187,6 @@ export function validatePlan(
 
   const usados = new Map<string, number>();
   const desconhecidos: string[] = [];
-  const recursosInvalidos: string[] = [];
   const blocosCheios: string[] = [];
 
   const conta = (nome: string) => {
@@ -166,9 +201,6 @@ export function validatePlan(
     }
     for (const arte of bloco.artes) {
       conta(arte.nome_arquivo);
-      if (!RECURSO_VALUES.includes(arte.recurso)) {
-        recursosInvalidos.push(`${arte.nome_arquivo}: ${arte.recurso}`);
-      }
     }
   }
 
@@ -188,7 +220,9 @@ export function validatePlan(
     faltando,
     repetidos,
     desconhecidos,
-    recursosInvalidos,
+    ctasDesconhecidos,
+    linksDesconhecidos,
+    ctasSemLink,
     blocosCheios,
     objetivosDesconhecidos,
     ok:
@@ -196,7 +230,6 @@ export function validatePlan(
       faltando.length === 0 &&
       repetidos.length === 0 &&
       desconhecidos.length === 0 &&
-      recursosInvalidos.length === 0 &&
       blocosCheios.length === 0,
   };
 }
@@ -262,8 +295,8 @@ export async function applyPlan(
           ordem,
           texto_principal: arte.texto_principal,
           observacao: arte.observacao,
-          recurso: arte.recurso,
-          recurso_detalhe: arte.recurso === "Menção" ? normalizaPerfil(arte.recurso_detalhe) : "",
+          cta: arte.cta,
+          cta_link: arte.cta ? arte.cta_link : "",
         })
         .eq("id", frame.id);
       if (error) throw error;
