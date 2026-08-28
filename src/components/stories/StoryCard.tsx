@@ -817,7 +817,7 @@ export function StoryCard({
             </span>
           )}
 
-          {!tudoAprovado ? (
+          {editable && !tudoAprovado ? (
             <span className="rounded-full border border-border bg-secondary px-2 py-0.5">
               {aprovadas} de {total} aprovadas
             </span>
