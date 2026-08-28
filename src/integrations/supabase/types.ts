@@ -98,6 +98,33 @@ export type Database = {
           },
         ]
       }
+      story_ctas: {
+        Row: {
+          arquivado: boolean
+          created_at: string
+          grupo: string
+          id: string
+          texto: string
+          updated_at: string
+        }
+        Insert: {
+          arquivado?: boolean
+          created_at?: string
+          grupo?: string
+          id?: string
+          texto: string
+          updated_at?: string
+        }
+        Update: {
+          arquivado?: boolean
+          created_at?: string
+          grupo?: string
+          id?: string
+          texto?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       story_frames: {
         Row: {
           adjust_comment: string | null
@@ -119,6 +146,8 @@ export type Database = {
           comp_texto_x: number
           comp_texto_y: number
           created_at: string
+          cta: string
+          cta_link: string
           id: string
           image_path: string
           image_path_anterior: string | null
@@ -152,6 +181,8 @@ export type Database = {
           comp_texto_x?: number
           comp_texto_y?: number
           created_at?: string
+          cta?: string
+          cta_link?: string
           id?: string
           image_path: string
           image_path_anterior?: string | null
@@ -185,6 +216,8 @@ export type Database = {
           comp_texto_x?: number
           comp_texto_y?: number
           created_at?: string
+          cta?: string
+          cta_link?: string
           id?: string
           image_path?: string
           image_path_anterior?: string | null
@@ -207,6 +240,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      story_links: {
+        Row: {
+          arquivado: boolean
+          created_at: string
+          descricao: string
+          id: string
+          nome: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          arquivado?: boolean
+          created_at?: string
+          descricao?: string
+          id?: string
+          nome: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          arquivado?: boolean
+          created_at?: string
+          descricao?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
       }
       story_logos: {
         Row: {
