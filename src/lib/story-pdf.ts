@@ -1,5 +1,6 @@
 import type { Story } from "@/lib/stories";
 import type { Objective } from "@/lib/objectives";
+import type { Cta, LinkCta } from "@/lib/story-ctas";
 
 function blocoObjetivos(objetivos: Objective[], todos: boolean): string {
   if (objetivos.length === 0) return "";
@@ -18,6 +19,45 @@ ${orientacao}
 Para cada bloco montado, identifique e informe o objetivo correspondente. O objetivo pertence ao story inteiro e entra na linha de BLOCO, como último campo, escrito exatamente com o nome do objetivo abaixo.
 
 ${lista}
+`;
+}
+
+function blocoCtas(ctas: Cta[], links: LinkCta[]): string {
+  if (ctas.length === 0 && links.length === 0) return "";
+
+  const grupos = new Map<string, string[]>();
+  for (const cta of ctas) {
+    const lista = grupos.get(cta.grupo) ?? [];
+    lista.push(cta.texto);
+    grupos.set(cta.grupo, lista);
+  }
+  const listaCtas = [...grupos.entries()]
+    .map(([grupo, frases]) => `${grupo}\n${frases.join("\n")}`)
+    .join("\n\n");
+
+  const listaLinks = links
+    .map((l) => `${l.nome}\n${l.url}\n${l.descricao || "Sem orientação cadastrada."}`)
+    .join("\n\n");
+
+  return `
+
+CTA E LINK
+
+Os stories são publicados pelo Meta Business Suite, que pede duas informações por arte, a frase do botão, chamada de CTA, e o endereço de destino, chamado de link.
+
+O campo cta aceita SOMENTE uma das frases listadas abaixo, copiada exatamente como está escrita, com a mesma pontuação e as mesmas maiúsculas. Não invente frase nova, não adapte, não junte duas. Quando a arte não levar CTA, deixe o campo vazio.
+
+Sempre que o campo cta estiver preenchido, o campo link também precisa vir preenchido, com um dos endereços listados abaixo, copiado exatamente. Escolha o endereço que combina com a frase escolhida e com o assunto da arte. Quando o campo cta estiver vazio, o campo link também fica vazio.
+
+Pelo menos 70 por cento dos blocos precisam levar CTA. Em bloco CAMPANHA, a última arte do bloco leva CTA e link obrigatoriamente, porque é ela que fecha a sequência.
+
+FRASES DE CTA DISPONÍVEIS
+
+${listaCtas || "Nenhuma frase cadastrada."}
+
+LINKS DISPONÍVEIS
+
+${listaLinks || "Nenhum link cadastrado."}
 `;
 }
 
@@ -40,6 +80,8 @@ function capa(
   objetivos: Objective[],
   todos: boolean,
   direcionamento = "",
+  ctas: Cta[] = [],
+  links: LinkCta[] = [],
 ): string {
   return `INSTRUÇÕES PARA MONTAR O PLANO DE STORIES
 
@@ -58,26 +100,22 @@ Alterne produto, benefício, vida real, marca, interação e venda. Evite sequê
 Devolva a resposta em um documento Word seguindo EXATAMENTE o formato abaixo. Não use tabelas. Não use marcadores. Não escreva nenhum texto fora do formato. Cada linha começa com BLOCO, ARTE ou SOBRA, e os campos são separados por barra vertical.
 
 BLOCO | numero | SOLO ou CAMPANHA | nome do bloco | objetivo
-ARTE | nome exato do arquivo | texto principal | observação | recurso | perfil da menção${quantidade > 0 ? `\nSOBRA | nome exato do arquivo | motivo curto` : ""}
-
-O campo recurso aceita apenas um destes valores.
-Nenhum, Link, Enquete, Menção, Slider, Caixa de pergunta.
-O campo perfil da menção só é preenchido quando o recurso for Menção, sempre começando com arroba. Nos demais casos o campo fica vazio.
+ARTE | nome exato do arquivo | texto principal | observação | cta | link${quantidade > 0 ? `\nSOBRA | nome exato do arquivo | motivo curto` : ""}
 
 Exemplo.
 
 BLOCO | 1 | CAMPANHA | AQUELA QUE VOCÊ REPETE | Prova social
-ARTE | prancheta 2 | AQUELA QUE VOCÊ REPETE. | Arte limpa, sem CTA. | Nenhum |
-ARTE | prancheta 3 | THERMOAIR. VOCÊ VAI ENTENDER QUANDO VESTIR. | Leve, respirável e feita para acompanhar. CTA CONHEÇA A JUFF | Link |
+ARTE | prancheta 2 | AQUELA QUE VOCÊ REPETE. | Abre a campanha, arte limpa. | |
+ARTE | prancheta 3 | THERMOAIR. VOCÊ VAI ENTENDER QUANDO VESTIR. | Fecha a campanha levando para a loja. | Veja a coleção. | https://loja.juff.com.br
 BLOCO | 2 | SOLO | DESACELERAR | Marca
-ARTE | prancheta 4 | HOJE O MOVIMENTO É DESACELERAR. | Sem CTA. | Nenhum |
-ARTE | prancheta 7 | QUEM VESTE, CONTA. | Repost do cliente. | Menção | @juffstore${quantidade > 0 ? `\nSOBRA | prancheta 5 | Repete a mesma ideia da prancheta 4.\nSOBRA | prancheta 6 | Texto pouco legível sobre a foto.` : ""}
+ARTE | prancheta 4 | HOJE O MOVIMENTO É DESACELERAR. | Story de marca, sem CTA. | |
+ARTE | prancheta 7 | SEU TIME COM A SUA CARA. | Personalização, atendimento por conversa. | Fale com nossa equipe | https://wa.me/551139612696${quantidade > 0 ? `\nSOBRA | prancheta 5 | Repete a mesma ideia da prancheta 4.\nSOBRA | prancheta 6 | Texto pouco legível sobre a foto.` : ""}
 
 ${
     quantidade > 0
       ? `Depois das linhas do plano, escreva uma linha SOBRA para CADA arte que você decidiu não usar. Toda arte deste PDF precisa aparecer uma vez, ou como ARTE ou como SOBRA. Nenhuma pode ficar de fora das duas listas. Não invente artes que não estão no PDF.`
       : `Toda arte deste PDF precisa aparecer no plano como uma linha ARTE, exatamente uma vez. Não escreva nenhuma linha SOBRA, porque nenhuma arte pode ficar de fora. Não invente artes que não estão no PDF.`
-  }${blocoObjetivos(objetivos, todos)}${blocoDirecionamento(direcionamento)}`;
+  }${blocoObjetivos(objetivos, todos)}${blocoCtas(ctas, links)}${blocoDirecionamento(direcionamento)}`;
 }
 
 
@@ -111,6 +149,8 @@ export async function exportPlanPdf(
   objetivos: Objective[] = [],
   todosObjetivos = true,
   direcionamento = "",
+  ctas: Cta[] = [],
+  links: LinkCta[] = [],
 ): Promise<void> {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -125,7 +165,7 @@ export async function exportPlanPdf(
 
   // As instruções podem passar de uma página; quebra automática por linha.
   const linhas: string[] = doc.splitTextToSize(
-    capa(frames.length, quantidade, objetivos, todosObjetivos, direcionamento),
+    capa(frames.length, quantidade, objetivos, todosObjetivos, direcionamento, ctas, links),
     pageW - margem * 2,
   );
   const alturaLinha = 5;

@@ -4,17 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 export const MAX_FRAMES = 5;
 export const BUCKET = "stories";
 
-/** Valor gravado no banco e rótulo mostrado na tela. */
-export const RECURSOS = [
-  { value: "Nenhum", label: "Nenhum" },
-  { value: "Link", label: "Link" },
-  { value: "Enquete", label: "Enquete" },
-  { value: "Menção", label: "Menção" },
-  { value: "Slider", label: "Slider de emoji" },
-  { value: "Caixa de pergunta", label: "Caixa de pergunta" },
-] as const;
-export type Recurso = (typeof RECURSOS)[number]["value"];
-export const RECURSO_VALUES = RECURSOS.map((r) => r.value) as readonly Recurso[];
 
 export type StoryStatus = "pendente" | "aprovado" | "ajustar";
 
@@ -92,8 +81,8 @@ export type FrameRow = {
   nome_arquivo: unknown;
   texto_principal: unknown;
   observacao: unknown;
-  recurso: unknown;
-  recurso_detalhe: unknown;
+  cta: unknown;
+  cta_link: unknown;
   status: unknown;
   adjust_comment: unknown;
   adjust_comment_at: unknown;
@@ -124,9 +113,10 @@ export type Frame = {
   nome_arquivo: string;
   texto_principal: string;
   observacao: string;
-  recurso: Recurso;
-  /** Perfil da menção (@perfil). Só usado quando o recurso é Menção. */
-  recurso_detalhe: string;
+  /** Texto do botão que vai no Meta Business Suite. Vazio quando a arte não tem CTA. */
+  cta: string;
+  /** Endereço de destino do CTA. Obrigatório sempre que houver CTA. */
+  cta_link: string;
   url: string;
   status: FrameStatus;
   adjust_comment: string | null;
@@ -203,7 +193,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
     const { data, error: framesError } = await supabase
       .from("story_frames")
       .select(
-        `id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, recurso, recurso_detalhe, status, adjust_comment, adjust_comment_at, image_path_anterior, ${COLUNAS_COMPOSICAO}`,
+        `id, story_id, image_path, ordem, nome_arquivo, texto_principal, observacao, cta, cta_link, status, adjust_comment, adjust_comment_at, image_path_anterior, ${COLUNAS_COMPOSICAO}`,
       )
       .in("story_id", ids)
       .order("ordem", { ascending: true });
@@ -242,8 +232,8 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
         nome_arquivo: (f.nome_arquivo as string) ?? "",
         texto_principal: (f.texto_principal as string) ?? "",
         observacao: (f.observacao as string) ?? "",
-        recurso: ((f.recurso as string) ?? "Nenhum") as Recurso,
-        recurso_detalhe: (f.recurso_detalhe as string) ?? "",
+        cta: (f.cta as string) ?? "",
+        cta_link: (f.cta_link as string) ?? "",
         url: urls.get(String(f.image_path)) ?? "",
         status: ((f.status as string) ?? "pendente") as FrameStatus,
         adjust_comment: (f.adjust_comment as string | null) ?? null,
@@ -390,7 +380,7 @@ export async function requestFrameAdjust(frameId: string, comment: string): Prom
 
 /**
  * Troca a imagem de uma arte. O status volta obrigatoriamente para refeito,
- * mesmo se a arte já estava aprovada. Nome, ordem, textos, recurso, posição e
+ * mesmo se a arte já estava aprovada. Nome, ordem, textos, CTA, link, posição e
  * comentário de ajuste ficam como estavam. A imagem antiga fica parada no
  * bucket, sem link e sem aparecer na interface.
  */
@@ -433,8 +423,8 @@ export async function updateFrameTexts(
   values: {
     texto_principal?: string;
     observacao?: string;
-    recurso?: Recurso;
-    recurso_detalhe?: string;
+    cta?: string;
+    cta_link?: string;
   },
 ): Promise<void> {
   const { error } = await supabase.from("story_frames").update(values).eq("id", frameId);

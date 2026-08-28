@@ -105,7 +105,8 @@ export async function exportStoriesZip(
     if (objetivo) linhas.push(`Objetivo: ${objetivo.nome}`);
     linhas.push(`Texto da arte: ${frame.texto_principal || "—"}`);
     linhas.push(`Observação: ${frame.observacao || "—"}`);
-    linhas.push(`Recurso: ${frame.recurso || "Nenhum"}`);
+    linhas.push(`CTA: ${frame.cta || "—"}`);
+    linhas.push(`Link: ${frame.cta_link || "—"}`);
     linhas.push("");
   }
   zip.file("roteiro.txt", linhas.join("\n"));

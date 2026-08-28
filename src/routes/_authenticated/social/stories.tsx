@@ -76,7 +76,8 @@ import {
 } from "@/lib/stories";
 
 import { objectivesQueryOptions, type Objective } from "@/lib/objectives";
-import { applyPlan, precisaPerfil, type PlanValidation } from "@/lib/story-plan";
+import { applyPlan, precisaCtaFinal, precisaLink, type PlanValidation } from "@/lib/story-plan";
+import { ctasQueryOptions, linksQueryOptions } from "@/lib/story-ctas";
 import { AlturasCompartilhadasProvider } from "@/components/stories/AlturasCompartilhadas";
 import { exportPlanPdf } from "@/lib/story-pdf";
 import { Textarea } from "@/components/ui/textarea";
@@ -224,6 +225,8 @@ function StoriesPage() {
   const { data: stories = [], isLoading } = useQuery(storiesQueryOptions(sequenceId));
   const { data: objetivos = [] } = useQuery(objectivesQueryOptions);
   const { data: logos = [] } = useQuery(logosQueryOptions);
+  const { data: ctas = [] } = useQuery(ctasQueryOptions);
+  const { data: links = [] } = useQuery(linksQueryOptions);
 
   const objetivosAtivos = useMemo(
     () => objetivos.filter((o: Objective) => !o.arquivado),
@@ -385,7 +388,7 @@ function StoriesPage() {
   async function exportar(qtd: number, escolhidos: Objective[], todos: boolean, texto: string) {
     setExportando(true);
     try {
-      await exportPlanPdf(fila, nomeAtual, qtd, escolhidos, todos, texto);
+      await exportPlanPdf(fila, nomeAtual, qtd, escolhidos, todos, texto, ctas, links);
     } catch (error) {
       toast.error((error as Error).message);
     } finally {
@@ -489,7 +492,8 @@ function StoriesPage() {
       await updateFrameTexts(frameId, {
         texto_principal: values.texto_principal ?? frame.texto_principal,
         observacao: values.observacao ?? frame.observacao,
-        recurso: values.recurso ?? frame.recurso,
+        cta: values.cta ?? frame.cta,
+        cta_link: values.cta_link ?? frame.cta_link,
       });
       patchLocal((s) => ({
         ...s,
@@ -623,8 +627,12 @@ function StoriesPage() {
 
       onApproveFrame: (frameId: string) => mutate.mutate(() => approveFrame(frameId)),
       onApproveStory: () => {
-        if (story.frames.some(precisaPerfil)) {
-          toast.error("Informe o perfil da menção antes de aprovar");
+        if (story.frames.some(precisaLink)) {
+          toast.error("Escolha o link do CTA antes de aprovar");
+          return;
+        }
+        if (precisaCtaFinal(story)) {
+          toast.error("A última arte do bloco precisa ter CTA antes de aprovar");
           return;
         }
         const total = story.frames.length;
@@ -986,6 +994,8 @@ function StoriesPage() {
         open={planoAberto}
         stories={stories}
         objetivos={objetivosAtivos}
+        ctas={ctas}
+        links={links}
 
         onOpenChange={setPlanoAberto}
         onApply={aplicarPlano}

@@ -13,8 +13,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import type { Composicao, Frame as FrameType, FrameStatus, Recurso, Story } from "@/lib/stories";
-import { MAX_FRAMES, RECURSOS, blocoTipo, ehImagemAceita } from "@/lib/stories";
+import type { Composicao, Frame as FrameType, FrameStatus, Story } from "@/lib/stories";
+import { MAX_FRAMES, blocoTipo, ehImagemAceita } from "@/lib/stories";
 import { ArteEditor, FileiraPresets } from "@/components/stories/ArteEditor";
 import { exportarBlocoMontado, logosQueryOptions } from "@/lib/story-editor";
 import { useQuery } from "@tanstack/react-query";
@@ -25,7 +25,9 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -33,7 +35,11 @@ import {
   useAlturaCompartilhada,
   type SlotAltura,
 } from "@/components/stories/AlturasCompartilhadas";
-import { normalizaPerfil, precisaPerfil } from "@/lib/story-plan";
+import { precisaLink } from "@/lib/story-plan";
+import { ctasQueryOptions, linksQueryOptions } from "@/lib/story-ctas";
+
+/** Valor sentinela do select, porque a lista suspensa não aceita valor vazio. */
+const SEM_CTA = "__sem_cta__";
 
 const FRAME_STATUS_LABEL: Record<FrameStatus, string> = {
   pendente: "Pendente",
@@ -183,14 +189,19 @@ function ArteBloco({
   const [ajusteAberto, setAjusteAberto] = useState(false);
   const [comentario, setComentario] = useState("");
 
-  const [recursoSalvo, setRecursoSalvo] = useState(false);
-  const [perfil, setPerfil] = useState(frame.recurso_detalhe);
-  const [perfilSalvo, setPerfilSalvo] = useState(false);
+  const [ctaSalvo, setCtaSalvo] = useState(false);
+  const [linkSalvo, setLinkSalvo] = useState(false);
+  const { data: ctas = [] } = useQuery(ctasQueryOptions);
+  const { data: links = [] } = useQuery(linksQueryOptions);
   const trocaRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => setPerfil(frame.recurso_detalhe), [frame.recurso_detalhe]);
-
-  const perfilVazio = frame.recurso === "Menção" && perfil.trim().length === 0;
+  const ctasAtivos = ctas.filter((c) => !c.arquivado);
+  const linksAtivos = links.filter((l) => !l.arquivado);
+  const gruposCta = [...new Set(ctasAtivos.map((c) => c.grupo))];
+  const ctaForaDoCadastro = frame.cta.length > 0 && !ctasAtivos.some((c) => c.texto === frame.cta);
+  const linkForaDoCadastro =
+    frame.cta_link.length > 0 && !linksAtivos.some((l) => l.url === frame.cta_link);
+  const linkFaltando = precisaLink(frame);
 
   const draggable = useDraggable({
     id: `frame:${frame.id}`,
@@ -274,64 +285,89 @@ function ArteBloco({
 
       <div className="space-y-1" {...stopDrag}>
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-muted-foreground">Recurso</span>
-          <Salvo visivel={recursoSalvo} />
+          <span className="text-[11px] text-muted-foreground">CTA</span>
+          <Salvo visivel={ctaSalvo} />
         </div>
         <Select
-          value={frame.recurso}
+          value={frame.cta || SEM_CTA}
           disabled={!editable}
           onValueChange={async (v) => {
-            if (v === frame.recurso) return;
-            const virouMencao = v === "Menção";
+            const texto = v === SEM_CTA ? "" : v;
+            if (texto === frame.cta) return;
             await onSaveFrame(frame.id, {
-              recurso: v as Recurso,
-              ...(virouMencao ? {} : { recurso_detalhe: "" }),
+              cta: texto,
+              ...(texto ? {} : { cta_link: "" }),
             });
-            setRecursoSalvo(true);
-            setTimeout(() => setRecursoSalvo(false), 2000);
+            setCtaSalvo(true);
+            setTimeout(() => setCtaSalvo(false), 2000);
           }}
         >
           <SelectTrigger className="h-8 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {RECURSOS.map((r) => (
-              <SelectItem key={r.value} value={r.value}>
-                {r.label}
-              </SelectItem>
+            <SelectItem value={SEM_CTA}>Sem CTA</SelectItem>
+            {gruposCta.map((grupo) => (
+              <SelectGroup key={grupo}>
+                <SelectLabel>{grupo}</SelectLabel>
+                {ctasAtivos
+                  .filter((c) => c.grupo === grupo)
+                  .map((c) => (
+                    <SelectItem key={c.id} value={c.texto}>
+                      {c.texto}
+                    </SelectItem>
+                  ))}
+              </SelectGroup>
             ))}
+            {ctaForaDoCadastro ? (
+              <SelectGroup>
+                <SelectLabel>Fora do cadastro</SelectLabel>
+                <SelectItem value={frame.cta}>{frame.cta}</SelectItem>
+              </SelectGroup>
+            ) : null}
           </SelectContent>
         </Select>
       </div>
 
-      <SlotCompartilhado slot="recurso_detalhe" frameId={frame.id}>
-        {frame.recurso === "Menção" ? (
+      <SlotCompartilhado slot="cta_link" frameId={frame.id}>
+        {frame.cta ? (
           <div className="space-y-1" {...stopDrag}>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-muted-foreground">Perfil da menção</span>
-              <Salvo visivel={perfilSalvo} />
+              <span className="text-[11px] text-muted-foreground">Link</span>
+              <Salvo visivel={linkSalvo} />
             </div>
-            <Input
-              value={perfil}
+            <Select
+              value={frame.cta_link}
               disabled={!editable}
-              placeholder="@perfil"
-              className={cn(
-                "h-8 text-sm",
-                perfilVazio && "border-warning focus-visible:ring-warning",
-              )}
-              onChange={(e) => setPerfil(e.target.value)}
-              onBlur={async () => {
-                const normalizado = normalizaPerfil(perfil);
-                if (normalizado !== perfil) setPerfil(normalizado);
-                if (normalizado === frame.recurso_detalhe) return;
-                await onSaveFrame(frame.id, { recurso_detalhe: normalizado });
-                setPerfilSalvo(true);
-                setTimeout(() => setPerfilSalvo(false), 2000);
+              onValueChange={async (v) => {
+                if (v === frame.cta_link) return;
+                await onSaveFrame(frame.id, { cta_link: v });
+                setLinkSalvo(true);
+                setTimeout(() => setLinkSalvo(false), 2000);
               }}
-            />
-            {perfilVazio ? (
+            >
+              <SelectTrigger
+                className={cn(
+                  "h-8 text-sm",
+                  linkFaltando && "border-warning focus-visible:ring-warning",
+                )}
+              >
+                <SelectValue placeholder="Escolha o link" />
+              </SelectTrigger>
+              <SelectContent>
+                {linksAtivos.map((l) => (
+                  <SelectItem key={l.id} value={l.url}>
+                    {l.nome}
+                  </SelectItem>
+                ))}
+                {linkForaDoCadastro ? (
+                  <SelectItem value={frame.cta_link}>{frame.cta_link}</SelectItem>
+                ) : null}
+              </SelectContent>
+            </Select>
+            {linkFaltando ? (
               <p className="text-[10px] font-medium text-warning-foreground">
-                Informe o perfil da menção
+                Escolha o link antes de aprovar
               </p>
             ) : null}
           </div>
@@ -390,8 +426,8 @@ function ArteBloco({
                   title="Aprovar"
                   aria-label="Aprovar arte"
                   onClick={() => {
-                    if (precisaPerfil(frame)) {
-                      toast.error("Informe o perfil da menção antes de aprovar");
+                    if (precisaLink(frame)) {
+                      toast.error("Escolha o link do CTA antes de aprovar");
                       return;
                     }
                     onApproveFrame(frame.id);

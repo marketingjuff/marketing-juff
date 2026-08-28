@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tansta
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { KeyRound, Trash2, UserPlus } from "lucide-react";
+import { KeyRound, Link2, MessageSquareQuote, Pencil, Plus, Trash2, UserPlus, X } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
 import { PERMISSION_CATALOG, READONLY_SUFFIX } from "@/config/navigation";
@@ -19,6 +19,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import {
+  CTA_GRUPOS,
+  createCta,
+  createLink,
+  ctasQueryOptions,
+  deleteCta,
+  deleteLink,
+  linksQueryOptions,
+  updateCta,
+  updateLink,
+  type Cta,
+  type LinkCta,
+} from "@/lib/story-ctas";
 import {
   Select,
   SelectContent,
@@ -169,10 +184,13 @@ function Configuracoes() {
           <h1 className="text-xl font-semibold tracking-tight">Configurações</h1>
           <p className="text-sm text-muted-foreground">
             {isAdmin
-              ? "Usuários e permissões do sistema."
-              : "Seção de usuários visível apenas para admin."}
+              ? "Usuários, permissões, frases de CTA e links dos stories."
+              : "Frases de CTA e links dos stories. A seção de usuários é visível apenas para admin."}
           </p>
         </div>
+
+        <PainelCtas />
+        <PainelLinks />
 
         {isAdmin ? (
           <>
@@ -389,5 +407,286 @@ function UserRow({
         </Button>
       </div>
     </div>
+  );
+}
+
+function PainelCtas() {
+  const queryClient = useQueryClient();
+  const { data: ctas = [] } = useQuery(ctasQueryOptions);
+  const [texto, setTexto] = useState("");
+  const [grupo, setGrupo] = useState<string>(CTA_GRUPOS[0]);
+  const [editando, setEditando] = useState<Cta | null>(null);
+  const [salvando, setSalvando] = useState(false);
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["story-ctas"] });
+
+  function limpar() {
+    setTexto("");
+    setGrupo(CTA_GRUPOS[0]);
+    setEditando(null);
+  }
+
+  async function salvar() {
+    const frase = texto.trim();
+    if (!frase) return;
+    setSalvando(true);
+    try {
+      if (editando) await updateCta(editando.id, { texto: frase, grupo });
+      else await createCta(frase, grupo);
+      toast.success(editando ? "CTA atualizado" : "CTA cadastrado");
+      limpar();
+      invalidate();
+    } catch (error) {
+      toast.error((error as Error).message);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
+      <h2 className="flex items-center gap-2 text-base font-semibold">
+        <MessageSquareQuote className="size-4 text-primary" /> Frases de CTA
+      </h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Frases usadas no botão do story dentro do Meta Business Suite. São elas que aparecem na
+        lista suspensa de cada arte e no PDF enviado para a análise do plano.
+      </p>
+
+      <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_12rem_auto]">
+        <Input
+          value={texto}
+          placeholder="Frase do CTA"
+          onChange={(e) => setTexto(e.target.value)}
+        />
+        <Select value={grupo} onValueChange={setGrupo}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {CTA_GRUPOS.map((g) => (
+              <SelectItem key={g} value={g}>
+                {g}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="flex gap-2">
+          <Button
+            className="gap-1"
+            disabled={salvando || texto.trim().length === 0}
+            onClick={salvar}
+          >
+            {editando ? <Pencil className="size-4" /> : <Plus className="size-4" />}
+            {editando ? "Salvar" : "Adicionar"}
+          </Button>
+          {editando ? (
+            <Button variant="ghost" className="gap-1" onClick={limpar}>
+              <X className="size-4" /> Cancelar
+            </Button>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="mt-4 space-y-2">
+        {ctas.map((c) => (
+          <div
+            key={c.id}
+            className="flex items-center justify-between gap-2 rounded-lg border border-border p-2"
+          >
+            <div className="min-w-0">
+              <p
+                className={cn("truncate text-sm", c.arquivado && "text-muted-foreground line-through")}
+              >
+                {c.texto}
+              </p>
+              <p className="text-[11px] text-muted-foreground">{c.grupo}</p>
+            </div>
+            <div className="flex shrink-0 gap-1">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setEditando(c);
+                  setTexto(c.texto);
+                  setGrupo(c.grupo);
+                }}
+              >
+                <Pencil className="size-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                title={c.arquivado ? "Reativar" : "Arquivar"}
+                onClick={async () => {
+                  await updateCta(c.id, { arquivado: !c.arquivado });
+                  invalidate();
+                }}
+              >
+                {c.arquivado ? "Reativar" : "Arquivar"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  if (!window.confirm(`Excluir a frase "${c.texto}"?`)) return;
+                  await deleteCta(c.id);
+                  toast.success("CTA excluído");
+                  invalidate();
+                }}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+        {ctas.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhuma frase cadastrada ainda.</p>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function PainelLinks() {
+  const queryClient = useQueryClient();
+  const { data: links = [] } = useQuery(linksQueryOptions);
+  const [nome, setNome] = useState("");
+  const [url, setUrl] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [editando, setEditando] = useState<LinkCta | null>(null);
+  const [salvando, setSalvando] = useState(false);
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["story-links"] });
+
+  function limpar() {
+    setNome("");
+    setUrl("");
+    setDescricao("");
+    setEditando(null);
+  }
+
+  async function salvar() {
+    if (!nome.trim() || !url.trim()) return;
+    setSalvando(true);
+    try {
+      if (editando) await updateLink(editando.id, { nome, url, descricao });
+      else await createLink(nome, url, descricao);
+      toast.success(editando ? "Link atualizado" : "Link cadastrado");
+      limpar();
+      invalidate();
+    } catch (error) {
+      toast.error((error as Error).message);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
+      <h2 className="flex items-center gap-2 text-base font-semibold">
+        <Link2 className="size-4 text-primary" /> Links de destino
+      </h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Endereços que podem ser ligados a um CTA. O campo de orientação explica quando cada link
+        deve ser usado e é essa explicação que vai no PDF para a análise do plano escolher certo.
+      </p>
+
+      <div className="mt-3 space-y-2">
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Input
+            value={nome}
+            placeholder="Nome do link"
+            onChange={(e) => setNome(e.target.value)}
+          />
+          <Input value={url} placeholder="https://" onChange={(e) => setUrl(e.target.value)} />
+        </div>
+        <Textarea
+          value={descricao}
+          rows={2}
+          placeholder="Quando usar este link"
+          onChange={(e) => setDescricao(e.target.value)}
+        />
+        <div className="flex gap-2">
+          <Button
+            className="gap-1"
+            disabled={salvando || nome.trim().length === 0 || url.trim().length === 0}
+            onClick={salvar}
+          >
+            {editando ? <Pencil className="size-4" /> : <Plus className="size-4" />}
+            {editando ? "Salvar" : "Adicionar"}
+          </Button>
+          {editando ? (
+            <Button variant="ghost" className="gap-1" onClick={limpar}>
+              <X className="size-4" /> Cancelar
+            </Button>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="mt-4 space-y-2">
+        {links.map((l) => (
+          <div
+            key={l.id}
+            className="flex items-start justify-between gap-2 rounded-lg border border-border p-2"
+          >
+            <div className="min-w-0">
+              <p
+                className={cn(
+                  "truncate text-sm font-medium",
+                  l.arquivado && "text-muted-foreground line-through",
+                )}
+              >
+                {l.nome}
+              </p>
+              <p className="truncate text-[11px] text-muted-foreground">{l.url}</p>
+              {l.descricao ? (
+                <p className="mt-1 text-[11px] text-muted-foreground">{l.descricao}</p>
+              ) : null}
+            </div>
+            <div className="flex shrink-0 gap-1">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setEditando(l);
+                  setNome(l.nome);
+                  setUrl(l.url);
+                  setDescricao(l.descricao);
+                }}
+              >
+                <Pencil className="size-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                title={l.arquivado ? "Reativar" : "Arquivar"}
+                onClick={async () => {
+                  await updateLink(l.id, { arquivado: !l.arquivado });
+                  invalidate();
+                }}
+              >
+                {l.arquivado ? "Reativar" : "Arquivar"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  if (!window.confirm(`Excluir o link "${l.nome}"?`)) return;
+                  await deleteLink(l.id);
+                  toast.success("Link excluído");
+                  invalidate();
+                }}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+        {links.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhum link cadastrado ainda.</p>
+        ) : null}
+      </div>
+    </section>
   );
 }

@@ -10,7 +10,7 @@ import {
 import type { ReactNode } from "react";
 
 /** Slots que participam da grade compartilhada de alturas. */
-export type SlotAltura = "observacao" | "recurso_detalhe" | "adjust_comment";
+export type SlotAltura = "observacao" | "cta_link" | "adjust_comment";
 
 type Ctx = {
   maximos: Record<SlotAltura, number>;
@@ -20,7 +20,7 @@ type Ctx = {
 
 const ZERO: Record<SlotAltura, number> = {
   observacao: 0,
-  recurso_detalhe: 0,
+  cta_link: 0,
   adjust_comment: 0,
 };
 
@@ -30,7 +30,7 @@ const AcoesContext = createContext<Pick<Ctx, "registrar" | "remover"> | null>(nu
 export function AlturasCompartilhadasProvider({ children }: { children: ReactNode }) {
   const mapa = useRef<Record<SlotAltura, Map<string, number>>>({
     observacao: new Map(),
-    recurso_detalhe: new Map(),
+    cta_link: new Map(),
     adjust_comment: new Map(),
   });
   const [maximos, setMaximos] = useState<Record<SlotAltura, number>>(ZERO);
