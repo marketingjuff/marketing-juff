@@ -40,77 +40,92 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
-        <div
-          className={cn("mx-auto flex h-14 items-center justify-between gap-3 px-4", larguraClasse)}
-        >
-          <div className="flex items-center gap-2">
+        <div className={cn("mx-auto flex h-14 items-center gap-4 px-4", larguraClasse)}>
+          <div className="flex min-w-0 shrink-0 items-center gap-2">
             <img
               src={juffLogo.url}
               alt="Logotipo Juff"
               className="size-7 rounded-md object-cover"
             />
-            <span className="text-base font-semibold tracking-tight">Marketing Juff</span>
+            <span className="truncate text-sm font-semibold tracking-tight">
+              Marketing Juff
+              <span className="hidden font-normal text-muted-foreground md:inline">
+                {" "}
+                — Comunicação e conteúdo
+              </span>
+            </span>
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2">
-                <User className="size-4" />
-                <span className="hidden max-w-[10rem] truncate sm:inline">{profile?.nome}</span>
+          <nav className="flex flex-1 justify-center overflow-x-auto">
+            <ul className="flex items-center gap-1 rounded-xl bg-secondary/60 p-1">
+              {NAVIGATION.map((master) => {
+                const primeiro = master.subTabs.find(
+                  (sub) =>
+                    (!sub.roles || (profile ? sub.roles.includes(profile.role) : false)) &&
+                    hasPermission(profile, sub.permission),
+                );
+                return (
+                  <li key={master.key}>
+                    {primeiro ? (
+                      <Link
+                        to={primeiro.to}
+                        className="inline-block rounded-lg px-4 py-1.5 text-xs font-semibold tracking-widest text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+                        activeProps={{ className: "bg-primary text-primary-foreground shadow-soft" }}
+                        activeOptions={{ exact: false }}
+                      >
+                        {master.label}
+                      </Link>
+                    ) : (
+                      <span className="inline-block cursor-not-allowed rounded-lg px-4 py-1.5 text-xs font-semibold tracking-widest text-muted-foreground/40">
+                        {master.label}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+
+          <div className="flex shrink-0 items-center gap-1">
+            {canOpenSettings ? (
+              <Button variant="ghost" size="sm" className="gap-2" asChild>
+                <Link to="/configuracoes">
+                  <Settings className="size-4" />
+                  <span className="hidden sm:inline">Configurações</span>
+                </Link>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="font-normal">
-                <div className="truncate text-sm font-medium">{profile?.nome}</div>
-                <div className="truncate text-xs text-muted-foreground">{profile?.email}</div>
-                <div className="mt-1 text-xs capitalize text-muted-foreground">{profile?.role}</div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {canOpenSettings ? (
+            ) : null}
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <User className="size-4" />
+                  <span className="hidden max-w-[8rem] truncate lg:inline">{profile?.nome}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="truncate text-sm font-medium">{profile?.nome}</div>
+                  <div className="truncate text-xs text-muted-foreground">{profile?.email}</div>
+                  <div className="mt-1 text-xs capitalize text-muted-foreground">
+                    {profile?.role}
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/configuracoes" className="flex items-center gap-2">
-                    <Settings className="size-4" /> Configurações
+                  <Link to="/trocar-senha" className="flex items-center gap-2">
+                    <User className="size-4" /> Trocar minha senha
                   </Link>
                 </DropdownMenuItem>
-              ) : null}
-              <DropdownMenuItem asChild>
-                <Link to="/trocar-senha" className="flex items-center gap-2">
-                  <User className="size-4" /> Trocar minha senha
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={sair} className="flex items-center gap-2">
-                <LogOut className="size-4" /> Sair
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-        <nav className={cn("mx-auto overflow-x-auto px-4", larguraClasse)}>
-          <ul className="flex items-end gap-1">
-            {NAVIGATION.map((master) => {
-              const enabled = master.subTabs.some(
-                (sub) =>
-                  (!sub.roles || (profile ? sub.roles.includes(profile.role) : false)) &&
-                  hasPermission(profile, sub.permission),
-              );
-              return (
-                <li key={master.key}>
-                  <span
-                    className={cn(
-                      "inline-block border-b-2 px-3 pb-2 text-xs font-semibold tracking-widest",
-                      enabled
-                        ? "border-primary text-foreground"
-                        : "cursor-not-allowed border-transparent text-muted-foreground/50",
-                    )}
-                  >
-                    {master.label}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
+            <Button variant="ghost" size="sm" className="gap-2" onClick={sair}>
+              <LogOut className="size-4" />
+              <span className="hidden sm:inline">Sair</span>
+            </Button>
+          </div>
+        </div>
 
         <div className={cn("mx-auto overflow-x-auto border-t border-border px-4", larguraClasse)}>
           <ul className="flex items-center gap-1 py-2">
@@ -142,6 +157,7 @@ export function AppShell({
           </ul>
         </div>
       </header>
+
 
       <main className={cn("mx-auto px-4 py-5", larguraClasse)}>{children}</main>
     </div>
