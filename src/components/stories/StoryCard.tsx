@@ -10,10 +10,18 @@ import {
   ImageUp,
   Copy,
   ArrowRight,
+  Send,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 
-import type { Composicao, Frame as FrameType, FrameStatus, Story } from "@/lib/stories";
+import type {
+  Composicao,
+  Frame as FrameType,
+  FrameStatus,
+  StatusBloco,
+  Story,
+} from "@/lib/stories";
 import { MAX_FRAMES, blocoTipo, ehImagemAceita } from "@/lib/stories";
 import { ArteEditor, FileiraPresets } from "@/components/stories/ArteEditor";
 import { exportarBlocoMontado, logosQueryOptions } from "@/lib/story-editor";
@@ -62,6 +70,16 @@ const STATUS_BORDER: Record<Story["status"], string> = {
   ajustar: "border-destructive/60",
 };
 
+/** Borda de bloco já publicado, tem prioridade sobre a borda de status. */
+const BORDA_PUBLICADO = "border-[#323db8]";
+
+const OPCOES_STATUS_BLOCO: { value: StatusBloco; label: string }[] = [
+  { value: "pendente", label: "Pendente" },
+  { value: "ajustar", label: "Ajustar" },
+  { value: "aprovado", label: "Aprovado" },
+  { value: "publicado", label: "Publicado" },
+];
+
 /** Impede que digitar ou selecionar texto inicie o arraste do dnd-kit. */
 const stopDrag = {
   onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
@@ -72,6 +90,36 @@ const stopDrag = {
 function Salvo({ visivel }: { visivel: boolean }) {
   if (!visivel) return null;
   return <span className="text-[10px] font-medium text-success">Salvo</span>;
+}
+
+/** Botão pequeno que copia um valor para a área de transferência. */
+function BotaoCopiar({ valor, titulo }: { valor: string; titulo: string }) {
+  const [copiado, setCopiado] = useState(false);
+  const vazio = valor.trim().length === 0;
+  return (
+    <button
+      type="button"
+      disabled={vazio}
+      title={vazio ? `Nada para copiar em ${titulo}` : `Copiar ${titulo}`}
+      aria-label={`Copiar ${titulo}`}
+      className={cn(
+        "ml-auto shrink-0 rounded p-1 text-muted-foreground transition-colors",
+        vazio ? "cursor-not-allowed opacity-40" : "hover:bg-secondary hover:text-foreground",
+      )}
+      onClick={async () => {
+        if (vazio) return;
+        try {
+          await navigator.clipboard.writeText(valor);
+          setCopiado(true);
+          setTimeout(() => setCopiado(false), 1500);
+        } catch {
+          toast.error("Não foi possível copiar");
+        }
+      }}
+    >
+      {copiado ? <Check className="size-3.5 text-success" /> : <Copy className="size-3.5" />}
+    </button>
+  );
 }
 
 /** Altura mínima equivalente a duas linhas. */
@@ -175,6 +223,7 @@ function ArteBloco({
   onApproveFrame,
   onAdjustFrame,
   onReplaceImage,
+  onReabrirFrame,
 }: {
   frame: FrameType;
   index: number;
@@ -186,6 +235,7 @@ function ArteBloco({
   onApproveFrame: (frameId: string) => void;
   onAdjustFrame: (frameId: string, comment: string) => void;
   onReplaceImage: (frame: FrameType, file: File) => void;
+  onReabrirFrame: (frameId: string) => void;
 }) {
   const [ajusteAberto, setAjusteAberto] = useState(false);
   const [comentario, setComentario] = useState("");
@@ -288,6 +338,7 @@ function ArteBloco({
         <div className="flex items-center gap-2">
           <span className="text-[11px] text-muted-foreground">CTA</span>
           <Salvo visivel={ctaSalvo} />
+          <BotaoCopiar valor={frame.cta} titulo="o CTA" />
         </div>
         <Select
           value={frame.cta || SEM_CTA}
@@ -336,6 +387,7 @@ function ArteBloco({
             <div className="flex items-center gap-2">
               <span className="text-[11px] text-muted-foreground">Link</span>
               <Salvo visivel={linkSalvo} />
+              <BotaoCopiar valor={frame.cta_link} titulo="o link" />
             </div>
             <Select
               value={frame.cta_link}
@@ -446,6 +498,17 @@ function ArteBloco({
                 >
                   <MessageSquare className="size-4" />
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 px-0"
+                  disabled={frame.status === "pendente"}
+                  title="Voltar esta arte para pendente"
+                  aria-label="Voltar esta arte para pendente"
+                  onClick={() => onReabrirFrame(frame.id)}
+                >
+                  <RotateCcw className="size-4" />
+                </Button>
               </>
             ) : null}
             <Button
@@ -500,6 +563,8 @@ export function StoryCard({
   onSetObjective,
   onReplicarBloco,
   onReplicarProximo,
+  onSetStatusBloco,
+  onReabrirFrame,
 }: {
   story: Story;
   editable: boolean;
@@ -518,6 +583,8 @@ export function StoryCard({
   onApproveStory: () => void;
   onAdjustFrame: (frameId: string, comment: string) => void;
   onReplaceImage: (frame: FrameType, file: File) => void;
+  onSetStatusBloco: (story: Story, alvo: StatusBloco) => void;
+  onReabrirFrame: (frameId: string) => void;
   onSetObjective: (storyId: string, objectiveId: string | null) => void;
   /** Replica a formatação de fonte da arte 1 em todas as artes do bloco. */
   onReplicarBloco?: () => void;
@@ -564,6 +631,14 @@ export function StoryCard({
   const aprovadas = story.frames.filter((f) => f.status === "aprovado").length;
   const emAjuste = story.frames.filter((f) => f.status === "ajustar").length;
   const tudoAprovado = total > 0 && aprovadas === total;
+  const publicado = Boolean(story.publicado_em);
+  const statusAtual: StatusBloco = publicado
+    ? "publicado"
+    : story.status === "ajustar"
+      ? "ajustar"
+      : tudoAprovado
+        ? "aprovado"
+        : "pendente";
   const objetivoAtual = objetivos.find((o) => o.id === story.objective_id) ?? null;
 
   return (
@@ -583,7 +658,7 @@ export function StoryCard({
         ref={droppable.setNodeRef}
         className={cn(
           "flex flex-col gap-3 rounded-xl border-2 bg-card p-3 shadow-soft transition-shadow",
-          STATUS_BORDER[story.status],
+          publicado ? BORDA_PUBLICADO : STATUS_BORDER[story.status],
           droppable.isOver && "ring-2 ring-primary ring-offset-2",
           draggable.isDragging && "opacity-50",
         )}
@@ -663,13 +738,76 @@ export function StoryCard({
               <CheckCheck className="size-3.5" /> Aprovar stories
             </Button>
           ) : null}
+
+          {editable && tudoAprovado ? (
+            <Button
+              size="sm"
+              variant={publicado ? "outline" : "secondary"}
+              className="shrink-0 gap-1"
+              title={
+                publicado
+                  ? "Voltar o bloco para aprovado"
+                  : "Marcar este bloco como publicado no Instagram"
+              }
+              onClick={() => onSetStatusBloco(story, publicado ? "aprovado" : "publicado")}
+              {...stopDrag}
+            >
+              <Send className="size-3.5" /> {publicado ? "Despublicar" : "Publicado"}
+            </Button>
+          ) : null}
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
           <span className="rounded-full border border-border bg-secondary px-2 py-0.5">
             {campanha ? `CAMPANHA • ${total} artes` : "SOLO"}
           </span>
-          {tudoAprovado ? (
+          {editable ? (
+            <span {...stopDrag}>
+              <Select
+                value={statusAtual}
+                onValueChange={(v) => onSetStatusBloco(story, v as StatusBloco)}
+              >
+                <SelectTrigger
+                  className={cn(
+                    "h-7 w-auto gap-1 rounded-full px-2 text-[11px] font-medium",
+                    publicado && "border-[#323db8] bg-[#323db8] text-[#f6f6fb]",
+                    !publicado && tudoAprovado && "border-success bg-success text-background",
+                    !publicado && !tudoAprovado && story.status === "ajustar" && "border-warning",
+                  )}
+                  aria-label="Status do bloco"
+                  title={
+                    story.publicado_em
+                      ? `Publicado em ${new Date(story.publicado_em).toLocaleString("pt-BR")}`
+                      : "Status do bloco"
+                  }
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {OPCOES_STATUS_BLOCO.map((o) => (
+                    <SelectItem
+                      key={o.value}
+                      value={o.value}
+                      disabled={
+                        o.value === "ajustar" ||
+                        (o.value === "pendente" && !canApprove) ||
+                        (!canApprove && !tudoAprovado)
+                      }
+                    >
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </span>
+          ) : publicado ? (
+            <span
+              className="rounded-full border px-2 py-0.5 text-[11px] font-medium"
+              style={{ borderColor: "#323db8", backgroundColor: "#323db8", color: "#f6f6fb" }}
+            >
+              Publicado
+            </span>
+          ) : tudoAprovado ? (
             <span className="rounded-full border border-success bg-success px-2 py-0.5 text-[11px] font-medium text-background">
               Aprovado
             </span>
@@ -678,6 +816,12 @@ export function StoryCard({
               {aprovadas} de {total} aprovadas
             </span>
           )}
+
+          {!tudoAprovado ? (
+            <span className="rounded-full border border-border bg-secondary px-2 py-0.5">
+              {aprovadas} de {total} aprovadas
+            </span>
+          ) : null}
           {emAjuste > 0 ? (
             <span className="rounded-full border border-warning bg-warning/25 px-2 py-0.5 font-medium text-foreground">
               {emAjuste} em ajuste
@@ -726,6 +870,7 @@ export function StoryCard({
               onApproveFrame={onApproveFrame}
               onAdjustFrame={onAdjustFrame}
               onReplaceImage={onReplaceImage}
+              onReabrirFrame={onReabrirFrame}
             />
           ))}
         </div>
