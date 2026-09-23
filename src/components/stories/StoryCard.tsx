@@ -12,7 +12,15 @@ import {
   ArrowRight,
   Send,
   RotateCcw,
+  MoreVertical,
+  Scissors,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 
 import type {
@@ -224,6 +232,8 @@ function ArteBloco({
   onAdjustFrame,
   onReplaceImage,
   onReabrirFrame,
+  onSplitFrame,
+  onDeleteFrame,
 }: {
   frame: FrameType;
   index: number;
@@ -236,6 +246,8 @@ function ArteBloco({
   onAdjustFrame: (frameId: string, comment: string) => void;
   onReplaceImage: (frame: FrameType, file: File) => void;
   onReabrirFrame: (frameId: string) => void;
+  onSplitFrame?: (frame: FrameType) => void;
+  onDeleteFrame?: (frame: FrameType) => void;
 }) {
   const [ajusteAberto, setAjusteAberto] = useState(false);
   const [comentario, setComentario] = useState("");
@@ -278,6 +290,45 @@ function ArteBloco({
         >
           {FRAME_STATUS_LABEL[frame.status]}
         </span>
+        {editable ? (
+          <span {...stopDrag} className="-mr-1 inline-flex">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Ações da arte"
+                  className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <MoreVertical className="size-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {total >= 2 ? (
+                  <DropdownMenuItem onSelect={() => onSplitFrame?.(frame)}>
+                    <Scissors className="size-4" />
+                    Separar em bloco novo
+                  </DropdownMenuItem>
+                ) : null}
+                <DropdownMenuItem
+                  disabled={total < 2}
+                  title={total < 2 ? "Use a lixeira do bloco para apagar o story inteiro" : undefined}
+                  className="flex-col items-start text-destructive focus:text-destructive"
+                  onSelect={() => onDeleteFrame?.(frame)}
+                >
+                  <span className="flex items-center gap-2">
+                    <Trash2 className="size-4" />
+                    Excluir arte
+                  </span>
+                  {total < 2 ? (
+                    <span className="text-[10px] text-muted-foreground">
+                      Use a lixeira do bloco para apagar o story inteiro
+                    </span>
+                  ) : null}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </span>
+        ) : null}
       </div>
 
       <div
@@ -565,6 +616,8 @@ export function StoryCard({
   onReplicarProximo,
   onSetStatusBloco,
   onReabrirFrame,
+  onSplitFrame,
+  onDeleteFrame,
 }: {
   story: Story;
   editable: boolean;
@@ -585,6 +638,8 @@ export function StoryCard({
   onReplaceImage: (frame: FrameType, file: File) => void;
   onSetStatusBloco: (story: Story, alvo: StatusBloco) => void;
   onReabrirFrame: (frameId: string) => void;
+  onSplitFrame?: (frame: FrameType) => void;
+  onDeleteFrame?: (frame: FrameType) => void;
   onSetObjective: (storyId: string, objectiveId: string | null) => void;
   /** Replica a formatação de fonte da arte 1 em todas as artes do bloco. */
   onReplicarBloco?: () => void;
@@ -871,6 +926,8 @@ export function StoryCard({
               onAdjustFrame={onAdjustFrame}
               onReplaceImage={onReplaceImage}
               onReabrirFrame={onReabrirFrame}
+              onSplitFrame={onSplitFrame}
+              onDeleteFrame={onDeleteFrame}
             />
           ))}
         </div>
