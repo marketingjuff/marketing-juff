@@ -47,27 +47,10 @@ export const PESOS = [
   { value: 900, label: "Black" },
 ] as const;
 
-export const GRID_COLUNAS = 10;
-export const GRID_LINHAS = 16;
-
-/** Gruda a posição no centro da célula mais próxima da grade 10 x 16. */
-export function grudarNaGrade(xPct: number, yPct: number): { x: number; y: number } {
-  const col = Math.min(GRID_COLUNAS - 1, Math.max(0, Math.round((xPct / 100) * GRID_COLUNAS - 0.5)));
-  const lin = Math.min(GRID_LINHAS - 1, Math.max(0, Math.round((yPct / 100) * GRID_LINHAS - 0.5)));
-  return {
-    x: ((col + 0.5) / GRID_COLUNAS) * 100,
-    y: ((lin + 0.5) / GRID_LINHAS) * 100,
-  };
-}
-
-/** Pontos da grade, em percentual, para o guia visual. */
-export const PONTOS_GRADE: { x: number; y: number }[] = Array.from(
-  { length: GRID_COLUNAS * GRID_LINHAS },
-  (_, i) => ({
-    x: (((i % GRID_COLUNAS) + 0.5) / GRID_COLUNAS) * 100,
-    y: ((Math.floor(i / GRID_COLUNAS) + 0.5) / GRID_LINHAS) * 100,
-  }),
-);
+/** Quanto a camada pode passar da borda da arte, em pontos percentuais. */
+export const SANGRIA_CAMADA = 20;
+export const POS_MINIMA = -SANGRIA_CAMADA;
+export const POS_MAXIMA = 100 + SANGRIA_CAMADA;
 
 /** Tamanho real da fonte em função da altura da imagem. */
 export function tamanhoFontePx(alturaPx: number, tamanho: number): number {

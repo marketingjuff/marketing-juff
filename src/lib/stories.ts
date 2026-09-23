@@ -747,20 +747,75 @@ export async function moveFrame(frameId: string, targetStory: Story, index: numb
   await reorderFrames(ids);
 }
 
-/** Separa um frame num story novo só com ele. */
-export async function splitFrame(frameId: string, sequenceId: string | null): Promise<void> {
-  const position = await nextPosition(sequenceId);
+/** Separa uma arte num bloco novo logo depois do bloco de origem. */
+export async function splitFrame(frame: Frame, origem: Story, fila: Story[]): Promise<string> {
+  const position = await nextPosition(origem.sequence_id);
   const { data: story, error } = await supabase
     .from("stories")
-    .insert({ position, status: "pendente", sequence_id: sequenceId })
+    .insert({
+      position,
+      status: "pendente",
+      sequence_id: origem.sequence_id,
+      descartado: origem.descartado,
+      objective_id: origem.objective_id,
+      nome_bloco: "",
+    })
     .select("id")
     .single();
   if (error) throw error;
   const { error: moveError } = await supabase
     .from("story_frames")
-    .update({ story_id: story.id, ordem: 0 })
-    .eq("id", frameId);
+    .update({
+      story_id: story.id,
+      ordem: 0,
+      status: "pendente",
+      adjust_comment: null,
+      adjust_comment_at: null,
+    })
+    .eq("id", frame.id);
   if (moveError) throw moveError;
+  await reorderFrames(origem.frames.filter((f) => f.id !== frame.id).map((f) => f.id));
+  const ids = fila.map((s) => s.id).filter((id) => id !== story.id);
+  const idx = ids.indexOf(origem.id);
+  ids.splice(idx >= 0 ? idx + 1 : ids.length, 0, story.id);
+  await reorderStories(ids);
+  return story.id;
+}
+
+/** Desfaz a separação: devolve a arte ao bloco de origem como estava. */
+export async function undoSplitFrame(
+  frame: Frame,
+  origem: Story,
+  novoStoryId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("story_frames")
+    .update({
+      story_id: origem.id,
+      ordem: frame.ordem,
+      status: frame.status,
+      adjust_comment: frame.adjust_comment,
+      adjust_comment_at: frame.adjust_comment_at,
+    })
+    .eq("id", frame.id);
+  if (error) throw error;
+  const { error: delError } = await supabase.from("stories").delete().eq("id", novoStoryId);
+  if (delError) throw delError;
+  await reorderFrames(origem.frames.map((f) => f.id));
+  await normalize(origem.sequence_id);
+}
+
+/** Exclui uma única arte do bloco e apaga suas imagens do bucket. */
+export async function deleteFrame(frame: Frame, origem: Story): Promise<void> {
+  if (origem.frames.length <= 1) {
+    throw new Error("Este bloco tem só uma arte. Apague o story inteiro pela lixeira do bloco.");
+  }
+  const { error } = await supabase.from("story_frames").delete().eq("id", frame.id);
+  if (error) throw error;
+  await removeImages(
+    [frame.image_path, frame.image_path_anterior].filter((p): p is string => Boolean(p)),
+  );
+  await reorderFrames(origem.frames.filter((f) => f.id !== frame.id).map((f) => f.id));
 }
 
 /** Remove stories sem frames e renumera a fila principal e a lista de nao utilizadas. */

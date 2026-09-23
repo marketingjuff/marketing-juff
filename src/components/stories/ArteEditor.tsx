@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Pencil,
   Layers,
-  Grid3X3,
   Trash2,
   Upload,
   Download,
@@ -24,13 +23,13 @@ import {
   CORES_MARCA,
   FONTES,
   PESOS,
-  PONTOS_GRADE,
   criarPreset,
   enviarLogo,
   excluirLogo,
   excluirPreset,
   exportarArteMontada,
-  grudarNaGrade,
+  POS_MINIMA,
+  POS_MAXIMA,
   dimensoesLogo,
   normalizarHex,
   logosQueryOptions,
@@ -712,7 +711,11 @@ function PainelLogos({
   );
 }
 
-/** Camada arrastável com efeito ímã na grade. */
+function limitarPos(v: number): number {
+  return Math.max(POS_MINIMA, Math.min(POS_MAXIMA, v));
+}
+
+/** Camada arrastável com movimento livre (pode sangrar da borda). */
 function Camada({
   x,
   y,
@@ -734,9 +737,46 @@ function Camada({
   const [pos, setPos] = useState({ x, y });
   const arrastando = useRef(false);
   const caixaRef = useRef<HTMLDivElement>(null);
+  const tecladoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const posRef = useRef(pos);
+  posRef.current = pos;
   useEffect(() => {
-    if (!arrastando.current) setPos({ x, y });
+    if (!arrastando.current && !tecladoTimer.current) setPos({ x, y });
   }, [x, y]);
+  useEffect(
+    () => () => {
+      if (tecladoTimer.current) clearTimeout(tecladoTimer.current);
+    },
+    [],
+  );
+
+  const aoTeclar = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!editable) return;
+    const alvo = e.target as HTMLElement;
+    if (alvo.isContentEditable) return;
+    if (e.key === "Escape") {
+      e.currentTarget.blur();
+      return;
+    }
+    const passo = e.shiftKey ? 2 : 0.25;
+    let dx = 0;
+    let dy = 0;
+    if (e.key === "ArrowUp") dy = -passo;
+    else if (e.key === "ArrowDown") dy = passo;
+    else if (e.key === "ArrowLeft") dx = -passo;
+    else if (e.key === "ArrowRight") dx = passo;
+    else return;
+    e.preventDefault();
+    e.stopPropagation();
+    const nova = { x: limitarPos(posRef.current.x + dx), y: limitarPos(posRef.current.y + dy) };
+    posRef.current = nova;
+    setPos(nova);
+    if (tecladoTimer.current) clearTimeout(tecladoTimer.current);
+    tecladoTimer.current = setTimeout(() => {
+      tecladoTimer.current = null;
+      onCommit(nova.x, nova.y);
+    }, 400);
+  };
 
   const iniciarArraste = (e: React.PointerEvent) => {
     e.stopPropagation();
@@ -751,8 +791,8 @@ function Camada({
     let comecou = false;
 
     const calcularPosicao = (ev: PointerEvent) => ({
-      x: Math.max(0, Math.min(100, posInicial.x + ((ev.clientX - startX) / rect.width) * 100)),
-      y: Math.max(0, Math.min(100, posInicial.y + ((ev.clientY - startY) / rect.height) * 100)),
+      x: limitarPos(posInicial.x + ((ev.clientX - startX) / rect.width) * 100),
+      y: limitarPos(posInicial.y + ((ev.clientY - startY) / rect.height) * 100),
     });
 
     const mover = (ev: PointerEvent) => {
@@ -775,9 +815,8 @@ function Camada({
       if (!comecou) return;
       arrastando.current = false;
       const bruto = calcularPosicao(ev);
-      const grudado = grudarNaGrade(bruto.x, bruto.y);
-      setPos(grudado);
-      onCommit(grudado.x, grudado.y);
+      setPos(bruto);
+      onCommit(bruto.x, bruto.y);
     };
 
     const cancelar = () => {
@@ -802,7 +841,10 @@ function Camada({
         alinhamento === "right" && "-translate-x-full",
         editable ? "pointer-events-auto touch-none" : "pointer-events-none",
         editable && !arrasteSoPelaAlca && "cursor-move",
+        editable && "rounded-sm outline-none focus-visible:ring-1 focus-visible:ring-primary/60 focus:ring-1 focus:ring-primary/40",
       )}
+      tabIndex={editable ? 0 : undefined}
+      onKeyDown={aoTeclar}
       style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
       {...semArraste}
       onPointerDown={(e) => {
@@ -1080,7 +1122,6 @@ export function ArteEditor({
   const caixaRef = useRef<HTMLDivElement>(null);
   const [altura, setAltura] = useState(0);
   const [largura, setLargura] = useState(0);
-  const [grade, setGrade] = useState(false);
   const [exportando, setExportando] = useState(false);
   const { data: logos = [] } = useQuery(logosQueryOptions);
 
@@ -1109,18 +1150,6 @@ export function ArteEditor({
 
   return (
     <div ref={caixaRef} className="pointer-events-none absolute inset-0">
-      {grade ? (
-        <div className="absolute inset-0">
-          {PONTOS_GRADE.map((p, i) => (
-            <span
-              key={i}
-              className="absolute size-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/70"
-              style={{ left: `${p.x}%`, top: `${p.y}%` }}
-            />
-          ))}
-        </div>
-      ) : null}
-
       {comp.logo_ativo && logo?.svg ? (
         <div className="pointer-events-none absolute inset-0">
           <Camada
@@ -1217,20 +1246,6 @@ export function ArteEditor({
               </PopoverContent>
             </Popover>
 
-            <button
-              type="button"
-              title={grade ? "Esconder grade" : "Mostrar grade"}
-              aria-label="Mostrar ou esconder a grade"
-              className={cn(
-                "rounded-md p-1 shadow",
-                grade
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background/85 text-foreground hover:bg-background",
-              )}
-              onClick={() => setGrade((v) => !v)}
-            >
-              <Grid3X3 className="size-3.5" />
-            </button>
           </>
         ) : null}
 

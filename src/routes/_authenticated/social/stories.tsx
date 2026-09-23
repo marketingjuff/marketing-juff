@@ -66,6 +66,8 @@ import {
   setStoryObjective,
   sortStoriesByName,
   splitFrame,
+  undoSplitFrame,
+  deleteFrame,
   storiesQueryOptions,
   undoMerge,
   updateFrameComposicao,
@@ -590,7 +592,9 @@ function StoriesPage() {
 
       if (over.type === "new-story") {
         if (source.frames.length === 1) return;
-        mutate.mutate(() => splitFrame(frameId, sequenceId));
+        const frame = source.frames.find((f) => f.id === frameId);
+        if (!frame) return;
+        separarArte(frame, source);
         return;
       }
 
@@ -617,6 +621,21 @@ function StoriesPage() {
         mutate.mutate(() => moveFrame(frameId, target, target.frames.length));
       }
     }
+  }
+
+  function separarArte(frame: Frame, origem: Story) {
+    const grupo = stories.filter((s) => s.descartado === origem.descartado);
+    mutate.mutate(async () => {
+      const novoId = await splitFrame(frame, origem, grupo);
+      toast.success("Arte separada em um bloco novo", {
+        action: {
+          label: "Desfazer",
+          onClick: () => {
+            mutate.mutate(() => undoSplitFrame(frame, origem, novoId));
+          },
+        },
+      });
+    });
   }
 
   function cardProps(story: Story) {
@@ -677,6 +696,17 @@ function StoriesPage() {
           title: `Apagar story #${story.position}?`,
           description: "O story e suas imagens serão removidos de vez.",
           action: () => mutate.mutate(() => deleteStory(story)),
+        }),
+      onSplitFrame: (frame: Frame) => separarArte(frame, story),
+      onDeleteFrame: (frame: Frame) =>
+        setConfirm({
+          title: "Excluir esta arte?",
+          description: `A arte ${frame.nome_arquivo || "Sem nome"} sai do bloco e a imagem é apagada de vez. As outras artes do bloco continuam como estão.`,
+          action: () =>
+            mutate.mutate(async () => {
+              await deleteFrame(frame, story);
+              toast.success("Arte excluída");
+            }),
         }),
       onAddFrames: (files: File[]) =>
         mutate.mutate(() => addFramesToStory(story.id, files, story.frames.length)),
