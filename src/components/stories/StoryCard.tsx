@@ -246,8 +246,8 @@ function ArteBloco({
   onAdjustFrame: (frameId: string, comment: string) => void;
   onReplaceImage: (frame: FrameType, file: File) => void;
   onReabrirFrame: (frameId: string) => void;
-  onSplitFrame?: (frame: FrameType) => void;
-  onDeleteFrame?: (frame: FrameType) => void;
+  onSplitFrame?: ((frame: FrameType) => void) | undefined;
+  onDeleteFrame?: ((frame: FrameType) => void) | undefined;
 }) {
   const [ajusteAberto, setAjusteAberto] = useState(false);
   const [comentario, setComentario] = useState("");
@@ -638,8 +638,8 @@ export function StoryCard({
   onReplaceImage: (frame: FrameType, file: File) => void;
   onSetStatusBloco: (story: Story, alvo: StatusBloco) => void;
   onReabrirFrame: (frameId: string) => void;
-  onSplitFrame?: (frame: FrameType) => void;
-  onDeleteFrame?: (frame: FrameType) => void;
+  onSplitFrame?: ((frame: FrameType) => void) | undefined;
+  onDeleteFrame?: ((frame: FrameType) => void) | undefined;
   onSetObjective: (storyId: string, objectiveId: string | null) => void;
   /** Replica a formatação de fonte da arte 1 em todas as artes do bloco. */
   onReplicarBloco?: () => void;
