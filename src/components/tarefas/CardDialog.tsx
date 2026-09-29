@@ -198,7 +198,9 @@ export function CardDialog({
             <div className="space-y-1.5">
               <Label>Descrição</Label>
               <Textarea
-                rows={4}
+                rows={12}
+                min-h-[18rem]
+                className="min-h-[18rem] resize-y"
                 value={descricao}
                 disabled={!editable}
                 onChange={(e) => setDescricao(e.target.value)}
