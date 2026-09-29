@@ -348,11 +348,13 @@ type UserRowData = {
 
 function UserRow({
   user,
+  travarOperador = false,
   onSavePerms,
   onSetPassword,
   onDelete,
 }: {
   user: UserRowData;
+  travarOperador?: boolean;
   onSavePerms: (role: AppRole, permissions: string[]) => Promise<void>;
   onSetPassword: (senha: string) => Promise<void>;
   onDelete: () => Promise<void>;
@@ -390,13 +392,17 @@ function UserRow({
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label>Papel</Label>
-          <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
+          <Select
+            value={role}
+            disabled={travarOperador}
+            onValueChange={(v) => setRole(v as AppRole)}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="gestor">Gestor</SelectItem>
+              {!travarOperador ? <SelectItem value="admin">Admin</SelectItem> : null}
+              {!travarOperador ? <SelectItem value="gestor">Gestor</SelectItem> : null}
               <SelectItem value="operador">Operador</SelectItem>
             </SelectContent>
           </Select>
