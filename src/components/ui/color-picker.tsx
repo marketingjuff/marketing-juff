@@ -51,7 +51,7 @@ export function ColorPicker({
   value: string;
   onChange: (hex: string) => void;
   label?: string;
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   presets?: string[];
   className?: string;
 }) {
