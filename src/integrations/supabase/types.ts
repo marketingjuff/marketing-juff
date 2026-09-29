@@ -894,6 +894,8 @@ export type Database = {
       }
       pode_editar_card: { Args: { _card_id: string }; Returns: boolean }
       pode_editar_quadro: { Args: { _quadro_id: string }; Returns: boolean }
+      pode_estruturar_quadro: { Args: { _quadro_id: string }; Returns: boolean }
+      pode_mexer_card: { Args: { _card_id: string }; Returns: boolean }
       pode_ver_card: { Args: { _card_id: string }; Returns: boolean }
       pode_ver_quadro: { Args: { _quadro_id: string }; Returns: boolean }
       recalc_story_status: { Args: { _story_id: string }; Returns: undefined }
