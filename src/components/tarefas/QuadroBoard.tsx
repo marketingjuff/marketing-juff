@@ -323,7 +323,11 @@ export function QuadroBoard({
                 </PopoverTrigger>
                 <PopoverContent className="w-80">
                   <FundoPicker
-                    value={quadro}
+                    value={{
+                      fundo_tipo: quadro.fundo_tipo,
+                      fundo_cor1: quadro.fundo_cor1,
+                      fundo_cor2: quadro.fundo_cor2,
+                    }}
                     onChange={(v) => rodar(() => updateQuadro(quadro.id, v))}
                   />
                 </PopoverContent>
