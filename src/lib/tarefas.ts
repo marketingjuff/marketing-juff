@@ -382,7 +382,7 @@ export async function updateQuadro(
   values: Partial<Pick<Quadro, "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2">>,
 ): Promise<void> {
   // Garante que só colunas reais da tabela sejam enviadas, mesmo se vierem campos extras.
-  const limpo: Record<string, unknown> = {};
+  const limpo: Partial<Pick<Quadro, "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2">> = {};
   for (const k of ["nome", "descricao", "fundo_tipo", "fundo_cor1", "fundo_cor2"] as const) {
     if (values[k] !== undefined) limpo[k] = values[k];
   }
