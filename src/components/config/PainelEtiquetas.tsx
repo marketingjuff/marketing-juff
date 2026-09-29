@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Archive, ChevronDown, Pencil, RotateCcw, Tag } from "lucide-react";
+import { Archive, ChevronDown, GripVertical, Pencil, RotateCcw, Tag } from "lucide-react";
+import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +27,7 @@ import {
   arquivarEtiqueta,
   createEtiqueta,
   etiquetasQueryOptions,
+  reordenarEtiquetas,
   updateEtiqueta,
   type Etiqueta,
 } from "@/lib/tarefas";
@@ -33,7 +37,7 @@ const arquivadasQueryOptions = queryOptions({
   queryFn: async (): Promise<Etiqueta[]> => {
     const { data, error } = await supabase
       .from("tarefa_etiquetas")
-      .select("id, nome, cor, arquivado")
+      .select("id, nome, cor, arquivado, posicao")
       .eq("arquivado", true)
       .order("nome", { ascending: true });
     if (error) throw error;
