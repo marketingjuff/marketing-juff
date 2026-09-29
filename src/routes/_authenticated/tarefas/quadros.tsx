@@ -67,7 +67,7 @@ function QuadrosPage() {
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
-      qc.invalidateQueries({ queryKey: ["tarefas"] });
+      qc.invalidateQueries({ queryKey: ["tarefas", "quadros"] });
     }
   }
 
