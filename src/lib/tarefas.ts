@@ -595,7 +595,7 @@ export async function uploadAnexo(cardId: string, file: File): Promise<void> {
   const path = `${cardId}/${crypto.randomUUID()}-${sanitizarNome(file.name)}`;
   const { error: upErr } = await supabase.storage
     .from("tarefas")
-    .upload(path, file, { contentType: file.type || undefined });
+    .upload(path, file, file.type ? { contentType: file.type } : {});
   if (upErr) throw upErr;
   const { error } = await supabase.from("tarefa_anexos").insert({
     card_id: cardId,
@@ -750,7 +750,7 @@ export function fundoCss(q: Pick<Quadro, "fundo_tipo" | "fundo_cor1" | "fundo_co
 export function formatarData(iso: string | null): string {
   if (!iso) return "";
   const [y, m, d] = iso.split("-");
-  return `${d}/${m}${y !== String(new Date().getFullYear()) ? `/${y.slice(2)}` : ""}`;
+  return `${d}/${m}${y && y !== String(new Date().getFullYear()) ? `/${y.slice(2)}` : ""}`;
 }
 
 export function iniciais(nome: string): string {

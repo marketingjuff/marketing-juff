@@ -193,8 +193,8 @@ function QuadrosPage() {
       <NovoQuadroDialog
         open={!!dialog}
         onOpenChange={(v) => !v && setDialog(null)}
-        quadro={dialog?.quadro}
-        somenteParticipantes={dialog?.participantes}
+        quadro={dialog?.quadro ?? null}
+        somenteParticipantes={dialog?.participantes ?? false}
         onSaved={(id) => {
           if (!dialog?.quadro) navigate({ to: "/tarefas/quadros/$quadroId", params: { quadroId: id } });
         }}

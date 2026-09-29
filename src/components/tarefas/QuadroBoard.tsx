@@ -117,17 +117,17 @@ export function QuadroBoard({
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   const colisao: CollisionDetection = (args) => {
-    const tipo = args.active.data.current?.type;
+    const tipo = args.active.data.current?.["type"];
     if (tipo === "coluna") {
       return closestCenter({
         ...args,
-        droppableContainers: args.droppableContainers.filter((d) => d.data.current?.type === "coluna"),
+        droppableContainers: args.droppableContainers.filter((d) => d.data.current?.["type"] === "coluna"),
       });
     }
-    const cardsAlvo = args.droppableContainers.filter((d) => d.data.current?.type === "card");
+    const cardsAlvo = args.droppableContainers.filter((d) => d.data.current?.["type"] === "card");
     const noCard = pointerWithin({ ...args, droppableContainers: cardsAlvo });
     if (noCard.length) return noCard;
-    const colsAlvo = args.droppableContainers.filter((d) => d.data.current?.type === "coluna");
+    const colsAlvo = args.droppableContainers.filter((d) => d.data.current?.["type"] === "coluna");
     const naColuna = pointerWithin({ ...args, droppableContainers: colsAlvo });
     if (naColuna.length) return naColuna;
     return closestCorners({ ...args, droppableContainers: cardsAlvo.concat(colsAlvo) });
@@ -139,7 +139,7 @@ export function QuadroBoard({
   }
 
   function onStart(e: DragStartEvent) {
-    const type = e.active.data.current?.type as "card" | "coluna";
+    const type = e.active.data.current?.["type"] as "card" | "coluna";
     setAtivo({ type, id: String(e.active.id) });
     if (type === "card") setColunaOrigem(colunaDe(String(e.active.id)));
   }
