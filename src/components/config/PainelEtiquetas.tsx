@@ -203,7 +203,24 @@ export function PainelEtiquetas() {
   const [salvando, setSalvando] = useState(false);
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ["tarefas", "etiquetas"] });
-  const ordenadas = [...ativas].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  const [ordem, setOrdem] = useState<Etiqueta[] | null>(null);
+  const ordenadas = ordem ?? ativas;
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+
+  function onDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    setOrdem(null);
+    if (!over || active.id === over.id) return;
+    const de = ordenadas.findIndex((e) => e.id === active.id);
+    const para = ordenadas.findIndex((e) => e.id === over.id);
+    if (de < 0 || para < 0) return;
+    const nova = arrayMove(ordenadas, de, para);
+    qc.setQueryData(etiquetasQueryOptions.queryKey, nova);
+    reordenarEtiquetas(nova.map((e) => e.id)).catch((e) => {
+      toast.error((e as Error).message);
+      invalidar();
+    });
+  }
 
   async function criar() {
     if (!nome.trim() || !HEX_RE.test(cor)) return;
@@ -246,15 +263,19 @@ export function PainelEtiquetas() {
         </Button>
       </form>
 
-      <div className="space-y-1.5">
-        {ordenadas.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma etiqueta cadastrada.</p>
-        ) : (
-          ordenadas.map((e) => (
-            <LinhaEtiqueta key={`${e.id}-${e.nome}-${e.cor}`} etiqueta={e} podeEditar={podeEditar} onChanged={invalidar} />
-          ))
-        )}
-      </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <SortableContext items={ordenadas.map((e) => e.id)} strategy={verticalListSortingStrategy}>
+          <div className="space-y-1.5">
+            {ordenadas.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma etiqueta cadastrada.</p>
+            ) : (
+              ordenadas.map((e) => (
+                <LinhaEtiqueta key={`${e.id}-${e.nome}-${e.cor}`} etiqueta={e} podeEditar={podeEditar} onChanged={invalidar} />
+              ))
+            )}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       <Collapsible>
         <CollapsibleTrigger className="flex items-center gap-1 text-sm font-medium text-muted-foreground">
