@@ -383,9 +383,11 @@ export async function updateQuadro(
 ): Promise<void> {
   // Garante que só colunas reais da tabela sejam enviadas, mesmo se vierem campos extras.
   const limpo: Partial<Pick<Quadro, "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2">> = {};
-  for (const k of ["nome", "descricao", "fundo_tipo", "fundo_cor1", "fundo_cor2"] as const) {
-    if (values[k] !== undefined) limpo[k] = values[k];
-  }
+  if (values.nome !== undefined) limpo.nome = values.nome;
+  if (values.descricao !== undefined) limpo.descricao = values.descricao;
+  if (values.fundo_tipo !== undefined) limpo.fundo_tipo = values.fundo_tipo;
+  if (values.fundo_cor1 !== undefined) limpo.fundo_cor1 = values.fundo_cor1;
+  if (values.fundo_cor2 !== undefined) limpo.fundo_cor2 = values.fundo_cor2;
   const { error } = await supabase.from("tarefa_quadros").update(limpo).eq("id", id);
   if (error) throw error;
 }
