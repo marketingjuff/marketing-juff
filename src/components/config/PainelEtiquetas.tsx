@@ -208,7 +208,6 @@ export function PainelEtiquetas() {
 
   function onDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    setOrdem(null);
     if (!over || active.id === over.id) return;
     const de = ordenadas.findIndex((e) => e.id === active.id);
     const para = ordenadas.findIndex((e) => e.id === over.id);
