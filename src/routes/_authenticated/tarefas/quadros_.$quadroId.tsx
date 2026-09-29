@@ -1,11 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { QuadroBoard } from "@/components/tarefas/QuadroBoard";
 import { canEdit, hasPermission, profileQueryOptions } from "@/lib/auth";
-import { quadroQueryOptions } from "@/lib/tarefas";
+import { quadroQueryOptions, registrarAberturaQuadro } from "@/lib/tarefas";
 
 export const Route = createFileRoute("/_authenticated/tarefas/quadros_/$quadroId")({
   head: () => ({
@@ -28,6 +28,16 @@ function QuadroPage() {
   const pode = hasPermission(profile, "tarefas.quadros");
   const navigate = useNavigate();
   const { data, isLoading, error } = useQuery({ ...quadroQueryOptions(quadroId), enabled: pode });
+  const queryClient = useQueryClient();
+  const jaContou = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!pode || isLoading || !data || jaContou.current === quadroId) return;
+    jaContou.current = quadroId;
+    void registrarAberturaQuadro(quadroId).then(() => {
+      queryClient.invalidateQueries({ queryKey: ["tarefas", "atalhos"] });
+    });
+  }, [pode, isLoading, data, quadroId, queryClient]);
 
   useEffect(() => {
     if (!pode || (!isLoading && (data === null || error))) {
