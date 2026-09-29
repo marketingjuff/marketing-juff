@@ -769,6 +769,38 @@ export type Database = {
           },
         ]
       }
+      tarefa_quadro_atalhos: {
+        Row: {
+          aberturas: number
+          fixado: boolean
+          quadro_id: string
+          ultimo_acesso: string
+          user_id: string
+        }
+        Insert: {
+          aberturas?: number
+          fixado?: boolean
+          quadro_id: string
+          ultimo_acesso?: string
+          user_id: string
+        }
+        Update: {
+          aberturas?: number
+          fixado?: boolean
+          quadro_id?: string
+          ultimo_acesso?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_quadro_atalhos_quadro_id_fkey"
+            columns: ["quadro_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_quadros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tarefa_quadro_membros: {
         Row: {
           created_at: string
@@ -865,6 +897,10 @@ export type Database = {
       pode_ver_card: { Args: { _card_id: string }; Returns: boolean }
       pode_ver_quadro: { Args: { _quadro_id: string }; Returns: boolean }
       recalc_story_status: { Args: { _story_id: string }; Returns: undefined }
+      registrar_abertura_quadro: {
+        Args: { p_quadro_id: string }
+        Returns: undefined
+      }
       tarefa_reordenar_cards: {
         Args: { _coluna_id: string; _ids: string[] }
         Returns: undefined
