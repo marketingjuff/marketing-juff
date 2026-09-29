@@ -16,6 +16,10 @@ import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authen
 import { Route as AuthenticatedObjetivosRouteImport } from './routes/_authenticated/objetivos'
 import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
 import { Route as AuthenticatedSocialStoriesRouteImport } from './routes/_authenticated/social/stories'
+import { Route as AuthenticatedTarefasCalendarioRouteImport } from './routes/_authenticated/tarefas/calendario'
+import { Route as AuthenticatedTarefasMeuTrabalhoRouteImport } from './routes/_authenticated/tarefas/meu-trabalho'
+import { Route as AuthenticatedTarefasQuadrosRouteImport } from './routes/_authenticated/tarefas/quadros'
+import { Route as AuthenticatedTarefasQuadrosQuadroIdRouteImport } from './routes/_authenticated/tarefas/quadros_.$quadroId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -54,6 +58,30 @@ const AuthenticatedSocialStoriesRoute =
     path: '/social/stories',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTarefasCalendarioRoute =
+  AuthenticatedTarefasCalendarioRouteImport.update({
+    id: '/tarefas/calendario',
+    path: '/tarefas/calendario',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTarefasMeuTrabalhoRoute =
+  AuthenticatedTarefasMeuTrabalhoRouteImport.update({
+    id: '/tarefas/meu-trabalho',
+    path: '/tarefas/meu-trabalho',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTarefasQuadrosRoute =
+  AuthenticatedTarefasQuadrosRouteImport.update({
+    id: '/tarefas/quadros',
+    path: '/tarefas/quadros',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTarefasQuadrosQuadroIdRoute =
+  AuthenticatedTarefasQuadrosQuadroIdRouteImport.update({
+    id: '/tarefas/quadros_/$quadroId',
+    path: '/tarefas/quadros/$quadroId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -62,6 +90,10 @@ export interface FileRoutesByFullPath {
   '/objetivos': typeof AuthenticatedObjetivosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/social/stories': typeof AuthenticatedSocialStoriesRoute
+  '/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
+  '/tarefas/meu-trabalho': typeof AuthenticatedTarefasMeuTrabalhoRoute
+  '/tarefas/quadros': typeof AuthenticatedTarefasQuadrosRoute
+  '/tarefas/quadros/$quadroId': typeof AuthenticatedTarefasQuadrosQuadroIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +102,10 @@ export interface FileRoutesByTo {
   '/objetivos': typeof AuthenticatedObjetivosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/social/stories': typeof AuthenticatedSocialStoriesRoute
+  '/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
+  '/tarefas/meu-trabalho': typeof AuthenticatedTarefasMeuTrabalhoRoute
+  '/tarefas/quadros': typeof AuthenticatedTarefasQuadrosRoute
+  '/tarefas/quadros/$quadroId': typeof AuthenticatedTarefasQuadrosQuadroIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +116,10 @@ export interface FileRoutesById {
   '/_authenticated/objetivos': typeof AuthenticatedObjetivosRoute
   '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/_authenticated/social/stories': typeof AuthenticatedSocialStoriesRoute
+  '/_authenticated/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
+  '/_authenticated/tarefas/meu-trabalho': typeof AuthenticatedTarefasMeuTrabalhoRoute
+  '/_authenticated/tarefas/quadros': typeof AuthenticatedTarefasQuadrosRoute
+  '/_authenticated/tarefas/quadros_/$quadroId': typeof AuthenticatedTarefasQuadrosQuadroIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -90,6 +130,10 @@ export interface FileRouteTypes {
     | '/objetivos'
     | '/trocar-senha'
     | '/social/stories'
+    | '/tarefas/calendario'
+    | '/tarefas/meu-trabalho'
+    | '/tarefas/quadros'
+    | '/tarefas/quadros/$quadroId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -98,6 +142,10 @@ export interface FileRouteTypes {
     | '/objetivos'
     | '/trocar-senha'
     | '/social/stories'
+    | '/tarefas/calendario'
+    | '/tarefas/meu-trabalho'
+    | '/tarefas/quadros'
+    | '/tarefas/quadros/$quadroId'
   id:
     | '__root__'
     | '/'
@@ -107,6 +155,10 @@ export interface FileRouteTypes {
     | '/_authenticated/objetivos'
     | '/_authenticated/trocar-senha'
     | '/_authenticated/social/stories'
+    | '/_authenticated/tarefas/calendario'
+    | '/_authenticated/tarefas/meu-trabalho'
+    | '/_authenticated/tarefas/quadros'
+    | '/_authenticated/tarefas/quadros_/$quadroId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -166,6 +218,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSocialStoriesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tarefas/calendario': {
+      id: '/_authenticated/tarefas/calendario'
+      path: '/tarefas/calendario'
+      fullPath: '/tarefas/calendario'
+      preLoaderRoute: typeof AuthenticatedTarefasCalendarioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tarefas/meu-trabalho': {
+      id: '/_authenticated/tarefas/meu-trabalho'
+      path: '/tarefas/meu-trabalho'
+      fullPath: '/tarefas/meu-trabalho'
+      preLoaderRoute: typeof AuthenticatedTarefasMeuTrabalhoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tarefas/quadros': {
+      id: '/_authenticated/tarefas/quadros'
+      path: '/tarefas/quadros'
+      fullPath: '/tarefas/quadros'
+      preLoaderRoute: typeof AuthenticatedTarefasQuadrosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tarefas/quadros_/$quadroId': {
+      id: '/_authenticated/tarefas/quadros_/$quadroId'
+      path: '/tarefas/quadros/$quadroId'
+      fullPath: '/tarefas/quadros/$quadroId'
+      preLoaderRoute: typeof AuthenticatedTarefasQuadrosQuadroIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -174,6 +254,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedObjetivosRoute: typeof AuthenticatedObjetivosRoute
   AuthenticatedTrocarSenhaRoute: typeof AuthenticatedTrocarSenhaRoute
   AuthenticatedSocialStoriesRoute: typeof AuthenticatedSocialStoriesRoute
+  AuthenticatedTarefasCalendarioRoute: typeof AuthenticatedTarefasCalendarioRoute
+  AuthenticatedTarefasMeuTrabalhoRoute: typeof AuthenticatedTarefasMeuTrabalhoRoute
+  AuthenticatedTarefasQuadrosRoute: typeof AuthenticatedTarefasQuadrosRoute
+  AuthenticatedTarefasQuadrosQuadroIdRoute: typeof AuthenticatedTarefasQuadrosQuadroIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -181,6 +265,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedObjetivosRoute: AuthenticatedObjetivosRoute,
   AuthenticatedTrocarSenhaRoute: AuthenticatedTrocarSenhaRoute,
   AuthenticatedSocialStoriesRoute: AuthenticatedSocialStoriesRoute,
+  AuthenticatedTarefasCalendarioRoute: AuthenticatedTarefasCalendarioRoute,
+  AuthenticatedTarefasMeuTrabalhoRoute: AuthenticatedTarefasMeuTrabalhoRoute,
+  AuthenticatedTarefasQuadrosRoute: AuthenticatedTarefasQuadrosRoute,
+  AuthenticatedTarefasQuadrosQuadroIdRoute:
+    AuthenticatedTarefasQuadrosQuadroIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

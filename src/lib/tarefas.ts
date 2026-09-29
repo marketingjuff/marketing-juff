@@ -403,11 +403,6 @@ export async function moverCard(
   colunaDestinoId: string,
   novaPosicao: number,
 ): Promise<void> {
-  const { data: atual } = await supabase
-    .from("tarefa_cards")
-    .select("coluna_id")
-    .eq("id", cardId)
-    .single();
   const { data: irmaos } = await supabase
     .from("tarefa_cards")
     .select("id")
@@ -423,13 +418,6 @@ export async function moverCard(
     .eq("id", cardId);
   if (error) throw error;
   await reorderCards(colunaDestinoId, ids);
-  if (atual && atual.coluna_id !== colunaDestinoId) {
-    const { data: col } = await supabase
-      .from("tarefa_colunas")
-      .select("nome")
-      .in("id", [atual.coluna_id, colunaDestinoId]);
-    void col;
-  }
 }
 
 export async function reorderCards(_colunaId: string, idsNaOrdem: string[]): Promise<void> {
