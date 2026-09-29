@@ -52,6 +52,8 @@ import {
   updateQuadro,
   type Card,
   type Coluna,
+  podeEstruturar,
+  podeMexerNoCard,
   type QuadroCompleto,
 } from "@/lib/tarefas";
 
@@ -62,13 +64,16 @@ export function QuadroBoard({
   editable,
   isAdmin,
   meuId,
+  role,
 }: {
   dados: QuadroCompleto;
   editable: boolean;
   isAdmin: boolean;
   meuId: string;
+  role?: string;
 }) {
   const qc = useQueryClient();
+  const estruturar = podeEstruturar(role, editable);
   const { quadro } = dados;
   const { data: etiquetasLista = [] } = useQuery(etiquetasQueryOptions);
   const { data: pessoasLista = [] } = useQuery(pessoasQueryOptions);
@@ -313,7 +318,7 @@ export function QuadroBoard({
         </h1>
         <span className="text-sm text-muted-foreground">{cards.length} cards</span>
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          {isAdmin ? (
+          {estruturar ? (
             <>
               <Popover>
                 <PopoverTrigger asChild>
@@ -388,6 +393,8 @@ export function QuadroBoard({
                   etiquetas={etiquetas}
                   pessoas={pessoas}
                   editable={editable}
+                  estruturar={estruturar}
+                  podeArrastarCard={(c) => podeMexerNoCard(c, role, meuId, editable)}
                   dragDisabled={filtrando}
                   onAbrirCard={setCardAberto}
                   onAddCard={(t) => rodar(() => createCard(quadro.id, col.id, t))}
@@ -409,7 +416,7 @@ export function QuadroBoard({
               ))}
             </SortableContext>
 
-            {editable ? (
+            {estruturar ? (
               <form
                 className="w-64 shrink-0 space-y-2 rounded-xl bg-background/60 p-2 backdrop-blur"
                 onSubmit={(e) => {
@@ -459,6 +466,7 @@ export function QuadroBoard({
         editable={editable}
         isAdmin={isAdmin}
         meuId={meuId}
+        role={role}
       />
       <ReorganizarCardsDialog
         open={!!reorganizando}

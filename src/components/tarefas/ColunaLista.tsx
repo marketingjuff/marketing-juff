@@ -51,6 +51,8 @@ export function ColunaLista({
   etiquetas,
   pessoas,
   editable,
+  estruturar,
+  podeArrastarCard,
   dragDisabled,
   onAbrirCard,
   onAddCard,
@@ -66,6 +68,8 @@ export function ColunaLista({
   etiquetas: Map<string, Etiqueta>;
   pessoas: Map<string, Pessoa>;
   editable: boolean;
+  estruturar: boolean;
+  podeArrastarCard: (c: Card) => boolean;
   dragDisabled: boolean;
   onAbrirCard: (id: string) => void;
   onAddCard: (titulo: string) => void;
@@ -79,7 +83,7 @@ export function ColunaLista({
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: coluna.id,
     data: { type: "coluna" },
-    disabled: !editable || dragDisabled,
+    disabled: !estruturar || dragDisabled,
   });
   const [editando, setEditando] = useState(false);
   const [nome, setNome] = useState(coluna.nome);
@@ -103,7 +107,7 @@ export function ColunaLista({
       )}
     >
       <div className="mb-2 flex items-center gap-1 px-1">
-        {editable && !dragDisabled ? (
+        {estruturar && !dragDisabled ? (
           <button
             type="button"
             className="cursor-grab text-muted-foreground"
@@ -132,7 +136,7 @@ export function ColunaLista({
         ) : (
           <h3
             className="flex min-w-0 flex-1 items-center gap-1 truncate text-sm font-semibold"
-            onDoubleClick={() => editable && setEditando(true)}
+            onDoubleClick={() => estruturar && setEditando(true)}
           >
             {coluna.conclui ? <CheckCircle2 className="size-3.5 shrink-0 text-success" /> : null}
             <span className="truncate">{coluna.nome}</span>
@@ -148,7 +152,7 @@ export function ColunaLista({
           {cards.length}
           {coluna.limite_wip != null ? `/${coluna.limite_wip}` : ""}
         </span>
-        {editable ? (
+        {estruturar ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="size-7" aria-label="Opções da coluna">
@@ -188,7 +192,7 @@ export function ColunaLista({
               card={c}
               etiquetas={etiquetas}
               pessoas={pessoas}
-              disabled={!editable || dragDisabled}
+              disabled={!podeArrastarCard(c) || dragDisabled}
               onAbrir={() => onAbrirCard(c.id)}
             />
           ))}

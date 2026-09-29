@@ -182,6 +182,7 @@ function mapCard(c: any): Card {
     titulo: c.titulo ?? "",
     descricao: c.descricao ?? "",
     responsavel_id: c.responsavel_id,
+    criado_por: c.criado_por ?? null,
     data_inicio: c.data_inicio,
     data_entrega: c.data_entrega,
     prioridade: c.prioridade,
