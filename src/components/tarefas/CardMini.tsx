@@ -52,7 +52,7 @@ export function CardMini({
             <span
               key={t.id}
               className="inline-flex max-w-full items-center truncate rounded px-1.5 py-0.5 text-[10px] font-medium leading-tight"
-              style={{ backgroundColor: `${t.cor}22`, color: t.cor }}
+              style={{ backgroundColor: t.cor, color: t.cor_texto }}
               title={t.nome}
             >
               {t.nome}

@@ -40,8 +40,8 @@ export function ListaCards({
                 return e ? (
                   <span
                     key={id}
-                    className="rounded px-1.5 py-0.5 text-[10px] text-primary-foreground"
-                    style={{ backgroundColor: e.cor }}
+                    className="rounded px-1.5 py-0.5 text-[10px]"
+                    style={{ backgroundColor: e.cor, color: e.cor_texto }}
                   >
                     {e.nome}
                   </span>

@@ -441,9 +441,9 @@ export function CardDialog({
                       }}
                       className={cn(
                         "rounded px-1.5 py-0.5 text-[11px] transition-opacity",
-                        on ? "text-primary-foreground" : "opacity-40",
+                        !on && "opacity-40",
                       )}
-                      style={{ backgroundColor: e.cor, color: "#ffffff" }}
+                      style={{ backgroundColor: e.cor, color: e.cor_texto }}
                     >
                       {e.nome}
                     </button>

@@ -28,7 +28,7 @@ export type Coluna = {
   arquivado: boolean;
 };
 
-export type Etiqueta = { id: string; nome: string; cor: string; arquivado: boolean; posicao: number };
+export type Etiqueta = { id: string; nome: string; cor: string; cor_texto: string; arquivado: boolean; posicao: number };
 
 export type Card = {
   id: string;
@@ -540,7 +540,7 @@ export const etiquetasQueryOptions = queryOptions({
   queryFn: async (): Promise<Etiqueta[]> => {
     const { data, error } = await supabase
       .from("tarefa_etiquetas")
-      .select("id, nome, cor, arquivado, posicao")
+      .select("id, nome, cor, cor_texto, arquivado, posicao")
       .eq("arquivado", false)
       .order("posicao", { ascending: true });
     if (error) throw error;
@@ -548,7 +548,7 @@ export const etiquetasQueryOptions = queryOptions({
   },
 });
 
-export async function createEtiqueta(nome: string, cor: string): Promise<void> {
+export async function createEtiqueta(nome: string, cor: string, corTexto: string): Promise<void> {
   const { data: ultima } = await supabase
     .from("tarefa_etiquetas")
     .select("posicao")
@@ -557,7 +557,7 @@ export async function createEtiqueta(nome: string, cor: string): Promise<void> {
     .maybeSingle();
   const { error } = await supabase
     .from("tarefa_etiquetas")
-    .insert({ nome: nome.trim(), cor: cor.toLowerCase(), posicao: (ultima?.posicao ?? 0) + 1 });
+    .insert({ nome: nome.trim(), cor: cor.toLowerCase(), cor_texto: corTexto.toLowerCase(), posicao: (ultima?.posicao ?? 0) + 1 });
   if (error) throw error;
 }
 
@@ -568,7 +568,7 @@ export async function reordenarEtiquetas(ids: string[]): Promise<void> {
 
 export async function updateEtiqueta(
   id: string,
-  values: Partial<Pick<Etiqueta, "nome" | "cor">>,
+  values: Partial<Pick<Etiqueta, "nome" | "cor" | "cor_texto">>,
 ): Promise<void> {
   const { error } = await supabase.from("tarefa_etiquetas").update(values).eq("id", id);
   if (error) throw error;

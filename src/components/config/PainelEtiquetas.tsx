@@ -7,6 +7,7 @@ import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } 
 import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { ColorPicker } from "@/components/ui/color-picker";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -37,7 +38,7 @@ const arquivadasQueryOptions = queryOptions({
   queryFn: async (): Promise<Etiqueta[]> => {
     const { data, error } = await supabase
       .from("tarefa_etiquetas")
-      .select("id, nome, cor, arquivado, posicao")
+      .select("id, nome, cor, cor_texto, arquivado, posicao")
       .eq("arquivado", true)
       .order("nome", { ascending: true });
     if (error) throw error;
@@ -45,59 +46,12 @@ const arquivadasQueryOptions = queryOptions({
   },
 });
 
-function normalizarHex(v: string): string {
-  const limpo = v.toLowerCase().replace(/[^#0-9a-f]/g, "").replace(/#/g, "");
-  return `#${limpo.slice(0, 6)}`;
-}
-
-function SeletorCor({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  disabled?: boolean;
-}) {
-  const valido = HEX_RE.test(value);
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="flex flex-wrap gap-1">
-        {CORES_ETIQUETA.map((c) => (
-          <button
-            key={c}
-            type="button"
-            disabled={disabled}
-            onClick={() => onChange(c)}
-            aria-label={`Cor ${c}`}
-            className={cn(
-              "size-5 rounded-full border border-border",
-              value === c && "ring-2 ring-ring ring-offset-2 ring-offset-background",
-            )}
-            style={{ backgroundColor: c }}
-          />
-        ))}
-      </div>
-      <div>
-        <Input
-          value={value}
-          disabled={disabled}
-          maxLength={7}
-          aria-invalid={!valido}
-          className={cn("h-8 w-24 font-mono text-xs", !valido && "border-destructive")}
-          onChange={(e) => onChange(normalizarHex(e.target.value))}
-        />
-        {!valido ? <p className="mt-0.5 text-[11px] text-destructive">Use # e 6 dígitos hex</p> : null}
-      </div>
-    </div>
-  );
-}
-
 function LinhaEtiqueta({ etiqueta, podeEditar, onChanged }: { etiqueta: Etiqueta; podeEditar: boolean; onChanged: () => void }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id: etiqueta.id });
   const [editando, setEditando] = useState(false);
   const [nome, setNome] = useState(etiqueta.nome);
   const [cor, setCor] = useState(etiqueta.cor);
+  const [corTexto, setCorTexto] = useState(etiqueta.cor_texto);
   const [confirmar, setConfirmar] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -120,13 +74,17 @@ function LinhaEtiqueta({ etiqueta, podeEditar, onChanged }: { etiqueta: Etiqueta
     return (
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-2">
         <Input value={nome} onChange={(e) => setNome(e.target.value)} className="h-8 w-48" autoFocus />
-        <SeletorCor value={cor} onChange={setCor} />
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          Fundo <ColorPicker value={cor} onChange={setCor} label="Cor do fundo" presets={CORES_ETIQUETA} />
+          Texto <ColorPicker value={corTexto} onChange={setCorTexto} label="Cor do texto" presets={["#ffffff", "#111111", ...CORES_ETIQUETA]} />
+        </div>
+        <span className="rounded px-2 py-1 text-xs font-medium" style={{ backgroundColor: cor, color: corTexto }}>{nome || "Prévia"}</span>
         <div className="ml-auto flex gap-2">
           <Button
             size="sm"
             disabled={busy || !nome.trim() || !HEX_RE.test(cor)}
             onClick={async () => {
-              if (await run(() => updateEtiqueta(etiqueta.id, { nome: nome.trim(), cor }), "Etiqueta atualizada"))
+              if (await run(() => updateEtiqueta(etiqueta.id, { nome: nome.trim(), cor, cor_texto: corTexto }), "Etiqueta atualizada"))
                 setEditando(false);
             }}
           >
@@ -138,6 +96,7 @@ function LinhaEtiqueta({ etiqueta, podeEditar, onChanged }: { etiqueta: Etiqueta
             onClick={() => {
               setNome(etiqueta.nome);
               setCor(etiqueta.cor);
+              setCorTexto(etiqueta.cor_texto);
               setEditando(false);
             }}
           >
@@ -164,8 +123,7 @@ function LinhaEtiqueta({ etiqueta, podeEditar, onChanged }: { etiqueta: Etiqueta
       >
         <GripVertical className="size-4" />
       </button>
-      <span className="size-4 shrink-0 rounded" style={{ backgroundColor: etiqueta.cor }} />
-      <span className="min-w-0 flex-1 truncate text-sm">{etiqueta.nome}</span>
+       <span className="min-w-0 flex-1 truncate rounded px-2 py-1 text-xs font-medium" style={{ backgroundColor: etiqueta.cor, color: etiqueta.cor_texto }}>{etiqueta.nome}</span>
       <Button size="icon" variant="ghost" className="size-7" disabled={!podeEditar} onClick={() => setEditando(true)} aria-label="Editar etiqueta">
         <Pencil className="size-4" />
       </Button>
@@ -200,6 +158,7 @@ export function PainelEtiquetas() {
   const { data: arquivadas = [] } = useQuery(arquivadasQueryOptions);
   const [nome, setNome] = useState("");
   const [cor, setCor] = useState(CORES_ETIQUETA[0]!);
+  const [corTexto, setCorTexto] = useState("#ffffff");
   const [salvando, setSalvando] = useState(false);
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ["tarefas", "etiquetas"] });
@@ -221,10 +180,10 @@ export function PainelEtiquetas() {
   }
 
   async function criar() {
-    if (!nome.trim() || !HEX_RE.test(cor)) return;
+    if (!nome.trim() || !HEX_RE.test(cor) || !HEX_RE.test(corTexto)) return;
     setSalvando(true);
     try {
-      await createEtiqueta(nome, cor);
+      await createEtiqueta(nome, cor, corTexto);
       toast.success("Etiqueta criada");
       setNome("");
       invalidar();
@@ -255,8 +214,12 @@ export function PainelEtiquetas() {
           className="h-8 w-48"
           onChange={(e) => setNome(e.target.value)}
         />
-        <SeletorCor value={cor} onChange={setCor} disabled={!podeEditar} />
-        <Button type="submit" size="sm" disabled={!podeEditar || salvando || !nome.trim() || !HEX_RE.test(cor)}>
+         <div className="flex items-center gap-2 text-xs text-muted-foreground">
+           Fundo <ColorPicker value={cor} onChange={setCor} disabled={!podeEditar} label="Cor do fundo" presets={CORES_ETIQUETA} />
+           Texto <ColorPicker value={corTexto} onChange={setCorTexto} disabled={!podeEditar} label="Cor do texto" presets={["#ffffff", "#111111", ...CORES_ETIQUETA]} />
+         </div>
+         <span className="rounded px-2 py-1 text-xs font-medium" style={{ backgroundColor: cor, color: corTexto }}>{nome || "Prévia"}</span>
+         <Button type="submit" size="sm" disabled={!podeEditar || salvando || !nome.trim() || !HEX_RE.test(cor) || !HEX_RE.test(corTexto)}>
           Criar
         </Button>
       </form>
@@ -268,7 +231,7 @@ export function PainelEtiquetas() {
               <p className="text-sm text-muted-foreground">Nenhuma etiqueta cadastrada.</p>
             ) : (
               ordenadas.map((e) => (
-                <LinhaEtiqueta key={`${e.id}-${e.nome}-${e.cor}`} etiqueta={e} podeEditar={podeEditar} onChanged={invalidar} />
+                 <LinhaEtiqueta key={`${e.id}-${e.nome}-${e.cor}-${e.cor_texto}`} etiqueta={e} podeEditar={podeEditar} onChanged={invalidar} />
               ))
             )}
           </div>
@@ -282,8 +245,7 @@ export function PainelEtiquetas() {
         <CollapsibleContent className="mt-2 space-y-1.5">
           {arquivadas.map((e) => (
             <div key={e.id} className="flex items-center gap-2 rounded-lg border border-border px-2 py-1.5">
-              <span className="size-4 shrink-0 rounded" style={{ backgroundColor: e.cor }} />
-              <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{e.nome}</span>
+               <span className="min-w-0 flex-1 truncate rounded px-2 py-1 text-xs font-medium" style={{ backgroundColor: e.cor, color: e.cor_texto }}>{e.nome}</span>
               <Button
                 size="sm"
                 variant="outline"
