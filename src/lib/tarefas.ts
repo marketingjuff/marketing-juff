@@ -37,6 +37,7 @@ export type Card = {
   titulo: string;
   descricao: string;
   responsavel_id: string | null;
+  criado_por: string | null;
   data_inicio: string | null;
   data_entrega: string | null;
   prioridade: Prioridade | null;
@@ -773,6 +774,37 @@ export async function uploadAnexo(cardId: string, file: File): Promise<void> {
     enviado_por: await uid(),
   });
   if (error) throw error;
+}
+
+/** Baixa de verdade, em vez de abrir no navegador. */
+export async function baixarAnexo(path: string, nome: string): Promise<void> {
+  const { data, error } = await supabase.storage.from("tarefas").download(path);
+  if (error) throw error;
+  const url = URL.createObjectURL(data);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nome || "arquivo";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/** Estrutura do quadro, só admin e gestor. */
+export function podeEstruturar(role: string | undefined, editavel: boolean): boolean {
+  return editavel && (role === "admin" || role === "gestor");
+}
+
+/** Operador só mexe no card em que é responsável ou que criou. */
+export function podeMexerNoCard(
+  card: { responsavel_id: string | null; criado_por?: string | null },
+  role: string | undefined,
+  meuId: string,
+  editavel: boolean,
+): boolean {
+  if (!editavel) return false;
+  if (role === "admin" || role === "gestor") return true;
+  return card.responsavel_id === meuId || card.criado_por === meuId;
 }
 
 export async function urlAnexo(path: string): Promise<string> {
