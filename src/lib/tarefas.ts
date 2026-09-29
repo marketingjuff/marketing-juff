@@ -235,6 +235,7 @@ async function fetchQuadros(arquivado: boolean): Promise<Quadro[]> {
 
 export const quadrosQueryOptions = queryOptions({
   queryKey: ["tarefas", "quadros"],
+  staleTime: 60_000,
   queryFn: () => fetchQuadros(false),
 });
 
@@ -248,6 +249,7 @@ export type QuadroCompleto = { quadro: Quadro; colunas: Coluna[]; cards: Card[] 
 export const quadroQueryOptions = (quadroId: string) =>
   queryOptions({
     queryKey: ["tarefas", "quadro", quadroId],
+    staleTime: 15_000,
     queryFn: async (): Promise<QuadroCompleto | null> => {
       const { data: q, error } = await supabase
         .from("tarefa_quadros")
@@ -468,27 +470,26 @@ export async function moverCard(
   colunaDestinoId: string,
   novaPosicao: number,
 ): Promise<void> {
-  const { data: irmaos } = await supabase
+  const { data: irmaos, error } = await supabase
     .from("tarefa_cards")
     .select("id")
     .eq("coluna_id", colunaDestinoId)
     .eq("arquivado", false)
     .neq("id", cardId)
     .order("posicao", { ascending: true });
+  if (error) throw error;
   const ids = (irmaos ?? []).map((c) => c.id);
   ids.splice(Math.max(0, Math.min(novaPosicao, ids.length)), 0, cardId);
-  const { error } = await supabase
-    .from("tarefa_cards")
-    .update({ coluna_id: colunaDestinoId, posicao: ids.indexOf(cardId) })
-    .eq("id", cardId);
-  if (error) throw error;
   await reorderCards(colunaDestinoId, ids);
 }
 
-export async function reorderCards(_colunaId: string, idsNaOrdem: string[]): Promise<void> {
-  await Promise.all(
-    idsNaOrdem.map((id, i) => supabase.from("tarefa_cards").update({ posicao: i }).eq("id", id)),
-  );
+export async function reorderCards(colunaId: string, idsNaOrdem: string[]): Promise<void> {
+  if (idsNaOrdem.length === 0) return;
+  const { error } = await supabase.rpc("tarefa_reordenar_cards", {
+    _coluna_id: colunaId,
+    _ids: idsNaOrdem,
+  });
+  if (error) throw error;
 }
 
 export async function arquivarCard(id: string, arquivado: boolean): Promise<void> {
@@ -504,19 +505,38 @@ export async function deleteCard(id: string): Promise<void> {
 }
 
 export async function setEtiquetasDoCard(cardId: string, etiquetaIds: string[]): Promise<void> {
-  const { error: e1 } = await supabase.from("tarefa_card_etiquetas").delete().eq("card_id", cardId);
-  if (e1) throw e1;
-  if (etiquetaIds.length === 0) return;
-  const { error } = await supabase
+  const { data: atuais, error: e0 } = await supabase
     .from("tarefa_card_etiquetas")
-    .insert(etiquetaIds.map((etiqueta_id) => ({ card_id: cardId, etiqueta_id })));
-  if (error) throw error;
+    .select("etiqueta_id")
+    .eq("card_id", cardId);
+  if (e0) throw e0;
+
+  const antes = new Set((atuais ?? []).map((r: { etiqueta_id: string }) => r.etiqueta_id));
+  const depois = new Set(etiquetaIds);
+  const remover = [...antes].filter((id) => !depois.has(id));
+  const inserir = [...depois].filter((id) => !antes.has(id));
+
+  if (remover.length) {
+    const { error } = await supabase
+      .from("tarefa_card_etiquetas")
+      .delete()
+      .eq("card_id", cardId)
+      .in("etiqueta_id", remover);
+    if (error) throw error;
+  }
+  if (inserir.length) {
+    const { error } = await supabase
+      .from("tarefa_card_etiquetas")
+      .insert(inserir.map((etiqueta_id) => ({ card_id: cardId, etiqueta_id })));
+    if (error) throw error;
+  }
 }
 
 // ---------------- etiquetas ----------------
 
 export const etiquetasQueryOptions = queryOptions({
   queryKey: ["tarefas", "etiquetas"],
+  staleTime: 300_000,
   queryFn: async (): Promise<Etiqueta[]> => {
     const { data, error } = await supabase
       .from("tarefa_etiquetas")
