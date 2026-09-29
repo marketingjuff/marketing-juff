@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Archive, CheckCircle2, GripVertical, Hash, MoreHorizontal, Pencil, Plus } from "lucide-react";
+import { Archive, ArrowDownAZ, CheckCircle2, GripVertical, Hash, MoreHorizontal, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -58,6 +58,8 @@ export function ColunaLista({
   onToggleConclui,
   onLimite,
   onArquivar,
+  totalCards,
+  onReorganizar,
 }: {
   coluna: Coluna;
   cards: Card[];
@@ -71,6 +73,8 @@ export function ColunaLista({
   onToggleConclui: () => void;
   onLimite: () => void;
   onArquivar: () => void;
+  totalCards: number;
+  onReorganizar: () => void;
 }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: coluna.id,
@@ -155,6 +159,12 @@ export function ColunaLista({
               <DropdownMenuItem onClick={() => setEditando(true)}>
                 <Pencil className="size-4" /> Renomear
               </DropdownMenuItem>
+              {totalCards >= 2 ? (
+                <DropdownMenuItem disabled={dragDisabled} onClick={onReorganizar}>
+                  <ArrowDownAZ className="size-4" />
+                  {dragDisabled ? "Limpe os filtros para reorganizar" : "Reorganizar cards"}
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuItem onClick={onToggleConclui}>
                 <CheckCircle2 className="size-4" />
                 {coluna.conclui ? "Desmarcar coluna de conclusão" : "Marcar como coluna de conclusão"}

@@ -48,14 +48,24 @@ export function CardMini({
     >
       {tags.length > 0 ? (
         <div className="mb-1.5 flex flex-wrap gap-1">
-          {tags.map((t) => (
+          {tags.slice(0, 3).map((t) => (
             <span
               key={t.id}
-              className="h-1.5 w-8 rounded-full"
-              style={{ backgroundColor: t.cor }}
+              className="inline-flex max-w-full items-center truncate rounded px-1.5 py-0.5 text-[10px] font-medium leading-tight"
+              style={{ backgroundColor: `${t.cor}22`, color: t.cor }}
               title={t.nome}
-            />
+            >
+              {t.nome}
+            </span>
           ))}
+          {tags.length > 3 ? (
+            <span
+              className="inline-flex items-center rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium leading-tight text-muted-foreground"
+              title={tags.slice(3).map((t) => t.nome).join(", ")}
+            >
+              +{tags.length - 3}
+            </span>
+          ) : null}
         </div>
       ) : null}
       <p className="flex items-start gap-1 text-sm leading-snug">
