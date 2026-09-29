@@ -203,8 +203,7 @@ export function PainelEtiquetas() {
   const [salvando, setSalvando] = useState(false);
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ["tarefas", "etiquetas"] });
-  const [ordem, setOrdem] = useState<Etiqueta[] | null>(null);
-  const ordenadas = ordem ?? ativas;
+  const ordenadas = ativas;
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   function onDragEnd(event: DragEndEvent) {
