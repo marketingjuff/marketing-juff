@@ -89,6 +89,71 @@ export const DIAS_PARADO_ALERTA = 5;
 
 export const HEX_RE = /^#[0-9a-f]{6}$/;
 
+/** Paleta sugerida para etiquetas. Sempre hexadecimal com cerquilha e seis dígitos (minúsculo, regra do projeto). */
+export const CORES_ETIQUETA: string[] = [
+  "#185fa5",
+  "#378add",
+  "#0f6e56",
+  "#1d9e75",
+  "#993c1d",
+  "#d85a30",
+  "#993556",
+  "#d4537e",
+  "#534ab7",
+  "#7f77dd",
+  "#854f0b",
+  "#ba7517",
+  "#a32d2d",
+  "#5f5e5a",
+];
+
+export type CriterioOrdem = "entrega" | "prioridade" | "responsavel" | "etiqueta" | "alfabetica";
+
+const PESO_PRIORIDADE: Record<Prioridade, number> = { maxima: 4, alta: 3, media: 2, baixa: 1 };
+
+/**
+ * Devolve os ids dos cards na nova ordem.
+ * Cards sem valor no critério escolhido ficam sempre no fim,
+ * qualquer que seja a direção.
+ */
+export function ordenarCards(
+  cards: Card[],
+  criterio: CriterioOrdem,
+  decrescente: boolean,
+  pessoas: Map<string, Pessoa>,
+  etiquetas: Map<string, Etiqueta>,
+): string[] {
+  const atual = [...cards].sort((a, b) => a.posicao - b.posicao);
+  const valor = (c: Card): string | number | null => {
+    switch (criterio) {
+      case "entrega":
+        return c.data_entrega;
+      case "prioridade":
+        return c.prioridade ? PESO_PRIORIDADE[c.prioridade] : null;
+      case "responsavel":
+        return c.responsavel_id ? (pessoas.get(c.responsavel_id)?.nome ?? null) : null;
+      case "etiqueta": {
+        const id = c.etiquetas.find((e) => etiquetas.has(e));
+        return id ? etiquetas.get(id)!.nome : null;
+      }
+      case "alfabetica":
+        return c.titulo.trim() || null;
+    }
+  };
+  const com = atual.filter((c) => valor(c) !== null);
+  const sem = atual.filter((c) => valor(c) === null);
+  com.sort((a, b) => {
+    const va = valor(a)!;
+    const vb = valor(b)!;
+    let r: number;
+    if (criterio === "prioridade") r = (vb as number) - (va as number);
+    else if (typeof va === "number" && typeof vb === "number") r = va - vb;
+    else r = String(va).localeCompare(String(vb), "pt-BR", { sensitivity: "base" });
+    return decrescente ? -r : r;
+  });
+  return [...com, ...sem].map((c) => c.id);
+}
+
 // ---------------- helpers ----------------
 
 async function uid(): Promise<string | null> {

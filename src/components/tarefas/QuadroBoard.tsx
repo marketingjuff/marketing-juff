@@ -33,6 +33,7 @@ import { CardMini } from "./CardMini";
 import { CardDialog } from "./CardDialog";
 import { FundoPicker } from "./FundoPicker";
 import { NovoQuadroDialog } from "./NovoQuadroDialog";
+import { ReorganizarCardsDialog } from "./ReorganizarCardsDialog";
 import {
   arquivarColuna,
   createCard,
@@ -41,9 +42,12 @@ import {
   etiquetasQueryOptions,
   fundoCss,
   moverCard,
+  ordenarCards,
   pessoasQueryOptions,
   registrarHistorico,
+  reorderCards,
   reorderColunas,
+  type CriterioOrdem,
   updateColuna,
   updateQuadro,
   type Card,
@@ -92,8 +96,38 @@ export function QuadroBoard({
   const [cardAberto, setCardAberto] = useState<string | null>(null);
   const [participantes, setParticipantes] = useState(false);
   const [novaColuna, setNovaColuna] = useState("");
+  const [reorganizando, setReorganizando] = useState<string | null>(null);
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ["tarefas"] });
+
+  async function reorganizarColuna(colId: string, criterio: CriterioOrdem, dec: boolean) {
+    const daColuna = cards.filter((c) => c.coluna_id === colId && !c.arquivado);
+    const anterior = [...daColuna].sort((a, b) => a.posicao - b.posicao).map((c) => c.id);
+    const nova = ordenarCards(daColuna, criterio, dec, pessoas, etiquetas);
+    const aplicar = (ids: string[]) =>
+      setCards((prev) => prev.map((c) => (ids.includes(c.id) ? { ...c, posicao: ids.indexOf(c.id) } : c)));
+    aplicar(nova);
+    setSalvandoArraste(true);
+    try {
+      await reorderCards(colId, nova);
+      toast.success("Cards reorganizados", {
+        duration: 10_000,
+        action: {
+          label: "Desfazer",
+          onClick: () => {
+            aplicar(anterior);
+            void rodar(() => reorderCards(colId, anterior));
+          },
+        },
+      });
+    } catch (e) {
+      aplicar(anterior);
+      toast.error((e as Error).message);
+    } finally {
+      setSalvandoArraste(false);
+      await invalidar();
+    }
+  }
   async function rodar(fn: () => Promise<void>) {
     try {
       await fn();
@@ -351,6 +385,8 @@ export function QuadroBoard({
                     rodar(() => updateColuna(col.id, { limite_wip: n }));
                   }}
                   onArquivar={() => rodar(() => arquivarColuna(col.id, true))}
+                  totalCards={cards.filter((c) => c.coluna_id === col.id).length}
+                  onReorganizar={() => setReorganizando(col.id)}
                 />
               ))}
             </SortableContext>
@@ -405,6 +441,12 @@ export function QuadroBoard({
         editable={editable}
         isAdmin={isAdmin}
         meuId={meuId}
+      />
+      <ReorganizarCardsDialog
+        open={!!reorganizando}
+        onOpenChange={(v) => !v && setReorganizando(null)}
+        colunaNome={colunas.find((c) => c.id === reorganizando)?.nome ?? ""}
+        onAplicar={(criterio, dec) => reorganizarColuna(reorganizando!, criterio, dec)}
       />
       <NovoQuadroDialog
         open={participantes}
