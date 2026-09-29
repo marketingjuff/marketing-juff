@@ -140,3 +140,25 @@
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }
+
+@utility color-picker-hue {
+  background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-background);
+    border-radius: 9999px;
+    background: var(--color-foreground);
+    box-shadow: 0 0 0 1px var(--color-border);
+  }
+
+  &::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--color-background);
+    border-radius: 9999px;
+    background: var(--color-foreground);
+  }
+}

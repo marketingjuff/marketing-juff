@@ -692,6 +692,7 @@ export type Database = {
         Row: {
           arquivado: boolean
           cor: string
+          cor_texto: string
           created_at: string
           id: string
           nome: string
@@ -700,6 +701,7 @@ export type Database = {
         Insert: {
           arquivado?: boolean
           cor?: string
+          cor_texto?: string
           created_at?: string
           id?: string
           nome: string
@@ -708,6 +710,7 @@ export type Database = {
         Update: {
           arquivado?: boolean
           cor?: string
+          cor_texto?: string
           created_at?: string
           id?: string
           nome?: string
