@@ -21,7 +21,8 @@ import {
 
 import { AppShell } from "@/components/AppShell";
 import { PainelEtiquetas } from "@/components/config/PainelEtiquetas";
-import { etiquetasQueryOptions, quadrosQueryOptions } from "@/lib/tarefas";
+import { CORES_ETIQUETA, etiquetasQueryOptions, quadrosQueryOptions, siglaPessoa } from "@/lib/tarefas";
+import { ColorPicker } from "@/components/ui/color-picker";
 import {
   PERMISSION_CATALOG,
   PRESETS,
@@ -410,10 +411,20 @@ function Configuracoes() {
                   key={user.id}
                   travarOperador={isGestor}
                   user={user}
-                  onSavePerms={async (nextRole, permissions) => {
-                    await updatePerms({ data: { userId: user.id, role: nextRole, permissions } });
-                    toast.success("Permissões atualizadas");
+                  onSavePerms={async (nextRole, permissions, identidade) => {
+                    await updatePerms({
+                      data: {
+                        userId: user.id,
+                        role: nextRole,
+                        permissions,
+                        sigla: identidade.sigla,
+                        cor_avatar: identidade.cor_avatar,
+                        cor_texto_avatar: identidade.cor_texto_avatar,
+                      },
+                    });
+                    toast.success("Conta atualizada");
                     invalidate();
+                    queryClient.invalidateQueries({ queryKey: ["tarefas", "pessoas"] });
                   }}
                   onSetPassword={async (novaSenha) => {
                     await setPassword({ data: { userId: user.id, senha: novaSenha } });
@@ -444,6 +455,9 @@ type UserRowData = {
   role: string;
   permissions: string[];
   must_change_password: boolean;
+  sigla: string | null;
+  cor_avatar: string | null;
+  cor_texto_avatar: string | null;
 };
 
 function UserRow({
@@ -455,7 +469,11 @@ function UserRow({
 }: {
   user: UserRowData;
   travarOperador?: boolean;
-  onSavePerms: (role: AppRole, permissions: string[]) => Promise<void>;
+  onSavePerms: (
+    role: AppRole,
+    permissions: string[],
+    identidade: { sigla: string; cor_avatar: string | null; cor_texto_avatar: string | null },
+  ) => Promise<void>;
   onSetPassword: (senha: string) => Promise<void>;
   onDelete: () => Promise<void>;
 }) {
@@ -463,6 +481,10 @@ function UserRow({
   const [perms, setPerms] = useState<PermState>(permsToState(user.permissions ?? []));
   const [novaSenha, setNovaSenha] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sigla, setSigla] = useState(user.sigla ?? "");
+  const [corAvatar, setCorAvatar] = useState(user.cor_avatar ?? "#378add");
+  const [corTextoAvatar, setCorTextoAvatar] = useState(user.cor_texto_avatar ?? "#ffffff");
+  const siglaMostrada = siglaPessoa({ nome: user.nome, sigla });
 
   async function run(fn: () => Promise<void>) {
     setBusy(true);
@@ -478,9 +500,18 @@ function UserRow({
   return (
     <div className="rounded-xl border border-border bg-card p-4 shadow-soft">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p className="text-sm font-medium">{user.nome}</p>
-          <p className="text-xs text-muted-foreground">{user.email}</p>
+        <div className="flex items-center gap-3">
+          <span
+            className="flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold leading-none tracking-tight"
+            style={{ backgroundColor: corAvatar, color: corTextoAvatar }}
+            title={`Bolinha de ${user.nome}`}
+          >
+            {siglaMostrada}
+          </span>
+          <div>
+            <p className="text-sm font-medium">{user.nome}</p>
+            <p className="text-xs text-muted-foreground">{user.email}</p>
+          </div>
         </div>
         {user.must_change_password ? (
           <span className="rounded-full border border-warning bg-warning/20 px-2 py-0.5 text-[11px]">
@@ -528,6 +559,41 @@ function UserRow({
             </Button>
           </div>
         </div>
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label>Bolinha nos cards</Label>
+          <div className="flex flex-wrap items-center gap-3">
+            <Input
+              value={sigla}
+              maxLength={3}
+              spellCheck={false}
+              placeholder={siglaPessoa({ nome: user.nome, sigla: null })}
+              aria-label="Sigla de até três caracteres"
+              className="h-8 w-20 text-center font-mono text-xs uppercase"
+              onChange={(e) => setSigla(e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 3))}
+            />
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              Fundo
+              <ColorPicker
+                value={corAvatar}
+                onChange={setCorAvatar}
+                label="Cor do fundo da bolinha"
+                presets={CORES_ETIQUETA}
+              />
+            </span>
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              Texto
+              <ColorPicker
+                value={corTextoAvatar}
+                onChange={setCorTextoAvatar}
+                label="Cor do texto da bolinha"
+                presets={["#ffffff", "#111111", ...CORES_ETIQUETA]}
+              />
+            </span>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Até três caracteres. Deixando em branco, o sistema monta a sigla pelo nome.
+          </p>
+        </div>
       </div>
 
       {role !== "admin" ? (
@@ -540,7 +606,15 @@ function UserRow({
         <Button
           size="sm"
           disabled={busy}
-          onClick={() => run(() => onSavePerms(role, stateToPerms(perms)))}
+          onClick={() =>
+            run(() =>
+              onSavePerms(role, stateToPerms(perms), {
+                sigla,
+                cor_avatar: corAvatar,
+                cor_texto_avatar: corTextoAvatar,
+              }),
+            )
+          }
         >
           Salvar
         </Button>

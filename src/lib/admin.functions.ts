@@ -3,6 +3,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
 const roleSchema = z.enum(["admin", "gestor", "operador"]);
+const siglaSchema = z.string().trim().regex(/^[A-Za-z0-9]{0,3}$/);
+const corSchema = z.string().trim().regex(/^#[0-9a-fA-F]{6}$/);
 
 type Ctx = { supabase: any; userId: string };
 
@@ -36,7 +38,7 @@ export const listUsers = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = supabaseAdmin
       .from("profiles")
-      .select("id, nome, email, role, permissions, must_change_password, created_at")
+      .select("id, nome, email, role, permissions, must_change_password, created_at, sigla, cor_avatar, cor_texto_avatar")
       .order("created_at", { ascending: true });
     if (papel === "gestor") q = q.eq("role", "operador").neq("id", context.userId);
     const { data, error } = await q;
@@ -90,6 +92,9 @@ export const updatePermissions = createServerFn({ method: "POST" })
         userId: z.string().uuid(),
         role: roleSchema,
         permissions: z.array(z.string()),
+        sigla: siglaSchema.optional(),
+        cor_avatar: corSchema.nullable().optional(),
+        cor_texto_avatar: corSchema.nullable().optional(),
       })
       .parse(data),
   )
@@ -106,6 +111,15 @@ export const updatePermissions = createServerFn({ method: "POST" })
       .update({
         role: data.role,
         permissions: data.role === "admin" ? [] : data.permissions,
+        ...(data.sigla !== undefined
+          ? { sigla: data.sigla ? data.sigla.toUpperCase().slice(0, 3) : null }
+          : {}),
+        ...(data.cor_avatar !== undefined
+          ? { cor_avatar: data.cor_avatar ? data.cor_avatar.toLowerCase() : null }
+          : {}),
+        ...(data.cor_texto_avatar !== undefined
+          ? { cor_texto_avatar: data.cor_texto_avatar ? data.cor_texto_avatar.toLowerCase() : null }
+          : {}),
       })
       .eq("id", data.userId);
     if (error) throw error;
