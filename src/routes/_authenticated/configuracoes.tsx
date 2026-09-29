@@ -1,11 +1,27 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { KeyRound, Link2, MessageSquareQuote, Pencil, Plus, Trash2, UserPlus, X } from "lucide-react";
+import {
+  KeyRound,
+  LayoutGrid,
+  Link2,
+  MessageSquareQuote,
+  Pencil,
+  Plus,
+  Settings,
+  Sparkles,
+  Trash2,
+  UserPlus,
+  Users,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
+import { PainelEtiquetas } from "@/components/config/PainelEtiquetas";
+import { etiquetasQueryOptions, quadrosQueryOptions } from "@/lib/tarefas";
 import {
   PERMISSION_CATALOG,
   PRESETS,
@@ -69,6 +85,22 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
   }),
   component: Configuracoes,
 });
+
+type SecaoConfig = {
+  key: string;
+  label: string;
+  icone: LucideIcon;
+  subtitulo: string;
+  /** Quando definido, só estes papéis enxergam a seção. */
+  roles?: AppRole[];
+};
+
+const SECOES: SecaoConfig[] = [
+  { key: "geral", label: "Geral", icone: Settings, subtitulo: "Sua conta e um resumo do sistema." },
+  { key: "social", label: "Social", icone: Sparkles, subtitulo: "Frases de CTA e links usados nos stories." },
+  { key: "tarefas", label: "Tarefas", icone: LayoutGrid, subtitulo: "Etiquetas usadas nos cards de todos os quadros." },
+  { key: "usuarios", label: "Usuários e permissões", icone: Users, subtitulo: "Contas, papéis e permissões de acesso." },
+];
 
 type PermState = Record<string, "nenhum" | "edicao" | "leitura">;
 
@@ -184,6 +216,9 @@ function Configuracoes() {
   const [senha, setSenha] = useState("");
   const [role, setRole] = useState<AppRole>("operador");
   const [perms, setPerms] = useState<PermState>(permsToState([]));
+  const [secao, setSecao] = useState<string>(SECOES[0]!.key);
+  const { data: etiquetasAtivas } = useQuery(etiquetasQueryOptions);
+  const { data: quadrosAtivos } = useQuery(quadrosQueryOptions);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["users"] });
 
@@ -212,22 +247,85 @@ function Configuracoes() {
     );
   }
 
+  const secoesVisiveis = SECOES.filter((s) => !s.roles || (profile && s.roles.includes(profile.role)));
+  const secaoAtual = secoesVisiveis.find((s) => s.key === secao) ?? secoesVisiveis[0]!;
+  const contador = (key: string): number | null =>
+    key === "tarefas" ? (etiquetasAtivas?.length ?? null) : key === "usuarios" ? (usersQuery.data?.length ?? null) : null;
+
   return (
     <AppShell>
       <div className="space-y-5">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Configurações</h1>
           <p className="text-sm text-muted-foreground">
-            {isAdmin
-              ? "Usuários, permissões, frases de CTA e links dos stories."
-              : "Operadores, permissões, frases de CTA e links dos stories."}
+            {secaoAtual.key === "usuarios" && isGestor
+              ? "Operadores que você administra e suas permissões."
+              : secaoAtual.subtitulo}
           </p>
         </div>
 
-        <PainelCtas />
-        <PainelLinks />
+        <div className="flex flex-col gap-5 md:flex-row">
+          <nav className="flex shrink-0 gap-1 overflow-x-auto md:w-60 md:flex-col md:overflow-visible">
+            {secoesVisiveis.map((s) => {
+              const Icone = s.icone;
+              const n = contador(s.key);
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  onClick={() => setSecao(s.key)}
+                  className={cn(
+                    "flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-secondary",
+                    s.key === secaoAtual.key && "bg-primary-soft font-medium text-foreground",
+                  )}
+                >
+                  <Icone className="size-4 shrink-0" />
+                  <span className="flex-1 whitespace-nowrap">{s.label}</span>
+                  {n != null ? <span className="text-xs tabular-nums text-muted-foreground">{n}</span> : null}
+                </button>
+              );
+            })}
+          </nav>
 
-        {podeUsuarios ? (
+          <div className="min-w-0 flex-1 space-y-5">
+        {secaoAtual.key === "geral" ? (
+          <>
+            <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
+              <h2 className="text-base font-semibold">Minha conta</h2>
+              <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
+                <div><dt className="text-muted-foreground">Nome</dt><dd className="font-medium">{profile?.nome}</dd></div>
+                <div><dt className="text-muted-foreground">E-mail</dt><dd className="font-medium">{profile?.email}</dd></div>
+                <div><dt className="text-muted-foreground">Papel</dt><dd className="font-medium capitalize">{profile?.role}</dd></div>
+              </dl>
+              <Button asChild size="sm" variant="outline" className="mt-3 gap-1">
+                <Link to="/trocar-senha"><KeyRound className="size-4" /> Trocar minha senha</Link>
+              </Button>
+            </section>
+            <section className="grid gap-3 sm:grid-cols-3">
+              {[
+                { label: "Pessoas com acesso", valor: usersQuery.data?.length },
+                { label: "Quadros ativos", valor: quadrosAtivos?.length },
+                { label: "Etiquetas ativas", valor: etiquetasAtivas?.length },
+              ].map((r) => (
+                <div key={r.label} className="rounded-xl border border-border bg-card p-4 shadow-soft">
+                  <p className="text-2xl font-semibold tabular-nums">{r.valor ?? "—"}</p>
+                  <p className="text-sm text-muted-foreground">{r.label}</p>
+                </div>
+              ))}
+            </section>
+          </>
+        ) : null}
+
+        {secaoAtual.key === "social" ? (
+          <>
+            <PainelCtas />
+            <PainelLinks />
+          </>
+        ) : null}
+
+        {secaoAtual.key === "tarefas" ? <PainelEtiquetas /> : null}
+
+        {secaoAtual.key === "usuarios" && podeUsuarios ? (
           <>
             <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
               <h2 className="flex items-center gap-2 text-base font-semibold">
@@ -332,6 +430,8 @@ function Configuracoes() {
             </section>
           </>
         ) : null}
+          </div>
+        </div>
       </div>
     </AppShell>
   );
