@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -75,12 +75,14 @@ export function QuadroBoard({
   const [cards, setCards] = useState<Card[]>(dados.cards);
   const [ativo, setAtivo] = useState<{ type: "card" | "coluna"; id: string } | null>(null);
   const [colunaOrigem, setColunaOrigem] = useState<string | null>(null);
+  const [salvandoArraste, setSalvandoArraste] = useState(false);
+  const antesDoArraste = useRef<{ colunas: Coluna[]; cards: Card[] } | null>(null);
   useEffect(() => {
-    if (!ativo) {
+    if (!ativo && !salvandoArraste) {
       setColunas(dados.colunas);
       setCards(dados.cards);
     }
-  }, [dados, ativo]);
+  }, [dados, ativo, salvandoArraste]);
 
   const [busca, setBusca] = useState("");
   const [fResp, setFResp] = useState(TODOS);
@@ -140,8 +142,40 @@ export function QuadroBoard({
 
   function onStart(e: DragStartEvent) {
     const type = e.active.data.current?.["type"] as "card" | "coluna";
+    antesDoArraste.current = { colunas, cards };
     setAtivo({ type, id: String(e.active.id) });
     if (type === "card") setColunaOrigem(colunaDe(String(e.active.id)));
+  }
+
+  function cancelarArraste() {
+    const anterior = antesDoArraste.current;
+    if (anterior) {
+      setColunas(anterior.colunas);
+      setCards(anterior.cards);
+    }
+    antesDoArraste.current = null;
+    setColunaOrigem(null);
+    setAtivo(null);
+  }
+
+  async function salvarArraste(fn: () => Promise<void>) {
+    setSalvandoArraste(true);
+    try {
+      await fn();
+      await invalidar();
+      antesDoArraste.current = null;
+    } catch (e) {
+      const anterior = antesDoArraste.current;
+      if (anterior) {
+        setColunas(anterior.colunas);
+        setCards(anterior.cards);
+      }
+      toast.error((e as Error).message);
+      await invalidar();
+    } finally {
+      setColunaOrigem(null);
+      setSalvandoArraste(false);
+    }
   }
 
   function onOver(e: DragOverEvent) {
@@ -167,22 +201,31 @@ export function QuadroBoard({
 
   function onEnd(e: DragEndEvent) {
     const a = ativo;
-    setAtivo(null);
-    if (!a || !e.over) return;
+    if (!a || !e.over) {
+      cancelarArraste();
+      return;
+    }
     const overId = String(e.over.id);
 
     if (a.type === "coluna") {
       const de = colunas.findIndex((c) => c.id === a.id);
       const para = colunas.findIndex((c) => c.id === overId);
-      if (de < 0 || para < 0 || de === para) return;
+      if (de < 0 || para < 0 || de === para) {
+        cancelarArraste();
+        return;
+      }
       const nova = arrayMove(colunas, de, para);
       setColunas(nova);
-      rodar(() => reorderColunas(quadro.id, nova.map((c) => c.id)));
+      setAtivo(null);
+      void salvarArraste(() => reorderColunas(quadro.id, nova.map((c) => c.id)));
       return;
     }
 
     const colId = colunaDe(a.id);
-    if (!colId) return;
+    if (!colId) {
+      cancelarArraste();
+      return;
+    }
     let ordem = cards
       .filter((c) => c.coluna_id === colId)
       .sort((x, y) => x.posicao - y.posicao)
@@ -195,7 +238,8 @@ export function QuadroBoard({
       prev.map((c) => (ordem.includes(c.id) ? { ...c, posicao: ordem.indexOf(c.id) } : c)),
     );
     const origem = colunaOrigem;
-    rodar(async () => {
+    setAtivo(null);
+    void salvarArraste(async () => {
       await moverCard(a.id, colId, idx);
       if (origem && origem !== colId) {
         const n = (id: string) => colunas.find((c) => c.id === id)?.nome ?? "";
@@ -280,7 +324,7 @@ export function QuadroBoard({
           onDragStart={onStart}
           onDragOver={onOver}
           onDragEnd={onEnd}
-          onDragCancel={() => setAtivo(null)}
+          onDragCancel={cancelarArraste}
         >
           <div className="flex items-start gap-3">
             <SortableContext items={colunas.map((c) => c.id)} strategy={horizontalListSortingStrategy}>
@@ -340,7 +384,7 @@ export function QuadroBoard({
             ) : null}
           </div>
 
-          <DragOverlay>
+          <DragOverlay dropAnimation={null}>
             {cardArrastado ? (
               <div className="w-68">
                 <CardMini card={cardArrastado} etiquetas={etiquetas} pessoas={pessoas} arrastando />
