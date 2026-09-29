@@ -809,9 +809,13 @@ export function podeMexerNoCard(
 }
 
 export async function urlAnexo(path: string): Promise<string> {
-  const { data, error } = await supabase.storage.from("tarefas").createSignedUrl(path, 60);
+  // Baixa com a sessão atual (checada a cada vez) e gera um link local,
+  // que só existe nesta aba e não dá acesso ao arquivo depois de removido o acesso.
+  const { data, error } = await supabase.storage.from("tarefas").download(path);
   if (error) throw error;
-  return data.signedUrl;
+  const url = URL.createObjectURL(data);
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  return url;
 }
 
 export async function deleteAnexo(id: string, path: string): Promise<void> {

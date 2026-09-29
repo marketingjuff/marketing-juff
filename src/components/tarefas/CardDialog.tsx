@@ -197,7 +197,7 @@ export function CardDialog({
 
   async function abrirAnexo(path: string) {
     try {
-      window.open(await urlAnexo(path), "_blank", "noopener");
+      window.open(await urlAnexo(path), "_blank");
     } catch (e) {
       toast.error((e as Error).message);
     }

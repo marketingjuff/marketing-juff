@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { AlinhamentoTexto, Frame, Story } from "@/lib/stories";
@@ -175,8 +176,9 @@ export function proporcaoDoSvg(svg: string): number {
 }
 
 /** Troca o preenchimento do SVG pela cor escolhida. */
-export function svgColorido(svg: string, cor: string): string {
-  let out = svg
+export function svgColorido(svg: string, corEntrada: string): string {
+  const cor = /^#[0-9a-fA-F]{3,8}$/.test(corEntrada) ? corEntrada : "#000000";
+  let out = DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true, svgFilters: true } })
     .replace(/<\?xml[^>]*\?>/gi, "")
     .replace(/<!DOCTYPE[^>]*>/gi, "")
     .replace(/<!--[\s\S]*?-->/g, "");
