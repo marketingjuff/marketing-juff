@@ -8,3 +8,4 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+- Tarefas: acesso a quadro via funções `pode_ver_quadro/pode_editar_quadro(_quadro_id)` que usam auth.uid() internamente — nunca aceitar id de usuário vindo de fora (mesma regra das funções de papel).
