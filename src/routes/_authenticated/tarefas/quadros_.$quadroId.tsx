@@ -54,6 +54,7 @@ function QuadroPage() {
           editable={canEdit(profile, "tarefas.quadros")}
           isAdmin={profile?.role === "admin"}
           meuId={profile?.id ?? ""}
+          role={profile?.role}
         />
       ) : (
         <p className="text-sm text-muted-foreground">Carregando...</p>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Archive, ChevronDown, Download, Plus, Trash2, Upload, X } from "lucide-react";
+import { Archive, ChevronDown, Download, ExternalLink, Plus, Trash2, Upload, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -34,6 +34,8 @@ import {
   addItemChecklist,
   anexosQueryOptions,
   arquivarCard,
+  baixarAnexo,
+  podeMexerNoCard,
   checklistQueryOptions,
   comentariosQueryOptions,
   deleteAnexo,
@@ -76,6 +78,7 @@ export function CardDialog({
   editable,
   isAdmin,
   meuId,
+  role,
 }: {
   card: Card | null;
   open: boolean;
@@ -83,6 +86,7 @@ export function CardDialog({
   editable: boolean;
   isAdmin: boolean;
   meuId: string;
+  role?: string | undefined;
 }) {
   const qc = useQueryClient();
   const cardId = card?.id ?? "";
@@ -112,6 +116,10 @@ export function CardDialog({
   const [enviando, setEnviando] = useState(false);
   const [arrastandoArq, setArrastandoArq] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [localCard, setLocalCard] = useState<Card | null>(null);
+  useEffect(() => {
+    setLocalCard(card ?? null);
+  }, [card]);
 
   useEffect(() => {
     if (card) {
@@ -121,11 +129,19 @@ export function CardDialog({
   }, [card?.id, card?.titulo, card?.descricao]);
 
   if (!card) return null;
-  const c = card;
+  const c = localCard && localCard.id === card.id ? localCard : card;
+  const mexer = podeMexerNoCard(c, role, meuId, editable);
   const nomePessoa = (id: string | null) => pessoas.find((p) => p.id === id)?.nome ?? "Ninguém";
-  const invalidar = () => qc.invalidateQueries({ queryKey: ["tarefas", "quadro", c.quadro_id] });
+  const invalidar = () => {
+    void qc.invalidateQueries({ queryKey: ["tarefas", "quadro", c.quadro_id] });
+    void qc.invalidateQueries({ queryKey: ["tarefas", "anexos", c.id] });
+    void qc.invalidateQueries({ queryKey: ["tarefas", "checklist", c.id] });
+    void qc.invalidateQueries({ queryKey: ["tarefas", "comentarios", c.id] });
+    void qc.invalidateQueries({ queryKey: ["tarefas", "historico", c.id] });
+  };
 
   function aplicarLocal(muda: (c: Card) => Card) {
+    setLocalCard((atual) => (atual ? muda(atual) : atual));
     qc.setQueryData(["tarefas", "quadro", c.quadro_id], (old: QuadroCompleto | null | undefined) => {
       if (!old) return old;
       return { ...old, cards: old.cards.map((x) => (x.id === c.id ? muda(x) : x)) };
@@ -160,8 +176,10 @@ export function CardDialog({
   async function enviarArquivos(files: FileList | File[]) {
     setEnviando(true);
     try {
-      for (const f of Array.from(files)) await uploadAnexo(c.id, f);
-      await invalidar();
+      for (const f of Array.from(files)) {
+        await uploadAnexo(c.id, f);
+        invalidar();
+      }
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -169,7 +187,15 @@ export function CardDialog({
     }
   }
 
-  async function baixar(path: string) {
+  async function baixarArquivo(path: string, nome: string) {
+    try {
+      await baixarAnexo(path, nome);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function abrirAnexo(path: string) {
     try {
       window.open(await urlAnexo(path), "_blank", "noopener");
     } catch (e) {
@@ -189,7 +215,7 @@ export function CardDialog({
           <div className="min-w-0 space-y-5">
             <Input
               value={titulo}
-              disabled={!editable}
+              disabled={!mexer}
               className="border-transparent px-1 text-lg font-semibold shadow-none focus-visible:border-input"
               onChange={(e) => setTitulo(e.target.value)}
               onBlur={() => titulo !== c.titulo && salvar({ titulo })}
@@ -201,7 +227,7 @@ export function CardDialog({
                 rows={12}
                 className="min-h-[18rem] resize-y"
                 value={descricao}
-                disabled={!editable}
+                disabled={!mexer}
                 onChange={(e) => setDescricao(e.target.value)}
                 onBlur={() => descricao !== c.descricao && salvar({ descricao })}
               />
@@ -224,13 +250,13 @@ export function CardDialog({
                   <li key={i.id} className="group flex items-center gap-2 text-sm">
                     <Checkbox
                       checked={i.feito}
-                      disabled={!editable}
+                      disabled={!mexer}
                       onCheckedChange={(v) => rodar(() => toggleItemChecklist(i.id, !!v))}
                     />
                     <span className={cn("flex-1", i.feito && "text-muted-foreground line-through")}>
                       {i.texto}
                     </span>
-                    {editable ? (
+                    {mexer ? (
                       <button
                         type="button"
                         className="opacity-0 group-hover:opacity-100"
@@ -243,7 +269,7 @@ export function CardDialog({
                   </li>
                 ))}
               </ul>
-              {editable ? (
+              {mexer ? (
                 <form
                   className="flex gap-2"
                   onSubmit={(e) => {
@@ -269,7 +295,7 @@ export function CardDialog({
 
             <div className="space-y-2">
               <Label>Anexos</Label>
-              {editable ? (
+              {mexer ? (
                 <div
                   onDragOver={(e) => {
                     e.preventDefault();
@@ -306,10 +332,15 @@ export function CardDialog({
                   >
                     <span className="min-w-0 flex-1 truncate">{a.nome}</span>
                     <span className="text-xs text-muted-foreground">{formatarTamanho(a.tamanho)}</span>
-                    <Button size="icon" variant="ghost" className="size-7" aria-label="Baixar" onClick={() => baixar(a.path)}>
+                    <Button size="icon" variant="ghost" className="size-7" aria-label="Abrir no navegador"
+                      onClick={() => abrirAnexo(a.path)}>
+                      <ExternalLink className="size-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="size-7" aria-label="Baixar arquivo"
+                      onClick={() => baixarArquivo(a.path, a.nome)}>
                       <Download className="size-4" />
                     </Button>
-                    {editable ? (
+                    {mexer ? (
                       <Button
                         size="icon"
                         variant="ghost"
@@ -374,9 +405,12 @@ export function CardDialog({
 
           {/* Lateral */}
           <aside className="space-y-3 text-sm">
+            {editable && !mexer ? (
+              <p className="text-xs text-muted-foreground">Só o responsável mexe neste card.</p>
+            ) : null}
             <Campo label="Responsável">
               <Select
-                disabled={!editable}
+                disabled={!mexer}
                 value={c.responsavel_id ?? NENHUM}
                 onValueChange={(v) => {
                   const novo = v === NENHUM ? null : v;
@@ -393,18 +427,18 @@ export function CardDialog({
               </Select>
             </Campo>
             <Campo label="Data de início">
-              <Input type="date" className="h-8" disabled={!editable} value={c.data_inicio ?? ""}
+              <Input type="date" className="h-8" disabled={!mexer} value={c.data_inicio ?? ""}
                 onChange={(e) => salvar({ data_inicio: e.target.value || null })} />
             </Campo>
             <Campo label="Data de entrega">
-              <Input type="date" className="h-8" disabled={!editable} value={c.data_entrega ?? ""}
+              <Input type="date" className="h-8" disabled={!mexer} value={c.data_entrega ?? ""}
                 onChange={(e) => {
                   const v = e.target.value || null;
                   salvar({ data_entrega: v }, ["Mudou entrega", `${formatarData(c.data_entrega) || "sem data"} → ${formatarData(v) || "sem data"}`]);
                 }} />
             </Campo>
             <Campo label="Prioridade">
-              <Select disabled={!editable} value={c.prioridade ?? NENHUM}
+              <Select disabled={!mexer} value={c.prioridade ?? NENHUM}
                 onValueChange={(v) => salvar({ prioridade: v === NENHUM ? null : (v as Card["prioridade"]) })}>
                 <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -414,7 +448,7 @@ export function CardDialog({
               </Select>
             </Campo>
             <Campo label="Esforço">
-              <Select disabled={!editable} value={c.esforco ?? NENHUM}
+              <Select disabled={!mexer} value={c.esforco ?? NENHUM}
                 onValueChange={(v) => salvar({ esforco: v === NENHUM ? null : (v as Card["esforco"]) })}>
                 <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -431,7 +465,7 @@ export function CardDialog({
                     <button
                       key={e.id}
                       type="button"
-                      disabled={!editable}
+                      disabled={!mexer}
                       onClick={() => {
                         const novas = on ? c.etiquetas.filter((x) => x !== e.id) : [...c.etiquetas, e.id];
                         rodar(
@@ -452,15 +486,15 @@ export function CardDialog({
               </div>
             </Campo>
             <Campo label="Adiar até">
-              <Input type="date" className="h-8" disabled={!editable} value={c.adiado_ate ?? ""}
+              <Input type="date" className="h-8" disabled={!mexer} value={c.adiado_ate ?? ""}
                 onChange={(e) => salvar({ adiado_ate: e.target.value || null })} />
             </Campo>
             <Campo label="Depende de">
-              <Input className="h-8" disabled={!editable} defaultValue={c.depende_de} key={`dep-${c.id}`}
+              <Input className="h-8" disabled={!mexer} defaultValue={c.depende_de} key={`dep-${c.id}`}
                 onBlur={(e) => e.target.value !== c.depende_de && salvar({ depende_de: e.target.value })} />
             </Campo>
             <Campo label="Link externo">
-              <Input className="h-8" disabled={!editable} defaultValue={c.link_externo} key={`lnk-${c.id}`}
+              <Input className="h-8" disabled={!mexer} defaultValue={c.link_externo} key={`lnk-${c.id}`}
                 placeholder="https://"
                 onBlur={(e) => e.target.value !== c.link_externo && salvar({ link_externo: e.target.value })} />
               {c.link_externo ? (
@@ -470,7 +504,7 @@ export function CardDialog({
               ) : null}
             </Campo>
             <Campo label="Quadro">
-              <Select disabled={!editable} value={quadroSel} onValueChange={setQuadroSel}>
+              <Select disabled={!mexer} value={quadroSel} onValueChange={setQuadroSel}>
                 <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {quadros.map((q) => <SelectItem key={q.id} value={q.id}>{q.nome}</SelectItem>)}
@@ -479,7 +513,7 @@ export function CardDialog({
             </Campo>
             <Campo label="Coluna">
               <Select
-                disabled={!editable || colunasDestino.length === 0}
+                disabled={!mexer || colunasDestino.length === 0}
                 value={quadroSel === c.quadro_id ? c.coluna_id : ""}
                 onValueChange={(v) => {
                   const origem = quadroSel === c.quadro_id ? colunasDestino.find((x) => x.id === c.coluna_id)?.nome : "outro quadro";
@@ -497,7 +531,7 @@ export function CardDialog({
               </Select>
             </Campo>
 
-            {editable ? (
+            {mexer ? (
               <div className="space-y-2 border-t border-border pt-3">
                 <Button
                   variant="outline"

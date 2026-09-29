@@ -50,6 +50,13 @@
       "when": 1790720835726,
       "tag": "0006_restringe_leitura_cadastros_stories",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790721024374,
+      "tag": "0007_permissao_card_vs_quadro",
+      "breakpoints": true
     }
   ]
 }
