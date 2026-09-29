@@ -86,7 +86,7 @@ export function CardDialog({
   editable: boolean;
   isAdmin: boolean;
   meuId: string;
-  role?: string;
+  role?: string | undefined;
 }) {
   const qc = useQueryClient();
   const cardId = card?.id ?? "";

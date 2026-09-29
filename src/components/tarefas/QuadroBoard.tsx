@@ -70,7 +70,7 @@ export function QuadroBoard({
   editable: boolean;
   isAdmin: boolean;
   meuId: string;
-  role?: string;
+  role?: string | undefined;
 }) {
   const qc = useQueryClient();
   const estruturar = podeEstruturar(role, editable);
