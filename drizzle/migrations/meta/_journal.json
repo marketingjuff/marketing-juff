@@ -43,6 +43,13 @@
       "when": 1790716516507,
       "tag": "0005_tarefa_quadro_atalhos",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790720835726,
+      "tag": "0006_restringe_leitura_cadastros_stories",
+      "breakpoints": true
     }
   ]
 }
