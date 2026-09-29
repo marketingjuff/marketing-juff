@@ -850,6 +850,10 @@ export type Database = {
       pode_ver_card: { Args: { _card_id: string }; Returns: boolean }
       pode_ver_quadro: { Args: { _quadro_id: string }; Returns: boolean }
       recalc_story_status: { Args: { _story_id: string }; Returns: undefined }
+      tarefa_reordenar_cards: {
+        Args: { _coluna_id: string; _ids: string[] }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "gestor" | "operador"
