@@ -199,7 +199,6 @@ export function CardDialog({
               <Label>Descrição</Label>
               <Textarea
                 rows={12}
-                min-h-[18rem]
                 className="min-h-[18rem] resize-y"
                 value={descricao}
                 disabled={!editable}
