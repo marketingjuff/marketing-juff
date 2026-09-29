@@ -1,4 +1,5 @@
-import { Link, useRouter } from "@tanstack/react-router";
+import { Link, useRouter, useRouterState } from "@tanstack/react-router";
+import { BarraAtalhos } from "@/components/tarefas/BarraAtalhos";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { LogOut, Settings, User } from "lucide-react";
 import type { ReactNode } from "react";
@@ -29,6 +30,9 @@ export function AppShell({
   const larguraClasse = largura === "ampla" ? "max-w-[110rem]" : "max-w-7xl";
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
   const router = useRouter();
+  const caminho = useRouterState({ select: (s) => s.location.pathname });
+  const emTarefas = caminho.startsWith("/tarefas");
+  const podeQuadros = hasPermission(profile, "tarefas.quadros");
 
   const canOpenSettings = profile?.role === "admin" || profile?.role === "gestor";
 
@@ -156,6 +160,12 @@ export function AppShell({
             })}
           </ul>
         </div>
+
+        {emTarefas && podeQuadros ? (
+          <div className={cn("mx-auto border-t border-border px-4", larguraClasse)}>
+            <BarraAtalhos />
+          </div>
+        ) : null}
       </header>
 
 
