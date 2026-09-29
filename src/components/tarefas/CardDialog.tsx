@@ -55,6 +55,7 @@ import {
   urlAnexo,
   type Card,
   type CardUpdate,
+  type QuadroCompleto,
 } from "@/lib/tarefas";
 
 const NENHUM = "__nenhum__";
@@ -122,23 +123,36 @@ export function CardDialog({
   if (!card) return null;
   const c = card;
   const nomePessoa = (id: string | null) => pessoas.find((p) => p.id === id)?.nome ?? "Ninguém";
-  const invalidar = () => qc.invalidateQueries({ queryKey: ["tarefas"] });
+  const invalidar = () => qc.invalidateQueries({ queryKey: ["tarefas", "quadro", c.quadro_id] });
+
+  function aplicarLocal(muda: (c: Card) => Card) {
+    qc.setQueryData(["tarefas", "quadro", c.quadro_id], (old: QuadroCompleto | null | undefined) => {
+      if (!old) return old;
+      return { ...old, cards: old.cards.map((x) => (x.id === c.id ? muda(x) : x)) };
+    });
+  }
 
   async function salvar(values: CardUpdate, hist?: [string, string]) {
+    const antes = c;
+    aplicarLocal((x) => ({ ...x, ...values }) as Card);
     try {
       await updateCard(c.id, values);
-      if (hist) await registrarHistorico(c.id, hist[0], hist[1]);
-      await invalidar();
+      if (hist) void registrarHistorico(c.id, hist[0], hist[1]);
+      void invalidar();
     } catch (e) {
+      aplicarLocal(() => antes);
       toast.error((e as Error).message);
     }
   }
 
-  async function rodar(fn: () => Promise<void>) {
+  async function rodar(fn: () => Promise<void>, local?: (c: Card) => Card) {
+    const antes = c;
+    if (local) aplicarLocal(local);
     try {
       await fn();
-      await invalidar();
+      void invalidar();
     } catch (e) {
+      if (local) aplicarLocal(() => antes);
       toast.error((e as Error).message);
     }
   }
@@ -417,11 +431,13 @@ export function CardDialog({
                       key={e.id}
                       type="button"
                       disabled={!editable}
-                      onClick={() =>
-                        rodar(() =>
-                          setEtiquetasDoCard(c.id, on ? c.etiquetas.filter((x) => x !== e.id) : [...c.etiquetas, e.id]),
-                        )
-                      }
+                      onClick={() => {
+                        const novas = on ? c.etiquetas.filter((x) => x !== e.id) : [...c.etiquetas, e.id];
+                        rodar(
+                          () => setEtiquetasDoCard(c.id, novas),
+                          (card) => ({ ...card, etiquetas: novas }),
+                        );
+                      }}
                       className={cn(
                         "rounded px-1.5 py-0.5 text-[11px] transition-opacity",
                         on ? "text-primary-foreground" : "opacity-40",

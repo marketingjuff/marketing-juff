@@ -8,6 +8,13 @@
       "when": 1790706392171,
       "tag": "0000_modulo_tarefas",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790712653068,
+      "tag": "0001_tarefa_reordenar_cards",
+      "breakpoints": true
     }
   ]
 }

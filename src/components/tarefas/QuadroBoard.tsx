@@ -98,7 +98,9 @@ export function QuadroBoard({
   const [novaColuna, setNovaColuna] = useState("");
   const [reorganizando, setReorganizando] = useState<string | null>(null);
 
-  const invalidar = () => qc.invalidateQueries({ queryKey: ["tarefas"] });
+  const invalidar = () => qc.invalidateQueries({ queryKey: ["tarefas", "quadro", quadro.id] });
+  const atualRef = useRef({ colunas, cards });
+  atualRef.current = { colunas, cards };
 
   async function reorganizarColuna(colId: string, criterio: CriterioOrdem, dec: boolean) {
     const daColuna = cards.filter((c) => c.coluna_id === colId && !c.arquivado);
@@ -134,7 +136,7 @@ export function QuadroBoard({
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
-      await invalidar();
+      void invalidar();
     }
   }
 
@@ -196,7 +198,11 @@ export function QuadroBoard({
     setSalvandoArraste(true);
     try {
       await fn();
-      await invalidar();
+      // Confirma no cache o estado local já exibido, para não piscar enquanto a recarga roda atrás.
+      qc.setQueryData(["tarefas", "quadro", quadro.id], (old: QuadroCompleto | null | undefined) =>
+        old ? { ...old, colunas: atualRef.current.colunas, cards: atualRef.current.cards } : old,
+      );
+      void invalidar();
       antesDoArraste.current = null;
     } catch (e) {
       const anterior = antesDoArraste.current;
@@ -205,7 +211,7 @@ export function QuadroBoard({
         setCards(anterior.cards);
       }
       toast.error((e as Error).message);
-      await invalidar();
+      void invalidar();
     } finally {
       setColunaOrigem(null);
       setSalvandoArraste(false);
@@ -273,11 +279,19 @@ export function QuadroBoard({
     );
     const origem = colunaOrigem;
     setAtivo(null);
+    const restantesOrigem =
+      origem && origem !== colId
+        ? cards
+            .filter((c) => c.coluna_id === origem && c.id !== a.id && !c.arquivado)
+            .sort((x, y) => x.posicao - y.posicao)
+            .map((c) => c.id)
+        : [];
     void salvarArraste(async () => {
       await moverCard(a.id, colId, idx);
       if (origem && origem !== colId) {
+        await reorderCards(origem, restantesOrigem);
         const n = (id: string) => colunas.find((c) => c.id === id)?.nome ?? "";
-        await registrarHistorico(a.id, "Moveu", `${n(origem)} → ${n(colId)}`);
+        void registrarHistorico(a.id, "Moveu", `${n(origem)} → ${n(colId)}`);
       }
     });
   }
