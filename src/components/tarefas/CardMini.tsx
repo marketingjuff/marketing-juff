@@ -7,7 +7,7 @@ import {
   estaAdiado,
   estaAtrasado,
   formatarData,
-  iniciais,
+  siglaPessoa,
   venceAmanha,
   venceHoje,
   type Card,
@@ -114,10 +114,18 @@ export function CardMini({
         ) : null}
         {resp ? (
           <span
-            className="ml-auto flex size-5 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground"
+            className={cn(
+              "ml-auto flex size-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold leading-none tracking-tight",
+              !resp.cor_avatar && "bg-primary text-primary-foreground",
+            )}
+            style={
+              resp.cor_avatar
+                ? { backgroundColor: resp.cor_avatar, color: resp.cor_texto_avatar ?? "#ffffff" }
+                : undefined
+            }
             title={resp.nome}
           >
-            {iniciais(resp.nome)}
+            {siglaPessoa(resp)}
           </span>
         ) : null}
       </div>

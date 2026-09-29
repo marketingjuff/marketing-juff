@@ -57,7 +57,14 @@ export type Card = {
 
 export type CardComContexto = Card & { quadro_nome: string; coluna_nome: string };
 
-export type Pessoa = { id: string; nome: string; role: string };
+export type Pessoa = {
+  id: string;
+  nome: string;
+  role: string;
+  sigla: string | null;
+  cor_avatar: string | null;
+  cor_texto_avatar: string | null;
+};
 
 export const PRIORIDADES: { valor: Prioridade; label: string; cor: string }[] = [
   { valor: "baixa", label: "Baixa", cor: "#888780" },
@@ -200,7 +207,7 @@ export const pessoasQueryOptions = queryOptions({
   queryFn: async (): Promise<Pessoa[]> => {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, nome, role")
+      .select("id, nome, role, sigla, cor_avatar, cor_texto_avatar")
       .order("nome", { ascending: true });
     if (error) throw error;
     return (data ?? []) as Pessoa[];
@@ -856,6 +863,22 @@ export function iniciais(nome: string): string {
     .slice(0, 2)
     .map((p) => p[0]?.toUpperCase())
     .join("");
+}
+
+/** Sigla de até três caracteres mostrada na bolinha do responsável.
+ *  Usa a sigla escolhida em Configurações. Sem sigla, deriva do nome. */
+export function siglaPessoa(pessoa: { nome: string; sigla?: string | null }): string {
+  const manual = (pessoa.sigla ?? "").trim().toUpperCase();
+  if (manual) return manual.slice(0, 3);
+
+  const partes = pessoa.nome.trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return "?";
+
+  const letras = partes.slice(0, 3).map((p) => p[0]!.toUpperCase()).join("");
+  if (letras.length >= 3) return letras.slice(0, 3);
+
+  const ultimo = (partes[partes.length - 1] ?? "").toUpperCase();
+  return (letras + ultimo.slice(1)).slice(0, 3) || "?";
 }
 
 export function formatarTamanho(bytes: number): string {

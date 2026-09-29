@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          cor_avatar: string | null
+          cor_texto_avatar: string | null
           created_at: string
           email: string
           id: string
@@ -23,8 +25,11 @@ export type Database = {
           nome: string
           permissions: string[]
           role: Database["public"]["Enums"]["app_role"]
+          sigla: string | null
         }
         Insert: {
+          cor_avatar?: string | null
+          cor_texto_avatar?: string | null
           created_at?: string
           email?: string
           id: string
@@ -32,8 +37,11 @@ export type Database = {
           nome?: string
           permissions?: string[]
           role?: Database["public"]["Enums"]["app_role"]
+          sigla?: string | null
         }
         Update: {
+          cor_avatar?: string | null
+          cor_texto_avatar?: string | null
           created_at?: string
           email?: string
           id?: string
@@ -41,6 +49,7 @@ export type Database = {
           nome?: string
           permissions?: string[]
           role?: Database["public"]["Enums"]["app_role"]
+          sigla?: string | null
         }
         Relationships: []
       }
