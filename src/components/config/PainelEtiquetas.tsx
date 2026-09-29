@@ -94,6 +94,7 @@ function SeletorCor({
 }
 
 function LinhaEtiqueta({ etiqueta, podeEditar, onChanged }: { etiqueta: Etiqueta; podeEditar: boolean; onChanged: () => void }) {
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id: etiqueta.id });
   const [editando, setEditando] = useState(false);
   const [nome, setNome] = useState(etiqueta.nome);
   const [cor, setCor] = useState(etiqueta.cor);
@@ -148,7 +149,21 @@ function LinhaEtiqueta({ etiqueta, podeEditar, onChanged }: { etiqueta: Etiqueta
   }
 
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-border px-2 py-1.5">
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={cn("flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5", isDragging && "z-10 opacity-80 shadow-md")}
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        disabled={!podeEditar}
+        aria-label="Arrastar para reordenar"
+        className={cn("shrink-0 cursor-grab touch-none text-muted-foreground", !podeEditar && "cursor-not-allowed opacity-40")}
+      >
+        <GripVertical className="size-4" />
+      </button>
       <span className="size-4 shrink-0 rounded" style={{ backgroundColor: etiqueta.cor }} />
       <span className="min-w-0 flex-1 truncate text-sm">{etiqueta.nome}</span>
       <Button size="icon" variant="ghost" className="size-7" disabled={!podeEditar} onClick={() => setEditando(true)} aria-label="Editar etiqueta">
