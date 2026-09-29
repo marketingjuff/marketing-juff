@@ -171,10 +171,12 @@ function Configuracoes() {
   const setPassword = useServerFn(setUserPassword);
   const removeUser = useServerFn(deleteUser);
 
+  const isGestor = profile?.role === "gestor";
+  const podeUsuarios = isAdmin || isGestor;
   const usersQuery = useQuery({
     queryKey: ["users"],
     queryFn: () => fetchUsers({ data: undefined }),
-    enabled: isAdmin,
+    enabled: podeUsuarios,
   });
 
   const [nome, setNome] = useState("");
@@ -218,14 +220,14 @@ function Configuracoes() {
           <p className="text-sm text-muted-foreground">
             {isAdmin
               ? "Usuários, permissões, frases de CTA e links dos stories."
-              : "Frases de CTA e links dos stories. A seção de usuários é visível apenas para admin."}
+              : "Operadores, permissões, frases de CTA e links dos stories."}
           </p>
         </div>
 
         <PainelCtas />
         <PainelLinks />
 
-        {isAdmin ? (
+        {podeUsuarios ? (
           <>
             <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
               <h2 className="flex items-center gap-2 text-base font-semibold">
@@ -270,20 +272,24 @@ function Configuracoes() {
                   </div>
                   <div className="space-y-1.5">
                     <Label>Papel</Label>
-                    <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
+                    <Select
+                      value={isGestor ? "operador" : role}
+                      disabled={isGestor}
+                      onValueChange={(v) => setRole(v as AppRole)}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="gestor">Gestor</SelectItem>
+                        {isAdmin ? <SelectItem value="admin">Admin</SelectItem> : null}
+                        {isAdmin ? <SelectItem value="gestor">Gestor</SelectItem> : null}
                         <SelectItem value="operador">Operador</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
-                {role !== "admin" ? (
+                {role !== "admin" || isGestor ? (
                   <PermissionPanel state={perms} onChange={setPerms} />
                 ) : (
                   <p className="text-xs text-muted-foreground">
@@ -298,10 +304,13 @@ function Configuracoes() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-base font-semibold">Contas do sistema</h2>
+              <h2 className="text-base font-semibold">
+                {isGestor ? "Operadores" : "Contas do sistema"}
+              </h2>
               {(usersQuery.data ?? []).map((user) => (
                 <UserRow
                   key={user.id}
+                  travarOperador={isGestor}
                   user={user}
                   onSavePerms={async (nextRole, permissions) => {
                     await updatePerms({ data: { userId: user.id, role: nextRole, permissions } });
