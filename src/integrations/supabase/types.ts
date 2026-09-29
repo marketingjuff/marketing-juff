@@ -695,6 +695,7 @@ export type Database = {
           created_at: string
           id: string
           nome: string
+          posicao: number
         }
         Insert: {
           arquivado?: boolean
@@ -702,6 +703,7 @@ export type Database = {
           created_at?: string
           id?: string
           nome: string
+          posicao?: number
         }
         Update: {
           arquivado?: boolean
@@ -709,6 +711,7 @@ export type Database = {
           created_at?: string
           id?: string
           nome?: string
+          posicao?: number
         }
         Relationships: []
       }
@@ -852,6 +855,10 @@ export type Database = {
       recalc_story_status: { Args: { _story_id: string }; Returns: undefined }
       tarefa_reordenar_cards: {
         Args: { _coluna_id: string; _ids: string[] }
+        Returns: undefined
+      }
+      tarefa_reordenar_etiquetas: {
+        Args: { _ids: string[] }
         Returns: undefined
       }
     }
