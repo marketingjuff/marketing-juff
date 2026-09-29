@@ -6,7 +6,16 @@ import { toast } from "sonner";
 import { KeyRound, Link2, MessageSquareQuote, Pencil, Plus, Trash2, UserPlus, X } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
-import { PERMISSION_CATALOG, READONLY_SUFFIX } from "@/config/navigation";
+import {
+  PERMISSION_CATALOG,
+  PRESETS,
+  gruposDePermissao,
+  niveisPermissoes,
+  permissoesDoGrupo,
+  serializarPermissao,
+  type NivelAcesso,
+} from "@/config/navigation";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { profileQueryOptions, type AppRole } from "@/lib/auth";
 import {
   createUser,
@@ -64,11 +73,11 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
 type PermState = Record<string, "nenhum" | "edicao" | "leitura">;
 
 function permsToState(permissions: string[]): PermState {
+  const niveis = niveisPermissoes(permissions);
   const state: PermState = {};
   for (const item of PERMISSION_CATALOG) {
-    if (permissions.includes(item.key)) state[item.key] = "edicao";
-    else if (permissions.includes(`${item.key}${READONLY_SUFFIX}`)) state[item.key] = "leitura";
-    else state[item.key] = "nenhum";
+    const nivel = niveis.get(item.key);
+    state[item.key] = nivel ?? "nenhum";
   }
   return state;
 }
@@ -76,7 +85,7 @@ function permsToState(permissions: string[]): PermState {
 function stateToPerms(state: PermState): string[] {
   return Object.entries(state)
     .filter(([, value]) => value !== "nenhum")
-    .map(([key, value]) => (value === "edicao" ? key : `${key}${READONLY_SUFFIX}`));
+    .map(([key, value]) => serializarPermissao(key, value as NivelAcesso));
 }
 
 function PermissionPanel({
@@ -87,42 +96,66 @@ function PermissionPanel({
   onChange: (next: PermState) => void;
 }) {
   return (
-    <div className="space-y-2 rounded-lg border border-border bg-secondary/40 p-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Permissões por aba
-      </p>
-      {PERMISSION_CATALOG.map((item) => {
-        const value = state[item.key] ?? "nenhum";
-        return (
-          <div key={item.key} className="flex flex-wrap items-center gap-3">
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
-                checked={value !== "nenhum"}
-                onCheckedChange={(checked) =>
-                  onChange({ ...state, [item.key]: checked ? "edicao" : "nenhum" })
-                }
-              />
-              {item.label}
-            </label>
-            {value !== "nenhum" ? (
-              <Select
-                value={value}
-                onValueChange={(next) =>
-                  onChange({ ...state, [item.key]: next as PermState[string] })
-                }
-              >
-                <SelectTrigger className="h-8 w-36 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="edicao">Edição</SelectItem>
-                  <SelectItem value="leitura">Só leitura</SelectItem>
-                </SelectContent>
-              </Select>
-            ) : null}
-          </div>
-        );
-      })}
+    <div className="space-y-3 rounded-lg border border-border bg-secondary/40 p-3">
+      <div className="space-y-1.5">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Presets
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => onChange(permsToState(preset.permissoes))}
+              className="rounded-lg border border-border bg-card px-3 py-1.5 text-left transition-colors hover:border-primary"
+            >
+              <span className="block text-sm font-medium">{preset.label}</span>
+              <span className="block text-[11px] text-muted-foreground">{preset.descricao}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {gruposDePermissao().map((grupo) => (
+        <div key={grupo} className="space-y-1.5">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {grupo}
+          </p>
+          {permissoesDoGrupo(grupo).map((item) => {
+            const value = state[item.key] ?? "nenhum";
+            const opcoes: { v: PermState[string]; label: string }[] = item.nivelConfiguravel
+              ? [
+                  { v: "nenhum", label: "Sem acesso" },
+                  { v: "leitura", label: "Somente leitura" },
+                  { v: "edicao", label: "Edição" },
+                ]
+              : [
+                  { v: "nenhum", label: "Sem acesso" },
+                  { v: "edicao", label: "Edição" },
+                ];
+            return (
+              <div key={item.key} className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-sm">{item.label}</span>
+                <ToggleGroup
+                  type="single"
+                  size="sm"
+                  variant="outline"
+                  value={value === "leitura" && !item.nivelConfiguravel ? "edicao" : value}
+                  onValueChange={(v) => {
+                    if (v) onChange({ ...state, [item.key]: v as PermState[string] });
+                  }}
+                >
+                  {opcoes.map((o) => (
+                    <ToggleGroupItem key={o.v} value={o.v} className="h-7 px-2 text-xs">
+                      {o.label}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 }
