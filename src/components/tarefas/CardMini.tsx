@@ -1,0 +1,116 @@
+import { CheckCircle2, CheckSquare, Clock, MessageSquare, Paperclip, Pause, Flag } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  DIAS_PARADO_ALERTA,
+  PRIORIDADES,
+  diasParado,
+  estaAdiado,
+  estaAtrasado,
+  formatarData,
+  iniciais,
+  venceAmanha,
+  venceHoje,
+  type Card,
+  type Etiqueta,
+  type Pessoa,
+} from "@/lib/tarefas";
+
+export function CardMini({
+  card,
+  etiquetas,
+  pessoas,
+  onClick,
+  arrastando = false,
+}: {
+  card: Card;
+  etiquetas: Map<string, Etiqueta>;
+  pessoas: Map<string, Pessoa>;
+  onClick?: () => void;
+  arrastando?: boolean;
+}) {
+  const atrasado = estaAtrasado(card);
+  const breve = venceHoje(card) || venceAmanha(card);
+  const parado = !card.concluido ? diasParado(card.coluna_desde) : 0;
+  const adiado = estaAdiado(card);
+  const prio = PRIORIDADES.find((p) => p.valor === card.prioridade);
+  const resp = card.responsavel_id ? pessoas.get(card.responsavel_id) : undefined;
+  const tags = card.etiquetas.map((id) => etiquetas.get(id)).filter(Boolean) as Etiqueta[];
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "block w-full rounded-lg border border-border bg-card p-2 text-left shadow-soft transition-shadow hover:shadow-md",
+        (adiado || card.concluido) && "opacity-60",
+        arrastando && "rotate-1 shadow-lg",
+      )}
+    >
+      {tags.length > 0 ? (
+        <div className="mb-1.5 flex flex-wrap gap-1">
+          {tags.map((t) => (
+            <span
+              key={t.id}
+              className="h-1.5 w-8 rounded-full"
+              style={{ backgroundColor: t.cor }}
+              title={t.nome}
+            />
+          ))}
+        </div>
+      ) : null}
+      <p className="flex items-start gap-1 text-sm leading-snug">
+        {card.concluido ? <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-success" /> : null}
+        <span className="break-words">{card.titulo || "Sem título"}</span>
+      </p>
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+        {card.data_entrega ? (
+          <span
+            className={cn(
+              "rounded px-1",
+              atrasado && "bg-destructive/15 font-medium text-destructive",
+              !atrasado && breve && "bg-warning/25 font-medium text-foreground",
+            )}
+          >
+            {formatarData(card.data_entrega)}
+          </span>
+        ) : null}
+        {prio ? (
+          <span className="flex items-center gap-0.5" title={`Prioridade ${prio.label}`}>
+            <Flag className="size-3" style={{ color: prio.cor }} />
+          </span>
+        ) : null}
+        {card.checklist_total > 0 ? (
+          <span className="flex items-center gap-0.5">
+            <CheckSquare className="size-3" />
+            {card.checklist_feitos}/{card.checklist_total}
+          </span>
+        ) : null}
+        {card.comentarios_total > 0 ? (
+          <span className="flex items-center gap-0.5">
+            <MessageSquare className="size-3" />
+            {card.comentarios_total}
+          </span>
+        ) : null}
+        {card.anexos_total > 0 ? <Paperclip className="size-3" /> : null}
+        {parado > DIAS_PARADO_ALERTA ? (
+          <span className="flex items-center gap-0.5 text-warning-foreground" title="Dias parado nesta coluna">
+            <Clock className="size-3" /> {parado}d parado
+          </span>
+        ) : null}
+        {adiado ? (
+          <span className="flex items-center gap-0.5">
+            <Pause className="size-3" /> até {formatarData(card.adiado_ate)}
+          </span>
+        ) : null}
+        {resp ? (
+          <span
+            className="ml-auto flex size-5 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground"
+            title={resp.nome}
+          >
+            {iniciais(resp.nome)}
+          </span>
+        ) : null}
+      </div>
+    </button>
+  );
+}

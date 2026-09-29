@@ -394,6 +394,446 @@ export type Database = {
         }
         Relationships: []
       }
+      tarefa_anexos: {
+        Row: {
+          card_id: string
+          created_at: string
+          enviado_por: string | null
+          id: string
+          nome: string
+          path: string
+          tamanho: number
+          tipo: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          enviado_por?: string | null
+          id?: string
+          nome?: string
+          path: string
+          tamanho?: number
+          tipo?: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          enviado_por?: string | null
+          id?: string
+          nome?: string
+          path?: string
+          tamanho?: number
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_anexos_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefa_anexos_enviado_por_fkey"
+            columns: ["enviado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarefa_card_etiquetas: {
+        Row: {
+          card_id: string
+          etiqueta_id: string
+        }
+        Insert: {
+          card_id: string
+          etiqueta_id: string
+        }
+        Update: {
+          card_id?: string
+          etiqueta_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_card_etiquetas_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefa_card_etiquetas_etiqueta_id_fkey"
+            columns: ["etiqueta_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_etiquetas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarefa_cards: {
+        Row: {
+          adiado_ate: string | null
+          arquivado: boolean
+          coluna_desde: string
+          coluna_id: string
+          concluido: boolean
+          concluido_em: string | null
+          created_at: string
+          criado_por: string | null
+          data_entrega: string | null
+          data_inicio: string | null
+          depende_de: string
+          descricao: string
+          esforco: string | null
+          id: string
+          link_externo: string
+          posicao: number
+          prioridade: string | null
+          quadro_id: string
+          responsavel_id: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          adiado_ate?: string | null
+          arquivado?: boolean
+          coluna_desde?: string
+          coluna_id: string
+          concluido?: boolean
+          concluido_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data_entrega?: string | null
+          data_inicio?: string | null
+          depende_de?: string
+          descricao?: string
+          esforco?: string | null
+          id?: string
+          link_externo?: string
+          posicao?: number
+          prioridade?: string | null
+          quadro_id: string
+          responsavel_id?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Update: {
+          adiado_ate?: string | null
+          arquivado?: boolean
+          coluna_desde?: string
+          coluna_id?: string
+          concluido?: boolean
+          concluido_em?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data_entrega?: string | null
+          data_inicio?: string | null
+          depende_de?: string
+          descricao?: string
+          esforco?: string | null
+          id?: string
+          link_externo?: string
+          posicao?: number
+          prioridade?: string | null
+          quadro_id?: string
+          responsavel_id?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_cards_coluna_id_fkey"
+            columns: ["coluna_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_colunas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefa_cards_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefa_cards_quadro_id_fkey"
+            columns: ["quadro_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_quadros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefa_cards_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarefa_checklist: {
+        Row: {
+          card_id: string
+          created_at: string
+          feito: boolean
+          id: string
+          posicao: number
+          texto: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          feito?: boolean
+          id?: string
+          posicao?: number
+          texto?: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          feito?: boolean
+          id?: string
+          posicao?: number
+          texto?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_checklist_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarefa_colunas: {
+        Row: {
+          arquivado: boolean
+          conclui: boolean
+          created_at: string
+          id: string
+          limite_wip: number | null
+          nome: string
+          posicao: number
+          quadro_id: string
+        }
+        Insert: {
+          arquivado?: boolean
+          conclui?: boolean
+          created_at?: string
+          id?: string
+          limite_wip?: number | null
+          nome?: string
+          posicao?: number
+          quadro_id: string
+        }
+        Update: {
+          arquivado?: boolean
+          conclui?: boolean
+          created_at?: string
+          id?: string
+          limite_wip?: number | null
+          nome?: string
+          posicao?: number
+          quadro_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_colunas_quadro_id_fkey"
+            columns: ["quadro_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_quadros"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarefa_comentarios: {
+        Row: {
+          autor_id: string | null
+          card_id: string
+          created_at: string
+          id: string
+          texto: string
+        }
+        Insert: {
+          autor_id?: string | null
+          card_id: string
+          created_at?: string
+          id?: string
+          texto?: string
+        }
+        Update: {
+          autor_id?: string | null
+          card_id?: string
+          created_at?: string
+          id?: string
+          texto?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_comentarios_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefa_comentarios_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarefa_etiquetas: {
+        Row: {
+          arquivado: boolean
+          cor: string
+          created_at: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          arquivado?: boolean
+          cor?: string
+          created_at?: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          arquivado?: boolean
+          cor?: string
+          created_at?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      tarefa_historico: {
+        Row: {
+          acao: string
+          autor_id: string | null
+          card_id: string
+          created_at: string
+          detalhe: string
+          id: string
+        }
+        Insert: {
+          acao: string
+          autor_id?: string | null
+          card_id: string
+          created_at?: string
+          detalhe?: string
+          id?: string
+        }
+        Update: {
+          acao?: string
+          autor_id?: string | null
+          card_id?: string
+          created_at?: string
+          detalhe?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_historico_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefa_historico_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarefa_quadro_membros: {
+        Row: {
+          created_at: string
+          quadro_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          quadro_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          quadro_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_quadro_membros_quadro_id_fkey"
+            columns: ["quadro_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_quadros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefa_quadro_membros_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tarefa_quadros: {
+        Row: {
+          arquivado: boolean
+          created_at: string
+          criado_por: string | null
+          descricao: string
+          fundo_cor1: string
+          fundo_cor2: string
+          fundo_tipo: string
+          id: string
+          nome: string
+          posicao: number
+        }
+        Insert: {
+          arquivado?: boolean
+          created_at?: string
+          criado_por?: string | null
+          descricao?: string
+          fundo_cor1?: string
+          fundo_cor2?: string
+          fundo_tipo?: string
+          id?: string
+          nome?: string
+          posicao?: number
+        }
+        Update: {
+          arquivado?: boolean
+          created_at?: string
+          criado_por?: string | null
+          descricao?: string
+          fundo_cor1?: string
+          fundo_cor2?: string
+          fundo_tipo?: string
+          id?: string
+          nome?: string
+          posicao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_quadros_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -405,6 +845,10 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
       }
+      pode_editar_card: { Args: { _card_id: string }; Returns: boolean }
+      pode_editar_quadro: { Args: { _quadro_id: string }; Returns: boolean }
+      pode_ver_card: { Args: { _card_id: string }; Returns: boolean }
+      pode_ver_quadro: { Args: { _quadro_id: string }; Returns: boolean }
       recalc_story_status: { Args: { _story_id: string }; Returns: undefined }
     }
     Enums: {
