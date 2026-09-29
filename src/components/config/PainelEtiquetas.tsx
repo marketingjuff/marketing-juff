@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Archive, ChevronDown, Pencil, RotateCcw, Tag } from "lucide-react";
+import { Archive, ChevronDown, GripVertical, Pencil, RotateCcw, Tag } from "lucide-react";
+import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +27,7 @@ import {
   arquivarEtiqueta,
   createEtiqueta,
   etiquetasQueryOptions,
+  reordenarEtiquetas,
   updateEtiqueta,
   type Etiqueta,
 } from "@/lib/tarefas";
@@ -33,7 +37,7 @@ const arquivadasQueryOptions = queryOptions({
   queryFn: async (): Promise<Etiqueta[]> => {
     const { data, error } = await supabase
       .from("tarefa_etiquetas")
-      .select("id, nome, cor, arquivado")
+      .select("id, nome, cor, arquivado, posicao")
       .eq("arquivado", true)
       .order("nome", { ascending: true });
     if (error) throw error;
@@ -90,6 +94,7 @@ function SeletorCor({
 }
 
 function LinhaEtiqueta({ etiqueta, podeEditar, onChanged }: { etiqueta: Etiqueta; podeEditar: boolean; onChanged: () => void }) {
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id: etiqueta.id });
   const [editando, setEditando] = useState(false);
   const [nome, setNome] = useState(etiqueta.nome);
   const [cor, setCor] = useState(etiqueta.cor);
@@ -144,7 +149,21 @@ function LinhaEtiqueta({ etiqueta, podeEditar, onChanged }: { etiqueta: Etiqueta
   }
 
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-border px-2 py-1.5">
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={cn("flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5", isDragging && "z-10 opacity-80 shadow-md")}
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        disabled={!podeEditar}
+        aria-label="Arrastar para reordenar"
+        className={cn("shrink-0 cursor-grab touch-none text-muted-foreground", !podeEditar && "cursor-not-allowed opacity-40")}
+      >
+        <GripVertical className="size-4" />
+      </button>
       <span className="size-4 shrink-0 rounded" style={{ backgroundColor: etiqueta.cor }} />
       <span className="min-w-0 flex-1 truncate text-sm">{etiqueta.nome}</span>
       <Button size="icon" variant="ghost" className="size-7" disabled={!podeEditar} onClick={() => setEditando(true)} aria-label="Editar etiqueta">
@@ -184,7 +203,22 @@ export function PainelEtiquetas() {
   const [salvando, setSalvando] = useState(false);
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ["tarefas", "etiquetas"] });
-  const ordenadas = [...ativas].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  const ordenadas = ativas;
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+
+  function onDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const de = ordenadas.findIndex((e) => e.id === active.id);
+    const para = ordenadas.findIndex((e) => e.id === over.id);
+    if (de < 0 || para < 0) return;
+    const nova = arrayMove(ordenadas, de, para);
+    qc.setQueryData(etiquetasQueryOptions.queryKey, nova);
+    reordenarEtiquetas(nova.map((e) => e.id)).catch((e) => {
+      toast.error((e as Error).message);
+      invalidar();
+    });
+  }
 
   async function criar() {
     if (!nome.trim() || !HEX_RE.test(cor)) return;
@@ -227,15 +261,19 @@ export function PainelEtiquetas() {
         </Button>
       </form>
 
-      <div className="space-y-1.5">
-        {ordenadas.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma etiqueta cadastrada.</p>
-        ) : (
-          ordenadas.map((e) => (
-            <LinhaEtiqueta key={`${e.id}-${e.nome}-${e.cor}`} etiqueta={e} podeEditar={podeEditar} onChanged={invalidar} />
-          ))
-        )}
-      </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <SortableContext items={ordenadas.map((e) => e.id)} strategy={verticalListSortingStrategy}>
+          <div className="space-y-1.5">
+            {ordenadas.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma etiqueta cadastrada.</p>
+            ) : (
+              ordenadas.map((e) => (
+                <LinhaEtiqueta key={`${e.id}-${e.nome}-${e.cor}`} etiqueta={e} podeEditar={podeEditar} onChanged={invalidar} />
+              ))
+            )}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       <Collapsible>
         <CollapsibleTrigger className="flex items-center gap-1 text-sm font-medium text-muted-foreground">

@@ -28,7 +28,7 @@ export type Coluna = {
   arquivado: boolean;
 };
 
-export type Etiqueta = { id: string; nome: string; cor: string; arquivado: boolean };
+export type Etiqueta = { id: string; nome: string; cor: string; arquivado: boolean; posicao: number };
 
 export type Card = {
   id: string;
@@ -540,18 +540,29 @@ export const etiquetasQueryOptions = queryOptions({
   queryFn: async (): Promise<Etiqueta[]> => {
     const { data, error } = await supabase
       .from("tarefa_etiquetas")
-      .select("id, nome, cor, arquivado")
+      .select("id, nome, cor, arquivado, posicao")
       .eq("arquivado", false)
-      .order("nome", { ascending: true });
+      .order("posicao", { ascending: true });
     if (error) throw error;
     return data ?? [];
   },
 });
 
 export async function createEtiqueta(nome: string, cor: string): Promise<void> {
+  const { data: ultima } = await supabase
+    .from("tarefa_etiquetas")
+    .select("posicao")
+    .order("posicao", { ascending: false })
+    .limit(1)
+    .maybeSingle();
   const { error } = await supabase
     .from("tarefa_etiquetas")
-    .insert({ nome: nome.trim(), cor: cor.toLowerCase() });
+    .insert({ nome: nome.trim(), cor: cor.toLowerCase(), posicao: (ultima?.posicao ?? 0) + 1 });
+  if (error) throw error;
+}
+
+export async function reordenarEtiquetas(ids: string[]): Promise<void> {
+  const { error } = await supabase.rpc("tarefa_reordenar_etiquetas", { _ids: ids });
   if (error) throw error;
 }
 
