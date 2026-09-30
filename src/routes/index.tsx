@@ -14,11 +14,7 @@ export const Route = createFileRoute("/")({
       .eq("id", data.user.id)
       .maybeSingle();
 
-    if (
-      profile?.role === "operador" &&
-      !profile.permissions.includes("tarefas.quadros") &&
-      profile.permissions.includes("tarefas.meu_trabalho")
-    ) {
+    if (profile?.role === "operador") {
       throw redirect({ to: "/tarefas/meu-trabalho" });
     }
     throw redirect({ to: "/tarefas/quadros" });

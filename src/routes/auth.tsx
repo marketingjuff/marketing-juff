@@ -55,11 +55,7 @@ function AuthPage() {
         .select("role, permissions")
         .eq("id", userData.user.id)
         .maybeSingle();
-      if (
-        profile?.role === "operador" &&
-        !profile.permissions.includes("tarefas.quadros") &&
-        profile.permissions.includes("tarefas.meu_trabalho")
-      ) {
+      if (profile?.role === "operador") {
         destino = "/tarefas/meu-trabalho";
       }
     }
