@@ -192,6 +192,167 @@ export type Database = {
           },
         ]
       }
+      feriados: {
+        Row: {
+          created_at: string
+          data: string
+          descricao: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          data: string
+          descricao?: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          descricao?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      meudia_diario: {
+        Row: {
+          data: string
+          modo: string | null
+          texto: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          data: string
+          modo?: string | null
+          texto?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          data?: string
+          modo?: string | null
+          texto?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meudia_diario_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meudia_itens: {
+        Row: {
+          bloco_inicio: number
+          blocos: number
+          card_id: string | null
+          created_at: string
+          data: string
+          feito: boolean
+          id: string
+          recorrente_id: string | null
+          texto: string
+          user_id: string
+        }
+        Insert: {
+          bloco_inicio: number
+          blocos?: number
+          card_id?: string | null
+          created_at?: string
+          data: string
+          feito?: boolean
+          id?: string
+          recorrente_id?: string | null
+          texto?: string
+          user_id: string
+        }
+        Update: {
+          bloco_inicio?: number
+          blocos?: number
+          card_id?: string | null
+          created_at?: string
+          data?: string
+          feito?: boolean
+          id?: string
+          recorrente_id?: string | null
+          texto?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meudia_itens_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meudia_itens_recorrente_id_fkey"
+            columns: ["recorrente_id"]
+            isOneToOne: false
+            referencedRelation: "meudia_recorrentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meudia_itens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meudia_recorrentes: {
+        Row: {
+          ativo: boolean
+          blocos: number
+          created_at: string
+          descricao: string
+          dia_semana: string
+          hora: string | null
+          id: string
+          posicao: number
+          user_id: string
+          vezes_mes: number
+        }
+        Insert: {
+          ativo?: boolean
+          blocos?: number
+          created_at?: string
+          descricao?: string
+          dia_semana?: string
+          hora?: string | null
+          id?: string
+          posicao?: number
+          user_id: string
+          vezes_mes?: number
+        }
+        Update: {
+          ativo?: boolean
+          blocos?: number
+          created_at?: string
+          descricao?: string
+          dia_semana?: string
+          hora?: string | null
+          id?: string
+          posicao?: number
+          user_id?: string
+          vezes_mes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meudia_recorrentes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notificacao_preferencias: {
         Row: {
           ativo: boolean
@@ -1190,6 +1351,14 @@ export type Database = {
       has_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
+      }
+      meudia_gravar_diario: {
+        Args: { _data: string; _modo: string; _texto: string }
+        Returns: undefined
+      }
+      meudia_reordenar_recorrentes: {
+        Args: { _ids: string[] }
+        Returns: undefined
       }
       notificacoes_gerar_diarias: { Args: never; Returns: number }
       notificacoes_gerar_lembretes: { Args: never; Returns: number }
