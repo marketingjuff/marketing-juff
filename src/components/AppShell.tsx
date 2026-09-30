@@ -39,7 +39,6 @@ export function AppShell({
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
   const router = useRouter();
   const caminho = useRouterState({ select: (s) => s.location.pathname });
-  const emTarefas = caminho.startsWith("/tarefas");
   const podeQuadros = hasPermission(profile, "tarefas.quadros");
   useAvancarRecorrentes(podeQuadros);
 
@@ -198,7 +197,7 @@ export function AppShell({
         ) : null}
 
 
-        {emTarefas && podeQuadros ? (
+        {podeQuadros ? (
           <div className={cn("mx-auto border-t border-border px-4", larguraClasse)}>
             <BarraAtalhos />
           </div>
