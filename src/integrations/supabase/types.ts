@@ -14,6 +14,184 @@ export type Database = {
   }
   public: {
     Tables: {
+      estrategia_atas: {
+        Row: {
+          ano: number
+          anotacoes: string
+          created_at: string
+          criado_por: string | null
+          frente: string
+          id: string
+          mes: number
+          updated_at: string
+        }
+        Insert: {
+          ano: number
+          anotacoes?: string
+          created_at?: string
+          criado_por?: string | null
+          frente: string
+          id?: string
+          mes: number
+          updated_at?: string
+        }
+        Update: {
+          ano?: number
+          anotacoes?: string
+          created_at?: string
+          criado_por?: string | null
+          frente?: string
+          id?: string
+          mes?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estrategia_atas_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estrategia_campos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          frente: string
+          icone: string
+          id: string
+          label: string
+          no_panorama: boolean
+          posicao: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          frente: string
+          icone?: string
+          id?: string
+          label?: string
+          no_panorama?: boolean
+          posicao?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          frente?: string
+          icone?: string
+          id?: string
+          label?: string
+          no_panorama?: boolean
+          posicao?: number
+        }
+        Relationships: []
+      }
+      estrategia_decisoes: {
+        Row: {
+          ata_id: string
+          card_id: string | null
+          created_at: string
+          criado_por: string | null
+          id: string
+          posicao: number
+          prazo: string | null
+          responsavel_id: string | null
+          texto: string
+        }
+        Insert: {
+          ata_id: string
+          card_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          posicao?: number
+          prazo?: string | null
+          responsavel_id?: string | null
+          texto?: string
+        }
+        Update: {
+          ata_id?: string
+          card_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          posicao?: number
+          prazo?: string | null
+          responsavel_id?: string | null
+          texto?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estrategia_decisoes_ata_id_fkey"
+            columns: ["ata_id"]
+            isOneToOne: false
+            referencedRelation: "estrategia_atas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_decisoes_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_decisoes_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_decisoes_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estrategia_valores: {
+        Row: {
+          ata_id: string
+          campo_id: string
+          id: string
+          updated_at: string
+          valor: string
+        }
+        Insert: {
+          ata_id: string
+          campo_id: string
+          id?: string
+          updated_at?: string
+          valor?: string
+        }
+        Update: {
+          ata_id?: string
+          campo_id?: string
+          id?: string
+          updated_at?: string
+          valor?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estrategia_valores_ata_id_fkey"
+            columns: ["ata_id"]
+            isOneToOne: false
+            referencedRelation: "estrategia_atas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_valores_campo_id_fkey"
+            columns: ["campo_id"]
+            isOneToOne: false
+            referencedRelation: "estrategia_campos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           cor_avatar: string | null
@@ -887,6 +1065,28 @@ export type Database = {
     }
     Functions: {
       can_edit: { Args: { _perm: string }; Returns: boolean }
+      estrategia_ata_id: {
+        Args: { _ano: number; _frente: string; _mes: number }
+        Returns: string
+      }
+      estrategia_gravar_anotacoes: {
+        Args: { _ano: number; _frente: string; _mes: number; _texto: string }
+        Returns: string
+      }
+      estrategia_gravar_valor: {
+        Args: {
+          _ano: number
+          _campo_id: string
+          _frente: string
+          _mes: number
+          _valor: string
+        }
+        Returns: string
+      }
+      estrategia_reordenar_campos: {
+        Args: { _frente: string; _ids: string[] }
+        Returns: undefined
+      }
       has_permission: { Args: { _perm: string }; Returns: boolean }
       has_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
@@ -894,6 +1094,7 @@ export type Database = {
       }
       pode_editar_card: { Args: { _card_id: string }; Returns: boolean }
       pode_editar_quadro: { Args: { _quadro_id: string }; Returns: boolean }
+      pode_escrever_estrategia: { Args: never; Returns: boolean }
       pode_estruturar_quadro: { Args: { _quadro_id: string }; Returns: boolean }
       pode_mexer_card: { Args: { _card_id: string }; Returns: boolean }
       pode_ver_card: { Args: { _card_id: string }; Returns: boolean }

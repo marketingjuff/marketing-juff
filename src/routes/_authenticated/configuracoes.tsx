@@ -12,6 +12,7 @@ import {
   Plus,
   Settings,
   Sparkles,
+  Telescope,
   Trash2,
   UserPlus,
   Users,
@@ -21,6 +22,7 @@ import {
 
 import { AppShell } from "@/components/AppShell";
 import { PainelEtiquetas } from "@/components/config/PainelEtiquetas";
+import { PainelCamposEstrategia } from "@/components/config/PainelCamposEstrategia";
 import { CORES_ETIQUETA, etiquetasQueryOptions, quadrosQueryOptions, siglaPessoa } from "@/lib/tarefas";
 import { ColorPicker } from "@/components/ui/color-picker";
 import {
@@ -100,6 +102,7 @@ const SECOES: SecaoConfig[] = [
   { key: "geral", label: "Geral", icone: Settings, subtitulo: "Sua conta e um resumo do sistema." },
   { key: "social", label: "Social", icone: Sparkles, subtitulo: "Frases de CTA e links usados nos stories." },
   { key: "tarefas", label: "Tarefas", icone: LayoutGrid, subtitulo: "Etiquetas usadas nos cards de todos os quadros." },
+  { key: "estrategia", label: "Estratégia", icone: Telescope, subtitulo: "Campos da ata mensal de cada frente." },
   { key: "usuarios", label: "Usuários e permissões", icone: Users, subtitulo: "Contas, papéis e permissões de acesso." },
 ];
 
@@ -325,6 +328,7 @@ function Configuracoes() {
         ) : null}
 
         {secaoAtual.key === "tarefas" ? <PainelEtiquetas /> : null}
+        {secaoAtual.key === "estrategia" ? <PainelCamposEstrategia /> : null}
 
         {secaoAtual.key === "usuarios" && podeUsuarios ? (
           <>

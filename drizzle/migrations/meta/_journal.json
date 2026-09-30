@@ -57,6 +57,13 @@
       "when": 1790721024374,
       "tag": "0007_permissao_card_vs_quadro",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790773182084,
+      "tag": "0008_estrategia_ata_mensal",
+      "breakpoints": true
     }
   ]
 }

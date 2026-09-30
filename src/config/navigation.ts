@@ -28,6 +28,8 @@ export const PERMISSION_CATALOG: PermissionEntry[] = [
   { key: "tarefas.meu_trabalho", grupo: "Tarefas", label: "Meu trabalho", nivelConfiguravel: false },
   { key: "tarefas.calendario", grupo: "Tarefas", label: "Calendário", nivelConfiguravel: false },
 
+  { key: "estrategia.ata", grupo: "Estratégia", label: "Ata mensal", nivelConfiguravel: true },
+
   { key: "config.usuarios", grupo: "Configurações", label: "Usuários e permissões", nivelConfiguravel: false },
 ];
 
@@ -93,7 +95,7 @@ export const PRESETS: Preset[] = [
     id: "marketing_completo",
     label: "Marketing completo",
     descricao: "Tudo liberado em edição, menos Configurações",
-    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario"],
+    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "estrategia.ata"],
   },
   {
     id: "social",
@@ -128,6 +130,7 @@ export const PRESETS: Preset[] = [
       "tarefas.quadros:leitura",
       "tarefas.meu_trabalho",
       "tarefas.calendario",
+      "estrategia.ata:leitura",
     ],
   },
 ];
@@ -143,6 +146,8 @@ export type SubTab = {
 export type MasterTab = {
   key: string;
   label: string;
+  /** Nome do ícone lucide usado no topo, ao lado do nome. */
+  icone: "megaphone" | "square-kanban" | "telescope" | "library";
   subTabs: SubTab[];
 };
 
@@ -150,6 +155,7 @@ export const NAVIGATION: MasterTab[] = [
   {
     key: "social",
     label: "SOCIAL",
+    icone: "megaphone",
     subTabs: [
       { key: "stories", label: "Stories", to: "/social/stories", permission: "social.stories" },
     ],
@@ -157,6 +163,7 @@ export const NAVIGATION: MasterTab[] = [
   {
     key: "tarefas",
     label: "TAREFAS",
+    icone: "square-kanban",
     subTabs: [
       { key: "quadros", label: "Quadros", to: "/tarefas/quadros", permission: "tarefas.quadros" },
       {
@@ -171,6 +178,14 @@ export const NAVIGATION: MasterTab[] = [
         to: "/tarefas/calendario",
         permission: "tarefas.calendario",
       },
+    ],
+  },
+  {
+    key: "estrategia",
+    label: "ESTRATÉGIA",
+    icone: "telescope",
+    subTabs: [
+      { key: "ata", label: "Ata mensal", to: "/estrategia/ata", permission: "estrategia.ata" },
     ],
   },
 ];
