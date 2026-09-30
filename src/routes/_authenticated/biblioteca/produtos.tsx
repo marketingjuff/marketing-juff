@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { BotaoZip } from "@/components/biblioteca/BotaoZip";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Bloco, CampoAutoSave, ListaProdutos, SemAcesso, patchProdutoOtimista } from "@/components/biblioteca/comum";
@@ -197,6 +198,7 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="gap-1" onClick={() => void exportarProduto(p, cores)}><Download className="size-4" /> Exportar este produto</Button>
           <Button variant="outline" size="sm" className="gap-1" onClick={() => void exportarTodos(produtos, cores)}><Download className="size-4" /> Exportar todos</Button>
+          <BotaoZip origem="produtos" />
         </div>
       }>
         <p className="mb-2 text-sm text-muted-foreground">Este produto gera {variacoes.length} variações.</p>

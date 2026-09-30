@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { BotaoZip } from "@/components/biblioteca/BotaoZip";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Bloco, CampoAutoSave, ListaProdutos, SemAcesso, patchProdutoOtimista } from "@/components/biblioteca/comum";
@@ -138,6 +139,7 @@ function FichaMedidas({ produto: p, editavel }: { produto: ProdutoBiblioteca; ed
             </label>
           ) : null}
           <Button variant="outline" size="sm" className="gap-1" onClick={() => void exportar()}><Download className="size-4" /> Exportar medidas</Button>
+          <BotaoZip origem="medidas" />
         </div>
       }>
         {isSuccess && medidas.length === 0 ? (

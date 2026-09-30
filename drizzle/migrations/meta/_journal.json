@@ -127,6 +127,13 @@
       "when": 1790796808714,
       "tag": "0017_biblioteca_produto",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790808317433,
+      "tag": "0018_biblioteca_marca",
+      "breakpoints": true
     }
   ]
 }

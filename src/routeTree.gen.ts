@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedObjetivosRouteImport } from './routes/_authenticated/objetivos'
 import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
+import { Route as AuthenticatedBibliotecaMarcaRouteImport } from './routes/_authenticated/biblioteca/marca'
 import { Route as AuthenticatedBibliotecaMedidasRouteImport } from './routes/_authenticated/biblioteca/medidas'
 import { Route as AuthenticatedBibliotecaProdutosRouteImport } from './routes/_authenticated/biblioteca/produtos'
 import { Route as AuthenticatedEstrategiaAtaRouteImport } from './routes/_authenticated/estrategia/ata'
@@ -54,6 +55,12 @@ const AuthenticatedTrocarSenhaRoute =
   AuthenticatedTrocarSenhaRouteImport.update({
     id: '/trocar-senha',
     path: '/trocar-senha',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBibliotecaMarcaRoute =
+  AuthenticatedBibliotecaMarcaRouteImport.update({
+    id: '/biblioteca/marca',
+    path: '/biblioteca/marca',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedBibliotecaMedidasRoute =
@@ -117,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/objetivos': typeof AuthenticatedObjetivosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/biblioteca/marca': typeof AuthenticatedBibliotecaMarcaRoute
   '/biblioteca/medidas': typeof AuthenticatedBibliotecaMedidasRoute
   '/biblioteca/produtos': typeof AuthenticatedBibliotecaProdutosRoute
   '/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
@@ -133,6 +141,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/objetivos': typeof AuthenticatedObjetivosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/biblioteca/marca': typeof AuthenticatedBibliotecaMarcaRoute
   '/biblioteca/medidas': typeof AuthenticatedBibliotecaMedidasRoute
   '/biblioteca/produtos': typeof AuthenticatedBibliotecaProdutosRoute
   '/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
@@ -151,6 +160,7 @@ export interface FileRoutesById {
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/objetivos': typeof AuthenticatedObjetivosRoute
   '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/_authenticated/biblioteca/marca': typeof AuthenticatedBibliotecaMarcaRoute
   '/_authenticated/biblioteca/medidas': typeof AuthenticatedBibliotecaMedidasRoute
   '/_authenticated/biblioteca/produtos': typeof AuthenticatedBibliotecaProdutosRoute
   '/_authenticated/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/objetivos'
     | '/trocar-senha'
+    | '/biblioteca/marca'
     | '/biblioteca/medidas'
     | '/biblioteca/produtos'
     | '/estrategia/ata'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/objetivos'
     | '/trocar-senha'
+    | '/biblioteca/marca'
     | '/biblioteca/medidas'
     | '/biblioteca/produtos'
     | '/estrategia/ata'
@@ -202,6 +214,7 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracoes'
     | '/_authenticated/objetivos'
     | '/_authenticated/trocar-senha'
+    | '/_authenticated/biblioteca/marca'
     | '/_authenticated/biblioteca/medidas'
     | '/_authenticated/biblioteca/produtos'
     | '/_authenticated/estrategia/ata'
@@ -261,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/trocar-senha'
       fullPath: '/trocar-senha'
       preLoaderRoute: typeof AuthenticatedTrocarSenhaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/biblioteca/marca': {
+      id: '/_authenticated/biblioteca/marca'
+      path: '/biblioteca/marca'
+      fullPath: '/biblioteca/marca'
+      preLoaderRoute: typeof AuthenticatedBibliotecaMarcaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/biblioteca/medidas': {
@@ -333,6 +353,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedObjetivosRoute: typeof AuthenticatedObjetivosRoute
   AuthenticatedTrocarSenhaRoute: typeof AuthenticatedTrocarSenhaRoute
+  AuthenticatedBibliotecaMarcaRoute: typeof AuthenticatedBibliotecaMarcaRoute
   AuthenticatedBibliotecaMedidasRoute: typeof AuthenticatedBibliotecaMedidasRoute
   AuthenticatedBibliotecaProdutosRoute: typeof AuthenticatedBibliotecaProdutosRoute
   AuthenticatedEstrategiaAtaRoute: typeof AuthenticatedEstrategiaAtaRoute
@@ -348,6 +369,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedObjetivosRoute: AuthenticatedObjetivosRoute,
   AuthenticatedTrocarSenhaRoute: AuthenticatedTrocarSenhaRoute,
+  AuthenticatedBibliotecaMarcaRoute: AuthenticatedBibliotecaMarcaRoute,
   AuthenticatedBibliotecaMedidasRoute: AuthenticatedBibliotecaMedidasRoute,
   AuthenticatedBibliotecaProdutosRoute: AuthenticatedBibliotecaProdutosRoute,
   AuthenticatedEstrategiaAtaRoute: AuthenticatedEstrategiaAtaRoute,
