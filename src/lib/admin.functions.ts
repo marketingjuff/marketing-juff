@@ -92,6 +92,7 @@ export const updatePermissions = createServerFn({ method: "POST" })
         userId: z.string().uuid(),
         role: roleSchema,
         permissions: z.array(z.string()),
+        nome: z.string().trim().min(1).max(80).optional(),
         sigla: siglaSchema.optional(),
         cor_avatar: corSchema.nullable().optional(),
         cor_texto_avatar: corSchema.nullable().optional(),
@@ -111,6 +112,7 @@ export const updatePermissions = createServerFn({ method: "POST" })
       .update({
         role: data.role,
         permissions: data.role === "admin" ? [] : data.permissions,
+        ...(data.nome !== undefined ? { nome: data.nome.trim() } : {}),
         ...(data.sigla !== undefined
           ? { sigla: data.sigla ? data.sigla.toUpperCase().slice(0, 3) : null }
           : {}),

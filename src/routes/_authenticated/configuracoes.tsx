@@ -12,6 +12,7 @@ import {
   Plus,
   Settings,
   Sparkles,
+  Bell,
   Telescope,
   Trash2,
   UserPlus,
@@ -23,6 +24,7 @@ import {
 import { AppShell } from "@/components/AppShell";
 import { PainelEtiquetas } from "@/components/config/PainelEtiquetas";
 import { PainelCamposEstrategia } from "@/components/config/PainelCamposEstrategia";
+import { PainelNotificacoes } from "@/components/config/PainelNotificacoes";
 import { CORES_ETIQUETA, etiquetasQueryOptions, quadrosQueryOptions, siglaPessoa } from "@/lib/tarefas";
 import { ColorPicker } from "@/components/ui/color-picker";
 import {
@@ -103,6 +105,7 @@ const SECOES: SecaoConfig[] = [
   { key: "social", label: "Social", icone: Sparkles, subtitulo: "Frases de CTA e links usados nos stories." },
   { key: "tarefas", label: "Tarefas", icone: LayoutGrid, subtitulo: "Etiquetas usadas nos cards de todos os quadros." },
   { key: "estrategia", label: "Estratégia", icone: Telescope, subtitulo: "Campos da ata mensal de cada frente." },
+  { key: "notificacoes", label: "Notificações", icone: Bell, subtitulo: "O que você quer receber no sininho." },
   { key: "usuarios", label: "Usuários e permissões", icone: Users, subtitulo: "Contas, papéis e permissões de acesso." },
 ];
 
@@ -329,6 +332,7 @@ function Configuracoes() {
 
         {secaoAtual.key === "tarefas" ? <PainelEtiquetas /> : null}
         {secaoAtual.key === "estrategia" ? <PainelCamposEstrategia /> : null}
+        {secaoAtual.key === "notificacoes" ? <PainelNotificacoes /> : null}
 
         {secaoAtual.key === "usuarios" && podeUsuarios ? (
           <>
@@ -421,6 +425,7 @@ function Configuracoes() {
                         userId: user.id,
                         role: nextRole,
                         permissions,
+                        nome: identidade.nome,
                         sigla: identidade.sigla,
                         cor_avatar: identidade.cor_avatar,
                         cor_texto_avatar: identidade.cor_texto_avatar,
@@ -476,7 +481,7 @@ function UserRow({
   onSavePerms: (
     role: AppRole,
     permissions: string[],
-    identidade: { sigla: string; cor_avatar: string | null; cor_texto_avatar: string | null },
+    identidade: { nome: string; sigla: string; cor_avatar: string | null; cor_texto_avatar: string | null },
   ) => Promise<void>;
   onSetPassword: (senha: string) => Promise<void>;
   onDelete: () => Promise<void>;
@@ -486,6 +491,7 @@ function UserRow({
   const [novaSenha, setNovaSenha] = useState("");
   const [busy, setBusy] = useState(false);
   const [sigla, setSigla] = useState(user.sigla ?? "");
+  const [nome, setNome] = useState(user.nome);
   const [corAvatar, setCorAvatar] = useState(user.cor_avatar ?? "#378add");
   const [corTextoAvatar, setCorTextoAvatar] = useState(user.cor_texto_avatar ?? "#ffffff");
   const siglaMostrada = siglaPessoa({ nome: user.nome, sigla });
@@ -512,8 +518,13 @@ function UserRow({
           >
             {siglaMostrada}
           </span>
-          <div>
-            <p className="text-sm font-medium">{user.nome}</p>
+          <div className="space-y-1">
+            <Input
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              className="h-8 w-56 text-sm font-medium"
+              aria-label="Nome da pessoa"
+            />
             <p className="text-xs text-muted-foreground">{user.email}</p>
           </div>
         </div>
@@ -613,6 +624,7 @@ function UserRow({
           onClick={() =>
             run(() =>
               onSavePerms(role, stateToPerms(perms), {
+                nome: nome.trim() || user.nome,
                 sigla,
                 cor_avatar: corAvatar,
                 cor_texto_avatar: corTextoAvatar,

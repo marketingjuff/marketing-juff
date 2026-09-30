@@ -126,6 +126,7 @@ export function AppShell({
           </nav>
 
           <div className="flex shrink-0 items-center gap-1">
+            <SinoNotificacoes />
             {canOpenSettings ? (
               <Button variant="ghost" size="sm" className="gap-2" asChild>
                 <Link to="/configuracoes">

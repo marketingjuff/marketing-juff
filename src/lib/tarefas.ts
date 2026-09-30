@@ -38,6 +38,17 @@ export type Recorrencia =
   | "mensal_dia"
   | "mensal_semana";
 
+export const LEMBRETES: { valor: number | null; label: string }[] = [
+  { valor: null, label: "Nenhum" },
+  { valor: 0, label: "Na hora da entrega" },
+  { valor: 5, label: "5 minutos antes" },
+  { valor: 15, label: "15 minutos antes" },
+  { valor: 30, label: "30 minutos antes" },
+  { valor: 60, label: "1 hora antes" },
+  { valor: 120, label: "2 horas antes" },
+  { valor: 1440, label: "1 dia antes" },
+];
+
 export const RECORRENCIAS: { valor: Recorrencia; label: string }[] = [
   { valor: "nunca", label: "Nunca" },
   { valor: "diario", label: "Diariamente" },
@@ -60,6 +71,7 @@ export type Card = {
   hora_inicio: string | null;
   hora_entrega: string | null;
   recorrencia: Recorrencia;
+  lembrete_min: number | null;
   prioridade: Prioridade | null;
   esforco: Esforco | null;
   adiado_ate: string | null;
@@ -208,6 +220,7 @@ function mapCard(c: any): Card {
     hora_inicio: c.hora_inicio ?? null,
     hora_entrega: c.hora_entrega ?? null,
     recorrencia: (c.recorrencia ?? "nunca") as Recorrencia,
+    lembrete_min: c.lembrete_min ?? null,
     prioridade: c.prioridade,
     esforco: c.esforco,
     adiado_ate: c.adiado_ate,
@@ -547,6 +560,7 @@ export type CardUpdate = Partial<
     | "hora_inicio"
     | "hora_entrega"
     | "recorrencia"
+    | "lembrete_min"
     | "prioridade"
     | "esforco"
     | "adiado_ate"
