@@ -85,6 +85,13 @@
       "when": 1790791724472,
       "tag": "0011_lembrete_padrao_sem_hora",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790792832028,
+      "tag": "0012_meu_dia",
+      "breakpoints": true
     }
   ]
 }
