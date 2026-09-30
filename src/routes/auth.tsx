@@ -45,7 +45,25 @@ function AuthPage() {
       return;
     }
     await router.invalidate();
-    await router.navigate({ to: "/social/stories" });
+
+    // Operadores caem em Meu trabalho; admin e gestor caem nos Quadros.
+    const { data: userData } = await supabase.auth.getUser();
+    let destino: string = "/tarefas/quadros";
+    if (userData.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role, permissions")
+        .eq("id", userData.user.id)
+        .maybeSingle();
+      if (
+        profile?.role === "operador" &&
+        !profile.permissions.includes("tarefas.quadros") &&
+        profile.permissions.includes("tarefas.meu_trabalho")
+      ) {
+        destino = "/tarefas/meu-trabalho";
+      }
+    }
+    await router.navigate({ to: destino });
   }
 
   return (
