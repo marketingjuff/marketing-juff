@@ -29,7 +29,7 @@ export type Cor = { nome: string; hex: string };
 export const CORES: Cor[] = [
   { nome: "amarelo", hex: "#ffe938" },
   { nome: "amarelo flúor", hex: "#e0ff00" },
-  { nome: "areia", hex: "#d6d1c9" },
+  { nome: "areia", hex: "#d6cdbf" },
   { nome: "azul índigo", hex: "#4d6694" },
   { nome: "bordô", hex: "#551b2a" },
   { nome: "branco", hex: "#f6f6fb" },
@@ -39,7 +39,7 @@ export const CORES: Cor[] = [
   { nome: "laranja", hex: "#e36837" },
   { nome: "laranja ultra", hex: "#fd5f2f" },
   { nome: "marinho", hex: "#1d2546" },
-  { nome: "marrom", hex: "#342423" },
+  { nome: "marrom", hex: "#342723" },
   { nome: "menta", hex: "#93a393" },
   { nome: "pink", hex: "#b7357a" },
   { nome: "preto", hex: "#212120" },
