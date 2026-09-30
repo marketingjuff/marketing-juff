@@ -41,6 +41,26 @@ export function AppShell({
   const emTarefas = caminho.startsWith("/tarefas");
   const podeQuadros = hasPermission(profile, "tarefas.quadros");
 
+  /**
+   * Aba mestre em que a pessoa está, descoberta pelo caminho atual.
+   * Telas fora da navegação, como Configurações e Trocar senha,
+   * não pertencem a nenhuma aba mestre e ficam sem segunda linha.
+   */
+  const masterAtiva = NAVIGATION.find((master) =>
+    master.subTabs.some((sub) => caminho === sub.to || caminho.startsWith(`${sub.to}/`)),
+  );
+
+  /** Sub abas que a pessoa pode enxergar dentro da aba mestre ativa. */
+  const subTabsVisiveis = (masterAtiva?.subTabs ?? []).filter(
+    (sub) => !sub.roles || (profile ? sub.roles.includes(profile.role) : false),
+  );
+
+  /**
+   * Com uma sub aba só, a linha inteira some.
+   * Uma linha para mostrar um item já selecionado não informa nada.
+   */
+  const mostrarSubTabs = subTabsVisiveis.length > 1;
+
   const canOpenSettings = profile?.role === "admin" || profile?.role === "gestor";
 
   async function sair() {
@@ -145,35 +165,36 @@ export function AppShell({
           </div>
         </div>
 
-        <div className={cn("mx-auto overflow-x-auto border-t border-border px-4", larguraClasse)}>
-          <ul className="flex items-center gap-1 py-2">
-            {NAVIGATION.flatMap((master) => master.subTabs).map((sub) => {
-              const roleOk = !sub.roles || (profile ? sub.roles.includes(profile.role) : false);
-              const allowed = roleOk && hasPermission(profile, sub.permission);
-              if (!roleOk) return null;
-              if (!allowed) {
+        {mostrarSubTabs ? (
+          <div className={cn("mx-auto overflow-x-auto border-t border-border px-4", larguraClasse)}>
+            <ul className="flex items-center gap-1 py-2">
+              {subTabsVisiveis.map((sub) => {
+                const allowed = hasPermission(profile, sub.permission);
+                if (!allowed) {
+                  return (
+                    <li key={sub.key}>
+                      <span className="rounded-md px-3 py-1.5 text-sm text-muted-foreground/50">
+                        {sub.label}
+                      </span>
+                    </li>
+                  );
+                }
                 return (
                   <li key={sub.key}>
-                    <span className="rounded-md px-3 py-1.5 text-sm text-muted-foreground/50">
+                    <Link
+                      to={sub.to}
+                      className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      activeProps={{ className: "bg-primary-soft text-foreground font-medium" }}
+                    >
                       {sub.label}
-                    </span>
+                    </Link>
                   </li>
                 );
-              }
-              return (
-                <li key={sub.key}>
-                  <Link
-                    to={sub.to}
-                    className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                    activeProps={{ className: "bg-primary-soft text-foreground font-medium" }}
-                  >
-                    {sub.label}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+              })}
+            </ul>
+          </div>
+        ) : null}
+
 
         {emTarefas && podeQuadros ? (
           <div className={cn("mx-auto border-t border-border px-4", larguraClasse)}>
