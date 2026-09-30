@@ -1,6 +1,7 @@
 import { SinoNotificacoes } from "@/components/SinoNotificacoes";
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { BarraAtalhos } from "@/components/tarefas/BarraAtalhos";
+import { arrastavel } from "@/lib/atalhos-paginas";
 import { useAvancarRecorrentes } from "@/hooks/useAvancarRecorrentes";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { LogOut, Megaphone, Library, Settings, SquareKanban, Telescope, User } from "lucide-react";
@@ -103,6 +104,7 @@ export function AppShell({
                     {primeiro ? (
                       <Link
                         to={primeiro.to}
+                        {...arrastavel(primeiro.to, master.label)}
                         className="inline-block rounded-lg px-4 py-1.5 text-xs font-semibold tracking-widest text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
                         activeProps={{ className: "bg-primary text-primary-foreground shadow-soft" }}
                         activeOptions={{ exact: false }}
@@ -186,6 +188,7 @@ export function AppShell({
                   <li key={sub.key}>
                     <Link
                       to={sub.to}
+                      {...arrastavel(sub.to, sub.label)}
                       className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                       activeProps={{ className: "bg-primary-soft text-foreground font-medium" }}
                     >
