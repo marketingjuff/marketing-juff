@@ -15,6 +15,8 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedObjetivosRouteImport } from './routes/_authenticated/objetivos'
 import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
+import { Route as AuthenticatedBibliotecaMedidasRouteImport } from './routes/_authenticated/biblioteca/medidas'
+import { Route as AuthenticatedBibliotecaProdutosRouteImport } from './routes/_authenticated/biblioteca/produtos'
 import { Route as AuthenticatedEstrategiaAtaRouteImport } from './routes/_authenticated/estrategia/ata'
 import { Route as AuthenticatedSocialStoriesRouteImport } from './routes/_authenticated/social/stories'
 import { Route as AuthenticatedTarefasCalendarioRouteImport } from './routes/_authenticated/tarefas/calendario'
@@ -52,6 +54,18 @@ const AuthenticatedTrocarSenhaRoute =
   AuthenticatedTrocarSenhaRouteImport.update({
     id: '/trocar-senha',
     path: '/trocar-senha',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBibliotecaMedidasRoute =
+  AuthenticatedBibliotecaMedidasRouteImport.update({
+    id: '/biblioteca/medidas',
+    path: '/biblioteca/medidas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBibliotecaProdutosRoute =
+  AuthenticatedBibliotecaProdutosRouteImport.update({
+    id: '/biblioteca/produtos',
+    path: '/biblioteca/produtos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedEstrategiaAtaRoute =
@@ -103,6 +117,8 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/objetivos': typeof AuthenticatedObjetivosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/biblioteca/medidas': typeof AuthenticatedBibliotecaMedidasRoute
+  '/biblioteca/produtos': typeof AuthenticatedBibliotecaProdutosRoute
   '/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
   '/social/stories': typeof AuthenticatedSocialStoriesRoute
   '/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
@@ -117,6 +133,8 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/objetivos': typeof AuthenticatedObjetivosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/biblioteca/medidas': typeof AuthenticatedBibliotecaMedidasRoute
+  '/biblioteca/produtos': typeof AuthenticatedBibliotecaProdutosRoute
   '/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
   '/social/stories': typeof AuthenticatedSocialStoriesRoute
   '/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
@@ -133,6 +151,8 @@ export interface FileRoutesById {
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/objetivos': typeof AuthenticatedObjetivosRoute
   '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/_authenticated/biblioteca/medidas': typeof AuthenticatedBibliotecaMedidasRoute
+  '/_authenticated/biblioteca/produtos': typeof AuthenticatedBibliotecaProdutosRoute
   '/_authenticated/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
   '/_authenticated/social/stories': typeof AuthenticatedSocialStoriesRoute
   '/_authenticated/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
@@ -149,6 +169,8 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/objetivos'
     | '/trocar-senha'
+    | '/biblioteca/medidas'
+    | '/biblioteca/produtos'
     | '/estrategia/ata'
     | '/social/stories'
     | '/tarefas/calendario'
@@ -163,6 +185,8 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/objetivos'
     | '/trocar-senha'
+    | '/biblioteca/medidas'
+    | '/biblioteca/produtos'
     | '/estrategia/ata'
     | '/social/stories'
     | '/tarefas/calendario'
@@ -178,6 +202,8 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracoes'
     | '/_authenticated/objetivos'
     | '/_authenticated/trocar-senha'
+    | '/_authenticated/biblioteca/medidas'
+    | '/_authenticated/biblioteca/produtos'
     | '/_authenticated/estrategia/ata'
     | '/_authenticated/social/stories'
     | '/_authenticated/tarefas/calendario'
@@ -237,6 +263,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTrocarSenhaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/biblioteca/medidas': {
+      id: '/_authenticated/biblioteca/medidas'
+      path: '/biblioteca/medidas'
+      fullPath: '/biblioteca/medidas'
+      preLoaderRoute: typeof AuthenticatedBibliotecaMedidasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/biblioteca/produtos': {
+      id: '/_authenticated/biblioteca/produtos'
+      path: '/biblioteca/produtos'
+      fullPath: '/biblioteca/produtos'
+      preLoaderRoute: typeof AuthenticatedBibliotecaProdutosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/estrategia/ata': {
       id: '/_authenticated/estrategia/ata'
       path: '/estrategia/ata'
@@ -293,6 +333,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedObjetivosRoute: typeof AuthenticatedObjetivosRoute
   AuthenticatedTrocarSenhaRoute: typeof AuthenticatedTrocarSenhaRoute
+  AuthenticatedBibliotecaMedidasRoute: typeof AuthenticatedBibliotecaMedidasRoute
+  AuthenticatedBibliotecaProdutosRoute: typeof AuthenticatedBibliotecaProdutosRoute
   AuthenticatedEstrategiaAtaRoute: typeof AuthenticatedEstrategiaAtaRoute
   AuthenticatedSocialStoriesRoute: typeof AuthenticatedSocialStoriesRoute
   AuthenticatedTarefasCalendarioRoute: typeof AuthenticatedTarefasCalendarioRoute
@@ -306,6 +348,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedObjetivosRoute: AuthenticatedObjetivosRoute,
   AuthenticatedTrocarSenhaRoute: AuthenticatedTrocarSenhaRoute,
+  AuthenticatedBibliotecaMedidasRoute: AuthenticatedBibliotecaMedidasRoute,
+  AuthenticatedBibliotecaProdutosRoute: AuthenticatedBibliotecaProdutosRoute,
   AuthenticatedEstrategiaAtaRoute: AuthenticatedEstrategiaAtaRoute,
   AuthenticatedSocialStoriesRoute: AuthenticatedSocialStoriesRoute,
   AuthenticatedTarefasCalendarioRoute: AuthenticatedTarefasCalendarioRoute,
