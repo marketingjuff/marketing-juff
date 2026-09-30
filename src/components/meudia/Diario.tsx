@@ -23,7 +23,7 @@ export function Diario({
           return (
             <li key={d} className="flex flex-wrap items-start gap-2 p-2">
               <span className="w-20 shrink-0 pt-1.5 text-xs text-muted-foreground">
-                {dia} {NOMES_MES[mes - 1].slice(0, 3).toLowerCase()}
+                {dia} {(NOMES_MES[mes - 1] ?? "").slice(0, 3).toLowerCase()}
               </span>
               <div className="flex shrink-0 overflow-hidden rounded border border-border">
                 {(["P", "HO"] as const).map((m) => (

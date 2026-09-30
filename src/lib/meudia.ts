@@ -155,7 +155,7 @@ export async function criarRecorrente(descricao: string, posicao: number): Promi
   const { data: auth } = await supabase.auth.getUser();
   const { error } = await supabase
     .from("meudia_recorrentes")
-    .insert({ user_id: auth.user?.id, descricao, posicao });
+    .insert({ user_id: auth.user?.id ?? "", descricao, posicao });
   if (error) throw error;
 }
 
@@ -206,7 +206,7 @@ export async function criarItem(item: {
   const { data: auth } = await supabase.auth.getUser();
   const { data, error } = await supabase
     .from("meudia_itens")
-    .insert({ ...item, user_id: auth.user?.id })
+    .insert({ ...item, user_id: auth.user?.id ?? "" })
     .select("id")
     .single();
   if (error) throw error;
@@ -277,7 +277,7 @@ export async function gravarDiario(
   texto: string,
 ): Promise<void> {
   const { error } = await supabase.rpc("meudia_gravar_diario", {
-    _data: data, _modo: modo, _texto: texto,
+    _data: data, _modo: modo as string, _texto: texto,
   });
   if (error) throw error;
 }

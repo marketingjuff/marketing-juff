@@ -53,19 +53,19 @@ export function DialogItem({
     setRecId("");
   }, [open, dataIso, bloco]);
 
-  function confirmar() {
+  function confirmar(): void {
     if (origem === "livre") {
-      if (!texto.trim()) return toast.error("Escreva alguma coisa");
+      if (!texto.trim()) { toast.error("Escreva alguma coisa"); return; }
       onConfirmar({ texto: texto.trim(), blocos, card_id: null, recorrente_id: null });
     }
     if (origem === "card") {
       const c = cards.find((x) => x.id === cardId);
-      if (!c) return toast.error("Escolha um card");
+      if (!c) { toast.error("Escolha um card"); return; }
       onConfirmar({ texto: c.titulo, blocos, card_id: c.id, recorrente_id: null });
     }
     if (origem === "recorrente") {
       const r = recorrentes.find((x) => x.id === recId);
-      if (!r) return toast.error("Escolha um recorrente");
+      if (!r) { toast.error("Escolha um recorrente"); return; }
       onConfirmar({ texto: r.descricao, blocos: Math.min(r.blocos, livres), card_id: null, recorrente_id: r.id });
     }
     onOpenChange(false);
