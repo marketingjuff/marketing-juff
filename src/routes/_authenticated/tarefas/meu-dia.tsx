@@ -48,9 +48,9 @@ function MeuDiaPage() {
 
   const semanas1 = semanasDoMes(ano, mes);
   const semanas2 = semanasDoMes(ano2, mes2);
-  const dias = [...semanas1, ...semanas2].flat();
-  const de = dias[0];
-  const ate = dias[dias.length - 1];
+  const dias = [...new Set([...semanas1, ...semanas2].flat())];
+  const de = dias[0] ?? "";
+  const ate = dias[dias.length - 1] ?? "";
 
   const { data: gravados = [] } = useQuery(itensQueryOptions(de, ate));
   const { data: feriados = {} } = useQuery(feriadosQueryOptions);
