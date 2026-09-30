@@ -27,6 +27,7 @@ export const PERMISSION_CATALOG: PermissionEntry[] = [
   { key: "tarefas.quadros", grupo: "Tarefas", label: "Quadros", nivelConfiguravel: true },
   { key: "tarefas.meu_trabalho", grupo: "Tarefas", label: "Meu trabalho", nivelConfiguravel: false },
   { key: "tarefas.calendario", grupo: "Tarefas", label: "Calendário", nivelConfiguravel: false },
+  { key: "tarefas.meu_dia", grupo: "Tarefas", label: "Meu dia", nivelConfiguravel: false },
 
   { key: "estrategia.ata", grupo: "Estratégia", label: "Ata mensal", nivelConfiguravel: true },
 
@@ -95,7 +96,7 @@ export const PRESETS: Preset[] = [
     id: "marketing_completo",
     label: "Marketing completo",
     descricao: "Tudo liberado em edição, menos Configurações",
-    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "estrategia.ata"],
+    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "estrategia.ata", "tarefas.meu_dia"],
   },
   {
     id: "social",
@@ -107,7 +108,7 @@ export const PRESETS: Preset[] = [
     id: "tarefas_completo",
     label: "Tarefas completo",
     descricao: "As três visões de Tarefas, em edição",
-    permissoes: ["tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario"],
+    permissoes: ["tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia"],
   },
   {
     id: "designer",
@@ -177,6 +178,12 @@ export const NAVIGATION: MasterTab[] = [
         label: "Calendário",
         to: "/tarefas/calendario",
         permission: "tarefas.calendario",
+      },
+      {
+        key: "meu-dia",
+        label: "Meu dia",
+        to: "/tarefas/meu-dia",
+        permission: "tarefas.meu_dia",
       },
     ],
   },
