@@ -78,6 +78,13 @@
       "when": 1790790534962,
       "tag": "0010_notificacoes_lembrete",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790791724472,
+      "tag": "0011_lembrete_padrao_sem_hora",
+      "breakpoints": true
     }
   ]
 }
