@@ -674,11 +674,14 @@ export type Database = {
           depende_de: string
           descricao: string
           esforco: string | null
+          hora_entrega: string | null
+          hora_inicio: string | null
           id: string
           link_externo: string
           posicao: number
           prioridade: string | null
           quadro_id: string
+          recorrencia: string
           responsavel_id: string | null
           titulo: string
           updated_at: string
@@ -697,11 +700,14 @@ export type Database = {
           depende_de?: string
           descricao?: string
           esforco?: string | null
+          hora_entrega?: string | null
+          hora_inicio?: string | null
           id?: string
           link_externo?: string
           posicao?: number
           prioridade?: string | null
           quadro_id: string
+          recorrencia?: string
           responsavel_id?: string | null
           titulo?: string
           updated_at?: string
@@ -720,11 +726,14 @@ export type Database = {
           depende_de?: string
           descricao?: string
           esforco?: string | null
+          hora_entrega?: string | null
+          hora_inicio?: string | null
           id?: string
           link_externo?: string
           posicao?: number
           prioridade?: string | null
           quadro_id?: string
+          recorrencia?: string
           responsavel_id?: string | null
           titulo?: string
           updated_at?: string
@@ -1099,11 +1108,17 @@ export type Database = {
       pode_mexer_card: { Args: { _card_id: string }; Returns: boolean }
       pode_ver_card: { Args: { _card_id: string }; Returns: boolean }
       pode_ver_quadro: { Args: { _quadro_id: string }; Returns: boolean }
+      proxima_ocorrencia: {
+        Args: { _data: string; _regra: string }
+        Returns: string
+      }
       recalc_story_status: { Args: { _story_id: string }; Returns: undefined }
       registrar_abertura_quadro: {
         Args: { p_quadro_id: string }
         Returns: undefined
       }
+      tarefa_avancar_recorrentes: { Args: never; Returns: number }
+      tarefa_card_avancar: { Args: { _id: string }; Returns: string }
       tarefa_reordenar_cards: {
         Args: { _coluna_id: string; _ids: string[] }
         Returns: undefined
