@@ -30,7 +30,7 @@ export function PainelCamposEstrategia() {
     const i = ids.indexOf(id);
     const j = i + passo;
     if (i < 0 || j < 0 || j >= ids.length) return;
-    [ids[i], ids[j]] = [ids[j], ids[i]];
+    [ids[i], ids[j]] = [ids[j]!, ids[i]!];
     qc.setQueryData(chave, ids.map((x) => campos.find((c) => c.id === x)!).filter(Boolean));
     try {
       await reordenarCampos(frente, ids);

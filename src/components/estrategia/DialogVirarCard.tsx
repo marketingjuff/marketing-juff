@@ -8,7 +8,25 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { colunasQueryOptions, pessoasQueryOptions, quadrosQueryOptions } from "@/lib/tarefas";
+import { pessoasQueryOptions, quadrosQueryOptions } from "@/lib/tarefas";
+import { supabase } from "@/integrations/supabase/client";
+
+type ColunaSimples = { id: string; nome: string };
+const colunasQueryOptions = (quadroId: string) => ({
+  queryKey: ["estrategia", "colunas-do-quadro", quadroId],
+  queryFn: async (): Promise<ColunaSimples[]> => {
+    const { data, error } = await supabase
+      .from("tarefa_colunas")
+      .select("id, nome")
+      .eq("quadro_id", quadroId)
+      .eq("arquivado", false)
+      .order("posicao");
+    if (error) throw error;
+    return data ?? [];
+  },
+  staleTime: 60_000,
+  refetchOnWindowFocus: false,
+});
 import { decisaoVirarCard, type DecisaoEstrategia } from "@/lib/estrategia";
 
 const NINGUEM = "__ninguem__";
@@ -47,12 +65,13 @@ export function DialogVirarCard({
   }, [open, decisao?.id]);
 
   useEffect(() => {
-    if (colunas.length && !colunas.some((c) => c.id === colunaId)) setColunaId(colunas[0].id);
+    if (colunas.length && !colunas.some((c) => c.id === colunaId)) setColunaId(colunas[0]!.id);
   }, [colunas, colunaId]);
 
   if (!decisao) return null;
 
   async function confirmar() {
+    if (!decisao) return;
     if (!quadroId || !colunaId || !titulo.trim()) {
       toast.error("Escolha quadro, coluna e escreva o título");
       return;
