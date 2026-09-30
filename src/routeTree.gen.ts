@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedObjetivosRouteImport } from './routes/_authenticated/objetivos'
 import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
+import { Route as AuthenticatedEstrategiaAtaRouteImport } from './routes/_authenticated/estrategia/ata'
 import { Route as AuthenticatedSocialStoriesRouteImport } from './routes/_authenticated/social/stories'
 import { Route as AuthenticatedTarefasCalendarioRouteImport } from './routes/_authenticated/tarefas/calendario'
 import { Route as AuthenticatedTarefasMeuTrabalhoRouteImport } from './routes/_authenticated/tarefas/meu-trabalho'
@@ -50,6 +51,12 @@ const AuthenticatedTrocarSenhaRoute =
   AuthenticatedTrocarSenhaRouteImport.update({
     id: '/trocar-senha',
     path: '/trocar-senha',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedEstrategiaAtaRoute =
+  AuthenticatedEstrategiaAtaRouteImport.update({
+    id: '/estrategia/ata',
+    path: '/estrategia/ata',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedSocialStoriesRoute =
@@ -89,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/objetivos': typeof AuthenticatedObjetivosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
   '/social/stories': typeof AuthenticatedSocialStoriesRoute
   '/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
   '/tarefas/meu-trabalho': typeof AuthenticatedTarefasMeuTrabalhoRoute
@@ -101,6 +109,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/objetivos': typeof AuthenticatedObjetivosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
   '/social/stories': typeof AuthenticatedSocialStoriesRoute
   '/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
   '/tarefas/meu-trabalho': typeof AuthenticatedTarefasMeuTrabalhoRoute
@@ -115,6 +124,7 @@ export interface FileRoutesById {
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/objetivos': typeof AuthenticatedObjetivosRoute
   '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/_authenticated/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
   '/_authenticated/social/stories': typeof AuthenticatedSocialStoriesRoute
   '/_authenticated/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
   '/_authenticated/tarefas/meu-trabalho': typeof AuthenticatedTarefasMeuTrabalhoRoute
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/objetivos'
     | '/trocar-senha'
+    | '/estrategia/ata'
     | '/social/stories'
     | '/tarefas/calendario'
     | '/tarefas/meu-trabalho'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/objetivos'
     | '/trocar-senha'
+    | '/estrategia/ata'
     | '/social/stories'
     | '/tarefas/calendario'
     | '/tarefas/meu-trabalho'
@@ -154,6 +166,7 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracoes'
     | '/_authenticated/objetivos'
     | '/_authenticated/trocar-senha'
+    | '/_authenticated/estrategia/ata'
     | '/_authenticated/social/stories'
     | '/_authenticated/tarefas/calendario'
     | '/_authenticated/tarefas/meu-trabalho'
@@ -211,6 +224,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTrocarSenhaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/estrategia/ata': {
+      id: '/_authenticated/estrategia/ata'
+      path: '/estrategia/ata'
+      fullPath: '/estrategia/ata'
+      preLoaderRoute: typeof AuthenticatedEstrategiaAtaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/social/stories': {
       id: '/_authenticated/social/stories'
       path: '/social/stories'
@@ -253,6 +273,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedObjetivosRoute: typeof AuthenticatedObjetivosRoute
   AuthenticatedTrocarSenhaRoute: typeof AuthenticatedTrocarSenhaRoute
+  AuthenticatedEstrategiaAtaRoute: typeof AuthenticatedEstrategiaAtaRoute
   AuthenticatedSocialStoriesRoute: typeof AuthenticatedSocialStoriesRoute
   AuthenticatedTarefasCalendarioRoute: typeof AuthenticatedTarefasCalendarioRoute
   AuthenticatedTarefasMeuTrabalhoRoute: typeof AuthenticatedTarefasMeuTrabalhoRoute
@@ -264,6 +285,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedObjetivosRoute: AuthenticatedObjetivosRoute,
   AuthenticatedTrocarSenhaRoute: AuthenticatedTrocarSenhaRoute,
+  AuthenticatedEstrategiaAtaRoute: AuthenticatedEstrategiaAtaRoute,
   AuthenticatedSocialStoriesRoute: AuthenticatedSocialStoriesRoute,
   AuthenticatedTarefasCalendarioRoute: AuthenticatedTarefasCalendarioRoute,
   AuthenticatedTarefasMeuTrabalhoRoute: AuthenticatedTarefasMeuTrabalhoRoute,

@@ -1,7 +1,7 @@
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { BarraAtalhos } from "@/components/tarefas/BarraAtalhos";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Megaphone, Library, Settings, SquareKanban, Telescope, User } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { NAVIGATION } from "@/config/navigation";
@@ -18,6 +18,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import juffLogo from "@/assets/juff-logo.png.asset.json";
+
+const ICONES_MASTER = {
+  megaphone: Megaphone,
+  "square-kanban": SquareKanban,
+  telescope: Telescope,
+  library: Library,
+} as const;
 
 export function AppShell({
   children,
@@ -68,6 +75,7 @@ export function AppShell({
                     (!sub.roles || (profile ? sub.roles.includes(profile.role) : false)) &&
                     hasPermission(profile, sub.permission),
                 );
+                const IconeMaster = ICONES_MASTER[master.icone];
                 return (
                   <li key={master.key}>
                     {primeiro ? (
@@ -77,11 +85,17 @@ export function AppShell({
                         activeProps={{ className: "bg-primary text-primary-foreground shadow-soft" }}
                         activeOptions={{ exact: false }}
                       >
-                        {master.label}
+                        <span className="inline-flex items-center gap-1.5">
+                          <IconeMaster className="size-3.5" />
+                          {master.label}
+                        </span>
                       </Link>
                     ) : (
                       <span className="inline-block cursor-not-allowed rounded-lg px-4 py-1.5 text-xs font-semibold tracking-widest text-muted-foreground/40">
-                        {master.label}
+                        <span className="inline-flex items-center gap-1.5">
+                          <IconeMaster className="size-3.5" />
+                          {master.label}
+                        </span>
                       </span>
                     )}
                   </li>
