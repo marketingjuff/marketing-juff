@@ -60,6 +60,7 @@ import {
   avancarCard,
   ehRecorrente,
   RECORRENCIAS,
+  LEMBRETES,
   type Card,
   type CardUpdate,
   type QuadroCompleto,
@@ -489,6 +490,28 @@ export function CardDialog({
                   <RefreshCw className="size-4" /> Já fiz, ir para a próxima
                 </Button>
               ) : null}
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground">Lembrete</p>
+              <Select
+                disabled={!mexer || !c.hora_entrega}
+                value={c.lembrete_min === null || c.lembrete_min === undefined ? "nenhum" : String(c.lembrete_min)}
+                onValueChange={(v) => salvar({ lembrete_min: v === "nenhum" ? null : Number(v) })}
+              >
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {LEMBRETES.map((l) => (
+                    <SelectItem key={String(l.valor)} value={l.valor === null ? "nenhum" : String(l.valor)}>
+                      {l.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                {!c.hora_entrega
+                  ? "Marque uma hora na data de entrega para poder ser lembrado"
+                  : "O aviso vai para o responsável pelo card"}
+              </p>
             </div>
             <Campo label="Prioridade">
               <Select disabled={!mexer} value={c.prioridade ?? NENHUM}

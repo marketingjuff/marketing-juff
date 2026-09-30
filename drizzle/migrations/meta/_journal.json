@@ -71,6 +71,13 @@
       "when": 1790789362013,
       "tag": "0009_tarefa_hora_recorrencia",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790790534962,
+      "tag": "0010_notificacoes_lembrete",
+      "breakpoints": true
     }
   ]
 }
