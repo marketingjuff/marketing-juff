@@ -120,6 +120,13 @@
       "when": 1790794512572,
       "tag": "0016_lembrete_rotulo_hora_fixa",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790796808714,
+      "tag": "0017_biblioteca_produto",
+      "breakpoints": true
     }
   ]
 }
