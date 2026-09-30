@@ -245,6 +245,39 @@ export type Database = {
           },
         ]
       }
+      meudia_excecoes: {
+        Row: {
+          data: string
+          recorrente_id: string
+          user_id: string
+        }
+        Insert: {
+          data: string
+          recorrente_id: string
+          user_id: string
+        }
+        Update: {
+          data?: string
+          recorrente_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meudia_excecoes_recorrente_id_fkey"
+            columns: ["recorrente_id"]
+            isOneToOne: false
+            referencedRelation: "meudia_recorrentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meudia_excecoes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meudia_itens: {
         Row: {
           bloco_inicio: number
@@ -313,6 +346,7 @@ export type Database = {
           created_at: string
           descricao: string
           dia_semana: string
+          encerrado_em: string | null
           hora: string | null
           id: string
           posicao: number
@@ -325,6 +359,7 @@ export type Database = {
           created_at?: string
           descricao?: string
           dia_semana?: string
+          encerrado_em?: string | null
           hora?: string | null
           id?: string
           posicao?: number
@@ -337,6 +372,7 @@ export type Database = {
           created_at?: string
           descricao?: string
           dia_semana?: string
+          encerrado_em?: string | null
           hora?: string | null
           id?: string
           posicao?: number

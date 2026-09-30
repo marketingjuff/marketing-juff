@@ -15,6 +15,9 @@ export const DIAS_SEMANA = [
 
 export type DiaSemana = (typeof DIAS_SEMANA)[number]["valor"];
 
+/** Posição do dia da semana dentro da grade de segunda a sexta. */
+const INDICE_DIA: Record<string, number> = { seg: 0, ter: 1, qua: 2, qui: 3, sex: 4 };
+
 export type Recorrente = {
   id: string;
   descricao: string;
@@ -24,6 +27,7 @@ export type Recorrente = {
   hora: string | null;
   ativo: boolean;
   posicao: number;
+  encerrado_em: string | null;
 };
 
 export type ItemDia = {
@@ -35,6 +39,9 @@ export type ItemDia = {
   card_id: string | null;
   recorrente_id: string | null;
   feito: boolean;
+  /** true quando o item ainda não existe no banco, só foi calculado. */
+  virtual?: boolean;
+  hora?: string | null;
 };
 
 export type RelatoDia = {
@@ -63,7 +70,6 @@ export function semanasDoMes(ano: number, mes: number): string[][] {
   const primeiro = new Date(ano, mes - 1, 1);
   const ultimo = new Date(ano, mes, 0);
   const cursor = new Date(primeiro);
-  // recua até a segunda-feira daquela semana
   const recuo = (cursor.getDay() + 6) % 7;
   cursor.setDate(cursor.getDate() - recuo);
 
@@ -83,6 +89,31 @@ export function semanasDoMes(ano: number, mes: number): string[][] {
 
 export function mesDe(dataIso: string): number {
   return Number(dataIso.slice(5, 7));
+}
+
+/** Último dia útil do mês, de segunda a sexta, pulando feriado. */
+export function ultimoDiaUtil(ano: number, mes: number, feriados: Record<string, string>): string {
+  const d = new Date(ano, mes, 0);
+  while (true) {
+    const dia = d.getDay();
+    const s = iso(d);
+    if (dia !== 0 && dia !== 6 && !feriados[s]) return s;
+    d.setDate(d.getDate() - 1);
+  }
+}
+
+/**
+ * Bloco em que a hora cai.
+ * Até as 10 é o primeiro, até meio dia o segundo,
+ * até as 15 o terceiro, depois disso o quarto.
+ */
+export function blocoDaHora(hora: string | null): number {
+  if (!hora) return 1;
+  const hhmm = hora.slice(0, 5);
+  if (hhmm <= "10:00") return 1;
+  if (hhmm <= "12:00") return 2;
+  if (hhmm <= "15:00") return 3;
+  return 4;
 }
 
 // ---------------- feriados ----------------
@@ -110,7 +141,6 @@ export async function excluirFeriado(data: string): Promise<void> {
   if (error) throw error;
 }
 
-/** Busca os feriados nacionais do ano na BrasilAPI. */
 export async function buscarFeriadosNacionais(
   ano: number,
 ): Promise<{ data: string; descricao: string }[]> {
@@ -120,7 +150,6 @@ export async function buscarFeriadosNacionais(
   return arr.map((f) => ({ data: f.date, descricao: f.name }));
 }
 
-/** Acrescenta os que faltam, nunca duplica. Devolve quantos entraram. */
 export async function importarFeriados(ano: number): Promise<number> {
   const vindos = await buscarFeriadosNacionais(ano);
   const { data: jaTem } = await supabase
@@ -143,7 +172,7 @@ export const recorrentesQueryOptions = queryOptions({
   queryFn: async (): Promise<Recorrente[]> => {
     const { data, error } = await supabase
       .from("meudia_recorrentes")
-      .select("id, descricao, vezes_mes, blocos, dia_semana, hora, ativo, posicao")
+      .select("id, descricao, vezes_mes, blocos, dia_semana, hora, ativo, posicao, encerrado_em")
       .order("posicao", { ascending: true });
     if (error) throw error;
     return (data ?? []) as Recorrente[];
@@ -161,7 +190,9 @@ export async function criarRecorrente(descricao: string, posicao: number): Promi
 
 export async function atualizarRecorrente(
   id: string,
-  patch: Partial<Pick<Recorrente, "descricao" | "vezes_mes" | "blocos" | "dia_semana" | "hora" | "ativo">>,
+  patch: Partial<
+    Pick<Recorrente, "descricao" | "vezes_mes" | "blocos" | "dia_semana" | "hora" | "ativo" | "encerrado_em">
+  >,
 ): Promise<void> {
   const { error } = await supabase.from("meudia_recorrentes").update(patch).eq("id", id);
   if (error) throw error;
@@ -175,6 +206,39 @@ export async function excluirRecorrente(id: string): Promise<void> {
 export async function reordenarRecorrentes(ids: string[]): Promise<void> {
   const { error } = await supabase.rpc("meudia_reordenar_recorrentes", { _ids: ids });
   if (error) throw error;
+}
+
+// ---------------- exceções ----------------
+
+export const excecoesQueryOptions = (de: string, ate: string) =>
+  queryOptions({
+    queryKey: ["meudia", "excecoes", de, ate],
+    queryFn: async (): Promise<Set<string>> => {
+      const { data, error } = await supabase
+        .from("meudia_excecoes")
+        .select("recorrente_id, data")
+        .gte("data", de)
+        .lte("data", ate);
+      if (error) throw error;
+      return new Set((data ?? []).map((e) => `${e.recorrente_id}|${e.data}`));
+    },
+    ...PADRAO,
+  });
+
+export async function criarExcecao(recorrenteId: string, data: string): Promise<void> {
+  const { data: auth } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from("meudia_excecoes")
+    .upsert(
+      { user_id: auth.user?.id ?? "", recorrente_id: recorrenteId, data },
+      { onConflict: "user_id,recorrente_id,data" },
+    );
+  if (error) throw error;
+}
+
+/** Para de gerar a partir daquele dia, sem apagar o que já passou. */
+export async function encerrarRecorrente(recorrenteId: string, data: string): Promise<void> {
+  await atualizarRecorrente(recorrenteId, { encerrado_em: data });
 }
 
 // ---------------- itens dos blocos ----------------
@@ -202,6 +266,7 @@ export async function criarItem(item: {
   texto: string;
   card_id: string | null;
   recorrente_id: string | null;
+  feito?: boolean;
 }): Promise<string> {
   const { data: auth } = await supabase.auth.getUser();
   const { data, error } = await supabase
@@ -226,22 +291,110 @@ export async function excluirItem(id: string): Promise<void> {
   if (error) throw error;
 }
 
-/** Quantos blocos livres existem num dia, a partir de um bloco. */
-export function livresApartirDe(itens: ItemDia[], dataIso: string, bloco: number): number {
-  const ocupados = new Set<number>();
+// ---------------- geração automática ----------------
+
+/** Blocos já ocupados num dia, considerando os itens informados. */
+function ocupados(itens: ItemDia[], dataIso: string): Set<number> {
+  const s = new Set<number>();
   for (const i of itens) {
     if (i.data !== dataIso) continue;
-    for (let b = i.bloco_inicio; b < i.bloco_inicio + i.blocos; b++) ocupados.add(b);
+    for (let b = i.bloco_inicio; b < i.bloco_inicio + i.blocos; b++) s.add(b);
   }
+  return s;
+}
+
+export function livresApartirDe(itens: ItemDia[], dataIso: string, bloco: number): number {
+  const o = ocupados(itens, dataIso);
   let n = 0;
   for (let b = bloco; b <= BLOCOS_POR_DIA; b++) {
-    if (ocupados.has(b)) break;
+    if (o.has(b)) break;
     n++;
   }
   return n;
 }
 
-/** Quantas vezes cada recorrente já foi encaixado num mês. */
+/** Primeiro bloco livre a partir do desejado, descendo. Zero quando não cabe. */
+function primeiroQueCabe(itens: ItemDia[], dataIso: string, desejado: number, blocos: number): number {
+  const o = ocupados(itens, dataIso);
+  for (let inicio = desejado; inicio <= BLOCOS_POR_DIA - blocos + 1; inicio++) {
+    let cabe = true;
+    for (let b = inicio; b < inicio + blocos; b++) if (o.has(b)) cabe = false;
+    if (cabe) return inicio;
+  }
+  for (let inicio = 1; inicio < desejado && inicio <= BLOCOS_POR_DIA - blocos + 1; inicio++) {
+    let cabe = true;
+    for (let b = inicio; b < inicio + blocos; b++) if (o.has(b)) cabe = false;
+    if (cabe) return inicio;
+  }
+  return 0;
+}
+
+/**
+ * Monta a lista final de um período, juntando o que está gravado
+ * com as ocorrências automáticas dos recorrentes que têm dia definido.
+ */
+export function montarItens(params: {
+  dias: string[];
+  gravados: ItemDia[];
+  recorrentes: Recorrente[];
+  excecoes: Set<string>;
+  feriados: Record<string, string>;
+}): ItemDia[] {
+  const { dias, gravados, recorrentes, excecoes, feriados } = params;
+  const saida: ItemDia[] = [...gravados];
+
+  const comDia = recorrentes.filter((r) => r.ativo && r.dia_semana !== "livre");
+  if (comDia.length === 0) return saida;
+
+  // dias em que cada recorrente já tem item gravado
+  const jaGravado = new Set(
+    gravados.filter((i) => i.recorrente_id).map((i) => `${i.recorrente_id}|${i.data}`),
+  );
+
+  for (const dataIso of dias) {
+    if (feriados[dataIso]) continue;
+
+    const d = new Date(`${dataIso}T12:00:00`);
+    const indice = (d.getDay() + 6) % 7;
+    if (indice > 4) continue;
+
+    for (const r of comDia) {
+      if (r.encerrado_em && dataIso >= r.encerrado_em) continue;
+      if (excecoes.has(`${r.id}|${dataIso}`)) continue;
+      if (jaGravado.has(`${r.id}|${dataIso}`)) continue;
+
+      let serve = false;
+      if (r.dia_semana === "ultimo_dia_util") {
+        const ano = Number(dataIso.slice(0, 4));
+        const mes = Number(dataIso.slice(5, 7));
+        serve = dataIso === ultimoDiaUtil(ano, mes, feriados);
+      } else {
+        serve = INDICE_DIA[r.dia_semana] === indice;
+      }
+      if (!serve) continue;
+
+      const inicio = primeiroQueCabe(saida, dataIso, blocoDaHora(r.hora), r.blocos);
+      if (inicio === 0) continue;
+
+      saida.push({
+        id: `virt-${r.id}-${dataIso}`,
+        data: dataIso,
+        bloco_inicio: inicio,
+        blocos: r.blocos,
+        texto: r.hora ? `${r.hora.slice(0, 5)} ${r.descricao}` : r.descricao,
+        card_id: null,
+        recorrente_id: r.id,
+        feito: false,
+        virtual: true,
+        hora: r.hora,
+      });
+    }
+  }
+
+  return saida;
+}
+
+/** Quantas vezes cada recorrente livre já foi encaixado num mês. */
 export function contagemDoMes(itens: ItemDia[], ano: number, mes: number): Record<string, number> {
   const pref = `${ano}-${String(mes).padStart(2, "0")}`;
   const out: Record<string, number> = {};

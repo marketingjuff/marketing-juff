@@ -92,6 +92,13 @@
       "when": 1790792832028,
       "tag": "0012_meu_dia",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790793744464,
+      "tag": "0013_meudia_recorrentes_automaticos",
+      "breakpoints": true
     }
   ]
 }

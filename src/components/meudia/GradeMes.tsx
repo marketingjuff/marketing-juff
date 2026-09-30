@@ -1,4 +1,4 @@
-import { Check, Trash2 } from "lucide-react";
+import { Check, RefreshCw, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   BLOCOS_POR_DIA, NOMES_DIA, NOMES_MES, mesDe, semanasDoMes,
@@ -84,7 +84,10 @@ export function GradeMes({
                           <div
                             key={bloco}
                             className={cn(
-                              "group relative flex items-start gap-1 rounded border border-border bg-secondary/60 px-1.5 py-1",
+                              "group relative flex items-start gap-1 rounded border px-1.5 py-1",
+                              item.recorrente_id
+                                ? "border-primary/40 bg-primary-soft/40"
+                                : "border-border bg-secondary/60",
                               item.feito && "opacity-55",
                             )}
                             style={{ minHeight: `${item.blocos * 1.75}rem` }}
@@ -100,6 +103,9 @@ export function GradeMes({
                             <span className={cn("min-w-0 flex-1 break-words text-[11px] leading-tight", item.feito && "line-through")}>
                               {item.texto}
                             </span>
+                            {item.recorrente_id ? (
+                              <RefreshCw className="mt-0.5 size-3 shrink-0 text-muted-foreground" />
+                            ) : null}
                             <button
                               type="button"
                               onClick={() => onExcluir(item)}

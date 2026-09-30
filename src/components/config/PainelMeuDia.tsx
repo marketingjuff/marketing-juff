@@ -42,6 +42,11 @@ export function PainelMeuDia() {
           <p className="text-xs text-muted-foreground">
             O que se repete todo mês. Só você enxerga esta lista.
           </p>
+          <p className="text-xs text-muted-foreground">
+            Com dia da semana escolhido, o item entra sozinho na grade em todo dia correspondente,
+            no bloco que a hora indicar. Marcado como livre, você encaixa na mão e o campo de vezes
+            por mês serve para o sistema avisar quanto ainda falta.
+          </p>
         </div>
 
         <ul className="divide-y divide-border rounded-lg border border-border">
@@ -59,8 +64,9 @@ export function PainelMeuDia() {
                   } catch { toast.error("Não deu para renomear"); }
                 }}
               />
+              {r.dia_semana === "livre" ? (
               <div className="flex items-center gap-1">
-                <span className="text-[11px] text-muted-foreground">vezes</span>
+                <span className="text-[11px] text-muted-foreground">vezes por mês</span>
                 <Input
                   type="number"
                   min={1}
@@ -77,6 +83,7 @@ export function PainelMeuDia() {
                   }}
                 />
               </div>
+              ) : null}
               <Select
                 value={String(r.blocos)}
                 onValueChange={async (v) => {
