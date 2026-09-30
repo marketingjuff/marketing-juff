@@ -1,4 +1,4 @@
-import { CheckCircle2, CheckSquare, Clock, MessageSquare, Paperclip, Pause, Flag } from "lucide-react";
+import { CheckCircle2, RefreshCw, CheckSquare, Clock, MessageSquare, Paperclip, Pause, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DIAS_PARADO_ALERTA,
@@ -6,7 +6,8 @@ import {
   diasParado,
   estaAdiado,
   estaAtrasado,
-  formatarData,
+  formatarDataHora,
+  ehRecorrente,
   siglaPessoa,
   venceAmanha,
   venceHoje,
@@ -76,12 +77,13 @@ export function CardMini({
         {card.data_entrega ? (
           <span
             className={cn(
-              "rounded px-1",
+              "inline-flex items-center gap-0.5 rounded px-1",
               atrasado && "bg-destructive/15 font-medium text-destructive",
               !atrasado && breve && "bg-warning/25 font-medium text-foreground",
             )}
           >
-            {formatarData(card.data_entrega)}
+            {ehRecorrente(card) ? <RefreshCw className="size-3 shrink-0" /> : null}
+            {formatarDataHora(card.data_entrega, card.hora_entrega)}
           </span>
         ) : null}
         {prio ? (
@@ -109,7 +111,7 @@ export function CardMini({
         ) : null}
         {adiado ? (
           <span className="flex items-center gap-0.5">
-            <Pause className="size-3" /> até {formatarData(card.adiado_ate)}
+            <Pause className="size-3" /> até {formatarDataHora(card.adiado_ate, null)}
           </span>
         ) : null}
         {resp ? (

@@ -30,6 +30,23 @@ export type Coluna = {
 
 export type Etiqueta = { id: string; nome: string; cor: string; cor_texto: string; arquivado: boolean; posicao: number };
 
+export type Recorrencia =
+  | "nunca"
+  | "diario"
+  | "dias_uteis"
+  | "semanal"
+  | "mensal_dia"
+  | "mensal_semana";
+
+export const RECORRENCIAS: { valor: Recorrencia; label: string }[] = [
+  { valor: "nunca", label: "Nunca" },
+  { valor: "diario", label: "Diariamente" },
+  { valor: "dias_uteis", label: "Segunda a sexta" },
+  { valor: "semanal", label: "Semanal" },
+  { valor: "mensal_dia", label: "Mensalmente no mesmo dia" },
+  { valor: "mensal_semana", label: "Mensalmente no mesmo dia da semana" },
+];
+
 export type Card = {
   id: string;
   quadro_id: string;
@@ -40,6 +57,9 @@ export type Card = {
   criado_por: string | null;
   data_inicio: string | null;
   data_entrega: string | null;
+  hora_inicio: string | null;
+  hora_entrega: string | null;
+  recorrencia: Recorrencia;
   prioridade: Prioridade | null;
   esforco: Esforco | null;
   adiado_ate: string | null;
@@ -185,6 +205,9 @@ function mapCard(c: any): Card {
     criado_por: c.criado_por ?? null,
     data_inicio: c.data_inicio,
     data_entrega: c.data_entrega,
+    hora_inicio: c.hora_inicio ?? null,
+    hora_entrega: c.hora_entrega ?? null,
+    recorrencia: (c.recorrencia ?? "nunca") as Recorrencia,
     prioridade: c.prioridade,
     esforco: c.esforco,
     adiado_ate: c.adiado_ate,
@@ -521,6 +544,9 @@ export type CardUpdate = Partial<
     | "responsavel_id"
     | "data_inicio"
     | "data_entrega"
+    | "hora_inicio"
+    | "hora_entrega"
+    | "recorrencia"
     | "prioridade"
     | "esforco"
     | "adiado_ate"
@@ -532,6 +558,20 @@ export type CardUpdate = Partial<
     | "concluido"
   >
 >;
+
+/** Empurra um card recorrente para a próxima ocorrência. */
+export async function avancarCard(id: string): Promise<string | null> {
+  const { data, error } = await supabase.rpc("tarefa_card_avancar", { _id: id });
+  if (error) throw error;
+  return (data as string | null) ?? null;
+}
+
+/** Empurra de uma vez todo recorrente vencido. Roda uma vez por dia. */
+export async function avancarRecorrentes(): Promise<number> {
+  const { data, error } = await supabase.rpc("tarefa_avancar_recorrentes");
+  if (error) throw error;
+  return (data as number) ?? 0;
+}
 
 export async function updateCard(id: string, values: CardUpdate): Promise<void> {
   const { error } = await supabase.from("tarefa_cards").update(values).eq("id", id);
@@ -927,8 +967,18 @@ export function diasParado(colunaDesde: string): number {
   return Math.floor((Date.now() - new Date(colunaDesde).getTime()) / 86_400_000);
 }
 
-export function estaAtrasado(card: Pick<Card, "data_entrega" | "concluido">): boolean {
-  return !!card.data_entrega && !card.concluido && card.data_entrega < hojeIso();
+export function estaAtrasado(
+  card: Pick<Card, "data_entrega" | "concluido"> & { hora_entrega?: string | null },
+): boolean {
+  if (!card.data_entrega || card.concluido) return false;
+  if (card.data_entrega < hojeIso()) return true;
+  // mesmo dia só atrasa depois da hora marcada
+  if (card.data_entrega === hojeIso() && card.hora_entrega) {
+    const agora = new Date();
+    const atual = `${String(agora.getHours()).padStart(2, "0")}:${String(agora.getMinutes()).padStart(2, "0")}`;
+    return card.hora_entrega.slice(0, 5) < atual;
+  }
+  return false;
 }
 
 export function venceHoje(card: Pick<Card, "data_entrega" | "concluido">): boolean {
@@ -955,6 +1005,30 @@ export function formatarData(iso: string | null): string {
   if (!iso) return "";
   const [y, m, d] = iso.split("-");
   return `${d}/${m}${y && y !== String(new Date().getFullYear()) ? `/${y.slice(2)}` : ""}`;
+}
+
+/** "09:00:00" vira "09:00". Vazio quando não há hora. */
+export function formatarHora(hora: string | null): string {
+  if (!hora) return "";
+  return hora.slice(0, 5);
+}
+
+/** Data com hora quando existe, só data quando não existe. */
+export function formatarDataHora(iso: string | null, hora: string | null): string {
+  const d = formatarData(iso);
+  if (!d) return "";
+  const h = formatarHora(hora);
+  return h ? `${d}, ${h}` : d;
+}
+
+/** Card que se repete nunca é tratado como concluído. */
+export function ehRecorrente(card: Pick<Card, "recorrencia">): boolean {
+  return !!card.recorrencia && card.recorrencia !== "nunca";
+}
+
+/** Ordena cards do mesmo dia pela hora, os sem hora primeiro. */
+export function ordenarPorHora<T extends Pick<Card, "hora_entrega">>(cards: T[]): T[] {
+  return [...cards].sort((a, b) => (a.hora_entrega ?? "").localeCompare(b.hora_entrega ?? ""));
 }
 
 export function iniciais(nome: string): string {

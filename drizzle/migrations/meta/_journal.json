@@ -64,6 +64,13 @@
       "when": 1790773182084,
       "tag": "0008_estrategia_ata_mensal",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790789362013,
+      "tag": "0009_tarefa_hora_recorrencia",
+      "breakpoints": true
     }
   ]
 }

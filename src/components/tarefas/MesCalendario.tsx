@@ -39,6 +39,9 @@ export function MesCalendario({
     if (!c.data_entrega) continue;
     porDia.set(c.data_entrega, [...(porDia.get(c.data_entrega) ?? []), c]);
   }
+  for (const [dia, lista] of porDia) {
+    porDia.set(dia, [...lista].sort((a, b) => (a.hora_entrega ?? "").localeCompare(b.hora_entrega ?? "")));
+  }
 
   function mover(delta: number) {
     const d = new Date(ano, mes + delta, 1);
@@ -99,6 +102,9 @@ export function MesCalendario({
                     c.concluido && "line-through opacity-60",
                   )}
                 >
+                  {c.hora_entrega ? (
+                    <span className="mr-1 tabular-nums opacity-70">{c.hora_entrega.slice(0, 5)}</span>
+                  ) : null}
                   {c.titulo || "Sem título"}
                 </span>
               ))}

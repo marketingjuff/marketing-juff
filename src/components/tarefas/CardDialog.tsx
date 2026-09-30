@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Archive, ChevronDown, Download, ExternalLink, Plus, Trash2, Upload, X } from "lucide-react";
+import { Archive, RefreshCw, ChevronDown, Download, ExternalLink, Plus, Trash2, Upload, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { CampoData } from "@/components/tarefas/CampoData";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,6 +56,10 @@ import {
   updateCard,
   uploadAnexo,
   urlAnexo,
+  formatarDataHora,
+  avancarCard,
+  ehRecorrente,
+  RECORRENCIAS,
   type Card,
   type CardUpdate,
   type QuadroCompleto,
@@ -426,17 +431,65 @@ export function CardDialog({
                 </SelectContent>
               </Select>
             </Campo>
-            <Campo label="Data de início">
-              <Input type="date" className="h-8" disabled={!mexer} value={c.data_inicio ?? ""}
-                onChange={(e) => salvar({ data_inicio: e.target.value || null })} />
-            </Campo>
-            <Campo label="Data de entrega">
-              <Input type="date" className="h-8" disabled={!mexer} value={c.data_entrega ?? ""}
-                onChange={(e) => {
-                  const v = e.target.value || null;
-                  salvar({ data_entrega: v }, ["Mudou entrega", `${formatarData(c.data_entrega) || "sem data"} → ${formatarData(v) || "sem data"}`]);
-                }} />
-            </Campo>
+            <CampoData
+              label="Data de início"
+              data={c.data_inicio}
+              hora={c.hora_inicio}
+              disabled={!mexer}
+              onChange={(d, h) => salvar({ data_inicio: d, hora_inicio: h })}
+            />
+            <CampoData
+              label="Data de entrega"
+              data={c.data_entrega}
+              hora={c.hora_entrega}
+              disabled={!mexer}
+              onChange={(d, h) =>
+                salvar({ data_entrega: d, hora_entrega: h, ...(d ? {} : { recorrencia: "nunca" as const }) }, [
+                  "Mudou entrega",
+                  `${formatarDataHora(c.data_entrega, c.hora_entrega) || "sem data"} → ${formatarDataHora(d, h) || "sem data"}`,
+                ])
+              }
+            />
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground">Recorrente</p>
+              <Select
+                disabled={!mexer || !c.data_entrega}
+                value={c.recorrencia ?? "nunca"}
+                onValueChange={(v) => salvar({ recorrencia: v as Card["recorrencia"] })}
+              >
+                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {RECORRENCIAS.map((r) => (
+                    <SelectItem key={r.valor} value={r.valor}>{r.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!c.data_entrega ? (
+                <p className="text-[11px] text-muted-foreground">
+                  Marque uma data de entrega para poder repetir
+                </p>
+              ) : null}
+              {ehRecorrente(c) ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-1 w-full gap-1"
+                  disabled={!mexer}
+                  onClick={async () => {
+                    try {
+                      const prox = await avancarCard(c.id);
+                      toast.success(prox ? `Próxima em ${formatarData(prox)}` : "Card atualizado");
+                    } catch {
+                      toast.error("Não deu para avançar");
+                    } finally {
+                      invalidar();
+                    }
+                  }}
+                >
+                  <RefreshCw className="size-4" /> Já fiz, ir para a próxima
+                </Button>
+              ) : null}
+            </div>
             <Campo label="Prioridade">
               <Select disabled={!mexer} value={c.prioridade ?? NENHUM}
                 onValueChange={(v) => salvar({ prioridade: v === NENHUM ? null : (v as Card["prioridade"]) })}>

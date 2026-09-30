@@ -1,5 +1,6 @@
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { BarraAtalhos } from "@/components/tarefas/BarraAtalhos";
+import { useAvancarRecorrentes } from "@/hooks/useAvancarRecorrentes";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { LogOut, Megaphone, Library, Settings, SquareKanban, Telescope, User } from "lucide-react";
 import type { ReactNode } from "react";
@@ -40,6 +41,7 @@ export function AppShell({
   const caminho = useRouterState({ select: (s) => s.location.pathname });
   const emTarefas = caminho.startsWith("/tarefas");
   const podeQuadros = hasPermission(profile, "tarefas.quadros");
+  useAvancarRecorrentes(podeQuadros);
 
   /**
    * Aba mestre em que a pessoa está, descoberta pelo caminho atual.
