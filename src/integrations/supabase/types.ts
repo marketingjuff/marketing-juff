@@ -117,6 +117,39 @@ export type Database = {
           },
         ]
       }
+      biblioteca_paleta: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          hex: string
+          id: string
+          nome: string
+          posicao: number
+          rascunho: boolean
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          hex: string
+          id?: string
+          nome: string
+          posicao?: number
+          rascunho?: boolean
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          hex?: string
+          id?: string
+          nome?: string
+          posicao?: number
+          rascunho?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       biblioteca_produto_cores: {
         Row: {
           categoria: string
@@ -198,6 +231,42 @@ export type Database = {
           usa_sufixo?: boolean
           usa_tecido?: boolean
           usa_xtra?: boolean
+        }
+        Relationships: []
+      }
+      biblioteca_textos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          grupo: string
+          id: string
+          observacao: string | null
+          posicao: number
+          texto: string
+          titulo: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          grupo: string
+          id?: string
+          observacao?: string | null
+          posicao?: number
+          texto: string
+          titulo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          grupo?: string
+          id?: string
+          observacao?: string | null
+          posicao?: number
+          texto?: string
+          titulo?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
