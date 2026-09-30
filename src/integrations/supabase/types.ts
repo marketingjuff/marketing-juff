@@ -192,6 +192,93 @@ export type Database = {
           },
         ]
       }
+      notificacao_preferencias: {
+        Row: {
+          ativo: boolean
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacao_preferencias_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notificacoes: {
+        Row: {
+          card_id: string | null
+          created_at: string
+          detalhe: string
+          dia: string
+          id: string
+          lida: boolean
+          quadro_id: string | null
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          card_id?: string | null
+          created_at?: string
+          detalhe?: string
+          dia?: string
+          id?: string
+          lida?: boolean
+          quadro_id?: string | null
+          tipo: string
+          titulo?: string
+          user_id: string
+        }
+        Update: {
+          card_id?: string | null
+          created_at?: string
+          detalhe?: string
+          dia?: string
+          id?: string
+          lida?: boolean
+          quadro_id?: string | null
+          tipo?: string
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notificacoes_quadro_id_fkey"
+            columns: ["quadro_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_quadros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notificacoes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           cor_avatar: string | null
@@ -677,6 +764,7 @@ export type Database = {
           hora_entrega: string | null
           hora_inicio: string | null
           id: string
+          lembrete_min: number | null
           link_externo: string
           posicao: number
           prioridade: string | null
@@ -703,6 +791,7 @@ export type Database = {
           hora_entrega?: string | null
           hora_inicio?: string | null
           id?: string
+          lembrete_min?: number | null
           link_externo?: string
           posicao?: number
           prioridade?: string | null
@@ -729,6 +818,7 @@ export type Database = {
           hora_entrega?: string | null
           hora_inicio?: string | null
           id?: string
+          lembrete_min?: number | null
           link_externo?: string
           posicao?: number
           prioridade?: string | null
@@ -1100,6 +1190,20 @@ export type Database = {
       has_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: boolean
+      }
+      notificacoes_gerar_diarias: { Args: never; Returns: number }
+      notificacoes_gerar_lembretes: { Args: never; Returns: number }
+      notificacoes_marcar_todas: { Args: never; Returns: number }
+      notificar: {
+        Args: {
+          _card_id: string
+          _detalhe: string
+          _quadro_id: string
+          _tipo: string
+          _titulo: string
+          _user_id: string
+        }
+        Returns: undefined
       }
       pode_editar_card: { Args: { _card_id: string }; Returns: boolean }
       pode_editar_quadro: { Args: { _quadro_id: string }; Returns: boolean }
