@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      atalhos_paginas: {
+        Row: {
+          created_at: string
+          destino: string
+          id: string
+          label: string
+          posicao: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          destino: string
+          id?: string
+          label: string
+          posicao?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          destino?: string
+          id?: string
+          label?: string
+          posicao?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atalhos_paginas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       estrategia_atas: {
         Row: {
           ano: number

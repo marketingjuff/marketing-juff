@@ -99,6 +99,13 @@
       "when": 1790793744464,
       "tag": "0013_meudia_recorrentes_automaticos",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790793852376,
+      "tag": "0014_atalhos_paginas",
+      "breakpoints": true
     }
   ]
 }
