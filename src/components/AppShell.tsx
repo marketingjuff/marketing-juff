@@ -1,3 +1,4 @@
+import { SinoNotificacoes } from "@/components/SinoNotificacoes";
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { BarraAtalhos } from "@/components/tarefas/BarraAtalhos";
 import { useAvancarRecorrentes } from "@/hooks/useAvancarRecorrentes";
