@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { GradeMes } from "@/components/meudia/GradeMes";
 import { Diario } from "@/components/meudia/Diario";
 import { DialogItem } from "@/components/meudia/DialogItem";
+import { DialogExcluirRecorrente } from "@/components/meudia/DialogExcluirRecorrente";
 import { profileQueryOptions } from "@/lib/auth";
 import {
-  NOMES_MES, atualizarItem, contagemDoMes, criarItem, diarioQueryOptions,
-  excluirItem, feriadosQueryOptions, gravarDiario, iso, itensQueryOptions,
-  livresApartirDe, recorrentesQueryOptions, semanasDoMes,
-  type ItemDia,
+  NOMES_MES, atualizarItem, contagemDoMes, criarExcecao, criarItem, diarioQueryOptions,
+  encerrarRecorrente, excecoesQueryOptions, excluirItem, feriadosQueryOptions, gravarDiario,
+  iso, itensQueryOptions, livresApartirDe, montarItens, recorrentesQueryOptions, semanasDoMes,
+  type ItemDia, type RelatoDia,
 } from "@/lib/meudia";
 
 export const Route = createFileRoute("/_authenticated/tarefas/meu-dia")({
@@ -40,24 +41,31 @@ function MeuDiaPage() {
   const [ano, setAno] = useState(hoje.getFullYear());
   const [mes, setMes] = useState(hoje.getMonth() + 1);
   const [alvo, setAlvo] = useState<{ data: string; bloco: number } | null>(null);
+  const [aTirar, setATirar] = useState<ItemDia | null>(null);
 
   const mes2 = mes === 12 ? 1 : mes + 1;
   const ano2 = mes === 12 ? ano + 1 : ano;
 
   const semanas1 = semanasDoMes(ano, mes);
   const semanas2 = semanasDoMes(ano2, mes2);
-  const de = semanas1[0]?.[0] ?? "";
-  const ate = semanas2[semanas2.length - 1]?.[4] ?? "";
+  const dias = [...semanas1, ...semanas2].flat();
+  const de = dias[0];
+  const ate = dias[dias.length - 1];
 
-  const { data: itens = [] } = useQuery(itensQueryOptions(de, ate));
+  const { data: gravados = [] } = useQuery(itensQueryOptions(de, ate));
   const { data: feriados = {} } = useQuery(feriadosQueryOptions);
   const { data: relatos = {} } = useQuery(diarioQueryOptions(de, ate));
   const { data: recorrentes = [] } = useQuery(recorrentesQueryOptions);
+  const { data: excecoes = new Set<string>() } = useQuery(excecoesQueryOptions(de, ate));
 
   const chaveItens = ["meudia", "itens", de, ate] as const;
+  const chaveExcecoes = ["meudia", "excecoes", de, ate] as const;
   const chaveDiario = ["meudia", "diario", de, ate] as const;
+  const chaveRec = ["meudia", "recorrentes"] as const;
 
-  function otimistaItens(muda: (l: ItemDia[]) => ItemDia[], gravar: () => Promise<unknown>) {
+  const itens = montarItens({ dias, gravados, recorrentes, excecoes, feriados });
+
+  function otimistaGravados(muda: (l: ItemDia[]) => ItemDia[], gravar: () => Promise<unknown>) {
     const antes = qc.getQueryData<ItemDia[]>(chaveItens);
     qc.setQueryData<ItemDia[]>(chaveItens, muda(antes ?? []));
     gravar()
@@ -68,15 +76,87 @@ function MeuDiaPage() {
       });
   }
 
+  /** Item automático só vira registro no banco quando a pessoa mexe nele. */
+  function alternarFeito(item: ItemDia) {
+    if (item.virtual) {
+      const real: ItemDia = { ...item, feito: true, virtual: false, id: `tmp-${Date.now()}` };
+      otimistaGravados(
+        (l) => [...l, real],
+        () =>
+          criarItem({
+            data: item.data,
+            bloco_inicio: item.bloco_inicio,
+            blocos: item.blocos,
+            texto: item.texto,
+            card_id: null,
+            recorrente_id: item.recorrente_id,
+            feito: true,
+          }),
+      );
+      return;
+    }
+    otimistaGravados(
+      (l) => l.map((x) => (x.id === item.id ? { ...x, feito: !x.feito } : x)),
+      () => atualizarItem(item.id, { feito: !item.feito }),
+    );
+  }
+
+  function pedirParaTirar(item: ItemDia) {
+    if (item.recorrente_id) {
+      setATirar(item);
+      return;
+    }
+    otimistaGravados((l) => l.filter((x) => x.id !== item.id), () => excluirItem(item.id));
+  }
+
+  function tirarSoEsteDia(item: ItemDia) {
+    const antes = qc.getQueryData<Set<string>>(chaveExcecoes);
+    const novo = new Set(antes ?? []);
+    novo.add(`${item.recorrente_id}|${item.data}`);
+    qc.setQueryData(chaveExcecoes, novo);
+
+    const tarefas: Promise<unknown>[] = [criarExcecao(item.recorrente_id as string, item.data)];
+    if (!item.virtual) {
+      qc.setQueryData<ItemDia[]>(chaveItens, (l) => (l ?? []).filter((x) => x.id !== item.id));
+      tarefas.push(excluirItem(item.id));
+    }
+
+    Promise.all(tarefas)
+      .then(() => {
+        void qc.invalidateQueries({ queryKey: chaveExcecoes });
+        void qc.invalidateQueries({ queryKey: chaveItens });
+      })
+      .catch(() => {
+        qc.setQueryData(chaveExcecoes, antes);
+        void qc.invalidateQueries({ queryKey: chaveItens });
+        toast.error("Não deu para tirar");
+      });
+  }
+
+  function tirarEsteEProximos(item: ItemDia) {
+    encerrarRecorrente(item.recorrente_id as string, item.data)
+      .then(() => {
+        void qc.invalidateQueries({ queryKey: chaveRec });
+        toast.success("Não vai mais aparecer daqui para frente");
+      })
+      .catch(() => toast.error("Não deu para encerrar"));
+  }
+
   const contagem = contagemDoMes(itens, ano, mes);
   const pendentes = recorrentes
-    .filter((r) => r.ativo && (contagem[r.id] ?? 0) < r.vezes_mes)
+    .filter((r) => r.ativo && r.dia_semana === "livre" && (contagem[r.id] ?? 0) < r.vezes_mes)
     .map((r) => `${r.descricao} ${contagem[r.id] ?? 0} de ${r.vezes_mes}`);
 
-  const diasDoDiario = [...semanas1, ...semanas2]
-    .flat()
-    .filter((d) => d <= hojeIso)
-    .slice(-20);
+  const diasDoDiario = dias.filter((d) => d <= hojeIso).slice(-20);
+
+  const gradeProps = {
+    itens,
+    feriados,
+    hojeIso,
+    onAbrirBloco: (data: string, bloco: number) => setAlvo({ data, bloco }),
+    onAlternarFeito: alternarFeito,
+    onExcluir: pedirParaTirar,
+  };
 
   return (
     <AppShell largura="ampla">
@@ -130,47 +210,14 @@ function MeuDiaPage() {
           </p>
         ) : null}
 
-        <GradeMes
-          ano={ano}
-          mes={mes}
-          itens={itens}
-          feriados={feriados}
-          hojeIso={hojeIso}
-          onAbrirBloco={(data, bloco) => setAlvo({ data, bloco })}
-          onAlternarFeito={(i) =>
-            otimistaItens(
-              (l) => l.map((x) => (x.id === i.id ? { ...x, feito: !x.feito } : x)),
-              () => atualizarItem(i.id, { feito: !i.feito }),
-            )
-          }
-          onExcluir={(i) =>
-            otimistaItens((l) => l.filter((x) => x.id !== i.id), () => excluirItem(i.id))
-          }
-        />
-
-        <GradeMes
-          ano={ano2}
-          mes={mes2}
-          itens={itens}
-          feriados={feriados}
-          hojeIso={hojeIso}
-          onAbrirBloco={(data, bloco) => setAlvo({ data, bloco })}
-          onAlternarFeito={(i) =>
-            otimistaItens(
-              (l) => l.map((x) => (x.id === i.id ? { ...x, feito: !x.feito } : x)),
-              () => atualizarItem(i.id, { feito: !i.feito }),
-            )
-          }
-          onExcluir={(i) =>
-            otimistaItens((l) => l.filter((x) => x.id !== i.id), () => excluirItem(i.id))
-          }
-        />
+        <GradeMes ano={ano} mes={mes} {...gradeProps} />
+        <GradeMes ano={ano2} mes={mes2} {...gradeProps} />
 
         <Diario
           dias={diasDoDiario}
           relatos={relatos}
           onGravar={(data, modo, texto) => {
-            const antes = qc.getQueryData<Record<string, typeof relatos[string]>>(chaveDiario);
+            const antes = qc.getQueryData<Record<string, RelatoDia>>(chaveDiario);
             qc.setQueryData(chaveDiario, { ...(antes ?? {}), [data]: { data, modo, texto } });
             gravarDiario(data, modo, texto)
               .then(() => void qc.invalidateQueries({ queryKey: chaveDiario }))
@@ -201,7 +248,7 @@ function MeuDiaPage() {
             recorrente_id: dados.recorrente_id,
             feito: false,
           };
-          otimistaItens(
+          otimistaGravados(
             (l) => [...l, provisorio],
             () =>
               criarItem({
@@ -215,6 +262,14 @@ function MeuDiaPage() {
           );
           setAlvo(null);
         }}
+      />
+
+      <DialogExcluirRecorrente
+        open={!!aTirar}
+        onOpenChange={(v) => !v && setATirar(null)}
+        descricao={aTirar?.texto ?? ""}
+        onSoEsteDia={() => aTirar && tirarSoEsteDia(aTirar)}
+        onEsteEProximos={() => aTirar && tirarEsteEProximos(aTirar)}
       />
     </AppShell>
   );
