@@ -29,6 +29,7 @@ import {
   type GrupoTexto,
   type TextoMarca,
 } from "@/lib/biblioteca-marca";
+import { coresQueryOptions, type CorBiblioteca } from "@/lib/biblioteca";
 
 export const Route = createFileRoute("/_authenticated/biblioteca/marca")({
   head: () => ({
@@ -63,6 +64,7 @@ function MarcaPage() {
   const pode = hasPermission(profile, "biblioteca.marca");
   const admin = profile?.role === "admin";
   const { data: paleta = [] } = useQuery({ ...paletaQueryOptions, enabled: pode });
+  const { data: coresCamiseta = [] } = useQuery({ ...coresQueryOptions, enabled: pode });
   const { data: textos = [] } = useQuery({ ...textosQueryOptions, enabled: pode });
 
   if (!pode) {
@@ -77,10 +79,77 @@ function MarcaPage() {
     <AppShell largura="ampla">
       <div className="mb-4 flex justify-end"><BotaoZip origem="marca" /></div>
       <div className="space-y-6">
+        <SecaoCamiseta cores={coresCamiseta} />
         <SecaoPaleta paleta={paleta} admin={admin} />
         <SecaoTextos textos={textos} admin={admin} />
       </div>
     </AppShell>
+  );
+}
+
+// ---------------- Grade de largura fixa ----------------
+
+/** Largura fixa (130–150px) de propósito: evita pastilhas esticadas em tela larga. */
+function Grade({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="grid justify-start gap-1.5 grid-cols-[repeat(auto-fill,minmax(130px,150px))]">
+      {children}
+    </div>
+  );
+}
+
+// ---------------- Pastilha achatada ----------------
+
+function Pastilha({
+  nome,
+  hex,
+  teste = false,
+  children,
+}: {
+  nome: string;
+  hex: string;
+  teste?: boolean;
+  children?: React.ReactNode;
+}) {
+  const seguro = HEX.test(hex) ? hex : "#888888";
+  const fg = textoSobreCor(seguro);
+
+  return (
+    <div className="group relative">
+      <button
+        type="button"
+        onClick={() => void copiar(hex, `${nome}: ${hex.toUpperCase()} copiado`)}
+        title={`${nome}  ${hex.toUpperCase()}`}
+        className={cn(
+          "flex w-full flex-col justify-center rounded-lg px-3 py-2 text-left transition-transform hover:-translate-y-px active:translate-y-0",
+          teste && "outline-dashed outline-2 -outline-offset-2 outline-current",
+        )}
+        style={{ backgroundColor: seguro, color: fg }}
+      >
+        <span className="truncate text-xs font-semibold leading-tight">{nome}</span>
+        <span className="truncate text-[10px] leading-tight opacity-70">{hex.toUpperCase()}</span>
+      </button>
+      {children}
+    </div>
+  );
+}
+
+// ---------------- Cores de camiseta, somente leitura ----------------
+
+function SecaoCamiseta({ cores }: { cores: CorBiblioteca[] }) {
+  const ativas = cores.filter((c) => c.ativo);
+
+  return (
+    <Bloco titulo="Cores de camiseta">
+      <p className="mb-3 text-xs text-muted-foreground">
+        Cartela oficial de tecido, {ativas.length} cores. Clique para copiar. Para editar, vá em Configurações, seção Biblioteca.
+      </p>
+      <Grade>
+        {ativas.map((c) => (
+          <Pastilha key={c.id} nome={c.nome} hex={c.hex} />
+        ))}
+      </Grade>
+    </Bloco>
   );
 }
 
@@ -122,11 +191,11 @@ function SecaoPaleta({ paleta, admin }: { paleta: CorPaleta[]; admin: boolean })
   }
 
   const grade = (lista: CorPaleta[], teste: boolean) => (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+    <Grade>
       {lista.map((c) => (
         <Quadrado key={c.id} cor={c} teste={teste} admin={admin} onPatch={(p) => patch(c.id, p)} onApagar={() => void apagar(c.id)} />
       ))}
-    </div>
+    </Grade>
   );
 
   return (
@@ -146,27 +215,17 @@ function SecaoPaleta({ paleta, admin }: { paleta: CorPaleta[]; admin: boolean })
 }
 
 function Quadrado({ cor, teste, admin, onPatch, onApagar }: { cor: CorPaleta; teste: boolean; admin: boolean; onPatch: (p: Partial<CorPaleta>) => void; onApagar: () => void }) {
-  const fg = textoSobreCor(HEX.test(cor.hex) ? cor.hex : "#888888");
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => void copiar(cor.hex, `${cor.nome}: ${cor.hex} copiado`)}
-        className={cn("flex aspect-square w-full flex-col justify-end rounded-xl p-3 text-left transition-transform hover:scale-[1.02]", teste && "outline-dashed outline-2 outline-offset-2 outline-muted-foreground")}
-        style={{
-          backgroundColor: cor.hex,
-          color: fg,
-          backgroundImage: teste ? `repeating-linear-gradient(135deg, transparent 0 10px, ${fg}22 10px 12px)` : undefined,
-        }}
-      >
-        <span className="text-sm font-bold leading-tight">{cor.nome}</span>
-        <span className="text-xs">{cor.hex.toUpperCase()}</span>
-      </button>
+    <Pastilha nome={cor.nome} hex={cor.hex} teste={teste}>
       {admin ? (
         <Popover>
           <PopoverTrigger asChild>
-            <button type="button" aria-label={`Editar ${cor.nome}`} className="absolute right-2 top-2 rounded-md bg-background/80 p-1 text-foreground hover:bg-background">
-              <Pencil className="size-3.5" />
+            <button
+              type="button"
+              aria-label={`Editar ${cor.nome}`}
+              className="absolute right-1 top-1 rounded-md bg-background/85 p-0.5 text-foreground opacity-0 transition-opacity hover:bg-background focus-visible:opacity-100 group-hover:opacity-100"
+            >
+              <Pencil className="size-3" />
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-72 space-y-3">
@@ -179,7 +238,7 @@ function Quadrado({ cor, teste, admin, onPatch, onApagar }: { cor: CorPaleta; te
           </PopoverContent>
         </Popover>
       ) : null}
-    </div>
+    </Pastilha>
   );
 }
 
