@@ -494,7 +494,7 @@ export function CardDialog({
             <div className="space-y-1">
               <p className="text-xs font-medium text-muted-foreground">Lembrete</p>
               <Select
-                disabled={!mexer || !c.hora_entrega}
+                disabled={!mexer || !c.data_entrega}
                 value={c.lembrete_min === null || c.lembrete_min === undefined ? "nenhum" : String(c.lembrete_min)}
                 onValueChange={(v) => salvar({ lembrete_min: v === "nenhum" ? null : Number(v) })}
               >
@@ -508,9 +508,11 @@ export function CardDialog({
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground">
-                {!c.hora_entrega
-                  ? "Marque uma hora na data de entrega para poder ser lembrado"
-                  : "O aviso vai para o responsável pelo card"}
+                {!c.data_entrega
+                  ? "Marque uma data de entrega para poder ser lembrado"
+                  : !c.hora_entrega
+                    ? "Sem hora marcada, o aviso aparece no sino à meia noite do dia da entrega"
+                    : "O aviso vai para o responsável pelo card"}
               </p>
             </div>
             <Campo label="Prioridade">

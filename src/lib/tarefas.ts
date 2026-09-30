@@ -545,6 +545,7 @@ export async function createCard(quadroId: string, colunaId: string, titulo: str
     titulo: titulo.trim(),
     posicao: (data?.[0]?.posicao ?? -1) + 1,
     criado_por: await uid(),
+    lembrete_min: 0,
   });
   if (error) throw error;
 }
