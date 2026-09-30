@@ -31,6 +31,8 @@ export const PERMISSION_CATALOG: PermissionEntry[] = [
 
   { key: "estrategia.ata", grupo: "Estratégia", label: "Ata mensal", nivelConfiguravel: true },
 
+  { key: "biblioteca.produtos", grupo: "Biblioteca", label: "Produtos", nivelConfiguravel: false },
+
   { key: "config.usuarios", grupo: "Configurações", label: "Usuários e permissões", nivelConfiguravel: false },
 ];
 
@@ -96,7 +98,7 @@ export const PRESETS: Preset[] = [
     id: "marketing_completo",
     label: "Marketing completo",
     descricao: "Tudo liberado em edição, menos Configurações",
-    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "estrategia.ata", "tarefas.meu_dia"],
+    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "estrategia.ata", "tarefas.meu_dia", "biblioteca.produtos"],
   },
   {
     id: "social",
@@ -114,7 +116,7 @@ export const PRESETS: Preset[] = [
     id: "designer",
     label: "Designer",
     descricao: "Stories em edição e Tarefas em edição",
-    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario"],
+    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "biblioteca.produtos"],
   },
   {
     id: "freelancer",
@@ -132,6 +134,7 @@ export const PRESETS: Preset[] = [
       "tarefas.meu_trabalho",
       "tarefas.calendario",
       "estrategia.ata:leitura",
+      "biblioteca.produtos",
     ],
   },
 ];
@@ -193,6 +196,15 @@ export const NAVIGATION: MasterTab[] = [
     icone: "telescope",
     subTabs: [
       { key: "ata", label: "Ata mensal", to: "/estrategia/ata", permission: "estrategia.ata" },
+    ],
+  },
+  {
+    key: "biblioteca",
+    label: "BIBLIOTECA",
+    icone: "library",
+    subTabs: [
+      { key: "produtos", label: "Produtos", to: "/biblioteca/produtos", permission: "biblioteca.produtos" },
+      { key: "medidas", label: "Medidas", to: "/biblioteca/medidas", permission: "biblioteca.produtos" },
     ],
   },
 ];
