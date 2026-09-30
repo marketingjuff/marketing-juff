@@ -12,7 +12,7 @@ export type TipoNotificacao =
 export const TIPOS_NOTIFICACAO: { valor: TipoNotificacao; label: string; descricao: string }[] = [
   { valor: "card_atribuido", label: "Card atribuído a mim", descricao: "Quando outra pessoa coloca seu nome num card." },
   { valor: "comentario", label: "Comentário", descricao: "Comentário num card seu ou que marcou seu nome com arroba." },
-  { valor: "lembrete", label: "Lembrete de hora", descricao: "Na antecedência que você escolheu dentro do card." },
+  { valor: "lembrete", label: "Lembrete de entrega", descricao: "Na antecedência escolhida dentro do card. Sem hora marcada, à meia noite do dia." },
   { valor: "vence_amanha", label: "Vence amanhã", descricao: "Um dia antes da data de entrega." },
   { valor: "atrasado", label: "Card atrasado", descricao: "Passou da data de entrega e não foi concluído." },
   { valor: "parado", label: "Card parado", descricao: "Cinco dias ou mais na mesma coluna." },
