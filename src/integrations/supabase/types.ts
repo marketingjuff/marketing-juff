@@ -49,6 +49,158 @@ export type Database = {
           },
         ]
       }
+      biblioteca_cores: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          hex: string
+          id: string
+          nome: string
+          nome_olist: string
+          posicao: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          hex: string
+          id?: string
+          nome: string
+          nome_olist: string
+          posicao?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          hex?: string
+          id?: string
+          nome?: string
+          nome_olist?: string
+          posicao?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      biblioteca_medidas: {
+        Row: {
+          alvo: number | null
+          maximo: number | null
+          minimo: number | null
+          ponto: string
+          produto_id: string
+          tamanho: string
+        }
+        Insert: {
+          alvo?: number | null
+          maximo?: number | null
+          minimo?: number | null
+          ponto: string
+          produto_id: string
+          tamanho: string
+        }
+        Update: {
+          alvo?: number | null
+          maximo?: number | null
+          minimo?: number | null
+          ponto?: string
+          produto_id?: string
+          tamanho?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_medidas_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      biblioteca_produto_cores: {
+        Row: {
+          categoria: string
+          cor_id: string
+          produto_id: string
+        }
+        Insert: {
+          categoria?: string
+          cor_id: string
+          produto_id: string
+        }
+        Update: {
+          categoria?: string
+          cor_id?: string
+          produto_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_produto_cores_cor_id_fkey"
+            columns: ["cor_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_cores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "biblioteca_produto_cores_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      biblioteca_produtos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome_base: string
+          pontos: string[]
+          posicao: number
+          sufixo: string
+          tamanhos: string[]
+          tamanhos_xtra: string[]
+          tecido: string
+          updated_at: string
+          usa_sufixo: boolean
+          usa_tecido: boolean
+          usa_xtra: boolean
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome_base: string
+          pontos?: string[]
+          posicao?: number
+          sufixo?: string
+          tamanhos?: string[]
+          tamanhos_xtra?: string[]
+          tecido?: string
+          updated_at?: string
+          usa_sufixo?: boolean
+          usa_tecido?: boolean
+          usa_xtra?: boolean
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome_base?: string
+          pontos?: string[]
+          posicao?: number
+          sufixo?: string
+          tamanhos?: string[]
+          tamanhos_xtra?: string[]
+          tecido?: string
+          updated_at?: string
+          usa_sufixo?: boolean
+          usa_tecido?: boolean
+          usa_xtra?: boolean
+        }
+        Relationships: []
+      }
       estrategia_atas: {
         Row: {
           ano: number
@@ -1395,6 +1547,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      biblioteca_salvar_cores: {
+        Args: { p_cores: Json; p_produto_id: string }
+        Returns: undefined
+      }
+      biblioteca_salvar_medidas: {
+        Args: { p_medidas: Json; p_produto_id: string }
+        Returns: undefined
+      }
       can_edit: { Args: { _perm: string }; Returns: boolean }
       estrategia_ata_id: {
         Args: { _ano: number; _frente: string; _mes: number }
