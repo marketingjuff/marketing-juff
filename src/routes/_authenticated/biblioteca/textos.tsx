@@ -1,0 +1,44 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { AppShell } from "@/components/AppShell";
+import { SecaoTextos } from "@/components/biblioteca/BlocosTextos";
+import { BotaoZip } from "@/components/biblioteca/BotaoZip";
+import { hasPermission, profileQueryOptions } from "@/lib/auth";
+import { textosQueryOptions } from "@/lib/biblioteca-marca";
+
+export const Route = createFileRoute("/_authenticated/biblioteca/textos")({
+  head: () => ({
+    meta: [
+      { title: "Textos — Biblioteca — Marketing Juff" },
+      { name: "description", content: "Frases, chamadas e textos prontos da Juff." },
+      { property: "og:title", content: "Textos — Biblioteca — Marketing Juff" },
+      { property: "og:description", content: "Frases, chamadas e textos prontos da Juff." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
+  component: TextosPage,
+});
+
+function TextosPage() {
+  const { data: profile } = useSuspenseQuery(profileQueryOptions);
+  const pode = hasPermission(profile, "biblioteca.marca");
+  const admin = profile?.role === "admin";
+  const { data: textos = [] } = useQuery({ ...textosQueryOptions, enabled: pode });
+
+  if (!pode) {
+    return (
+      <AppShell>
+        <p className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">Você não tem acesso à Biblioteca de marca.</p>
+      </AppShell>
+    );
+  }
+
+  return (
+    <AppShell largura="ampla">
+      <div className="mb-4 flex justify-end"><BotaoZip origem="textos" /></div>
+      <SecaoTextos textos={textos} admin={admin} />
+    </AppShell>
+  );
+}

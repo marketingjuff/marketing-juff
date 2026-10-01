@@ -180,3 +180,13 @@ export function Bloco({ titulo, children, acoes }: { titulo: string; children: R
     </section>
   );
 }
+
+/** Copia e avisa. Usada por Cores e por Textos. */
+export async function copiar(texto: string, aviso: string) {
+  try {
+    await navigator.clipboard.writeText(texto);
+    toast.success(aviso);
+  } catch {
+    toast.error("Não foi possível copiar.");
+  }
+}

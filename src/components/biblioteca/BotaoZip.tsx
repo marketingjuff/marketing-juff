@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { coresQueryOptions, medidasQueryOptions, nomeCurto, produtosQueryOptions } from "@/lib/biblioteca";
 import { paletaQueryOptions, textosQueryOptions } from "@/lib/biblioteca-marca";
+import { arquivosQueryOptions, gruposArquivoQueryOptions, baixarConteudo, nomeCompleto } from "@/lib/biblioteca-arquivos";
 import {
   baixarZip,
   pdfCoresCamiseta,
@@ -17,7 +18,7 @@ import {
   type ItemZip,
 } from "@/lib/biblioteca-pdf";
 
-type Origem = "produtos" | "medidas" | "marca";
+type Origem = "produtos" | "medidas" | "marca" | "cores" | "textos" | "arquivos";
 
 function Linha({ marcado, onChange, children, disabled }: { marcado: boolean; onChange: (v: boolean) => void; children: React.ReactNode; disabled?: boolean }) {
   return (
@@ -33,6 +34,9 @@ export function BotaoZip({ origem }: { origem: Origem }) {
   const [aberto, setAberto] = useState(false);
   const [gerando, setGerando] = useState(false);
   const { data: produtos = [] } = useQuery({ ...produtosQueryOptions, enabled: aberto });
+  const { data: gruposArq = [] } = useQuery({ ...gruposArquivoQueryOptions, enabled: aberto });
+  const { data: arquivos = [] } = useQuery({ ...arquivosQueryOptions, enabled: aberto });
+  const [arqs, setArqs] = useState<Set<string>>(new Set());
   const [paleta, setPaleta] = useState(false);
   const [textos, setTextos] = useState(false);
   const [coresCam, setCoresCam] = useState(false);
@@ -42,15 +46,16 @@ export function BotaoZip({ origem }: { origem: Origem }) {
   async function abrir() {
     const lista = await qc.ensureQueryData(produtosQueryOptions).catch(() => []);
     const todos = new Set(lista.map((p) => p.id));
-    setPaleta(origem === "marca");
-    setTextos(origem === "marca");
+    setPaleta(origem === "marca" || origem === "cores");
+    setTextos(origem === "marca" || origem === "textos");
     setCoresCam(origem === "produtos");
     setNomes(origem === "produtos" ? todos : new Set());
     setMedidas(origem === "medidas" ? new Set(todos) : new Set());
+    setArqs(new Set());
     setAberto(true);
   }
 
-  const total = (paleta ? 1 : 0) + (textos ? 1 : 0) + (coresCam ? 1 : 0) + nomes.size + medidas.size;
+  const total = (paleta ? 1 : 0) + (textos ? 1 : 0) + (coresCam ? 1 : 0) + nomes.size + medidas.size + arqs.size;
 
   async function gerar() {
     setGerando(true);
@@ -61,16 +66,25 @@ export function BotaoZip({ origem }: { origem: Origem }) {
         paleta ? qc.ensureQueryData(paletaQueryOptions) : Promise.resolve([]),
         textos ? qc.ensureQueryData(textosQueryOptions) : Promise.resolve([]),
       ]);
-      if (paleta) itens.push({ nomeArquivo: "Paleta manual de marca.pdf", blob: pdfPaleta(pal) });
-      if (textos) itens.push({ nomeArquivo: "Frases e textos.pdf", blob: pdfTextos(txt) });
-      if (coresCam) itens.push({ nomeArquivo: "Cores de camiseta.pdf", blob: pdfCoresCamiseta(cores) });
+      if (paleta) itens.push({ nomeArquivo: "Marca/Paleta manual de marca.pdf", blob: pdfPaleta(pal) });
+      if (textos) itens.push({ nomeArquivo: "Marca/Frases e textos.pdf", blob: pdfTextos(txt) });
+      if (coresCam) itens.push({ nomeArquivo: "Produtos/Cores de camiseta.pdf", blob: pdfCoresCamiseta(cores) });
       for (const p of produtos) {
-        if (nomes.has(p.id)) itens.push({ nomeArquivo: `Nomes ${nomeCurto(p)}.pdf`, blob: pdfNomesProduto(p, cores) });
+        if (nomes.has(p.id)) itens.push({ nomeArquivo: `Produtos/Nomes ${nomeCurto(p)}.pdf`, blob: pdfNomesProduto(p, cores) });
       }
       for (const p of produtos) {
         if (!medidas.has(p.id)) continue;
         const m = await qc.ensureQueryData(medidasQueryOptions(p.id));
-        itens.push({ nomeArquivo: `Medidas ${nomeCurto(p)}.pdf`, blob: pdfMedidasProduto(p, m) });
+        itens.push({ nomeArquivo: `Medidas/Medidas ${nomeCurto(p)}.pdf`, blob: pdfMedidasProduto(p, m) });
+      }
+      for (const a of arquivos) {
+        if (!arqs.has(a.id)) continue;
+        const grupo = gruposArq.find((g) => g.id === a.grupo_id);
+        const blob = await baixarConteudo(a.caminho);
+        itens.push({
+          nomeArquivo: `Arquivos/${grupo ? grupo.nome : "Sem grupo"}/${nomeCompleto(a)}`,
+          blob,
+        });
       }
       const d = new Date();
       const data = `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
@@ -132,6 +146,43 @@ export function BotaoZip({ origem }: { origem: Origem }) {
               <div className="text-sm">Tabela de medidas</div>
               <Sublista sel={medidas} setSel={setMedidas} />
             </section>
+            {gruposArq.length ? (
+              <section className="space-y-1.5">
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Arquivos da marca</h3>
+                {gruposArq.map((g) => {
+                  const lista = arquivos.filter((a) => a.grupo_id === g.id && a.ativo);
+                  if (!lista.length) return null;
+                  return (
+                    <div key={g.id}>
+                      <div className="text-sm">{g.nome}</div>
+                      <div className="ml-6 mt-1 space-y-1">
+                        <div className="flex gap-3 text-xs">
+                          <button type="button" disabled={gerando} className="text-primary hover:underline" onClick={() => {
+                            const n = new Set(arqs);
+                            lista.forEach((a) => n.add(a.id));
+                            setArqs(n);
+                          }}>Marcar todos</button>
+                          <button type="button" disabled={gerando} className="text-muted-foreground hover:underline" onClick={() => {
+                            const n = new Set(arqs);
+                            lista.forEach((a) => n.delete(a.id));
+                            setArqs(n);
+                          }}>Limpar</button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1">
+                          {lista.map((a) => (
+                            <Linha key={a.id} disabled={gerando} marcado={arqs.has(a.id)} onChange={(v) => {
+                              const n = new Set(arqs);
+                              if (v) n.add(a.id); else n.delete(a.id);
+                              setArqs(n);
+                            }}>{nomeCompleto(a)}</Linha>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </section>
+            ) : null}
           </div>
           <DialogFooter className="items-center gap-2 sm:justify-between">
             <span className="text-xs text-muted-foreground">{total} {total === 1 ? "arquivo" : "arquivos"}</span>

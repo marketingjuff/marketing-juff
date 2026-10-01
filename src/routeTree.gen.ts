@@ -15,9 +15,12 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedObjetivosRouteImport } from './routes/_authenticated/objetivos'
 import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
+import { Route as AuthenticatedBibliotecaArquivosRouteImport } from './routes/_authenticated/biblioteca/arquivos'
+import { Route as AuthenticatedBibliotecaCoresRouteImport } from './routes/_authenticated/biblioteca/cores'
 import { Route as AuthenticatedBibliotecaMarcaRouteImport } from './routes/_authenticated/biblioteca/marca'
 import { Route as AuthenticatedBibliotecaMedidasRouteImport } from './routes/_authenticated/biblioteca/medidas'
 import { Route as AuthenticatedBibliotecaProdutosRouteImport } from './routes/_authenticated/biblioteca/produtos'
+import { Route as AuthenticatedBibliotecaTextosRouteImport } from './routes/_authenticated/biblioteca/textos'
 import { Route as AuthenticatedEstrategiaAtaRouteImport } from './routes/_authenticated/estrategia/ata'
 import { Route as AuthenticatedSocialStoriesRouteImport } from './routes/_authenticated/social/stories'
 import { Route as AuthenticatedTarefasCalendarioRouteImport } from './routes/_authenticated/tarefas/calendario'
@@ -57,6 +60,18 @@ const AuthenticatedTrocarSenhaRoute =
     path: '/trocar-senha',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedBibliotecaArquivosRoute =
+  AuthenticatedBibliotecaArquivosRouteImport.update({
+    id: '/biblioteca/arquivos',
+    path: '/biblioteca/arquivos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBibliotecaCoresRoute =
+  AuthenticatedBibliotecaCoresRouteImport.update({
+    id: '/biblioteca/cores',
+    path: '/biblioteca/cores',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBibliotecaMarcaRoute =
   AuthenticatedBibliotecaMarcaRouteImport.update({
     id: '/biblioteca/marca',
@@ -73,6 +88,12 @@ const AuthenticatedBibliotecaProdutosRoute =
   AuthenticatedBibliotecaProdutosRouteImport.update({
     id: '/biblioteca/produtos',
     path: '/biblioteca/produtos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBibliotecaTextosRoute =
+  AuthenticatedBibliotecaTextosRouteImport.update({
+    id: '/biblioteca/textos',
+    path: '/biblioteca/textos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedEstrategiaAtaRoute =
@@ -124,9 +145,12 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/objetivos': typeof AuthenticatedObjetivosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/biblioteca/arquivos': typeof AuthenticatedBibliotecaArquivosRoute
+  '/biblioteca/cores': typeof AuthenticatedBibliotecaCoresRoute
   '/biblioteca/marca': typeof AuthenticatedBibliotecaMarcaRoute
   '/biblioteca/medidas': typeof AuthenticatedBibliotecaMedidasRoute
   '/biblioteca/produtos': typeof AuthenticatedBibliotecaProdutosRoute
+  '/biblioteca/textos': typeof AuthenticatedBibliotecaTextosRoute
   '/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
   '/social/stories': typeof AuthenticatedSocialStoriesRoute
   '/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
@@ -141,9 +165,12 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/objetivos': typeof AuthenticatedObjetivosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/biblioteca/arquivos': typeof AuthenticatedBibliotecaArquivosRoute
+  '/biblioteca/cores': typeof AuthenticatedBibliotecaCoresRoute
   '/biblioteca/marca': typeof AuthenticatedBibliotecaMarcaRoute
   '/biblioteca/medidas': typeof AuthenticatedBibliotecaMedidasRoute
   '/biblioteca/produtos': typeof AuthenticatedBibliotecaProdutosRoute
+  '/biblioteca/textos': typeof AuthenticatedBibliotecaTextosRoute
   '/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
   '/social/stories': typeof AuthenticatedSocialStoriesRoute
   '/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
@@ -160,9 +187,12 @@ export interface FileRoutesById {
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/objetivos': typeof AuthenticatedObjetivosRoute
   '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/_authenticated/biblioteca/arquivos': typeof AuthenticatedBibliotecaArquivosRoute
+  '/_authenticated/biblioteca/cores': typeof AuthenticatedBibliotecaCoresRoute
   '/_authenticated/biblioteca/marca': typeof AuthenticatedBibliotecaMarcaRoute
   '/_authenticated/biblioteca/medidas': typeof AuthenticatedBibliotecaMedidasRoute
   '/_authenticated/biblioteca/produtos': typeof AuthenticatedBibliotecaProdutosRoute
+  '/_authenticated/biblioteca/textos': typeof AuthenticatedBibliotecaTextosRoute
   '/_authenticated/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
   '/_authenticated/social/stories': typeof AuthenticatedSocialStoriesRoute
   '/_authenticated/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
@@ -179,9 +209,12 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/objetivos'
     | '/trocar-senha'
+    | '/biblioteca/arquivos'
+    | '/biblioteca/cores'
     | '/biblioteca/marca'
     | '/biblioteca/medidas'
     | '/biblioteca/produtos'
+    | '/biblioteca/textos'
     | '/estrategia/ata'
     | '/social/stories'
     | '/tarefas/calendario'
@@ -196,9 +229,12 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/objetivos'
     | '/trocar-senha'
+    | '/biblioteca/arquivos'
+    | '/biblioteca/cores'
     | '/biblioteca/marca'
     | '/biblioteca/medidas'
     | '/biblioteca/produtos'
+    | '/biblioteca/textos'
     | '/estrategia/ata'
     | '/social/stories'
     | '/tarefas/calendario'
@@ -214,9 +250,12 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracoes'
     | '/_authenticated/objetivos'
     | '/_authenticated/trocar-senha'
+    | '/_authenticated/biblioteca/arquivos'
+    | '/_authenticated/biblioteca/cores'
     | '/_authenticated/biblioteca/marca'
     | '/_authenticated/biblioteca/medidas'
     | '/_authenticated/biblioteca/produtos'
+    | '/_authenticated/biblioteca/textos'
     | '/_authenticated/estrategia/ata'
     | '/_authenticated/social/stories'
     | '/_authenticated/tarefas/calendario'
@@ -276,6 +315,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTrocarSenhaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/biblioteca/arquivos': {
+      id: '/_authenticated/biblioteca/arquivos'
+      path: '/biblioteca/arquivos'
+      fullPath: '/biblioteca/arquivos'
+      preLoaderRoute: typeof AuthenticatedBibliotecaArquivosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/biblioteca/cores': {
+      id: '/_authenticated/biblioteca/cores'
+      path: '/biblioteca/cores'
+      fullPath: '/biblioteca/cores'
+      preLoaderRoute: typeof AuthenticatedBibliotecaCoresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/biblioteca/marca': {
       id: '/_authenticated/biblioteca/marca'
       path: '/biblioteca/marca'
@@ -295,6 +348,13 @@ declare module '@tanstack/react-router' {
       path: '/biblioteca/produtos'
       fullPath: '/biblioteca/produtos'
       preLoaderRoute: typeof AuthenticatedBibliotecaProdutosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/biblioteca/textos': {
+      id: '/_authenticated/biblioteca/textos'
+      path: '/biblioteca/textos'
+      fullPath: '/biblioteca/textos'
+      preLoaderRoute: typeof AuthenticatedBibliotecaTextosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/estrategia/ata': {
@@ -353,9 +413,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedObjetivosRoute: typeof AuthenticatedObjetivosRoute
   AuthenticatedTrocarSenhaRoute: typeof AuthenticatedTrocarSenhaRoute
+  AuthenticatedBibliotecaArquivosRoute: typeof AuthenticatedBibliotecaArquivosRoute
+  AuthenticatedBibliotecaCoresRoute: typeof AuthenticatedBibliotecaCoresRoute
   AuthenticatedBibliotecaMarcaRoute: typeof AuthenticatedBibliotecaMarcaRoute
   AuthenticatedBibliotecaMedidasRoute: typeof AuthenticatedBibliotecaMedidasRoute
   AuthenticatedBibliotecaProdutosRoute: typeof AuthenticatedBibliotecaProdutosRoute
+  AuthenticatedBibliotecaTextosRoute: typeof AuthenticatedBibliotecaTextosRoute
   AuthenticatedEstrategiaAtaRoute: typeof AuthenticatedEstrategiaAtaRoute
   AuthenticatedSocialStoriesRoute: typeof AuthenticatedSocialStoriesRoute
   AuthenticatedTarefasCalendarioRoute: typeof AuthenticatedTarefasCalendarioRoute
@@ -369,9 +432,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedObjetivosRoute: AuthenticatedObjetivosRoute,
   AuthenticatedTrocarSenhaRoute: AuthenticatedTrocarSenhaRoute,
+  AuthenticatedBibliotecaArquivosRoute: AuthenticatedBibliotecaArquivosRoute,
+  AuthenticatedBibliotecaCoresRoute: AuthenticatedBibliotecaCoresRoute,
   AuthenticatedBibliotecaMarcaRoute: AuthenticatedBibliotecaMarcaRoute,
   AuthenticatedBibliotecaMedidasRoute: AuthenticatedBibliotecaMedidasRoute,
   AuthenticatedBibliotecaProdutosRoute: AuthenticatedBibliotecaProdutosRoute,
+  AuthenticatedBibliotecaTextosRoute: AuthenticatedBibliotecaTextosRoute,
   AuthenticatedEstrategiaAtaRoute: AuthenticatedEstrategiaAtaRoute,
   AuthenticatedSocialStoriesRoute: AuthenticatedSocialStoriesRoute,
   AuthenticatedTarefasCalendarioRoute: AuthenticatedTarefasCalendarioRoute,

@@ -33,6 +33,7 @@ export const PERMISSION_CATALOG: PermissionEntry[] = [
 
   { key: "biblioteca.produtos", grupo: "Biblioteca", label: "Produtos", nivelConfiguravel: false },
   { key: "biblioteca.marca", grupo: "Biblioteca", label: "Marca", nivelConfiguravel: false },
+  { key: "biblioteca.arquivos", grupo: "Biblioteca", label: "Arquivos", nivelConfiguravel: false },
 
   { key: "config.usuarios", grupo: "Configurações", label: "Usuários e permissões", nivelConfiguravel: false },
 ];
@@ -99,7 +100,7 @@ export const PRESETS: Preset[] = [
     id: "marketing_completo",
     label: "Marketing completo",
     descricao: "Tudo liberado em edição, menos Configurações",
-    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "estrategia.ata", "tarefas.meu_dia", "biblioteca.produtos", "biblioteca.marca"],
+    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "estrategia.ata", "tarefas.meu_dia", "biblioteca.produtos", "biblioteca.marca", "biblioteca.arquivos"],
   },
   {
     id: "social",
@@ -117,7 +118,7 @@ export const PRESETS: Preset[] = [
     id: "designer",
     label: "Designer",
     descricao: "Stories em edição e Tarefas em edição",
-    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "biblioteca.produtos", "biblioteca.marca"],
+    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "biblioteca.produtos", "biblioteca.marca", "biblioteca.arquivos"],
   },
   {
     id: "freelancer",
@@ -137,6 +138,7 @@ export const PRESETS: Preset[] = [
       "estrategia.ata:leitura",
       "biblioteca.produtos",
       "biblioteca.marca",
+      "biblioteca.arquivos",
     ],
   },
 ];
@@ -207,7 +209,9 @@ export const NAVIGATION: MasterTab[] = [
     subTabs: [
       { key: "produtos", label: "Produtos", to: "/biblioteca/produtos", permission: "biblioteca.produtos" },
       { key: "medidas", label: "Medidas", to: "/biblioteca/medidas", permission: "biblioteca.produtos" },
-      { key: "marca", label: "Marca", to: "/biblioteca/marca", permission: "biblioteca.marca" },
+      { key: "cores", label: "Cores", to: "/biblioteca/cores", permission: "biblioteca.marca" },
+      { key: "textos", label: "Textos", to: "/biblioteca/textos", permission: "biblioteca.marca" },
+      { key: "arquivos", label: "Arquivos", to: "/biblioteca/arquivos", permission: "biblioteca.arquivos" },
     ],
   },
 ];

@@ -49,6 +49,83 @@ export type Database = {
           },
         ]
       }
+      biblioteca_arquivo_grupos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          posicao: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          posicao?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          posicao?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      biblioteca_arquivos: {
+        Row: {
+          ativo: boolean
+          caminho: string
+          created_at: string
+          formato: string
+          grupo_id: string
+          id: string
+          nome: string
+          posicao: number
+          tamanho_bytes: number
+          variacao: string
+        }
+        Insert: {
+          ativo?: boolean
+          caminho: string
+          created_at?: string
+          formato: string
+          grupo_id: string
+          id?: string
+          nome: string
+          posicao?: number
+          tamanho_bytes?: number
+          variacao?: string
+        }
+        Update: {
+          ativo?: boolean
+          caminho?: string
+          created_at?: string
+          formato?: string
+          grupo_id?: string
+          id?: string
+          nome?: string
+          posicao?: number
+          tamanho_bytes?: number
+          variacao?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_arquivos_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_arquivo_grupos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       biblioteca_cores: {
         Row: {
           ativo: boolean
