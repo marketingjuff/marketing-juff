@@ -81,14 +81,11 @@ function EstampasPage() {
   }
 
   async function acrescentar(familia: Familia) {
-    const doFim = cores.filter((c) => c.familia === familia).reduce((m, c) => Math.max(m, c.posicao), 0);
     const maxGeral = cores.reduce((m, c) => Math.max(m, c.posicao), 0);
     const novos = cores.filter((c) => /^Nova\d+$/.test(c.codigo)).map((c) => Number(c.codigo.slice(4)));
     const n = (novos.length ? Math.max(...novos) : 0) + 1;
-    // Fica no fim da família; quando ela não é a última, empurra a ordem só pelo número da posição.
-    const pos = doFim === maxGeral ? maxGeral + 1 : doFim + 0.5;
     try {
-      await criarCorEstampa(familia, `Nova${n}`, Number.isInteger(pos) ? pos : maxGeral + 1);
+      await criarCorEstampa(familia, `Nova${n}`, maxGeral + 1);
       void qc.invalidateQueries({ queryKey: K });
     } catch (e) {
       toast.error((e as Error).message);
