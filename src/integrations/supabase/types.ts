@@ -159,6 +159,54 @@ export type Database = {
         }
         Relationships: []
       }
+      biblioteca_estampa_cores: {
+        Row: {
+          ativo: boolean
+          c: number
+          codigo: string
+          created_at: string
+          familia: string
+          hex: string
+          id: string
+          k: number
+          m: number
+          nome: string
+          posicao: number
+          updated_at: string
+          y: number
+        }
+        Insert: {
+          ativo?: boolean
+          c?: number
+          codigo: string
+          created_at?: string
+          familia?: string
+          hex: string
+          id?: string
+          k?: number
+          m?: number
+          nome?: string
+          posicao?: number
+          updated_at?: string
+          y?: number
+        }
+        Update: {
+          ativo?: boolean
+          c?: number
+          codigo?: string
+          created_at?: string
+          familia?: string
+          hex?: string
+          id?: string
+          k?: number
+          m?: number
+          nome?: string
+          posicao?: number
+          updated_at?: string
+          y?: number
+        }
+        Relationships: []
+      }
       biblioteca_medidas: {
         Row: {
           alvo: number | null

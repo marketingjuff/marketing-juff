@@ -8,9 +8,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { coresQueryOptions, medidasQueryOptions, nomeCurto, produtosQueryOptions } from "@/lib/biblioteca";
 import { paletaQueryOptions, textosQueryOptions } from "@/lib/biblioteca-marca";
 import { arquivosQueryOptions, gruposArquivoQueryOptions, baixarConteudo, nomeCompleto } from "@/lib/biblioteca-arquivos";
+import { estampaQueryOptions } from "@/lib/biblioteca-estampa";
 import {
   baixarZip,
   pdfCoresCamiseta,
+  pdfEstampa,
   pdfMedidasProduto,
   pdfNomesProduto,
   pdfPaleta,
@@ -18,7 +20,7 @@ import {
   type ItemZip,
 } from "@/lib/biblioteca-pdf";
 
-type Origem = "produtos" | "medidas" | "marca" | "cores" | "textos" | "arquivos";
+type Origem = "produtos" | "medidas" | "marca" | "cores" | "textos" | "arquivos" | "estampas";
 
 function Linha({ marcado, onChange, children, disabled }: { marcado: boolean; onChange: (v: boolean) => void; children: React.ReactNode; disabled?: boolean }) {
   return (
@@ -37,6 +39,7 @@ export function BotaoZip({ origem }: { origem: Origem }) {
   const { data: gruposArq = [] } = useQuery({ ...gruposArquivoQueryOptions, enabled: aberto });
   const { data: arquivos = [] } = useQuery({ ...arquivosQueryOptions, enabled: aberto });
   const [arqs, setArqs] = useState<Set<string>>(new Set());
+  const [estampa, setEstampa] = useState(false);
   const [paleta, setPaleta] = useState(false);
   const [textos, setTextos] = useState(false);
   const [coresCam, setCoresCam] = useState(false);
@@ -52,10 +55,11 @@ export function BotaoZip({ origem }: { origem: Origem }) {
     setNomes(origem === "produtos" ? todos : new Set());
     setMedidas(origem === "medidas" ? new Set(todos) : new Set());
     setArqs(new Set());
+    setEstampa(origem === "estampas");
     setAberto(true);
   }
 
-  const total = (paleta ? 1 : 0) + (textos ? 1 : 0) + (coresCam ? 1 : 0) + nomes.size + medidas.size + arqs.size;
+  const total = (paleta ? 1 : 0) + (textos ? 1 : 0) + (coresCam ? 1 : 0) + (estampa ? 1 : 0) + nomes.size + medidas.size + arqs.size;
 
   async function gerar() {
     setGerando(true);
@@ -69,6 +73,10 @@ export function BotaoZip({ origem }: { origem: Origem }) {
       if (paleta) itens.push({ nomeArquivo: "Marca/Paleta manual de marca.pdf", blob: pdfPaleta(pal) });
       if (textos) itens.push({ nomeArquivo: "Marca/Frases e textos.pdf", blob: pdfTextos(txt) });
       if (coresCam) itens.push({ nomeArquivo: "Produtos/Cores de camiseta.pdf", blob: pdfCoresCamiseta(cores) });
+      if (estampa) {
+        const est = await qc.ensureQueryData(estampaQueryOptions);
+        itens.push({ nomeArquivo: "Marca/Cores de estampa.pdf", blob: pdfEstampa(est) });
+      }
       for (const p of produtos) {
         if (nomes.has(p.id)) itens.push({ nomeArquivo: `Produtos/Nomes ${nomeCurto(p)}.pdf`, blob: pdfNomesProduto(p, cores) });
       }
@@ -134,6 +142,7 @@ export function BotaoZip({ origem }: { origem: Origem }) {
               <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Marca</h3>
               <Linha disabled={gerando} marcado={paleta} onChange={setPaleta}>Paleta do manual de marca</Linha>
               <Linha disabled={gerando} marcado={textos} onChange={setTextos}>Frases e textos prontos</Linha>
+              <Linha disabled={gerando} marcado={estampa} onChange={setEstampa}>Cores de estampa</Linha>
             </section>
             <section className="space-y-1.5">
               <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Produto</h3>
