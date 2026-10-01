@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Globe, Lock } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -47,6 +49,7 @@ export function NovoQuadroDialog({
     fundo_cor2: "#042c53",
   });
   const [membros, setMembros] = useState<string[]>([]);
+  const [acesso, setAcesso] = useState<"aberto" | "restrito">("aberto");
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
@@ -59,6 +62,7 @@ export function NovoQuadroDialog({
       fundo_cor2: quadro?.fundo_cor2 ?? "#042c53",
     });
     setMembros(quadro?.membros ?? []);
+    setAcesso(quadro?.acesso ?? "aberto");
   }, [open, quadro]);
 
   async function salvar() {
@@ -66,10 +70,11 @@ export function NovoQuadroDialog({
     try {
       let id = quadro?.id;
       if (!somenteParticipantes) {
-        if (id) await updateQuadro(id, { nome: nome.trim() || "Novo quadro", descricao, ...fundo });
-        else id = await createQuadro(nome, { descricao, ...fundo });
+        if (id) await updateQuadro(id, { nome: nome.trim() || "Novo quadro", descricao, acesso, ...fundo });
+        else id = await createQuadro(nome, { descricao, acesso, ...fundo });
       }
       if (id) await setMembrosQuadro(id, membros);
+      if (id && somenteParticipantes) await updateQuadro(id, { acesso });
       await qc.invalidateQueries({ queryKey: ["tarefas"] });
       toast.success(quadro ? "Quadro atualizado" : "Quadro criado");
       onOpenChange(false);
@@ -117,6 +122,33 @@ export function NovoQuadroDialog({
           ) : null}
 
           <div className="space-y-1.5">
+            <Label>Acesso</Label>
+            <div className="flex gap-2">
+              {(["aberto", "restrito"] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setAcesso(v)}
+                  className={cn(
+                    "flex-1 rounded-lg border p-2 text-left text-sm",
+                    acesso === v ? "border-primary bg-primary-soft font-medium" : "border-border",
+                  )}
+                >
+                  <span className="flex items-center gap-1.5">
+                    {v === "aberto" ? <Globe className="size-4" /> : <Lock className="size-4" />}
+                    {v === "aberto" ? "Aberto" : "Restrito"}
+                  </span>
+                  <span className="mt-0.5 block text-[11px] font-normal text-muted-foreground">
+                    {v === "aberto"
+                      ? "Todo mundo que tem Tarefas enxerga este quadro."
+                      : "Só os participantes marcados e os admins."}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
             <Label>Participantes</Label>
             <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-border p-2">
               {pessoas.map((p) => (
@@ -133,8 +165,9 @@ export function NovoQuadroDialog({
               ))}
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Sem ninguém marcado, o quadro fica aberto a todos que têm Tarefas. Com participantes,
-              só eles e os admins entram.
+              {acesso === "restrito"
+                ? "Quem não estiver marcado não enxerga este quadro em lugar nenhum, nem os cards dele no Meu trabalho e no Calendário. Admin entra sempre."
+                : "Quadro aberto. A marcação de participantes fica guardada e passa a valer se você mudar para restrito."}
             </p>
           </div>
         </div>

@@ -310,8 +310,8 @@ export function QuadroBoard({
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight">
           {quadro.nome}
-          {quadro.membros.length > 0 ? (
-            <span className="flex items-center gap-0.5 text-xs font-normal text-muted-foreground">
+          {quadro.acesso === "restrito" ? (
+            <span title="Quadro restrito" className="flex items-center gap-0.5 text-xs font-normal text-muted-foreground">
               <Lock className="size-3" /> {quadro.membros.length}
             </span>
           ) : null}

@@ -29,7 +29,7 @@ import { PainelMeuDia } from "@/components/config/PainelMeuDia";
 import { PainelCamposEstrategia } from "@/components/config/PainelCamposEstrategia";
 import { PainelNotificacoes } from "@/components/config/PainelNotificacoes";
 import { PainelCoresProduto } from "@/components/config/PainelCoresProduto";
-import { CORES_ETIQUETA, etiquetasQueryOptions, quadrosQueryOptions, siglaPessoa } from "@/lib/tarefas";
+import { CORES_ETIQUETA, etiquetasQueryOptions, quadrosDoUsuarioQueryOptions, quadrosQueryOptions, setQuadrosDoUsuario, siglaPessoa } from "@/lib/tarefas";
 import { ColorPicker } from "@/components/ui/color-picker";
 import {
   PERMISSION_CATALOG,
@@ -426,6 +426,7 @@ function Configuracoes() {
                 <UserRow
                   key={user.id}
                   travarOperador={isGestor}
+                  podeQuadros={isAdmin}
                   user={user}
                   onSavePerms={async (nextRole, permissions, identidade) => {
                     await updatePerms({
@@ -480,12 +481,14 @@ type UserRowData = {
 function UserRow({
   user,
   travarOperador = false,
+  podeQuadros = false,
   onSavePerms,
   onSetPassword,
   onDelete,
 }: {
   user: UserRowData;
   travarOperador?: boolean;
+  podeQuadros?: boolean;
   onSavePerms: (
     role: AppRole,
     permissions: string[],
@@ -623,6 +626,10 @@ function UserRow({
         <div className="mt-3">
           <PermissionPanel state={perms} onChange={setPerms} />
         </div>
+      ) : null}
+
+      {podeQuadros && role !== "admin" ? (
+        <QuadrosDoUsuario userId={user.id} nome={user.nome} />
       ) : null}
 
       <div className="mt-3 flex flex-wrap gap-2">
@@ -934,5 +941,74 @@ function PainelLinks() {
         ) : null}
       </div>
     </section>
+  );
+}
+
+function QuadrosDoUsuario({ userId, nome }: { userId: string; nome: string }) {
+  const queryClient = useQueryClient();
+  const { data: quadros = [] } = useQuery(quadrosQueryOptions);
+  const { data: marcados = [], isLoading } = useQuery(quadrosDoUsuarioQueryOptions(userId));
+  const [sel, setSel] = useState<string[] | null>(null);
+  const [salvando, setSalvando] = useState(false);
+
+  const atual = sel ?? marcados;
+  const mudou = sel !== null && [...sel].sort().join() !== [...marcados].sort().join();
+
+  async function salvar() {
+    if (!sel) return;
+    setSalvando(true);
+    try {
+      await setQuadrosDoUsuario(userId, sel);
+      queryClient.setQueryData(["tarefas", "quadros-do-usuario", userId], sel);
+      toast.success(`Quadros de ${nome} atualizados`);
+      setSel(null);
+      queryClient.invalidateQueries({ queryKey: ["tarefas", "quadros-do-usuario", userId] });
+      queryClient.invalidateQueries({ queryKey: ["tarefas", "quadros"] });
+    } catch (error) {
+      toast.error((error as Error).message);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 space-y-1.5">
+      <Label>Quadros em que entra</Label>
+      {isLoading ? (
+        <p className="text-xs text-muted-foreground">Carregando...</p>
+      ) : (
+        <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-border p-2">
+          {quadros.map((q) => (
+            <label key={q.id} className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={atual.includes(q.id)}
+                onCheckedChange={(c) =>
+                  setSel((s) => {
+                    const base = s ?? marcados;
+                    return c ? [...base, q.id] : base.filter((x) => x !== q.id);
+                  })
+                }
+              />
+              <span className="flex-1">{q.nome}</span>
+              {q.acesso === "aberto" ? (
+                <span className="text-[11px] text-muted-foreground">aberto a todos</span>
+              ) : null}
+            </label>
+          ))}
+          {quadros.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Nenhum quadro ativo.</p>
+          ) : null}
+        </div>
+      )}
+      <p className="text-[11px] text-muted-foreground">
+        Em quadro aberto a marcação fica guardada e só passa a valer se o quadro virar restrito.
+        Admin entra em todos sem precisar de marcação.
+      </p>
+      {mudou ? (
+        <Button size="sm" variant="outline" disabled={salvando} onClick={salvar}>
+          Salvar quadros
+        </Button>
+      ) : null}
+    </div>
   );
 }
