@@ -158,7 +158,7 @@ function BlocoGrupo({ grupo, arquivos, previas, admin }: { grupo: GrupoArquivo; 
       {!arquivos.length && !admin ? <p className="text-xs text-muted-foreground">Ainda não tem arquivo neste grupo.</p> : null}
       <div className="grid justify-start gap-3 grid-cols-[repeat(auto-fill,minmax(150px,190px))]">
         {arquivos.map((a) => (
-          <Cartao key={a.id} a={a} url={previas[a.caminho]} admin={admin} onPatch={(p) => patch(a.id, p)} onApagar={() => apagar(a)} />
+          <Cartao key={a.id} a={a} url={previas[a.caminho] ?? ""} admin={admin} onPatch={(p) => patch(a.id, p)} onApagar={() => apagar(a)} />
         ))}
         {admin ? <AreaEnvio grupoId={grupo.id} proxima={arquivos.reduce((m, a) => Math.max(m, a.posicao), 0) + 1} /> : null}
       </div>
@@ -167,7 +167,7 @@ function BlocoGrupo({ grupo, arquivos, previas, admin }: { grupo: GrupoArquivo; 
   );
 }
 
-function Cartao({ a, url, admin, onPatch, onApagar }: { a: ArquivoMarca; url?: string; admin: boolean; onPatch: (p: Partial<ArquivoMarca>) => void; onApagar: () => void }) {
+function Cartao({ a, url, admin, onPatch, onApagar }: { a: ArquivoMarca; url: string; admin: boolean; onPatch: (p: Partial<ArquivoMarca>) => void; onApagar: () => void }) {
   const previa = COM_PREVIA.includes(a.formato);
   return (
     <div className="group relative">
@@ -221,7 +221,7 @@ function AreaEnvio({ grupoId, proxima }: { grupoId: string; proxima: number }) {
     setProgresso({ feito: 0, total: lista.length });
     let pos = proxima;
     for (let i = 0; i < lista.length; i++) {
-      const f = lista[i];
+      const f = lista[i]!;
       const ext = extensaoDe(f.name);
       if (!(FORMATOS as readonly string[]).includes(ext)) {
         toast.error(`${f.name}: formato ${ext ? ext.toUpperCase() : "sem extensão"} não entra.`);
