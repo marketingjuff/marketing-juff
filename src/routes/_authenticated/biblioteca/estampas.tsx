@@ -146,7 +146,7 @@ function Pastilha({ cor, pequena, admin, onPatch, onApagar }: { cor: CorEstampa;
         style={{ backgroundColor: seguro, color: textoSobreCor(seguro) }}
       >
         <span className={cn("font-bold leading-tight", pequena ? "text-[clamp(7px,30cqw,13px)]" : "text-[clamp(9px,13cqw,14px)]")}>{cor.codigo}</span>
-        <span className={cn("whitespace-nowrap leading-tight opacity-70 tabular-nums", pequena ? "text-[clamp(5px,15cqw,9px)]" : "text-[clamp(7px,8cqw,10px)]")}>{textoCmyk(cor)}</span>
+        <span className={cn("whitespace-nowrap font-medium leading-tight tabular-nums", pequena ? "text-[clamp(5px,15cqw,9px)]" : "text-[clamp(7px,8cqw,10px)]")}>{textoCmyk(cor)}</span>
       </button>
       {admin ? (
         <Popover>
