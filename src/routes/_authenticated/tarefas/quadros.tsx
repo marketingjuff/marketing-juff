@@ -118,8 +118,8 @@ function QuadrosPage() {
                 </div>
                 <div className="flex items-center gap-3 text-xs opacity-90">
                   <span>{q.cards_total ?? 0} cards</span>
-                  {q.membros.length > 0 ? (
-                    <span className="flex items-center gap-0.5">
+                  {q.acesso === "restrito" ? (
+                    <span title="Quadro restrito" className="flex items-center gap-0.5">
                       <Lock className="size-3" /> {q.membros.length}
                     </span>
                   ) : null}

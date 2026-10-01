@@ -14,6 +14,7 @@ export type Quadro = {
   fundo_cor2: string;
   posicao: number;
   arquivado: boolean;
+  acesso: "aberto" | "restrito";
   membros: string[];
   cards_total?: number;
 };
@@ -273,6 +274,7 @@ async function fetchQuadros(arquivado: boolean): Promise<Quadro[]> {
     fundo_cor2: q.fundo_cor2,
     posicao: q.posicao,
     arquivado: q.arquivado,
+    acesso: (q.acesso ?? "aberto") as "aberto" | "restrito",
     membros: (q.tarefa_quadro_membros ?? []).map((m: { user_id: string }) => m.user_id),
     cards_total: (q.tarefa_cards ?? []).filter((c: { arquivado: boolean }) => !c.arquivado).length,
   }));
@@ -386,6 +388,7 @@ export const quadroQueryOptions = (quadroId: string) =>
           fundo_cor2: q.fundo_cor2,
           posicao: q.posicao,
           arquivado: q.arquivado,
+          acesso: (q.acesso ?? "aberto") as "aberto" | "restrito",
           membros: (q.tarefa_quadro_membros ?? []).map((m: { user_id: string }) => m.user_id),
         },
         colunas: (cols ?? []) as Coluna[],
@@ -396,7 +399,7 @@ export const quadroQueryOptions = (quadroId: string) =>
 
 export async function createQuadro(
   nome: string,
-  extra?: { descricao?: string; fundo_tipo?: FundoTipo; fundo_cor1?: string; fundo_cor2?: string },
+  extra?: { descricao?: string; fundo_tipo?: FundoTipo; fundo_cor1?: string; fundo_cor2?: string; acesso?: "aberto" | "restrito" },
 ): Promise<string> {
   const { count } = await supabase
     .from("tarefa_quadros")
@@ -417,15 +420,16 @@ export async function createQuadro(
 
 export async function updateQuadro(
   id: string,
-  values: Partial<Pick<Quadro, "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2">>,
+  values: Partial<Pick<Quadro, "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2" | "acesso">>,
 ): Promise<void> {
   // Garante que só colunas reais da tabela sejam enviadas, mesmo se vierem campos extras.
-  const limpo: Partial<Pick<Quadro, "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2">> = {};
+  const limpo: Partial<Pick<Quadro, "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2" | "acesso">> = {};
   if (values.nome !== undefined) limpo.nome = values.nome;
   if (values.descricao !== undefined) limpo.descricao = values.descricao;
   if (values.fundo_tipo !== undefined) limpo.fundo_tipo = values.fundo_tipo;
   if (values.fundo_cor1 !== undefined) limpo.fundo_cor1 = values.fundo_cor1;
   if (values.fundo_cor2 !== undefined) limpo.fundo_cor2 = values.fundo_cor2;
+  if (values.acesso !== undefined) limpo.acesso = values.acesso;
   const { error } = await supabase.from("tarefa_quadros").update(limpo).eq("id", id);
   if (error) throw error;
 }
@@ -440,6 +444,32 @@ export async function setMembrosQuadro(quadroId: string, userIds: string[]): Pro
   const { error } = await supabase
     .from("tarefa_quadro_membros")
     .insert(userIds.map((user_id) => ({ quadro_id: quadroId, user_id })));
+  if (error) throw error;
+}
+
+/** Ids dos quadros em que a pessoa está marcada como participante. Só admin lê. */
+export const quadrosDoUsuarioQueryOptions = (userId: string) =>
+  queryOptions({
+    queryKey: ["tarefas", "quadros-do-usuario", userId],
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    enabled: !!userId,
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await supabase
+        .from("tarefa_quadro_membros")
+        .select("quadro_id")
+        .eq("user_id", userId);
+      if (error) throw error;
+      return (data ?? []).map((m: { quadro_id: string }) => m.quadro_id);
+    },
+  });
+
+/** Grava de uma vez em quais quadros a pessoa entra. Uma chamada só. */
+export async function setQuadrosDoUsuario(userId: string, quadroIds: string[]): Promise<void> {
+  const { error } = await supabase.rpc("tarefa_set_quadros_do_usuario", {
+    _user_id: userId,
+    _quadro_ids: quadroIds,
+  });
   if (error) throw error;
 }
 
