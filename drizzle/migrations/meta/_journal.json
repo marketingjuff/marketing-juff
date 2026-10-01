@@ -141,6 +141,13 @@
       "when": 1790814591067,
       "tag": "0019_biblioteca_arquivos",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790815961273,
+      "tag": "0020_biblioteca_estampa",
+      "breakpoints": true
     }
   ]
 }
