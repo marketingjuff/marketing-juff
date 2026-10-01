@@ -10,6 +10,15 @@ import {
   type ProdutoBiblioteca,
 } from "@/lib/biblioteca";
 import { ROTULO_GRUPO, type CorPaleta, type TextoMarca, type GrupoTexto } from "@/lib/biblioteca-marca";
+import {
+  FAMILIAS,
+  POR_LINHA,
+  ROTULO_FAMILIA,
+  emLinhas,
+  textoCmyk,
+  type CorEstampa,
+  type Familia,
+} from "@/lib/biblioteca-estampa";
 
 const MARGEM = 15;
 const LARGURA = 210;
@@ -246,6 +255,53 @@ export function pdfMedidasProduto(p: ProdutoBiblioteca, medidas: Medida[]): Blob
     y,
   );
   doc.setTextColor(0);
+
+  rodape(doc);
+  return doc.output("blob");
+}
+
+export function pdfEstampa(cores: CorEstampa[]): Blob {
+  const doc = novoDoc(
+    "Tabela de cores de estampa",
+    "O CMYK é o dado real. O hexadecimal serve apenas para ver na tela.",
+  );
+  let y = 38;
+
+  for (const familia of FAMILIAS) {
+    const lista = cores.filter((c) => c.familia === familia && c.ativo);
+    if (!lista.length) continue;
+
+    const porLinha = POR_LINHA[familia as Familia];
+    const largura = (LARGURA - MARGEM * 2 - (porLinha - 1) * 1) / porLinha;
+    const altura = largura / 1.55;
+
+    y = quebra(doc, y, 14 + altura);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text(limparTexto(ROTULO_FAMILIA[familia as Familia]), MARGEM, y);
+    y += 6;
+
+    for (const linha of emLinhas(lista, porLinha)) {
+      y = quebra(doc, y, altura + 2);
+      linha.forEach((cor, i) => {
+        const x = MARGEM + i * (largura + 1);
+        doc.setFillColor(cor.hex);
+        doc.rect(x, y, largura, altura, "F");
+
+        const [r, g, b] = textoSobre(cor.hex);
+        doc.setTextColor(r, g, b);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(porLinha > 12 ? 4.5 : 8);
+        doc.text(limparTexto(cor.codigo), x + 1, y + altura / 2 - 0.3);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(porLinha > 12 ? 3.2 : 6);
+        doc.text(textoCmyk(cor), x + 1, y + altura / 2 + 3);
+        doc.setTextColor(0);
+      });
+      y += altura + 1;
+    }
+    y += 7;
+  }
 
   rodape(doc);
   return doc.output("blob");
