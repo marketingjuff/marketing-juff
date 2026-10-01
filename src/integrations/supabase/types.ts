@@ -14,6 +14,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_marcos: {
+        Row: {
+          aplicado_em: string
+          chave: string
+        }
+        Insert: {
+          aplicado_em?: string
+          chave: string
+        }
+        Update: {
+          aplicado_em?: string
+          chave?: string
+        }
+        Relationships: []
+      }
       atalhos_paginas: {
         Row: {
           created_at: string
@@ -1691,6 +1706,7 @@ export type Database = {
       }
       tarefa_quadros: {
         Row: {
+          acesso: string
           arquivado: boolean
           created_at: string
           criado_por: string | null
@@ -1703,6 +1719,7 @@ export type Database = {
           posicao: number
         }
         Insert: {
+          acesso?: string
           arquivado?: boolean
           created_at?: string
           criado_por?: string | null
@@ -1715,6 +1732,7 @@ export type Database = {
           posicao?: number
         }
         Update: {
+          acesso?: string
           arquivado?: boolean
           created_at?: string
           criado_por?: string | null
@@ -1823,6 +1841,10 @@ export type Database = {
       }
       tarefa_reordenar_etiquetas: {
         Args: { _ids: string[] }
+        Returns: undefined
+      }
+      tarefa_set_quadros_do_usuario: {
+        Args: { _quadro_ids: string[]; _user_id: string }
         Returns: undefined
       }
     }
