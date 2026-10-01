@@ -255,12 +255,22 @@ export function pdfMedidasProduto(p: ProdutoBiblioteca, medidas: Medida[]): Blob
 
 export type ItemZip = { nomeArquivo: string; blob: Blob };
 
+/**
+ * Limpa o nome mas preserva a barra, porque ela é o que cria pasta
+ * dentro do ZIP. Cada pedaço do caminho é limpo em separado.
+ */
 function nomeLimpo(s: string): string {
   return s
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9 ._-]/g, "")
-    .trim();
+    .split("/")
+    .map((parte) =>
+      parte
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9 ._-]/g, "")
+        .trim(),
+    )
+    .filter(Boolean)
+    .join("/");
 }
 
 export async function baixarZip(nomeArquivo: string, itens: ItemZip[]): Promise<void> {
