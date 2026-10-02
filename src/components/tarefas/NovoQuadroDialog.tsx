@@ -50,6 +50,7 @@ export function NovoQuadroDialog({
   });
   const [membros, setMembros] = useState<string[]>([]);
   const [acesso, setAcesso] = useState<"aberto" | "restrito">("aberto");
+  const [exigeResponsavel, setExigeResponsavel] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
@@ -63,6 +64,7 @@ export function NovoQuadroDialog({
     });
     setMembros(quadro?.membros ?? []);
     setAcesso(quadro?.acesso ?? "aberto");
+    setExigeResponsavel(quadro?.exige_responsavel ?? false);
   }, [open, quadro]);
 
   async function salvar() {
@@ -70,11 +72,11 @@ export function NovoQuadroDialog({
     try {
       let id = quadro?.id;
       if (!somenteParticipantes) {
-        if (id) await updateQuadro(id, { nome: nome.trim() || "Novo quadro", descricao, acesso, ...fundo });
-        else id = await createQuadro(nome, { descricao, acesso, ...fundo });
+        if (id) await updateQuadro(id, { nome: nome.trim() || "Novo quadro", descricao, acesso, exige_responsavel: exigeResponsavel, ...fundo });
+        else id = await createQuadro(nome, { descricao, acesso, exige_responsavel: exigeResponsavel, ...fundo });
       }
       if (id) await setMembrosQuadro(id, membros);
-      if (id && somenteParticipantes) await updateQuadro(id, { acesso });
+      if (id && somenteParticipantes) await updateQuadro(id, { acesso, exige_responsavel: exigeResponsavel });
       await qc.invalidateQueries({ queryKey: ["tarefas"] });
       toast.success(quadro ? "Quadro atualizado" : "Quadro criado");
       onOpenChange(false);
@@ -170,6 +172,19 @@ export function NovoQuadroDialog({
                 : "Quadro aberto. A marcação de participantes fica guardada e passa a valer se você mudar para restrito."}
             </p>
           </div>
+          <label className="flex items-start gap-2 rounded-lg border border-border p-2.5">
+            <Checkbox
+              checked={exigeResponsavel}
+              onCheckedChange={(v) => setExigeResponsavel(!!v)}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="block text-sm font-medium">Exigir responsável</span>
+              <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                Card novo nasce com quem criou, e card sem responsável não muda de coluna.
+              </span>
+            </span>
+          </label>
         </div>
 
         <DialogFooter>
