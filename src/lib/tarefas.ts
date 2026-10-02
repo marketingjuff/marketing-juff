@@ -530,7 +530,7 @@ export const REGRAS_RESPONSAVEL = [
   {
     valor: "quem_ficou" as const,
     rotulo: "Devolve para quem fez",
-    ajuda: "Volta para a última pessoa responsável enquanto o card esteve numa coluna escolhida.",
+    ajuda: "Volta para a última pessoa responsável enquanto o card esteve numa coluna escolhida. Na primeira vez, assume quem arrastou.",
   },
 ];
 
