@@ -76,8 +76,10 @@ export function CardMini({
     <button
       type="button"
       onClick={onClick}
+      style={card.cor_fundo ? { backgroundColor: card.cor_fundo } : undefined}
       className={cn(
-        "block w-full rounded-lg border border-border bg-card p-2 text-left shadow-soft transition-shadow hover:shadow-md",
+        "block w-full rounded-lg border border-border p-2 text-left shadow-soft transition-shadow hover:shadow-md",
+        !card.cor_fundo && "bg-card",
         (adiado || card.concluido) && "opacity-60",
         arrastando && "rotate-1 shadow-lg",
       )}

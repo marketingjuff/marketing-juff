@@ -439,17 +439,32 @@ export function CardDialog({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="max-h-[70vh] w-72 space-y-3 overflow-y-auto">
-                  <Campo label="Cor do card">
+                  <Campo label="Cor da faixa">
                     <div className="flex items-center gap-2">
                       <ColorPicker
                         value={c.cor ?? "#378add"}
                         onChange={(v) => salvar({ cor: v.toLowerCase() })}
-                        label="Cor do card"
+                        label="Cor da faixa"
                         presets={CORES_ETIQUETA}
                       />
                       {c.cor ? (
                         <Button size="sm" variant="ghost" onClick={() => salvar({ cor: null })}>
                           Tirar cor
+                        </Button>
+                      ) : null}
+                    </div>
+                  </Campo>
+                  <Campo label="Cor do fundo">
+                    <div className="flex items-center gap-2">
+                      <ColorPicker
+                        value={c.cor_fundo ?? "#378add"}
+                        onChange={(v) => salvar({ cor_fundo: v.toLowerCase() })}
+                        label="Cor do fundo"
+                        presets={CORES_ETIQUETA}
+                      />
+                      {c.cor_fundo ? (
+                        <Button size="sm" variant="ghost" onClick={() => salvar({ cor_fundo: null })}>
+                          Voltar ao neutro
                         </Button>
                       ) : null}
                     </div>
