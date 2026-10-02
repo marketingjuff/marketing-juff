@@ -162,6 +162,13 @@
       "when": 1790953546427,
       "tag": "0022_etiquetas_por_quadro",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1790959180140,
+      "tag": "0023_card_cor_realtime",
+      "breakpoints": true
     }
   ]
 }

@@ -1347,6 +1347,7 @@ export type Database = {
           coluna_id: string
           concluido: boolean
           concluido_em: string | null
+          cor: string | null
           created_at: string
           criado_por: string | null
           data_entrega: string | null
@@ -1374,6 +1375,7 @@ export type Database = {
           coluna_id: string
           concluido?: boolean
           concluido_em?: string | null
+          cor?: string | null
           created_at?: string
           criado_por?: string | null
           data_entrega?: string | null
@@ -1401,6 +1403,7 @@ export type Database = {
           coluna_id?: string
           concluido?: boolean
           concluido_em?: string | null
+          cor?: string | null
           created_at?: string
           criado_por?: string | null
           data_entrega?: string | null

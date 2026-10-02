@@ -87,6 +87,7 @@ export type Card = {
   checklist_feitos: number;
   comentarios_total: number;
   anexos_total: number;
+  cor: string | null;
 };
 
 export type CardComContexto = Card & { quadro_nome: string; coluna_nome: string };
@@ -236,6 +237,7 @@ function mapCard(c: any): Card {
     checklist_feitos: checklist.filter((i) => i.feito).length,
     comentarios_total: (c.tarefa_comentarios ?? []).length,
     anexos_total: (c.tarefa_anexos ?? []).length,
+    cor: c.cor ?? null,
   };
 }
 
@@ -601,6 +603,7 @@ export type CardUpdate = Partial<
     | "quadro_id"
     | "posicao"
     | "concluido"
+    | "cor"
   >
 >;
 
