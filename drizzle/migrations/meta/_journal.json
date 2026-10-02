@@ -218,6 +218,13 @@
       "when": 1790967088179,
       "tag": "0030_notificacoes_comentario_avisa_sempre",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1790967676946,
+      "tag": "0031_quem_entra_no_quadro_edita",
+      "breakpoints": true
     }
   ]
 }

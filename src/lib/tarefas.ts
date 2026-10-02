@@ -983,15 +983,14 @@ export function podeEstruturar(role: string | undefined, editavel: boolean): boo
 }
 
 /** Operador só mexe no card em que é responsável ou que criou. */
+/** Quem entra no quadro mexe em qualquer card dele. Estrutura continua com admin e gestor. */
 export function podeMexerNoCard(
-  card: { responsavel_id: string | null; criado_por?: string | null },
-  role: string | undefined,
-  meuId: string,
+  _card: { responsavel_id: string | null; criado_por?: string | null },
+  _role: string | undefined,
+  _meuId: string,
   editavel: boolean,
 ): boolean {
-  if (!editavel) return false;
-  if (role === "admin" || role === "gestor") return true;
-  return card.responsavel_id === meuId || card.criado_por === meuId;
+  return editavel;
 }
 
 export async function urlAnexo(path: string): Promise<string> {
