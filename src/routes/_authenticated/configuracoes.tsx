@@ -29,6 +29,7 @@ import { PainelMeuDia } from "@/components/config/PainelMeuDia";
 import { PainelCamposEstrategia } from "@/components/config/PainelCamposEstrategia";
 import { PainelNotificacoes } from "@/components/config/PainelNotificacoes";
 import { PainelCoresProduto } from "@/components/config/PainelCoresProduto";
+import { MinhaBolinha } from "@/components/config/MinhaBolinha";
 import { CORES_ETIQUETA, etiquetasQueryOptions, quadrosDoUsuarioQueryOptions, quadrosQueryOptions, setQuadrosDoUsuario, siglaPessoa } from "@/lib/tarefas";
 import { ColorPicker } from "@/components/ui/color-picker";
 import {
@@ -266,17 +267,11 @@ function Configuracoes() {
     onError: (error: Error) => toast.error(error.message),
   });
 
-  if (!isAdmin && profile?.role !== "gestor") {
-    return (
-      <AppShell>
-        <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
-          Você não tem acesso às configurações.
-        </div>
-      </AppShell>
-    );
-  }
-
-  const secoesVisiveis = SECOES.filter((s) => !s.roles || (profile && s.roles.includes(profile.role)));
+  const secoesVisiveis = SECOES.filter((s) => {
+    if (!profile) return false;
+    if (profile.role === "operador") return s.key === "geral" || s.key === "notificacoes";
+    return !s.roles || s.roles.includes(profile.role);
+  });
   const secaoAtual = secoesVisiveis.find((s) => s.key === secao) ?? secoesVisiveis[0]!;
   const contador = (key: string): number | null =>
     key === "tarefas" ? (etiquetasAtivas?.length ?? null) : key === "usuarios" ? (usersQuery.data?.length ?? null) : null;
@@ -330,6 +325,8 @@ function Configuracoes() {
                 <Link to="/trocar-senha"><KeyRound className="size-4" /> Trocar minha senha</Link>
               </Button>
             </section>
+            <MinhaBolinha />
+            {podeUsuarios ? (
             <section className="grid gap-3 sm:grid-cols-3">
               {[
                 { label: "Pessoas com acesso", valor: usersQuery.data?.length },
@@ -342,6 +339,7 @@ function Configuracoes() {
                 </div>
               ))}
             </section>
+            ) : null}
           </>
         ) : null}
 

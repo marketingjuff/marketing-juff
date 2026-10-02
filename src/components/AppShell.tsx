@@ -64,7 +64,7 @@ export function AppShell({
    */
   const mostrarSubTabs = subTabsVisiveis.length > 1;
 
-  const canOpenSettings = profile?.role === "admin" || profile?.role === "gestor";
+  const canOpenSettings = !!profile;
 
   async function sair() {
     await supabase.auth.signOut();
