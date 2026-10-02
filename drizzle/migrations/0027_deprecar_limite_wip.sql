@@ -1,0 +1,1 @@
+COMMENT ON COLUMN public.tarefa_colunas.limite_wip IS 'DEPRECATED: recurso de limite de cards removido do app';
