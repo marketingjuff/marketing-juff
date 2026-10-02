@@ -34,6 +34,7 @@ import { CardDialog } from "./CardDialog";
 import { FundoPicker } from "./FundoPicker";
 import { NovoQuadroDialog } from "./NovoQuadroDialog";
 import { ReorganizarCardsDialog } from "./ReorganizarCardsDialog";
+import { ColunaResponsavelDialog } from "./ColunaResponsavelDialog";
 import {
   arquivarColuna,
   createCard,
@@ -102,6 +103,7 @@ export function QuadroBoard({
   const [participantes, setParticipantes] = useState(false);
   const [novaColuna, setNovaColuna] = useState("");
   const [reorganizando, setReorganizando] = useState<string | null>(null);
+  const [colunaRegra, setColunaRegra] = useState<string | null>(null);
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ["tarefas", "quadro", quadro.id] });
   const atualRef = useRef({ colunas, cards });
@@ -271,6 +273,12 @@ export function QuadroBoard({
       cancelarArraste();
       return;
     }
+    const cardMovido = (antesDoArraste.current?.cards ?? cards).find((c) => c.id === a.id);
+    if (quadro.exige_responsavel && cardMovido && !cardMovido.responsavel_id && colunaOrigem && colunaOrigem !== colId) {
+      toast.error("Escolha um responsável antes de mover este card");
+      cancelarArraste();
+      return;
+    }
     let ordem = cards
       .filter((c) => c.coluna_id === colId)
       .sort((x, y) => x.posicao - y.posicao)
@@ -412,6 +420,8 @@ export function QuadroBoard({
                   onArquivar={() => rodar(() => arquivarColuna(col.id, true))}
                   totalCards={cards.filter((c) => c.coluna_id === col.id).length}
                   onReorganizar={() => setReorganizando(col.id)}
+                  onResponsavelAoEntrar={() => setColunaRegra(col.id)}
+                  exigeResponsavel={quadro.exige_responsavel}
                 />
               ))}
             </SortableContext>
@@ -473,6 +483,13 @@ export function QuadroBoard({
         onOpenChange={(v) => !v && setReorganizando(null)}
         colunaNome={colunas.find((c) => c.id === reorganizando)?.nome ?? ""}
         onAplicar={(criterio, dec) => reorganizarColuna(reorganizando!, criterio, dec)}
+      />
+      <ColunaResponsavelDialog
+        aberto={!!colunaRegra}
+        coluna={colunas.find((c) => c.id === colunaRegra) ?? null}
+        colunas={colunas}
+        onFechar={() => setColunaRegra(null)}
+        onSalvo={() => void invalidar()}
       />
       <NovoQuadroDialog
         open={participantes}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Archive, ArrowDownAZ, CheckCircle2, GripVertical, Hash, MoreHorizontal, Pencil, Plus } from "lucide-react";
+import { Archive, ArrowDownAZ, CheckCircle2, GripVertical, Hash, MoreHorizontal, Pencil, Plus, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { CardMini } from "./CardMini";
-import type { Card, Coluna, Etiqueta, Pessoa } from "@/lib/tarefas";
+import { REGRAS_RESPONSAVEL, type Card, type Coluna, type Etiqueta, type Pessoa } from "@/lib/tarefas";
 
 function CardArrastavel({
   card,
@@ -20,12 +20,14 @@ function CardArrastavel({
   pessoas,
   disabled,
   onAbrir,
+  exigeResponsavel,
 }: {
   card: Card;
   etiquetas: Map<string, Etiqueta>;
   pessoas: Map<string, Pessoa>;
   disabled: boolean;
   onAbrir: () => void;
+  exigeResponsavel: boolean;
 }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: card.id,
@@ -40,7 +42,7 @@ function CardArrastavel({
       {...attributes}
       {...listeners}
     >
-      <CardMini card={card} etiquetas={etiquetas} pessoas={pessoas} onClick={onAbrir} />
+      <CardMini card={card} etiquetas={etiquetas} pessoas={pessoas} onClick={onAbrir} exigeResponsavel={exigeResponsavel} />
     </div>
   );
 }
@@ -62,6 +64,8 @@ export function ColunaLista({
   onArquivar,
   totalCards,
   onReorganizar,
+  onResponsavelAoEntrar,
+  exigeResponsavel = false,
 }: {
   coluna: Coluna;
   cards: Card[];
@@ -79,6 +83,8 @@ export function ColunaLista({
   onArquivar: () => void;
   totalCards: number;
   onReorganizar: () => void;
+  onResponsavelAoEntrar: () => void;
+  exigeResponsavel?: boolean;
 }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: coluna.id,
@@ -140,6 +146,14 @@ export function ColunaLista({
           >
             {coluna.conclui ? <CheckCircle2 className="size-3.5 shrink-0 text-success" /> : null}
             <span className="truncate">{coluna.nome}</span>
+            {coluna.resp_ao_entrar && coluna.resp_ao_entrar !== "padrao" ? (
+              <span
+                className="shrink-0 text-muted-foreground"
+                title={REGRAS_RESPONSAVEL.find((r) => r.valor === coluna.resp_ao_entrar)?.rotulo ?? ""}
+              >
+                <UserCheck className="size-3.5" />
+              </span>
+            ) : null}
           </h3>
         )}
         <span
@@ -176,6 +190,9 @@ export function ColunaLista({
               <DropdownMenuItem onClick={onLimite}>
                 <Hash className="size-4" /> Definir limite de cards
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={onResponsavelAoEntrar}>
+                <UserCheck className="size-4" /> Responsável ao entrar
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={onArquivar}>
                 <Archive className="size-4" /> Arquivar coluna
               </DropdownMenuItem>
@@ -193,6 +210,7 @@ export function ColunaLista({
               etiquetas={etiquetas}
               pessoas={pessoas}
               disabled={!podeArrastarCard(c) || dragDisabled}
+              exigeResponsavel={exigeResponsavel}
               onAbrir={() => onAbrirCard(c.id)}
             />
           ))}
