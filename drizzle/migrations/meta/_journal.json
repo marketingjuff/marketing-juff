@@ -225,6 +225,13 @@
       "when": 1790967676946,
       "tag": "0031_quem_entra_no_quadro_edita",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1790968011949,
+      "tag": "0032_resp_ao_entrar_plano_b",
+      "breakpoints": true
     }
   ]
 }
