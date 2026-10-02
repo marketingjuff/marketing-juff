@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { textoSobreCor } from "@/config/produtos";
-import { hasPermission, profileQueryOptions } from "@/lib/auth";
+import { canEdit, hasPermission, profileQueryOptions } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import {
   FAMILIAS,
@@ -50,7 +50,8 @@ function EstampasPage() {
   const qc = useQueryClient();
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
   const pode = hasPermission(profile, "biblioteca.estampa");
-  const admin = profile?.role === "admin";
+  const podeEditar = canEdit(profile, "biblioteca.estampa");
+  const admin = profile?.role === "admin" && podeEditar;
   const { data: cores = [] } = useQuery({ ...estampaQueryOptions, enabled: pode });
 
   if (!pode) {
@@ -94,6 +95,11 @@ function EstampasPage() {
 
   return (
     <AppShell largura="ampla">
+        {!podeEditar ? (
+          <p className="mb-4 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            Você está em modo de consulta. Pode ver, copiar e baixar, mas não alterar.
+          </p>
+        ) : null}
       <div className="mb-4 flex justify-end"><BotaoZip origem="estampas" /></div>
       <p className="mb-4 text-xs text-muted-foreground">
         O CMYK é o dado real, é ele que vai para a arte. O hexadecimal serve apenas para a cor aparecer parecida na tela. Clique copia o CMYK, Alt mais clique copia o hexadecimal.

@@ -3,7 +3,7 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { SecaoTextos } from "@/components/biblioteca/BlocosTextos";
 import { BotaoZip } from "@/components/biblioteca/BotaoZip";
-import { hasPermission, profileQueryOptions } from "@/lib/auth";
+import { canEdit, hasPermission, profileQueryOptions } from "@/lib/auth";
 import { textosQueryOptions } from "@/lib/biblioteca-marca";
 
 export const Route = createFileRoute("/_authenticated/biblioteca/textos")({
@@ -24,7 +24,8 @@ export const Route = createFileRoute("/_authenticated/biblioteca/textos")({
 function TextosPage() {
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
   const pode = hasPermission(profile, "biblioteca.marca");
-  const admin = profile?.role === "admin";
+  const podeEditar = canEdit(profile, "biblioteca.marca");
+  const admin = profile?.role === "admin" && podeEditar;
   const { data: textos = [] } = useQuery({ ...textosQueryOptions, enabled: pode });
 
   if (!pode) {
@@ -37,6 +38,11 @@ function TextosPage() {
 
   return (
     <AppShell largura="ampla">
+        {!podeEditar ? (
+          <p className="mb-4 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            Você está em modo de consulta. Pode ver, copiar e baixar, mas não alterar.
+          </p>
+        ) : null}
       <div className="mb-4 flex justify-end"><BotaoZip origem="textos" /></div>
       <SecaoTextos textos={textos} admin={admin} />
     </AppShell>

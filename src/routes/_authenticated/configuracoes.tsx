@@ -39,6 +39,7 @@ import {
   permissoesDoGrupo,
   serializarPermissao,
   type NivelAcesso,
+  modoDaPermissao,
 } from "@/config/navigation";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { profileQueryOptions, type AppRole } from "@/lib/auth";
@@ -168,7 +169,23 @@ function PermissionPanel({
           </p>
           {permissoesDoGrupo(grupo).map((item) => {
             const value = state[item.key] ?? "nenhum";
-            const opcoes: { v: PermState[string]; label: string }[] = item.nivelConfiguravel
+            const modo = modoDaPermissao(item.key);
+            const opcoes: { v: PermState[string]; label: string }[] =
+              modo === "tres"
+                ? [
+                    { v: "nenhum", label: "Sem acesso" },
+                    { v: "leitura", label: "Somente leitura" },
+                    { v: "edicao", label: "Edição" },
+                  ]
+                : modo === "ver"
+                  ? [
+                      { v: "nenhum", label: "Sem acesso" },
+                      { v: "edicao", label: "Ver" },
+                    ]
+                  : [
+                      { v: "nenhum", label: "Sem acesso" },
+                      { v: "edicao", label: "Edição" },
+                    ]; label: string }[] = item.nivelConfiguravel
               ? [
                   { v: "nenhum", label: "Sem acesso" },
                   { v: "leitura", label: "Somente leitura" },
@@ -185,7 +202,7 @@ function PermissionPanel({
                   type="single"
                   size="sm"
                   variant="outline"
-                  value={value === "leitura" && !item.nivelConfiguravel ? "edicao" : value}
+                  value={value === "leitura" && modo !== "tres" ? "edicao" : value}
                   onValueChange={(v) => {
                     if (v) onChange({ ...state, [item.key]: v as PermState[string] });
                   }}

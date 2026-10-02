@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Bloco, CampoAutoSave } from "@/components/biblioteca/comum";
 import { BotaoZip } from "@/components/biblioteca/BotaoZip";
-import { hasPermission, profileQueryOptions } from "@/lib/auth";
+import { canEdit, hasPermission, profileQueryOptions } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import {
   COM_PREVIA,
@@ -59,7 +59,8 @@ function ArquivosPage() {
   const qc = useQueryClient();
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
   const pode = hasPermission(profile, "biblioteca.arquivos");
-  const admin = profile?.role === "admin";
+  const podeEditar = canEdit(profile, "biblioteca.arquivos");
+  const admin = profile?.role === "admin" && podeEditar;
   const { data: grupos = [] } = useQuery({ ...gruposArquivoQueryOptions, enabled: pode });
   const { data: arquivos = [] } = useQuery({ ...arquivosQueryOptions, enabled: pode });
   const caminhos = arquivos.filter((a) => COM_PREVIA.includes(a.formato)).map((a) => a.caminho);
@@ -91,6 +92,11 @@ function ArquivosPage() {
 
   return (
     <AppShell largura="ampla">
+        {!podeEditar ? (
+          <p className="mb-4 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            Você está em modo de consulta. Pode ver, copiar e baixar, mas não alterar.
+          </p>
+        ) : null}
       <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
         {admin ? (
           criando ? (

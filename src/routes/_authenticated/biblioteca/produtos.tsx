@@ -8,7 +8,7 @@ import { BotaoZip } from "@/components/biblioteca/BotaoZip";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Bloco, CampoAutoSave, ListaProdutos, SemAcesso, patchProdutoOtimista } from "@/components/biblioteca/comum";
-import { hasPermission, profileQueryOptions } from "@/lib/auth";
+import { canEdit, hasPermission, profileQueryOptions } from "@/lib/auth";
 import { textoSobreCor } from "@/config/produtos";
 import { cn } from "@/lib/utils";
 import {
@@ -46,7 +46,8 @@ export const Route = createFileRoute("/_authenticated/biblioteca/produtos")({
 function ProdutosPage() {
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
   const pode = hasPermission(profile, "biblioteca.produtos");
-  const editavel = profile?.role === "admin";
+  const podeEditar = canEdit(profile, "biblioteca.produtos");
+  const editavel = profile?.role === "admin" && podeEditar;
   const { data: produtos = [] } = useQuery({ ...produtosQueryOptions, enabled: pode });
   const { data: cores = [] } = useQuery({ ...coresQueryOptions, enabled: pode });
   const [sel, setSel] = useState<string | null>(null);
@@ -56,6 +57,11 @@ function ProdutosPage() {
 
   return (
     <AppShell largura="ampla">
+        {!podeEditar ? (
+          <p className="mb-4 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            Você está em modo de consulta. Pode ver, copiar e baixar, mas não alterar.
+          </p>
+        ) : null}
       <div className="flex flex-col gap-4 md:flex-row">
         <ListaProdutos produtos={produtos} cores={cores} selecionado={produto?.id ?? null} onSelecionar={setSel} editavel={editavel} />
         <div className="min-w-0 flex-1">
