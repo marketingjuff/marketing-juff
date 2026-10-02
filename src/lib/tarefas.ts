@@ -15,6 +15,7 @@ export type Quadro = {
   posicao: number;
   arquivado: boolean;
   acesso: "aberto" | "restrito";
+  exige_responsavel: boolean;
   membros: string[];
   cards_total?: number;
 };
@@ -27,6 +28,8 @@ export type Coluna = {
   conclui: boolean;
   limite_wip: number | null;
   arquivado: boolean;
+  resp_ao_entrar: "padrao" | "arrastou" | "criador" | "quem_ficou";
+  resp_coluna_origem_id: string | null;
 };
 
 export type Etiqueta = { id: string; nome: string; cor: string; cor_texto: string; arquivado: boolean; posicao: number; quadro_id: string | null };
@@ -279,6 +282,7 @@ async function fetchQuadros(arquivado: boolean): Promise<Quadro[]> {
     posicao: q.posicao,
     arquivado: q.arquivado,
     acesso: (q.acesso ?? "aberto") as "aberto" | "restrito",
+    exige_responsavel: q.exige_responsavel ?? false,
     membros: (q.tarefa_quadro_membros ?? []).map((m: { user_id: string }) => m.user_id),
     cards_total: (q.tarefa_cards ?? []).filter((c: { arquivado: boolean }) => !c.arquivado).length,
   }));
@@ -393,6 +397,7 @@ export const quadroQueryOptions = (quadroId: string) =>
           posicao: q.posicao,
           arquivado: q.arquivado,
           acesso: (q.acesso ?? "aberto") as "aberto" | "restrito",
+          exige_responsavel: q.exige_responsavel ?? false,
           membros: (q.tarefa_quadro_membros ?? []).map((m: { user_id: string }) => m.user_id),
         },
         colunas: (cols ?? []) as Coluna[],
@@ -403,7 +408,7 @@ export const quadroQueryOptions = (quadroId: string) =>
 
 export async function createQuadro(
   nome: string,
-  extra?: { descricao?: string; fundo_tipo?: FundoTipo; fundo_cor1?: string; fundo_cor2?: string; acesso?: "aberto" | "restrito" },
+  extra?: { descricao?: string; fundo_tipo?: FundoTipo; fundo_cor1?: string; fundo_cor2?: string; acesso?: "aberto" | "restrito"; exige_responsavel?: boolean },
 ): Promise<string> {
   const { count } = await supabase
     .from("tarefa_quadros")
@@ -422,18 +427,21 @@ export async function createQuadro(
   return data.id;
 }
 
+type QuadroEditavel = "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2" | "acesso" | "exige_responsavel";
+
 export async function updateQuadro(
   id: string,
-  values: Partial<Pick<Quadro, "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2" | "acesso">>,
+  values: Partial<Pick<Quadro, QuadroEditavel>>,
 ): Promise<void> {
   // Garante que só colunas reais da tabela sejam enviadas, mesmo se vierem campos extras.
-  const limpo: Partial<Pick<Quadro, "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2" | "acesso">> = {};
+  const limpo: Partial<Pick<Quadro, QuadroEditavel>> = {};
   if (values.nome !== undefined) limpo.nome = values.nome;
   if (values.descricao !== undefined) limpo.descricao = values.descricao;
   if (values.fundo_tipo !== undefined) limpo.fundo_tipo = values.fundo_tipo;
   if (values.fundo_cor1 !== undefined) limpo.fundo_cor1 = values.fundo_cor1;
   if (values.fundo_cor2 !== undefined) limpo.fundo_cor2 = values.fundo_cor2;
   if (values.acesso !== undefined) limpo.acesso = values.acesso;
+  if (values.exige_responsavel !== undefined) limpo.exige_responsavel = values.exige_responsavel;
   const { error } = await supabase.from("tarefa_quadros").update(limpo).eq("id", id);
   if (error) throw error;
 }
@@ -506,11 +514,22 @@ export async function createColuna(quadroId: string, nome: string): Promise<void
 
 export async function updateColuna(
   id: string,
-  values: Partial<Pick<Coluna, "nome" | "conclui" | "limite_wip">>,
+  values: Partial<Pick<Coluna, "nome" | "conclui" | "limite_wip" | "resp_ao_entrar" | "resp_coluna_origem_id">>,
 ): Promise<void> {
   const { error } = await supabase.from("tarefa_colunas").update(values).eq("id", id);
   if (error) throw error;
 }
+
+export const REGRAS_RESPONSAVEL = [
+  { valor: "padrao" as const, rotulo: "Padrão", ajuda: "Não muda nada. O card entra e continua com quem estava." },
+  { valor: "arrastou" as const, rotulo: "Assume quem arrastou", ajuda: "Quem puxou o card para esta coluna vira o responsável." },
+  { valor: "criador" as const, rotulo: "Devolve para quem criou", ajuda: "O responsável volta a ser quem abriu o card." },
+  {
+    valor: "quem_ficou" as const,
+    rotulo: "Devolve para quem fez",
+    ajuda: "Volta para a última pessoa responsável enquanto o card esteve numa coluna escolhida.",
+  },
+];
 
 export async function reorderColunas(_quadroId: string, idsNaOrdem: string[]): Promise<void> {
   await Promise.all(
