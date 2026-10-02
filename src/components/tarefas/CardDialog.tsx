@@ -74,6 +74,7 @@ import {
   type Card,
   type CardUpdate,
   type QuadroCompleto,
+  coresDaEtiqueta,
 } from "@/lib/tarefas";
 
 const NENHUM = "__nenhum__";

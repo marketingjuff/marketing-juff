@@ -14,6 +14,7 @@ import {
   type Card,
   type Etiqueta,
   type Pessoa,
+  coresDaEtiqueta,
 } from "@/lib/tarefas";
 import { useLayoutEffect, useRef, useState } from "react";
 

@@ -51,6 +51,7 @@ export function NovoQuadroDialog({
   const [membros, setMembros] = useState<string[]>([]);
   const [acesso, setAcesso] = useState<"aberto" | "restrito">("aberto");
   const [exigeResponsavel, setExigeResponsavel] = useState(false);
+  const [etiquetaDoCriador, setEtiquetaDoCriador] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
@@ -65,6 +66,7 @@ export function NovoQuadroDialog({
     setMembros(quadro?.membros ?? []);
     setAcesso(quadro?.acesso ?? "aberto");
     setExigeResponsavel(quadro?.exige_responsavel ?? false);
+    setEtiquetaDoCriador(quadro?.etiqueta_do_criador ?? false);
   }, [open, quadro]);
 
   async function salvar() {
@@ -72,11 +74,11 @@ export function NovoQuadroDialog({
     try {
       let id = quadro?.id;
       if (!somenteParticipantes) {
-        if (id) await updateQuadro(id, { nome: nome.trim() || "Novo quadro", descricao, acesso, exige_responsavel: exigeResponsavel, ...fundo });
-        else id = await createQuadro(nome, { descricao, acesso, exige_responsavel: exigeResponsavel, ...fundo });
+        if (id) await updateQuadro(id, { nome: nome.trim() || "Novo quadro", descricao, acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, ...fundo });
+        else id = await createQuadro(nome, { descricao, acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, ...fundo });
       }
       if (id) await setMembrosQuadro(id, membros);
-      if (id && somenteParticipantes) await updateQuadro(id, { acesso, exige_responsavel: exigeResponsavel });
+      if (id && somenteParticipantes) await updateQuadro(id, { acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador });
       await qc.invalidateQueries({ queryKey: ["tarefas"] });
       toast.success(quadro ? "Quadro atualizado" : "Quadro criado");
       onOpenChange(false);
@@ -182,6 +184,19 @@ export function NovoQuadroDialog({
               <span className="block text-sm font-medium">Exigir responsável</span>
               <span className="mt-0.5 block text-[11px] text-muted-foreground">
                 Card novo nasce com quem criou, e card sem responsável não muda de coluna.
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-2 rounded-lg border border-border p-2.5">
+            <Checkbox
+              checked={etiquetaDoCriador}
+              onCheckedChange={(v) => setEtiquetaDoCriador(!!v)}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="block text-sm font-medium">Etiquetar quem cria</span>
+              <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                Card novo recebe sozinho a etiqueta da pessoa que criou, se ela tiver uma neste quadro.
               </span>
             </span>
           </label>
