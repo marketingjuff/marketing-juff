@@ -197,6 +197,13 @@
       "when": 1790962684225,
       "tag": "0027_deprecar_limite_wip",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1790963103611,
+      "tag": "0028_etiqueta_da_pessoa",
+      "breakpoints": true
     }
   ]
 }
