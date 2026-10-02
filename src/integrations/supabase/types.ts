@@ -1339,6 +1339,42 @@ export type Database = {
           },
         ]
       }
+      tarefa_card_resp_coluna: {
+        Row: {
+          atualizado_em: string
+          card_id: string
+          coluna_id: string
+          responsavel_id: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          card_id: string
+          coluna_id: string
+          responsavel_id?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          card_id?: string
+          coluna_id?: string
+          responsavel_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_card_resp_coluna_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefa_card_resp_coluna_coluna_id_fkey"
+            columns: ["coluna_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_colunas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tarefa_cards: {
         Row: {
           adiado_ate: string | null
@@ -1503,6 +1539,8 @@ export type Database = {
           nome: string
           posicao: number
           quadro_id: string
+          resp_ao_entrar: string
+          resp_coluna_origem_id: string | null
         }
         Insert: {
           arquivado?: boolean
@@ -1513,6 +1551,8 @@ export type Database = {
           nome?: string
           posicao?: number
           quadro_id: string
+          resp_ao_entrar?: string
+          resp_coluna_origem_id?: string | null
         }
         Update: {
           arquivado?: boolean
@@ -1523,6 +1563,8 @@ export type Database = {
           nome?: string
           posicao?: number
           quadro_id?: string
+          resp_ao_entrar?: string
+          resp_coluna_origem_id?: string | null
         }
         Relationships: [
           {
@@ -1530,6 +1572,13 @@ export type Database = {
             columns: ["quadro_id"]
             isOneToOne: false
             referencedRelation: "tarefa_quadros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefa_colunas_resp_coluna_origem_id_fkey"
+            columns: ["resp_coluna_origem_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_colunas"
             referencedColumns: ["id"]
           },
         ]
@@ -1760,6 +1809,7 @@ export type Database = {
           created_at: string
           criado_por: string | null
           descricao: string
+          exige_responsavel: boolean
           fundo_cor1: string
           fundo_cor2: string
           fundo_tipo: string
@@ -1773,6 +1823,7 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           descricao?: string
+          exige_responsavel?: boolean
           fundo_cor1?: string
           fundo_cor2?: string
           fundo_tipo?: string
@@ -1786,6 +1837,7 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           descricao?: string
+          exige_responsavel?: boolean
           fundo_cor1?: string
           fundo_cor2?: string
           fundo_tipo?: string

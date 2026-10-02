@@ -183,6 +183,13 @@
       "when": 1790961425023,
       "tag": "0025_tarefa_cores_salvas",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1790962229978,
+      "tag": "0026_responsavel_ao_entrar",
+      "breakpoints": true
     }
   ]
 }
