@@ -606,6 +606,7 @@ export type CardUpdate = Partial<
     | "posicao"
     | "concluido"
     | "cor"
+    | "cor_fundo"
   >
 >;
 
