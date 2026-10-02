@@ -41,7 +41,7 @@ export function ListaCards({
                   <span
                     key={id}
                     className="rounded px-1.5 py-0.5 text-[10px]"
-                    style={{ backgroundColor: e.cor, color: e.cor_texto }}
+                    style={(() => { const cs = coresDaEtiqueta(e, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}
                   >
                     {e.nome}
                   </span>
