@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { estampaQueryOptions as coresEstampaQueryOptions, type CorEstampa } from "@/lib/biblioteca-estampa";
 import type { ItemCor } from "@/lib/biblioteca-estampas";
+import { textoSobreCor } from "@/config/produtos";
 
 const HEX = /^#[0-9a-f]{6}$/;
 
@@ -74,4 +75,57 @@ function corTexto(hex: string) {
   if (!HEX.test(hex)) return "#111111";
   const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
   return (r * 299 + g * 587 + b * 114) / 1000 > 140 ? "#111111" : "#ffffff";
+}
+
+export type TamanhoCard = "p" | "m" | "g";
+export const MEDIDAS_CARD: Record<TamanhoCard, { celula: number; faixa: number; fonte: number; fonteUso: number; fonteUni: number }> = {
+  p: { celula: 22, faixa: 28, fonte: 11, fonteUso: 9, fonteUni: 8 },
+  m: { celula: 28, faixa: 34, fonte: 12, fonteUso: 10, fonteUni: 9 },
+  g: { celula: 34, faixa: 40, fonte: 14, fonteUso: 12, fonteUni: 10 },
+};
+
+/** Card de combo: faixa na cor da camiseta (código, uni, uso) e grade de seis colunas com as cores. */
+export function CardCombo({ codigo, fundo, itens, porCodigo, tamanho = "m", uso, onVerUso, marcaUni, onClick, title }: {
+  codigo: string;
+  fundo: string;
+  itens: ItemCor[];
+  porCodigo: Map<string, CorEstampa>;
+  tamanho?: TamanhoCard;
+  uso?: number;
+  onVerUso?: () => void;
+  marcaUni?: boolean;
+  onClick?: (() => void) | undefined;
+  title?: string;
+}) {
+  const m = MEDIDAS_CARD[tamanho];
+  const bg = HEX.test(fundo) ? fundo : "#888888";
+  const txt = textoSobreCor(bg);
+  const n = uso ?? 0;
+  return (
+    <div onClick={onClick} title={title} className={`overflow-hidden rounded-md border border-border bg-background ${onClick ? "cursor-pointer hover:ring-2 hover:ring-primary" : ""}`} style={{ width: m.celula * 6 + 8 }}>
+      <div className="flex flex-col justify-center px-1.5" style={{ height: m.faixa, backgroundColor: bg, color: txt }}>
+        <div className="flex items-center justify-between leading-none">
+          <strong style={{ fontSize: m.fonte }}>{codigo}</strong>
+          {marcaUni ? <span className="opacity-60" style={{ fontSize: m.fonteUni }}>uni</span> : null}
+        </div>
+        {n > 0 ? (
+          <button type="button" className="w-fit cursor-pointer text-left leading-tight underline" style={{ fontSize: m.fonteUso, color: txt }} onClick={(e) => { e.stopPropagation(); onVerUso?.(); }}>
+            {n} {n === 1 ? "estampa" : "estampas"}
+          </button>
+        ) : (
+          <span className="leading-tight opacity-60" style={{ fontSize: m.fonteUso }}>sem uso</span>
+        )}
+      </div>
+      <div className="grid grid-cols-6 gap-px p-1" style={{ height: m.celula + 8 }}>
+        {itens.slice(0, 6).map((i, k) => {
+          const h = i.codigo ? hexDoCodigo(porCodigo, i.codigo) : null;
+          return (
+            <div key={k} className="flex items-center justify-center rounded-sm font-bold" style={{ fontSize: Math.max(7, m.fonteUso - 2), backgroundColor: h ?? "transparent", color: h ? textoSobreCor(h) : undefined }}>
+              {i.codigo}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
