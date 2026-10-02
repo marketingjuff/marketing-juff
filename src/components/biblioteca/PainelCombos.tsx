@@ -216,7 +216,7 @@ function FormCombo({ inicial, cores, onCancelar, onPronto }: {
           </div>
         ))}
         <Popover>
-          <PopoverAnchor asChild><Button variant="ghost" size="sm" className="gap-1"><Plus className="size-4" /> Cor</Button></PopoverAnchor>
+          <PopoverTrigger asChild><Button variant="ghost" size="sm" className="gap-1"><Plus className="size-4" /> Cor</Button></PopoverTrigger>
           <PopoverContent className="w-80"><EscolherCorEstampa onEscolher={(c) => setItens([...itens, { codigo: c.codigo, c: c.c, m: c.m, y: c.y, k: c.k }])} /></PopoverContent>
         </Popover>
       </div>
