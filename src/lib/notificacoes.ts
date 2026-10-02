@@ -38,7 +38,7 @@ export const notificacoesQueryOptions = queryOptions({
       .from("notificacoes")
       .select("id, tipo, card_id, quadro_id, titulo, detalhe, lida, created_at")
       .order("created_at", { ascending: false })
-      .limit(40);
+      .limit(50);
     if (error) throw error;
     return (data ?? []) as Notificacao[];
   },
