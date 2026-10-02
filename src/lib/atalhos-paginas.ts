@@ -21,7 +21,7 @@ export type AtalhoBarra = {
 
 export type ConteudoArrasto =
   | { tipo: "pagina"; destino: string; label: string }
-  | { tipo: "quadro"; quadro_id: string; label: string; cor?: string | null }
+  | { tipo: "quadro"; quadro_id: string; label: string; cor?: string | null | undefined }
   | { tipo: "mover"; id: string };
 
 export const atalhosBarraQueryOptions = queryOptions({

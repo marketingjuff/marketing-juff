@@ -31,7 +31,7 @@ function corAnel(hex: string | null | undefined): string {
     const v = parseInt(h.slice(i, i + 2), 16) / 255;
     return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
   });
-  const lum = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  const lum = 0.2126 * c[0]! + 0.7152 * c[1]! + 0.0722 * c[2]!;
   return lum > 0.82 ? CINZA : h;
 }
 
@@ -114,7 +114,7 @@ export function BarraAtalhos() {
     const para = lista.findIndex((a) => a.id === alvoId);
     if (de < 0 || para < 0) return;
     const [item] = lista.splice(de, 1);
-    lista.splice(para, 0, item);
+    lista.splice(para, 0, item!);
     queryClient.setQueryData<AtalhoBarra[]>(CHAVE_BARRA, lista.map((a, i) => ({ ...a, posicao: i })));
   }
 
@@ -199,9 +199,7 @@ export function BarraAtalhos() {
               </span>
             ) : (
               <Link
-                to={a.quadro_id ? "/tarefas/quadros/$quadroId" : (a.destino ?? "/")}
-                params={a.quadro_id ? { quadroId: a.quadro_id } : undefined}
-                search={a.quadro_id ? { card: undefined } : undefined}
+                to={a.quadro_id ? `/tarefas/quadros/${a.quadro_id}` : (a.destino ?? "/")}
                 title={a.label}
                 draggable={false}
                 className={classe}
