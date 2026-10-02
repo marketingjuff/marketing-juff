@@ -137,7 +137,7 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
                   {lista.map(({ combo: c, uni }) => (
                     <Popover key={c.id} open={verUso === `${chave}:${c.id}`} onOpenChange={(o) => setVerUso(o ? `${chave}:${c.id}` : null)}>
                       <PopoverAnchor asChild>
-                        <div className="relative">
+                        <div className="group flex flex-col items-center">
                           <CardCombo
                             codigo={c.codigo}
                             fundo={cor?.hex ?? "#888888"}
@@ -150,7 +150,7 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
                             title={c.itens.map((it) => `${it.codigo} ${textoCmykItem(it)}`).join(" · ")}
                             onClick={editavel ? () => setEditando(c) : undefined}
                           />
-                          {editavel ? <Button variant="ghost" size="icon" className="absolute bottom-0.5 right-0.5 size-5 bg-background/80" title="Apagar combo" onClick={(e) => { e.stopPropagation(); apagar(c); }}><Trash2 className="size-3" /></Button> : null}
+                          {editavel ? <Button variant="ghost" size="icon" className="mt-0.5 size-5 opacity-0 transition-opacity group-hover:opacity-100" title="Apagar combo" onClick={(e) => { e.stopPropagation(); apagar(c); }}><Trash2 className="size-3" /></Button> : null}
                         </div>
                       </PopoverAnchor>
                       <PopoverContent className="w-56 text-sm" onOpenAutoFocus={(e) => e.preventDefault()}>

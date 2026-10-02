@@ -78,13 +78,41 @@ function corTexto(hex: string) {
 }
 
 export type TamanhoCard = "p" | "m" | "g";
-export const MEDIDAS_CARD: Record<TamanhoCard, { celula: number; faixa: number; fonte: number; fonteUso: number; fonteUni: number }> = {
-  p: { celula: 22, faixa: 28, fonte: 11, fonteUso: 9, fonteUni: 8 },
-  m: { celula: 28, faixa: 34, fonte: 12, fonteUso: 10, fonteUni: 9 },
-  g: { celula: 34, faixa: 40, fonte: 14, fonteUso: 12, fonteUni: 10 },
+/** Medidas de cada tamanho. O dado é sempre quadrado, do tamanho da largura. */
+export const MEDIDAS_CARD: Record<TamanhoCard, {
+  lado: number; faixa: number; fatia: number; bolinha: number;
+  fonte: number; fonteUso: number; fonteUni: number; fonteCor: number;
+}> = {
+  p: { lado: 76, faixa: 28, fatia: 14, bolinha: 15, fonte: 10, fonteUso: 9, fonteUni: 8, fonteCor: 9 },
+  m: { lado: 100, faixa: 34, fatia: 18, bolinha: 20, fonte: 12, fonteUso: 10, fonteUni: 9, fonteCor: 11 },
+  g: { lado: 128, faixa: 40, fatia: 22, bolinha: 26, fonte: 15, fonteUso: 12, fonteUni: 10, fonteCor: 13 },
 };
 
-/** Card de combo: faixa na cor da camiseta (código, uni, uso) e grade de seis colunas com as cores. */
+/** Posição de cada bolinha, em porcentagem, igual à face de um dado. */
+const FACE_DADO: Record<number, [number, number][]> = {
+  1: [[50, 50]],
+  2: [[28, 28], [72, 72]],
+  3: [[28, 28], [50, 50], [72, 72]],
+  4: [[28, 28], [72, 28], [28, 72], [72, 72]],
+  5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]],
+  6: [[22, 30], [50, 30], [78, 30], [22, 72], [50, 72], [78, 72]],
+};
+
+/**
+ * Quantas colunas cada fatia ocupa na grade de seis colunas da faixa de baixo.
+ * Com uma, duas ou três cores a fatia ocupa as duas linhas inteiras, então
+ * todos os cards têm a mesma altura, de uma a seis cores.
+ */
+const FATIAS_CARD: Record<number, number[]> = {
+  1: [6],
+  2: [3, 3],
+  3: [2, 2, 2],
+  4: [3, 3, 3, 3],
+  5: [2, 2, 2, 3, 3],
+  6: [2, 2, 2, 2, 2, 2],
+};
+
+/** Card de combo: faixa de código, dado com bolinhas e faixa de cores. */
 export function CardCombo({ codigo, fundo, itens, porCodigo, tamanho = "m", uso, onVerUso, marcaUni, onClick, title }: {
   codigo: string;
   fundo: string;
@@ -100,29 +128,84 @@ export function CardCombo({ codigo, fundo, itens, porCodigo, tamanho = "m", uso,
   const m = MEDIDAS_CARD[tamanho];
   const bg = HEX.test(fundo) ? fundo : "#888888";
   const txt = textoSobreCor(bg);
+  const claro = txt === "#ffffff";
   const n = uso ?? 0;
+  const q = Math.min(Math.max(itens.length, 1), 6);
+  const face = FACE_DADO[q] ?? FACE_DADO[6]!;
+  const fatias = FATIAS_CARD[q] ?? FATIAS_CARD[6]!;
+
   return (
-    <div onClick={onClick} title={title} className={`overflow-hidden rounded-md border border-border bg-background ${onClick ? "cursor-pointer hover:ring-2 hover:ring-primary" : ""}`} style={{ width: m.celula * 6 + 8 }}>
-      <div className="flex flex-col justify-center px-1.5" style={{ height: m.faixa, backgroundColor: bg, color: txt }}>
-        <div className="flex items-center justify-between leading-none">
-          <strong style={{ fontSize: m.fonte }}>{codigo}</strong>
-          {marcaUni ? <span className="opacity-60" style={{ fontSize: m.fonteUni }}>uni</span> : null}
+    <div
+      onClick={onClick}
+      title={title}
+      className={`shrink-0 overflow-hidden rounded-md border border-border ${onClick ? "cursor-pointer hover:ring-2 hover:ring-primary" : ""}`}
+      style={{ width: m.lado }}
+    >
+      <div style={{ height: m.faixa + m.lado, backgroundColor: bg, color: txt }}>
+        <div
+          className="flex flex-col justify-center px-1.5"
+          style={{ height: m.faixa, backgroundColor: claro ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)" }}
+        >
+          <div className="flex items-center justify-between leading-none">
+            <strong style={{ fontSize: m.fonte }}>{codigo}</strong>
+            {marcaUni ? <span className="opacity-60" style={{ fontSize: m.fonteUni }}>uni</span> : null}
+          </div>
+          {n > 0 ? (
+            <button
+              type="button"
+              className="w-fit cursor-pointer text-left font-bold leading-tight underline"
+              style={{ fontSize: m.fonteUso, color: txt }}
+              onClick={(e) => { e.stopPropagation(); onVerUso?.(); }}
+            >
+              {n} {n === 1 ? "estampa" : "estampas"}
+            </button>
+          ) : (
+            <span className="font-bold leading-tight opacity-60" style={{ fontSize: m.fonteUso }}>sem uso</span>
+          )}
         </div>
-        {n > 0 ? (
-          <button type="button" className="w-fit cursor-pointer text-left leading-tight underline" style={{ fontSize: m.fonteUso, color: txt }} onClick={(e) => { e.stopPropagation(); onVerUso?.(); }}>
-            {n} {n === 1 ? "estampa" : "estampas"}
-          </button>
-        ) : (
-          <span className="leading-tight opacity-60" style={{ fontSize: m.fonteUso }}>sem uso</span>
-        )}
+
+        <div className="relative" style={{ height: m.lado }}>
+          {itens.slice(0, 6).map((it, k) => {
+            const pos = face[k] ?? [50, 50];
+            const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
+            return (
+              <span
+                key={k}
+                className="absolute rounded-full border border-black/10"
+                style={{
+                  width: m.bolinha,
+                  height: m.bolinha,
+                  left: `${pos[0]}%`,
+                  top: `${pos[1]}%`,
+                  transform: "translate(-50%,-50%)",
+                  backgroundColor: h ?? "transparent",
+                  backgroundImage: h ? undefined : "repeating-linear-gradient(45deg,#d4d4d8 0 2px,transparent 2px 5px)",
+                }}
+              />
+            );
+          })}
+        </div>
       </div>
-      <div className="grid grid-cols-6 gap-px p-1" style={{ height: m.celula + 8 }}>
-        {itens.slice(0, 6).map((i, k) => {
-          const h = i.codigo ? hexDoCodigo(porCodigo, i.codigo) : null;
+
+      <div className="grid" style={{ gridTemplateColumns: "repeat(6, 1fr)", gridAutoRows: `${m.fatia}px` }}>
+        {itens.slice(0, 6).map((it, k) => {
+          const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
+          const cor = h ?? "#d4d4d8";
           return (
-            <div key={k} className="flex items-center justify-center rounded-sm font-bold" style={{ fontSize: Math.max(7, m.fonteUso - 2), backgroundColor: h ?? "transparent", color: h ? textoSobreCor(h) : undefined }}>
-              {i.codigo}
-            </div>
+            <span
+              key={k}
+              className="flex items-center justify-center font-bold"
+              style={{
+                gridColumn: `span ${fatias[k] ?? 2}`,
+                gridRow: q <= 3 ? "span 2" : undefined,
+                fontSize: m.fonteCor,
+                lineHeight: 1,
+                backgroundColor: cor,
+                color: textoSobreCor(cor),
+              }}
+            >
+              {it.codigo || "?"}
+            </span>
           );
         })}
       </div>
