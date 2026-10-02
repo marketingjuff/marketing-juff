@@ -102,6 +102,16 @@ export function QuadroBoard({
   const [soAtrasados, setSoAtrasados] = useState(false);
   const filtrando = !!busca.trim() || fResp !== TODOS || fEtiq !== TODOS || soAtrasados;
   const [cardAberto, setCardAberto] = useState<string | null>(cardInicial ?? null);
+  const navegarCard = useNavigate();
+  useEffect(() => {
+    if (cardInicial) setCardAberto(cardInicial);
+  }, [cardInicial]);
+  const fecharCard = () => {
+    setCardAberto(null);
+    if (cardInicial) {
+      navegarCard({ to: "/tarefas/quadros/$quadroId", params: { quadroId }, search: {}, replace: true });
+    }
+  };
   const [participantes, setParticipantes] = useState(false);
   const [novaColuna, setNovaColuna] = useState("");
   const [reorganizando, setReorganizando] = useState<string | null>(null);
@@ -465,7 +475,7 @@ export function QuadroBoard({
       <CardDialog
         card={cardDialog}
         open={!!cardDialog}
-        onOpenChange={(v) => !v && setCardAberto(null)}
+        onOpenChange={(v) => !v && fecharCard()}
         editable={editable}
         isAdmin={isAdmin}
         meuId={meuId}
