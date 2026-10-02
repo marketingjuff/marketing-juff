@@ -77,34 +77,34 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
               const cor = corPorId.get(cid);
               return (
                 <div key={cid} className="rounded-lg border border-border p-1.5">
-                  <div className="mb-1 flex items-center gap-1.5 px-0.5 text-xs font-medium capitalize"><Bolinha hex={cor?.hex ?? null} tamanho={11} /> {cor?.nome ?? "Sem cor de camiseta"}</div>
-                  <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5">
+                  <div className="mb-1 flex items-center gap-1.5 px-0.5 text-xs font-medium capitalize"><Bolinha hex={cor?.hex ?? null} tamanho={11} /> {cor?.nome ?? "Sem cor de camiseta"} <span className="text-muted-foreground">· {lista.length}</span></div>
+                  <div className="grid gap-1 sm:grid-cols-2">
                     {lista.map((c) => (
-                      <div key={c.id} className="rounded-md border border-border bg-background px-2 py-1.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-semibold">{c.codigo}</span>
-                          <Amostra fundo={cor?.hex ?? "#888888"} itens={c.itens} porCodigo={porCodigo} />
-                          <div className="ml-auto flex">
-                            {editavel ? <Button variant="ghost" size="icon" className="size-6" title="Editar combo" onClick={() => setEditando(c)}><Pencil className="size-3" /></Button> : null}
-                            {editavel ? <Button variant="ghost" size="icon" className="size-6" title="Apagar combo" onClick={() => apagar(c)}><Trash2 className="size-3" /></Button> : null}
-                          </div>
-                        </div>
-                        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
+                      <div key={c.id} className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-background px-2 py-1" title={c.itens.map((it) => `${it.codigo} ${textoCmykItem(it)}`).join(" · ")}>
+                        <span className="shrink-0 text-xs font-semibold">{c.codigo}</span>
+                        <Amostra fundo={cor?.hex ?? "#888888"} itens={c.itens} porCodigo={porCodigo} />
+                        <div className="flex min-w-0 flex-1 items-center gap-x-2 overflow-hidden whitespace-nowrap">
                           {c.itens.map((it, i) => (
-                            <span key={i} className="flex items-center gap-1 text-[11px] leading-4">
+                            <span key={i} className="flex shrink-0 items-center gap-1 text-[11px] leading-4">
                               <Bolinha hex={hexDoCodigo(porCodigo, it.codigo)} tamanho={10} />
                               <strong>{it.codigo}</strong>
                               <span className="tabular-nums text-muted-foreground">{textoCmykItem(it)}</span>
                             </span>
                           ))}
+                        </div>
+                        {c.uso > 0 ? (
                           <Popover>
                             <PopoverTrigger asChild>
-                              <button type="button" className="ml-auto shrink-0 text-[10px] leading-4 text-primary hover:underline" disabled={!c.uso}>{c.uso} estampa{c.uso === 1 ? "" : "s"}</button>
+                              <button type="button" className="shrink-0 text-[10px] leading-4 text-primary hover:underline" title="Ver estampas que usam este combo">{c.uso}×</button>
                             </PopoverTrigger>
                             <PopoverContent className="w-56 text-sm">
                               <ul className="space-y-0.5">{c.estampas.map((e) => <li key={e}>{e}</li>)}</ul>
                             </PopoverContent>
                           </Popover>
+                        ) : null}
+                        <div className="shrink-0">
+                          {editavel ? <Button variant="ghost" size="icon" className="size-6" title="Editar combo" onClick={() => setEditando(c)}><Pencil className="size-3" /></Button> : null}
+                          {editavel ? <Button variant="ghost" size="icon" className="size-6" title="Apagar combo" onClick={() => apagar(c)}><Trash2 className="size-3" /></Button> : null}
                         </div>
                       </div>
                     ))}
