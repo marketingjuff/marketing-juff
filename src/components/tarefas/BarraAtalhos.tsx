@@ -140,6 +140,7 @@ export function BarraAtalhos() {
             <Link
               to="/tarefas/quadros/$quadroId"
               params={{ quadroId: a.quadro_id }}
+              search={{ card: undefined }}
               title={a.nome}
               className={chip}
               activeProps={{ className: "border-primary bg-primary-soft text-foreground font-medium" }}
