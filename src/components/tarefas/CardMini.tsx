@@ -15,6 +15,41 @@ import {
   type Etiqueta,
   type Pessoa,
 } from "@/lib/tarefas";
+import { useLayoutEffect, useRef, useState } from "react";
+
+const ACHATAMENTO = 0.6;
+
+function EtiquetaCompacta({ nome, cor, corTexto }: { nome: string; cor: string; corTexto: string }) {
+  const texto = useRef<HTMLSpanElement>(null);
+  const [largura, setLargura] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    const el = texto.current;
+    if (!el) return;
+    setLargura(el.scrollWidth * ACHATAMENTO);
+  }, [nome]);
+
+  return (
+    <span
+      className="inline-flex max-w-full shrink items-center overflow-hidden rounded-[3px] px-1 py-px"
+      style={{ backgroundColor: cor, color: corTexto }}
+      title={nome}
+    >
+      <span
+        className="block overflow-hidden"
+        style={{ width: largura === null ? undefined : `${largura}px` }}
+      >
+        <span
+          ref={texto}
+          className="block whitespace-nowrap text-[10px] font-medium uppercase leading-[1.3]"
+          style={{ transform: `scaleX(${ACHATAMENTO})`, transformOrigin: "left center" }}
+        >
+          {nome}
+        </span>
+      </span>
+    </span>
+  );
+}
 
 export function CardMini({
   card,
@@ -50,14 +85,7 @@ export function CardMini({
       {tags.length > 0 ? (
         <div className="mb-1.5 flex flex-wrap gap-1">
           {tags.slice(0, 3).map((t) => (
-            <span
-              key={t.id}
-              className="inline-flex max-w-full items-center truncate rounded-[3px] px-1 py-px text-[9px] font-normal uppercase leading-[1.25] tracking-tight"
-              style={{ backgroundColor: t.cor, color: t.cor_texto }}
-              title={t.nome}
-            >
-              {t.nome}
-            </span>
+            <EtiquetaCompacta key={t.id} nome={t.nome} cor={t.cor} corTexto={t.cor_texto} />
           ))}
           {tags.length > 3 ? (
             <span
