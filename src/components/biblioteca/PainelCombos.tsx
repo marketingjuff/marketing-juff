@@ -128,40 +128,33 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
       {secoes.map(({ chave, rotulo, faixas, total }) => (
         <section key={chave} className="space-y-1.5">
           <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{rotulo} · {total}</h4>
-          <div className="grid gap-1.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", alignItems: "start" }}>
-          {faixas.map(({ cid, lista }) => {
+          <div className="flex flex-wrap gap-1.5">
+          {faixas.flatMap(({ cid, lista }) => {
             const cor = corPorId.get(cid);
-            return (
-              <div key={cid} className="rounded-lg border border-border p-1.5">
-                <div className="mb-1 flex items-center gap-1.5 px-0.5 text-xs font-medium capitalize"><Bolinha hex={cor?.hex ?? null} tamanho={11} /> {cor?.nome ?? "Sem cor de camiseta"} <span className="text-muted-foreground">· {lista.length}</span></div>
-                <div className="flex flex-wrap gap-1.5">
-                  {lista.map(({ combo: c, uni }) => (
-                    <Popover key={c.id} open={verUso === `${chave}:${c.id}`} onOpenChange={(o) => setVerUso(o ? `${chave}:${c.id}` : null)}>
-                      <PopoverAnchor asChild>
-                        <div className="group flex flex-col items-center">
-                          <CardCombo
-                            codigo={c.codigo}
-                            fundo={cor?.hex ?? "#888888"}
-                            itens={c.itens}
-                            porCodigo={porCodigo}
-                            tamanho={tamanho}
-                            uso={c.uso}
-                            onVerUso={() => setVerUso(`${chave}:${c.id}`)}
-                            marcaUni={uni}
-                            title={c.itens.map((it) => `${it.codigo} ${textoCmykItem(it)}`).join(" · ")}
-                            onClick={editavel ? () => setEditando(c) : undefined}
-                          />
-                          {editavel ? <Button variant="ghost" size="icon" className="mt-0.5 size-5 opacity-0 transition-opacity group-hover:opacity-100" title="Apagar combo" onClick={(e) => { e.stopPropagation(); apagar(c); }}><Trash2 className="size-3" /></Button> : null}
-                        </div>
-                      </PopoverAnchor>
-                      <PopoverContent className="w-56 text-sm" onOpenAutoFocus={(e) => e.preventDefault()}>
-                        <ul className="space-y-0.5">{c.estampas.map((e) => <li key={e}>{e}</li>)}</ul>
-                      </PopoverContent>
-                    </Popover>
-                  ))}
-                </div>
-              </div>
-            );
+            return lista.map(({ combo: c, uni }) => (
+                <Popover key={c.id} open={verUso === `${chave}:${c.id}`} onOpenChange={(o) => setVerUso(o ? `${chave}:${c.id}` : null)}>
+                  <PopoverAnchor asChild>
+                    <div className="group flex flex-col items-center">
+                      <CardCombo
+                        codigo={c.codigo}
+                        fundo={cor?.hex ?? "#888888"}
+                        itens={c.itens}
+                        porCodigo={porCodigo}
+                        tamanho={tamanho}
+                        uso={c.uso}
+                        onVerUso={() => setVerUso(`${chave}:${c.id}`)}
+                        marcaUni={uni}
+                        title={[cor?.nome ?? "Sem cor de camiseta", ...c.itens.map((it) => `${it.codigo} ${textoCmykItem(it)}`)].join(" · ")}
+                        onClick={editavel ? () => setEditando(c) : undefined}
+                      />
+                      {editavel ? <Button variant="ghost" size="icon" className="mt-0.5 size-5 opacity-0 transition-opacity group-hover:opacity-100" title="Apagar combo" onClick={(e) => { e.stopPropagation(); apagar(c); }}><Trash2 className="size-3" /></Button> : null}
+                    </div>
+                  </PopoverAnchor>
+                  <PopoverContent className="w-56 text-sm" onOpenAutoFocus={(e) => e.preventDefault()}>
+                    <ul className="space-y-0.5">{c.estampas.map((e) => <li key={e}>{e}</li>)}</ul>
+                  </PopoverContent>
+                </Popover>
+            ));
           })}
           </div>
         </section>
