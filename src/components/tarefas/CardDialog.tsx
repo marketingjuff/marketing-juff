@@ -746,9 +746,6 @@ export function CardDialog({
 
           {/* Comentários e atividade */}
           <aside className="space-y-3 border-l border-border bg-muted/30 p-5 text-sm">
-            {editable && !mexer ? (
-              <p className="text-xs text-muted-foreground">Só o responsável mexe neste card.</p>
-            ) : null}
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Label>Comentários e atividade</Label>
               <div className="inline-flex overflow-hidden rounded-md border border-border text-[11px]">
