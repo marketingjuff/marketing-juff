@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { prefixoVariacao, type CorBiblioteca, type ProdutoBiblioteca } from "@/lib/biblioteca";
+import { type CorBiblioteca, type ProdutoBiblioteca } from "@/lib/biblioteca";
 
 const DEPOSITO = "marca";
 const CINCO_MIN = 5 * 60 * 1000;
@@ -198,7 +198,6 @@ export function nomeProdutoEstampa(p: ProdutoBiblioteca, estampa: string, cor: C
   const partes = ["Juff Store", modelo];
   if (p.usa_tecido && p.tecido) partes.push(p.tecido);
   partes.push(estampa, cor.nome_olist);
-  void prefixoVariacao;
   return partes.join(" - ");
 }
 
