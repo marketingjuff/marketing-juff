@@ -190,6 +190,13 @@
       "when": 1790962229978,
       "tag": "0026_responsavel_ao_entrar",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1790962684225,
+      "tag": "0027_deprecar_limite_wip",
+      "breakpoints": true
     }
   ]
 }

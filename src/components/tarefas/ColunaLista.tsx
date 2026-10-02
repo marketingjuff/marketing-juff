@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Archive, ArrowDownAZ, CheckCircle2, GripVertical, Hash, MoreHorizontal, Pencil, Plus, UserCheck } from "lucide-react";
+import { Archive, ArrowDownAZ, CheckCircle2, GripVertical, MoreHorizontal, Pencil, Plus, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -60,7 +60,6 @@ export function ColunaLista({
   onAddCard,
   onRenomear,
   onToggleConclui,
-  onLimite,
   onArquivar,
   totalCards,
   onReorganizar,
@@ -79,7 +78,6 @@ export function ColunaLista({
   onAddCard: (titulo: string) => void;
   onRenomear: (nome: string) => void;
   onToggleConclui: () => void;
-  onLimite: () => void;
   onArquivar: () => void;
   totalCards: number;
   onReorganizar: () => void;
@@ -95,7 +93,6 @@ export function ColunaLista({
   const [nome, setNome] = useState(coluna.nome);
   const [adicionando, setAdicionando] = useState(false);
   const [novo, setNovo] = useState("");
-  const estourou = coluna.limite_wip != null && cards.length > coluna.limite_wip;
 
   function confirmarNome() {
     setEditando(false);
@@ -156,16 +153,7 @@ export function ColunaLista({
             ) : null}
           </h3>
         )}
-        <span
-          className={cn(
-            "rounded-full px-1.5 text-xs tabular-nums",
-            estourou ? "bg-destructive text-destructive-foreground" : "text-muted-foreground",
-          )}
-          title={coluna.limite_wip != null ? `Limite de ${coluna.limite_wip} cards` : undefined}
-        >
-          {cards.length}
-          {coluna.limite_wip != null ? `/${coluna.limite_wip}` : ""}
-        </span>
+        <span className="rounded-full px-1.5 text-xs tabular-nums text-muted-foreground">{cards.length}</span>
         {estruturar ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -186,9 +174,6 @@ export function ColunaLista({
               <DropdownMenuItem onClick={onToggleConclui}>
                 <CheckCircle2 className="size-4" />
                 {coluna.conclui ? "Desmarcar coluna de conclusão" : "Marcar como coluna de conclusão"}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onLimite}>
-                <Hash className="size-4" /> Definir limite de cards
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onResponsavelAoEntrar}>
                 <UserCheck className="size-4" /> Responsável ao entrar

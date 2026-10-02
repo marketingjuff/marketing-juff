@@ -408,15 +408,6 @@ export function QuadroBoard({
                   onAddCard={(t) => rodar(() => createCard(quadro.id, col.id, t))}
                   onRenomear={(nome) => rodar(() => updateColuna(col.id, { nome }))}
                   onToggleConclui={() => rodar(() => updateColuna(col.id, { conclui: !col.conclui }))}
-                  onLimite={() => {
-                    const v = window.prompt(
-                      "Limite de cards nesta coluna (deixe vazio para sem limite)",
-                      col.limite_wip?.toString() ?? "",
-                    );
-                    if (v === null) return;
-                    const n = v.trim() === "" ? null : Math.max(0, parseInt(v, 10) || 0);
-                    rodar(() => updateColuna(col.id, { limite_wip: n }));
-                  }}
                   onArquivar={() => rodar(() => arquivarColuna(col.id, true))}
                   totalCards={cards.filter((c) => c.coluna_id === col.id).length}
                   onReorganizar={() => setReorganizando(col.id)}

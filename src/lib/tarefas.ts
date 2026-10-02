@@ -26,7 +26,6 @@ export type Coluna = {
   nome: string;
   posicao: number;
   conclui: boolean;
-  limite_wip: number | null;
   arquivado: boolean;
   resp_ao_entrar: "padrao" | "arrastou" | "criador" | "quem_ficou";
   resp_coluna_origem_id: string | null;
@@ -514,7 +513,7 @@ export async function createColuna(quadroId: string, nome: string): Promise<void
 
 export async function updateColuna(
   id: string,
-  values: Partial<Pick<Coluna, "nome" | "conclui" | "limite_wip" | "resp_ao_entrar" | "resp_coluna_origem_id">>,
+  values: Partial<Pick<Coluna, "nome" | "conclui" | "resp_ao_entrar" | "resp_coluna_origem_id">>,
 ): Promise<void> {
   const { error } = await supabase.from("tarefa_colunas").update(values).eq("id", id);
   if (error) throw error;
