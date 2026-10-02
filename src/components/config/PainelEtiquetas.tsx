@@ -2,7 +2,7 @@ import { useState } from "react";
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Archive, ChevronDown, GripVertical, Pencil, Plus, RotateCcw, Tag } from "lucide-react";
-import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { DndContext, PointerSensor, closestCenter, useDroppable, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/integrations/supabase/client";
@@ -194,6 +194,18 @@ function LinhaEtiqueta({ etiqueta, quadros, pessoas, podeEditar, onChanged }: { 
   );
 }
 
+function GrupoSoltavel({ id, children }: { id: string; children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`min-h-10 space-y-1.5 rounded-lg p-1 transition-colors ${isOver ? "bg-primary/10 ring-1 ring-primary/40" : ""}`}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function PainelEtiquetas() {
   const qc = useQueryClient();
   const { data: profile = null } = useQuery(profileQueryOptions);
@@ -220,26 +232,61 @@ export function PainelEtiquetas() {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const arrastada = ativas.find((e) => e.id === active.id);
-    const alvo = ativas.find((e) => e.id === over.id);
-    if (!arrastada || !alvo) return;
-    if ((arrastada.quadro_id ?? null) !== (alvo.quadro_id ?? null)) return;
-    const doGrupo = ativas.filter((e) => (e.quadro_id ?? null) === (arrastada.quadro_id ?? null));
-    const de = doGrupo.findIndex((e) => e.id === active.id);
-    const para = doGrupo.findIndex((e) => e.id === over.id);
-    if (de < 0 || para < 0) return;
-    const fila = arrayMove(doGrupo, de, para).map((e) => e.id);
+    if (!arrastada) return;
+    const overId = String(over.id);
+    const alvo = ativas.find((e) => e.id === overId);
+    let destino: string | null;
+    if (alvo) destino = alvo.quadro_id ?? null;
+    else if (overId.startsWith("grupo:")) destino = overId === "grupo:global" ? null : overId.slice(6);
+    else return;
+    const origem = arrastada.quadro_id ?? null;
+
+    if (origem === destino) {
+      if (!alvo) return;
+      const doGrupo = ativas.filter((e) => (e.quadro_id ?? null) === origem);
+      const de = doGrupo.findIndex((e) => e.id === active.id);
+      const para = doGrupo.findIndex((e) => e.id === over.id);
+      if (de < 0 || para < 0) return;
+      const fila = arrayMove(doGrupo, de, para).map((e) => e.id);
+      const atualizada = ativas
+        .map((e) => {
+          if ((e.quadro_id ?? null) !== origem) return e;
+          const idx = fila.indexOf(e.id);
+          return idx >= 0 ? { ...e, posicao: idx + 1 } : e;
+        })
+        .sort((x, y) => x.posicao - y.posicao);
+      qc.setQueryData(etiquetasQueryOptions.queryKey, atualizada);
+      reordenarEtiquetas(fila).catch((e) => {
+        toast.error((e as Error).message);
+        invalidar();
+      });
+      return;
+    }
+
+    // Mudança de grupo (entre quadros / global)
+    const destinoItens = ativas.filter((e) => (e.quadro_id ?? null) === destino);
+    const idxAlvo = alvo ? destinoItens.findIndex((e) => e.id === alvo.id) : destinoItens.length;
+    const fila = destinoItens.map((e) => e.id);
+    fila.splice(idxAlvo < 0 ? fila.length : idxAlvo, 0, arrastada.id);
+    const pessoa = destino === null ? null : arrastada.pessoa_id;
     const atualizada = ativas
       .map((e) => {
-        if ((e.quadro_id ?? null) !== (arrastada.quadro_id ?? null)) return e;
-        const idx = fila.indexOf(e.id);
-        return idx >= 0 ? { ...e, posicao: idx + 1 } : e;
+        if (e.id === arrastada.id) return { ...e, quadro_id: destino, pessoa_id: pessoa, posicao: fila.indexOf(e.id) + 1 };
+        if ((e.quadro_id ?? null) !== destino) return e;
+        return { ...e, posicao: fila.indexOf(e.id) + 1 };
       })
       .sort((x, y) => x.posicao - y.posicao);
     qc.setQueryData(etiquetasQueryOptions.queryKey, atualizada);
-    reordenarEtiquetas(fila).catch((e) => {
-      toast.error((e as Error).message);
-      invalidar();
-    });
+    updateEtiqueta(arrastada.id, { quadro_id: destino, pessoa_id: pessoa })
+      .then(() => reordenarEtiquetas(fila))
+      .then(() => {
+        toast.success("Etiqueta movida");
+        invalidar();
+      })
+      .catch((e) => {
+        toast.error((e as Error).message);
+        invalidar();
+      });
   }
 
   async function criar(emQuadro: string | null = grupoNovo) {
@@ -354,9 +401,9 @@ export function PainelEtiquetas() {
                 </Button>
               </div>
               <SortableContext items={g.itens.map((e) => e.id)} strategy={verticalListSortingStrategy}>
-                <div className="space-y-1.5">
+                <GrupoSoltavel id={`grupo:${g.id ?? "global"}`}>
                   {g.itens.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">Nenhuma etiqueta neste grupo.</p>
+                    <p className="text-xs text-muted-foreground">Nenhuma etiqueta neste grupo. Arraste uma etiqueta para cá.</p>
                   ) : (
                     g.itens.map((e) => (
                       <LinhaEtiqueta
@@ -369,7 +416,7 @@ export function PainelEtiquetas() {
                       />
                     ))
                   )}
-                </div>
+                </GrupoSoltavel>
               </SortableContext>
             </div>
           ))}
