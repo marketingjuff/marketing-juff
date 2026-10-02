@@ -41,6 +41,14 @@ import {
   type NivelAcesso,
   modoDaPermissao,
 } from "@/config/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { profileQueryOptions, type AppRole } from "@/lib/auth";
 import {
@@ -623,22 +631,20 @@ function UserRow({
                 presets={["#ffffff", "#111111", ...CORES_ETIQUETA]}
               />
             </span>
+            {role !== "admin" ? (
+              <PermissoesDialog
+                user={user}
+                perms={perms}
+                onApply={setPerms}
+                podeQuadros={podeQuadros}
+              />
+            ) : null}
           </div>
           <p className="text-[11px] text-muted-foreground">
             Até três caracteres. Deixando em branco, o sistema monta a sigla pelo nome.
           </p>
         </div>
       </div>
-
-      {role !== "admin" ? (
-        <div className="mt-3">
-          <PermissionPanel state={perms} onChange={setPerms} />
-        </div>
-      ) : null}
-
-      {podeQuadros && role !== "admin" ? (
-        <QuadrosDoUsuario userId={user.id} nome={user.nome} />
-      ) : null}
 
       <div className="mt-3 flex flex-wrap gap-2">
         <Button
@@ -949,6 +955,74 @@ function PainelLinks() {
         ) : null}
       </div>
     </section>
+  );
+}
+
+function resumoPermissoes(perms: PermState): string {
+  const atuais = [...stateToPerms(perms)].sort().join("|");
+  const preset = PRESETS.find((p) => [...p.permissoes].sort().join("|") === atuais);
+  const abas = Object.values(perms).filter((v) => v !== "nenhum").length;
+  if (abas === 0) return "Sem acesso";
+  return `${preset ? `Preset ${preset.label}` : "Personalizado"} · ${abas} ${abas === 1 ? "aba" : "abas"}`;
+}
+
+function PermissoesDialog({
+  user,
+  perms,
+  onApply,
+  podeQuadros,
+}: {
+  user: UserRowData;
+  perms: PermState;
+  onApply: (p: PermState) => void;
+  podeQuadros: boolean;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const [rascunho, setRascunho] = useState<PermState>(perms);
+  const { data: marcados = [] } = useQuery({ ...quadrosDoUsuarioQueryOptions(user.id), enabled: podeQuadros });
+  const quadrosTxt = podeQuadros ? ` · ${marcados.length} ${marcados.length === 1 ? "quadro" : "quadros"}` : "";
+
+  return (
+    <Dialog
+      open={aberto}
+      onOpenChange={(o) => {
+        if (o) setRascunho(perms);
+        setAberto(o);
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5">
+          Permissões
+          <span className="text-xs font-normal text-muted-foreground">
+            {resumoPermissoes(perms)}
+            {quadrosTxt}
+          </span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Permissões de {user.nome}</DialogTitle>
+        </DialogHeader>
+        <PermissionPanel state={rascunho} onChange={setRascunho} />
+        {podeQuadros ? <QuadrosDoUsuario userId={user.id} nome={user.nome} /> : null}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setAberto(false)}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => {
+              onApply(rascunho);
+              setAberto(false);
+            }}
+          >
+            Aplicar
+          </Button>
+        </DialogFooter>
+        <p className="text-[11px] text-muted-foreground">
+          Aplicar guarda na ficha. Clique em Salvar na ficha para gravar.
+        </p>
+      </DialogContent>
+    </Dialog>
   );
 }
 
