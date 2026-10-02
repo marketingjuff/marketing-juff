@@ -45,6 +45,9 @@ import {
   podeMexerNoCard,
   checklistQueryOptions,
   comentariosQueryOptions,
+  coresSalvasQueryOptions,
+  criarCorSalva,
+  excluirCorSalva,
   deleteAnexo,
   deleteCard,
   deleteComentario,
@@ -111,6 +114,23 @@ export function CardDialog({
   const { data: comentarios = [] } = useQuery({ ...comentariosQueryOptions(cardId), enabled: ativo });
   const { data: anexos = [] } = useQuery({ ...anexosQueryOptions(cardId), enabled: ativo });
   const { data: historico = [] } = useQuery({ ...historicoQueryOptions(cardId), enabled: ativo });
+  const { data: coresSalvas = [] } = useQuery({ ...coresSalvasQueryOptions, enabled: ativo });
+  const guardarCor = async (hex: string) => {
+    try {
+      await criarCorSalva(hex);
+      void qc.invalidateQueries({ queryKey: coresSalvasQueryOptions.queryKey });
+    } catch {
+      toast.error("Não foi possível salvar a cor");
+    }
+  };
+  const tirarCorSalva = async (hex: string) => {
+    try {
+      await excluirCorSalva(hex);
+      void qc.invalidateQueries({ queryKey: coresSalvasQueryOptions.queryKey });
+    } catch {
+      toast.error("Não foi possível remover a cor");
+    }
+  };
   const [quadroSel, setQuadroSel] = useState<string>("");
   useEffect(() => {
     if (card) setQuadroSel(card.quadro_id);
@@ -446,6 +466,9 @@ export function CardDialog({
                         onChange={(v) => salvar({ cor: v.toLowerCase() })}
                         label="Cor da faixa"
                         presets={CORES_ETIQUETA}
+                        salvas={coresSalvas}
+                        onSalvarAtual={guardarCor}
+                        onRemoverSalva={tirarCorSalva}
                       />
                       {c.cor ? (
                         <Button size="sm" variant="ghost" onClick={() => salvar({ cor: null })}>
@@ -461,6 +484,9 @@ export function CardDialog({
                         onChange={(v) => salvar({ cor_fundo: v.toLowerCase() })}
                         label="Cor do fundo"
                         presets={CORES_ETIQUETA}
+                        salvas={coresSalvas}
+                        onSalvarAtual={guardarCor}
+                        onRemoverSalva={tirarCorSalva}
                       />
                       {c.cor_fundo ? (
                         <Button size="sm" variant="ghost" onClick={() => salvar({ cor_fundo: null })}>

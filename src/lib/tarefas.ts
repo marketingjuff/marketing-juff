@@ -712,6 +712,41 @@ export const etiquetasQueryOptions = queryOptions({
   },
 });
 
+// ---------------- cores salvas de card ----------------
+
+export const coresSalvasQueryOptions = queryOptions({
+  queryKey: ["tarefas", "cores-salvas"],
+  staleTime: 300_000,
+  queryFn: async (): Promise<string[]> => {
+    const { data, error } = await supabase
+      .from("tarefa_cores_salvas")
+      .select("hex")
+      .order("posicao", { ascending: true });
+    if (error) throw error;
+    return (data ?? []).map((r) => r.hex);
+  },
+});
+
+export async function criarCorSalva(hex: string): Promise<void> {
+  const limpo = hex.toLowerCase();
+  if (!/^#[0-9a-f]{6}$/.test(limpo)) throw new Error("Cor inválida");
+  const { data: ultima } = await supabase
+    .from("tarefa_cores_salvas")
+    .select("posicao")
+    .order("posicao", { ascending: false })
+    .limit(1);
+  const posicao = ((ultima?.[0]?.posicao as number | undefined) ?? 0) + 1;
+  const { error } = await supabase
+    .from("tarefa_cores_salvas")
+    .upsert({ hex: limpo, posicao }, { onConflict: "hex", ignoreDuplicates: true });
+  if (error) throw error;
+}
+
+export async function excluirCorSalva(hex: string): Promise<void> {
+  const { error } = await supabase.from("tarefa_cores_salvas").delete().eq("hex", hex.toLowerCase());
+  if (error) throw error;
+}
+
 export async function createEtiqueta(
   nome: string,
   cor: string,
