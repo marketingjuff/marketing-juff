@@ -169,6 +169,13 @@
       "when": 1790959180140,
       "tag": "0023_card_cor_realtime",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790961082442,
+      "tag": "0024_lov_database_migration",
+      "breakpoints": true
     }
   ]
 }

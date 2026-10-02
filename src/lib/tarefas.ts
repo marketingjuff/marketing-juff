@@ -88,6 +88,7 @@ export type Card = {
   comentarios_total: number;
   anexos_total: number;
   cor: string | null;
+  cor_fundo: string | null;
 };
 
 export type CardComContexto = Card & { quadro_nome: string; coluna_nome: string };
@@ -238,6 +239,7 @@ function mapCard(c: any): Card {
     comentarios_total: (c.tarefa_comentarios ?? []).length,
     anexos_total: (c.tarefa_anexos ?? []).length,
     cor: c.cor ?? null,
+    cor_fundo: c.cor_fundo ?? null,
   };
 }
 
@@ -604,6 +606,7 @@ export type CardUpdate = Partial<
     | "posicao"
     | "concluido"
     | "cor"
+    | "cor_fundo"
   >
 >;
 
