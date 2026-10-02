@@ -1,3 +1,4 @@
+import { arrastavelQuadro } from "@/lib/atalhos-paginas";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -329,7 +330,10 @@ export function QuadroBoard({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight">
+        <h1
+          {...arrastavelQuadro(quadro.id, quadro.nome, quadro.fundo_cor1)}
+          className="flex cursor-grab items-center gap-2 text-xl font-semibold tracking-tight"
+        >
           {quadro.nome}
           {quadro.acesso === "restrito" ? (
             <span title="Quadro restrito" className="flex items-center gap-0.5 text-xs font-normal text-muted-foreground">

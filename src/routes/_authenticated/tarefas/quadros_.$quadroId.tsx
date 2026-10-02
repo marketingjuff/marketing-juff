@@ -38,9 +38,7 @@ function QuadroPage() {
   useEffect(() => {
     if (!pode || isLoading || !data || jaContou.current === quadroId) return;
     jaContou.current = quadroId;
-    void registrarAberturaQuadro(quadroId).then(() => {
-      queryClient.invalidateQueries({ queryKey: ["tarefas", "atalhos"] });
-    });
+    void registrarAberturaQuadro(quadroId);
   }, [pode, isLoading, data, quadroId, queryClient]);
 
   useEffect(() => {

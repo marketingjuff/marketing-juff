@@ -106,7 +106,8 @@ export function AppShell({
                         to={primeiro.to}
                         {...arrastavel(primeiro.to, master.label)}
                         className="inline-block rounded-lg px-4 py-1.5 text-xs font-semibold tracking-widest text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
-                        activeProps={{ className: "bg-primary text-primary-foreground shadow-soft" }}
+                        style={masterAtiva?.key === master.key ? { background: master.cor, color: "#ffffff" } : undefined}
+                        activeProps={masterAtiva?.key === master.key ? { className: "shadow-soft" } : undefined}
                         activeOptions={{ exact: false }}
                       >
                         <span className="inline-flex items-center gap-1.5">
@@ -202,11 +203,9 @@ export function AppShell({
         ) : null}
 
 
-        {podeQuadros ? (
-          <div className={cn("mx-auto border-t border-border px-4", larguraClasse)}>
-            <BarraAtalhos />
-          </div>
-        ) : null}
+        <div className={cn("mx-auto border-t border-border px-4", larguraClasse)}>
+          <BarraAtalhos />
+        </div>
       </header>
 
 

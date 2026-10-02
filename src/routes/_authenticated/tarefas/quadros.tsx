@@ -3,6 +3,7 @@ import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-quer
 import { useState } from "react";
 import { toast } from "sonner";
 import { Archive, ArchiveRestore, ChevronDown, Lock, MoreHorizontal, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { arrastavelQuadro } from "@/lib/atalhos-paginas";
 import { AppShell } from "@/components/AppShell";
 import { NovoQuadroDialog } from "@/components/tarefas/NovoQuadroDialog";
 import { Button } from "@/components/ui/button";
@@ -111,6 +112,7 @@ function QuadrosPage() {
                 to="/tarefas/quadros/$quadroId"
                 params={{ quadroId: q.id }}
                 search={{ card: undefined }}
+                {...arrastavelQuadro(q.id, q.nome, q.fundo_cor1)}
                 className="absolute inset-0 flex flex-col justify-between p-3 text-primary-foreground"
               >
                 <div>

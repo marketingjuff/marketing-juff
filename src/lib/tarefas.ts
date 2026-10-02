@@ -300,61 +300,8 @@ export const quadrosArquivadosQueryOptions = queryOptions({
   queryFn: () => fetchQuadros(true),
 });
 
-// ---------------- atalhos de quadro ----------------
-
-export const ATALHOS_MAX = 10;
-
-export type AtalhoQuadro = {
-  quadro_id: string;
-  nome: string;
-  fundo_tipo: FundoTipo;
-  fundo_cor1: string;
-  fundo_cor2: string;
-  fixado: boolean;
-};
-
-export const atalhosQuadrosQueryOptions = queryOptions({
-  queryKey: ["tarefas", "atalhos"],
-  staleTime: 60_000,
-  refetchOnWindowFocus: false,
-  queryFn: async (): Promise<AtalhoQuadro[]> => {
-    const { data, error } = await supabase
-      .from("tarefa_quadro_atalhos")
-      .select(
-        "quadro_id, fixado, aberturas, ultimo_acesso, tarefa_quadros(nome, fundo_tipo, fundo_cor1, fundo_cor2, arquivado)",
-      )
-      .order("fixado", { ascending: false })
-      .order("aberturas", { ascending: false })
-      .order("ultimo_acesso", { ascending: false })
-      .limit(30);
-    if (error) throw error;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data ?? [])
-      .map((a: any) => ({ atalho: a, quadro: a.tarefa_quadros }))
-      .filter((r) => r.quadro && !r.quadro.arquivado)
-      .slice(0, ATALHOS_MAX)
-      .map((r) => ({
-        quadro_id: r.atalho.quadro_id as string,
-        nome: r.quadro.nome as string,
-        fundo_tipo: r.quadro.fundo_tipo as FundoTipo,
-        fundo_cor1: r.quadro.fundo_cor1 as string,
-        fundo_cor2: r.quadro.fundo_cor2 as string,
-        fixado: Boolean(r.atalho.fixado),
-      }));
-  },
-});
-
 export async function registrarAberturaQuadro(quadroId: string): Promise<void> {
   await supabase.rpc("registrar_abertura_quadro", { p_quadro_id: quadroId });
-}
-
-export async function fixarQuadro(quadroId: string, fixado: boolean): Promise<void> {
-  const { error } = await supabase
-    .from("tarefa_quadro_atalhos")
-    .update({ fixado })
-    .eq("quadro_id", quadroId);
-  if (error) throw error;
 }
 
 export type QuadroCompleto = { quadro: Quadro; colunas: Coluna[]; cards: Card[] };
