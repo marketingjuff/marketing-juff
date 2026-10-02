@@ -269,9 +269,9 @@ export function CardDialog({
                   salvar({ responsavel_id: novo }, ["Trocou responsável", `${nomePessoa(c.responsavel_id)} → ${nomePessoa(novo)}`]);
                 }}
               >
-                <SelectTrigger className="h-8 w-auto gap-1.5">
+                <SelectTrigger className="h-8 w-auto gap-1.5" title={c.responsavel_id ? nomePessoa(c.responsavel_id) : "Ninguém"}>
                   <User className="size-4" />
-                  <SelectValue placeholder="Responsável" />
+                  Responsável
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NENHUM}>Ninguém</SelectItem>
