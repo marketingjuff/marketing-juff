@@ -14,6 +14,7 @@ import {
   type Card,
   type Etiqueta,
   type Pessoa,
+  coresDaEtiqueta,
 } from "@/lib/tarefas";
 import { useLayoutEffect, useRef, useState } from "react";
 
@@ -92,7 +93,7 @@ export function CardMini({
       {tags.length > 0 ? (
         <div className="mb-1.5 flex flex-wrap gap-1">
           {tags.slice(0, 3).map((t) => (
-            <EtiquetaCompacta key={t.id} nome={t.nome} cor={t.cor} corTexto={t.cor_texto} />
+            <EtiquetaCompacta key={t.id} nome={t.nome} cor={coresDaEtiqueta(t, pessoas).cor} corTexto={coresDaEtiqueta(t, pessoas).cor_texto} />
           ))}
           {tags.length > 3 ? (
             <span

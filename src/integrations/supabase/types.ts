@@ -1662,6 +1662,7 @@ export type Database = {
           created_at: string
           id: string
           nome: string
+          pessoa_id: string | null
           posicao: number
           quadro_id: string | null
         }
@@ -1672,6 +1673,7 @@ export type Database = {
           created_at?: string
           id?: string
           nome: string
+          pessoa_id?: string | null
           posicao?: number
           quadro_id?: string | null
         }
@@ -1682,10 +1684,18 @@ export type Database = {
           created_at?: string
           id?: string
           nome?: string
+          pessoa_id?: string | null
           posicao?: number
           quadro_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "tarefa_etiquetas_pessoa_id_fkey"
+            columns: ["pessoa_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tarefa_etiquetas_quadro_id_fkey"
             columns: ["quadro_id"]
@@ -1809,6 +1819,7 @@ export type Database = {
           created_at: string
           criado_por: string | null
           descricao: string
+          etiqueta_do_criador: boolean
           exige_responsavel: boolean
           fundo_cor1: string
           fundo_cor2: string
@@ -1823,6 +1834,7 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           descricao?: string
+          etiqueta_do_criador?: boolean
           exige_responsavel?: boolean
           fundo_cor1?: string
           fundo_cor2?: string
@@ -1837,6 +1849,7 @@ export type Database = {
           created_at?: string
           criado_por?: string | null
           descricao?: string
+          etiqueta_do_criador?: boolean
           exige_responsavel?: boolean
           fundo_cor1?: string
           fundo_cor2?: string

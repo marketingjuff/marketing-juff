@@ -27,7 +27,10 @@ import {
   CORES_ETIQUETA,
   HEX_RE,
   arquivarEtiqueta,
+  coresDaEtiqueta,
   corSugerida,
+  pessoasQueryOptions,
+  type Pessoa,
   createEtiqueta,
   etiquetasQueryOptions,
   quadrosQueryOptions,
@@ -41,7 +44,7 @@ const arquivadasQueryOptions = queryOptions({
   queryFn: async (): Promise<Etiqueta[]> => {
     const { data, error } = await supabase
       .from("tarefa_etiquetas")
-      .select("id, nome, cor, cor_texto, arquivado, posicao, quadro_id")
+      .select("id, nome, cor, cor_texto, arquivado, posicao, quadro_id, pessoa_id")
       .eq("arquivado", true)
       .order("nome", { ascending: true });
     if (error) throw error;
@@ -49,13 +52,14 @@ const arquivadasQueryOptions = queryOptions({
   },
 });
 
-function LinhaEtiqueta({ etiqueta, quadros, podeEditar, onChanged }: { etiqueta: Etiqueta; quadros: { id: string; nome: string }[]; podeEditar: boolean; onChanged: () => void }) {
+function LinhaEtiqueta({ etiqueta, quadros, pessoas, podeEditar, onChanged }: { etiqueta: Etiqueta; quadros: { id: string; nome: string }[]; pessoas: Pessoa[]; podeEditar: boolean; onChanged: () => void }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id: etiqueta.id });
   const [editando, setEditando] = useState(false);
   const [nome, setNome] = useState(etiqueta.nome);
   const [cor, setCor] = useState(etiqueta.cor);
   const [corTexto, setCorTexto] = useState(etiqueta.cor_texto);
   const [quadroId, setQuadroId] = useState<string | null>(etiqueta.quadro_id);
+  const [pessoaId, setPessoaId] = useState<string | null>(etiqueta.pessoa_id);
   const [confirmar, setConfirmar] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -78,7 +82,7 @@ function LinhaEtiqueta({ etiqueta, quadros, podeEditar, onChanged }: { etiqueta:
     return (
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-2">
         <Input value={nome} onChange={(e) => setNome(e.target.value.toUpperCase())} className="h-8 w-48" autoFocus />
-        <Select value={quadroId ?? "global"} onValueChange={(v) => setQuadroId(v === "global" ? null : v)}>
+        <Select value={quadroId ?? "global"} onValueChange={(v) => { setQuadroId(v === "global" ? null : v); if (v === "global") setPessoaId(null); }}>
           <SelectTrigger className="h-8 w-40 text-xs">
             <SelectValue />
           </SelectTrigger>
@@ -89,17 +93,35 @@ function LinhaEtiqueta({ etiqueta, quadros, podeEditar, onChanged }: { etiqueta:
             ))}
           </SelectContent>
         </Select>
+        {quadroId ? (
+          <Select value={pessoaId ?? "ninguem"} onValueChange={(v) => setPessoaId(v === "ninguem" ? null : v)}>
+            <SelectTrigger className="h-8 w-40 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ninguem">De ninguém</SelectItem>
+              {pessoas.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.nome || "Sem nome"}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : null}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          Fundo <ColorPicker value={cor} onChange={setCor} label="Cor do fundo" presets={CORES_ETIQUETA} />
-          Texto <ColorPicker value={corTexto} onChange={setCorTexto} label="Cor do texto" presets={["#ffffff", "#111111", ...CORES_ETIQUETA]} />
+          Fundo <ColorPicker value={cor} onChange={setCor} disabled={!!pessoaId} label="Cor do fundo" presets={CORES_ETIQUETA} />
+          Texto <ColorPicker value={corTexto} onChange={setCorTexto} disabled={!!pessoaId} label="Cor do texto" presets={["#ffffff", "#111111", ...CORES_ETIQUETA]} />
         </div>
-        <span className="rounded px-2 py-1 text-xs font-medium" style={{ backgroundColor: cor, color: corTexto }}>{nome || "Prévia"}</span>
+        <span className="rounded px-2 py-1 text-xs font-medium" style={(() => { const cs = coresDaEtiqueta({ cor, cor_texto: corTexto, pessoa_id: pessoaId }, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}>{nome || "Prévia"}</span>
+        {pessoaId ? (
+          <span className="w-full text-[11px] text-muted-foreground">
+            Cor travada na cor da pessoa. Troque na ficha dela em Usuários e permissões.
+          </span>
+        ) : null}
         <div className="ml-auto flex gap-2">
           <Button
             size="sm"
             disabled={busy || !nome.trim() || !HEX_RE.test(cor)}
             onClick={async () => {
-              if (await run(() => updateEtiqueta(etiqueta.id, { nome: nome.trim().toUpperCase(), cor, cor_texto: corTexto, quadro_id: quadroId }), "Etiqueta atualizada"))
+              if (await run(() => updateEtiqueta(etiqueta.id, { nome: nome.trim().toUpperCase(), cor, cor_texto: corTexto, quadro_id: quadroId, pessoa_id: quadroId ? pessoaId : null }), "Etiqueta atualizada"))
                 setEditando(false);
             }}
           >
@@ -113,6 +135,7 @@ function LinhaEtiqueta({ etiqueta, quadros, podeEditar, onChanged }: { etiqueta:
               setCor(etiqueta.cor);
               setCorTexto(etiqueta.cor_texto);
               setQuadroId(etiqueta.quadro_id);
+              setPessoaId(etiqueta.pessoa_id);
               setEditando(false);
             }}
           >
@@ -139,7 +162,12 @@ function LinhaEtiqueta({ etiqueta, quadros, podeEditar, onChanged }: { etiqueta:
       >
         <GripVertical className="size-4" />
       </button>
-       <span className="min-w-0 flex-1 truncate rounded px-2 py-1 text-xs font-medium" style={{ backgroundColor: etiqueta.cor, color: etiqueta.cor_texto }}>{etiqueta.nome}</span>
+       <span className="min-w-0 flex-1 truncate rounded px-2 py-1 text-xs font-medium" style={(() => { const cs = coresDaEtiqueta(etiqueta, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}>{etiqueta.nome}</span>
+      {etiqueta.pessoa_id ? (
+        <span className="shrink-0 text-[11px] text-muted-foreground">
+          {pessoas.find((p) => p.id === etiqueta.pessoa_id)?.nome ?? "pessoa removida"}
+        </span>
+      ) : null}
       <Button size="icon" variant="ghost" className="size-7" disabled={!podeEditar} onClick={() => setEditando(true)} aria-label="Editar etiqueta">
         <Pencil className="size-4" />
       </Button>
@@ -173,6 +201,8 @@ export function PainelEtiquetas() {
   const { data: ativas = [] } = useQuery(etiquetasQueryOptions);
   const { data: arquivadas = [] } = useQuery(arquivadasQueryOptions);
   const { data: quadros = [] } = useQuery(quadrosQueryOptions);
+  const { data: pessoas = [] } = useQuery(pessoasQueryOptions);
+  const [pessoaNova, setPessoaNova] = useState<string | null>(null);
   const [grupoNovo, setGrupoNovo] = useState<string | null>(null);
   const [nome, setNome] = useState("");
   const [cor, setCor] = useState(CORES_ETIQUETA[0]!);
@@ -216,9 +246,10 @@ export function PainelEtiquetas() {
     if (!nome.trim() || !HEX_RE.test(cor) || !HEX_RE.test(corTexto)) return;
     setSalvando(true);
     try {
-      await createEtiqueta(nome, cor, corTexto, emQuadro);
+      await createEtiqueta(nome, cor, corTexto, emQuadro, emQuadro ? pessoaNova : null);
       toast.success("Etiqueta criada");
       setNome("");
+      setPessoaNova(null);
       setCor(corSugerida([...ativas, { ...(ativas[0] ?? {}), cor, quadro_id: emQuadro } as Etiqueta], emQuadro));
       invalidar();
     } catch (e) {
@@ -254,6 +285,7 @@ export function PainelEtiquetas() {
           onValueChange={(v) => {
             const alvo = v === "global" ? null : v;
             setGrupoNovo(alvo);
+            if (alvo === null) setPessoaNova(null);
             setCor(corSugerida(ativas, alvo));
           }}
         >
@@ -267,14 +299,32 @@ export function PainelEtiquetas() {
             ))}
           </SelectContent>
         </Select>
+        {grupoNovo ? (
+          <Select value={pessoaNova ?? "ninguem"} onValueChange={(v) => setPessoaNova(v === "ninguem" ? null : v)}>
+            <SelectTrigger className="h-8 w-44 text-xs" disabled={!podeEditar}>
+              <SelectValue placeholder="De quem é" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ninguem">De ninguém</SelectItem>
+              {pessoas.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.nome || "Sem nome"}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : null}
          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-           Fundo <ColorPicker value={cor} onChange={setCor} disabled={!podeEditar} label="Cor do fundo" presets={CORES_ETIQUETA} />
-           Texto <ColorPicker value={corTexto} onChange={setCorTexto} disabled={!podeEditar} label="Cor do texto" presets={["#ffffff", "#111111", ...CORES_ETIQUETA]} />
+           Fundo <ColorPicker value={cor} onChange={setCor} disabled={!podeEditar || !!pessoaNova} label="Cor do fundo" presets={CORES_ETIQUETA} />
+           Texto <ColorPicker value={corTexto} onChange={setCorTexto} disabled={!podeEditar || !!pessoaNova} label="Cor do texto" presets={["#ffffff", "#111111", ...CORES_ETIQUETA]} />
          </div>
-         <span className="rounded px-2 py-1 text-xs font-medium" style={{ backgroundColor: cor, color: corTexto }}>{nome || "Prévia"}</span>
+         <span className="rounded px-2 py-1 text-xs font-medium" style={(() => { const cs = coresDaEtiqueta({ cor, cor_texto: corTexto, pessoa_id: grupoNovo ? pessoaNova : null }, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}>{nome || "Prévia"}</span>
          <Button type="submit" size="sm" disabled={!podeEditar || salvando || !nome.trim() || !HEX_RE.test(cor) || !HEX_RE.test(corTexto)}>
           Criar
         </Button>
+        {pessoaNova ? (
+          <p className="w-full text-[11px] text-muted-foreground">
+            Esta etiqueta vai usar a cor da pessoa, definida na ficha dela em Usuários e permissões.
+          </p>
+        ) : null}
       </form>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
@@ -295,6 +345,7 @@ export function PainelEtiquetas() {
                   aria-label={`Criar etiqueta em ${g.nome}`}
                   onClick={() => {
                     setGrupoNovo(g.id);
+                    setPessoaNova(null);
                     setCor(corSugerida(ativas, g.id));
                     document.getElementById("campo-nome-etiqueta")?.focus();
                   }}
@@ -309,9 +360,10 @@ export function PainelEtiquetas() {
                   ) : (
                     g.itens.map((e) => (
                       <LinhaEtiqueta
-                        key={`${e.id}-${e.nome}-${e.cor}-${e.cor_texto}-${e.quadro_id ?? "g"}`}
+                        key={`${e.id}-${e.nome}-${e.cor}-${e.cor_texto}-${e.quadro_id ?? "g"}-${e.pessoa_id ?? "n"}`}
                         etiqueta={e}
                         quadros={quadros}
+                        pessoas={pessoas}
                         podeEditar={podeEditar}
                         onChanged={invalidar}
                       />
@@ -331,7 +383,7 @@ export function PainelEtiquetas() {
         <CollapsibleContent className="mt-2 space-y-1.5">
           {arquivadas.map((e) => (
             <div key={e.id} className="flex items-center gap-2 rounded-lg border border-border px-2 py-1.5">
-               <span className="min-w-0 flex-1 truncate rounded px-2 py-1 text-xs font-medium" style={{ backgroundColor: e.cor, color: e.cor_texto }}>{e.nome}</span>
+               <span className="min-w-0 flex-1 truncate rounded px-2 py-1 text-xs font-medium" style={(() => { const cs = coresDaEtiqueta(e, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}>{e.nome}</span>
               <span className="shrink-0 text-[11px] text-muted-foreground">
                 {e.quadro_id ? (quadros.find((q) => q.id === e.quadro_id)?.nome ?? "quadro removido") : "Global"}
               </span>

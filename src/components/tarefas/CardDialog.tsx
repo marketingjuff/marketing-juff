@@ -74,6 +74,7 @@ import {
   type Card,
   type CardUpdate,
   type QuadroCompleto,
+  coresDaEtiqueta,
 } from "@/lib/tarefas";
 
 const NENHUM = "__nenhum__";
@@ -327,7 +328,7 @@ export function CardDialog({
                               "rounded px-1.5 py-0.5 text-[11px] transition-opacity",
                               !on && "opacity-40",
                             )}
-                            style={{ backgroundColor: e.cor, color: e.cor_texto }}
+                            style={(() => { const cs = coresDaEtiqueta(e, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}
                           >
                             {e.nome}
                           </button>
@@ -585,7 +586,7 @@ export function CardDialog({
                     <span
                       key={e.id}
                       className="rounded-[3px] px-1 py-px text-[10px] font-medium uppercase"
-                      style={{ backgroundColor: e.cor, color: e.cor_texto }}
+                      style={(() => { const cs = coresDaEtiqueta(e, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}
                     >
                       {e.nome}
                     </span>

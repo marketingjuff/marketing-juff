@@ -16,6 +16,7 @@ export type Quadro = {
   arquivado: boolean;
   acesso: "aberto" | "restrito";
   exige_responsavel: boolean;
+  etiqueta_do_criador: boolean;
   membros: string[];
   cards_total?: number;
 };
@@ -31,7 +32,7 @@ export type Coluna = {
   resp_coluna_origem_id: string | null;
 };
 
-export type Etiqueta = { id: string; nome: string; cor: string; cor_texto: string; arquivado: boolean; posicao: number; quadro_id: string | null };
+export type Etiqueta = { id: string; nome: string; cor: string; cor_texto: string; arquivado: boolean; posicao: number; quadro_id: string | null; pessoa_id: string | null };
 
 export type Recorrencia =
   | "nunca"
@@ -282,6 +283,7 @@ async function fetchQuadros(arquivado: boolean): Promise<Quadro[]> {
     arquivado: q.arquivado,
     acesso: (q.acesso ?? "aberto") as "aberto" | "restrito",
     exige_responsavel: q.exige_responsavel ?? false,
+    etiqueta_do_criador: q.etiqueta_do_criador ?? false,
     membros: (q.tarefa_quadro_membros ?? []).map((m: { user_id: string }) => m.user_id),
     cards_total: (q.tarefa_cards ?? []).filter((c: { arquivado: boolean }) => !c.arquivado).length,
   }));
@@ -397,6 +399,7 @@ export const quadroQueryOptions = (quadroId: string) =>
           arquivado: q.arquivado,
           acesso: (q.acesso ?? "aberto") as "aberto" | "restrito",
           exige_responsavel: q.exige_responsavel ?? false,
+          etiqueta_do_criador: q.etiqueta_do_criador ?? false,
           membros: (q.tarefa_quadro_membros ?? []).map((m: { user_id: string }) => m.user_id),
         },
         colunas: (cols ?? []) as Coluna[],
@@ -407,7 +410,7 @@ export const quadroQueryOptions = (quadroId: string) =>
 
 export async function createQuadro(
   nome: string,
-  extra?: { descricao?: string; fundo_tipo?: FundoTipo; fundo_cor1?: string; fundo_cor2?: string; acesso?: "aberto" | "restrito"; exige_responsavel?: boolean },
+  extra?: { descricao?: string; fundo_tipo?: FundoTipo; fundo_cor1?: string; fundo_cor2?: string; acesso?: "aberto" | "restrito"; exige_responsavel?: boolean; etiqueta_do_criador?: boolean },
 ): Promise<string> {
   const { count } = await supabase
     .from("tarefa_quadros")
@@ -426,7 +429,7 @@ export async function createQuadro(
   return data.id;
 }
 
-type QuadroEditavel = "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2" | "acesso" | "exige_responsavel";
+type QuadroEditavel = "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2" | "acesso" | "exige_responsavel" | "etiqueta_do_criador";
 
 export async function updateQuadro(
   id: string,
@@ -441,6 +444,7 @@ export async function updateQuadro(
   if (values.fundo_cor2 !== undefined) limpo.fundo_cor2 = values.fundo_cor2;
   if (values.acesso !== undefined) limpo.acesso = values.acesso;
   if (values.exige_responsavel !== undefined) limpo.exige_responsavel = values.exige_responsavel;
+  if (values.etiqueta_do_criador !== undefined) limpo.etiqueta_do_criador = values.etiqueta_do_criador;
   const { error } = await supabase.from("tarefa_quadros").update(limpo).eq("id", id);
   if (error) throw error;
 }
@@ -722,7 +726,7 @@ export const etiquetasQueryOptions = queryOptions({
   queryFn: async (): Promise<Etiqueta[]> => {
     const { data, error } = await supabase
       .from("tarefa_etiquetas")
-      .select("id, nome, cor, cor_texto, arquivado, posicao, quadro_id")
+      .select("id, nome, cor, cor_texto, arquivado, posicao, quadro_id, pessoa_id")
       .eq("arquivado", false)
       .order("posicao", { ascending: true });
     if (error) throw error;
@@ -770,6 +774,7 @@ export async function createEtiqueta(
   cor: string,
   corTexto: string,
   quadroId: string | null = null,
+  pessoaId: string | null = null,
 ): Promise<void> {
   const base = supabase.from("tarefa_etiquetas").select("posicao").order("posicao", { ascending: false }).limit(1);
   const { data: ultima } = await (quadroId ? base.eq("quadro_id", quadroId) : base.is("quadro_id", null)).maybeSingle();
@@ -779,10 +784,11 @@ export async function createEtiqueta(
     cor: cor.toLowerCase(),
     cor_texto: corTexto.toLowerCase(),
     quadro_id: quadroId,
+    pessoa_id: quadroId ? pessoaId : null,
     posicao: (ultima?.posicao ?? 0) + 1,
   });
   if (error) {
-    if (error.code === "23505") throw new Error("Já existe uma etiqueta com esse nome neste grupo");
+    if (error.code === "23505") throw new Error("Já existe etiqueta com esse nome ou dessa pessoa neste quadro");
     throw error;
   }
 }
@@ -794,15 +800,25 @@ export async function reordenarEtiquetas(ids: string[]): Promise<void> {
 
 export async function updateEtiqueta(
   id: string,
-  values: Partial<Pick<Etiqueta, "nome" | "cor" | "cor_texto" | "quadro_id">>,
+  values: Partial<Pick<Etiqueta, "nome" | "cor" | "cor_texto" | "quadro_id" | "pessoa_id">>,
 ): Promise<void> {
   const limpo = { ...values };
   if (limpo.nome !== undefined) limpo.nome = limpo.nome.trim().toUpperCase();
   const { error } = await supabase.from("tarefa_etiquetas").update(limpo).eq("id", id);
   if (error) {
-    if (error.code === "23505") throw new Error("Já existe uma etiqueta com esse nome neste grupo");
+    if (error.code === "23505") throw new Error("Já existe etiqueta com esse nome ou dessa pessoa neste quadro");
     throw error;
   }
+}
+
+/** Cor que a etiqueta mostra. Etiqueta com dono usa a cor da pessoa. */
+export function coresDaEtiqueta(
+  e: Pick<Etiqueta, "cor" | "cor_texto" | "pessoa_id">,
+  pessoas: Pessoa[] | Map<string, Pessoa>,
+): { cor: string; cor_texto: string } {
+  if (!e.pessoa_id) return { cor: e.cor, cor_texto: e.cor_texto };
+  const p = pessoas instanceof Map ? pessoas.get(e.pessoa_id) : pessoas.find((x) => x.id === e.pessoa_id);
+  return { cor: p?.cor_avatar ?? e.cor, cor_texto: p?.cor_texto_avatar ?? e.cor_texto };
 }
 
 export async function arquivarEtiqueta(id: string, arquivado: boolean): Promise<void> {

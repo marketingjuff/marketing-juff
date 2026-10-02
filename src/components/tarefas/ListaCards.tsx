@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import {
+  coresDaEtiqueta,
   estaAtrasado,
+  pessoasQueryOptions,
   etiquetasQueryOptions,
   formatarData,
   type CardComContexto,
@@ -17,6 +19,7 @@ export function ListaCards({
   vazio?: string;
 }) {
   const { data: etiquetas = [] } = useQuery(etiquetasQueryOptions);
+  const { data: pessoas = [] } = useQuery(pessoasQueryOptions);
   const mapa = new Map(etiquetas.map((e) => [e.id, e]));
   if (cards.length === 0) return <p className="py-2 text-sm text-muted-foreground">{vazio}</p>;
   return (
@@ -41,7 +44,7 @@ export function ListaCards({
                   <span
                     key={id}
                     className="rounded px-1.5 py-0.5 text-[10px]"
-                    style={{ backgroundColor: e.cor, color: e.cor_texto }}
+                    style={(() => { const cs = coresDaEtiqueta(e, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}
                   >
                     {e.nome}
                   </span>
