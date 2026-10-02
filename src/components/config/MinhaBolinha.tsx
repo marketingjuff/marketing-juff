@@ -36,7 +36,7 @@ export function MinhaBolinha() {
   }, [data]);
 
   if (!data) return null;
-  const mostrada = sigla || siglaPessoa(data.nome);
+  const mostrada = sigla || siglaPessoa({ nome: data.nome });
 
   const salvar = async () => {
     setSalvando(true);
@@ -45,7 +45,7 @@ export function MinhaBolinha() {
       .update({ sigla: sigla || null, cor_avatar: fundo, cor_texto_avatar: texto })
       .eq("id", data.id);
     setSalvando(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Bolinha salva");
     qc.invalidateQueries();
   };
@@ -63,7 +63,7 @@ export function MinhaBolinha() {
         </span>
         <Input
           value={sigla}
-          placeholder={siglaPessoa(data.nome)}
+          placeholder={siglaPessoa({ nome: data.nome })}
           aria-label="Sigla de até três caracteres"
           className="h-8 w-20 text-center font-mono text-xs uppercase"
           onChange={(e) => setSigla(e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 3))}
