@@ -154,6 +154,8 @@ export type MasterTab = {
   label: string;
   /** Nome do ícone lucide usado no topo, ao lado do nome. */
   icone: "megaphone" | "square-kanban" | "telescope" | "library";
+  /** Cor da aba, usada na aba ativa do topo e no anel do atalho. */
+  cor: string;
   subTabs: SubTab[];
 };
 
@@ -162,6 +164,7 @@ export const NAVIGATION: MasterTab[] = [
     key: "social",
     label: "SOCIAL",
     icone: "megaphone",
+    cor: "#8354b5",
     subTabs: [
       { key: "stories", label: "Stories", to: "/social/stories", permission: "social.stories" },
     ],
@@ -170,6 +173,7 @@ export const NAVIGATION: MasterTab[] = [
     key: "tarefas",
     label: "TAREFAS",
     icone: "square-kanban",
+    cor: "#323db8",
     subTabs: [
       { key: "quadros", label: "Quadros", to: "/tarefas/quadros", permission: "tarefas.quadros" },
       {
@@ -196,6 +200,7 @@ export const NAVIGATION: MasterTab[] = [
     key: "estrategia",
     label: "ESTRATÉGIA",
     icone: "telescope",
+    cor: "#2e572d",
     subTabs: [
       { key: "ata", label: "Ata mensal", to: "/estrategia/ata", permission: "estrategia.ata" },
     ],
@@ -204,6 +209,7 @@ export const NAVIGATION: MasterTab[] = [
     key: "biblioteca",
     label: "BIBLIOTECA",
     icone: "library",
+    cor: "#585858",
     subTabs: [
       { key: "produtos", label: "Produtos", to: "/biblioteca/produtos", permission: "biblioteca.produtos" },
       { key: "medidas", label: "Medidas", to: "/biblioteca/medidas", permission: "biblioteca.produtos" },
@@ -214,3 +220,10 @@ export const NAVIGATION: MasterTab[] = [
     ],
   },
 ];
+
+/** Aba mestre a que um caminho pertence, ou nulo quando não pertence a nenhuma. */
+export function masterDoCaminho(caminho: string): MasterTab | undefined {
+  return NAVIGATION.find((master) =>
+    master.subTabs.some((sub) => caminho === sub.to || caminho.startsWith(`${sub.to}/`)),
+  );
+}
