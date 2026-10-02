@@ -34,10 +34,10 @@ type Patch = Parameters<typeof salvarCorEstampa>[1];
 export const Route = createFileRoute("/_authenticated/biblioteca/estampas")({
   head: () => ({
     meta: [
-      { title: "Estampas — Biblioteca — Marketing Juff" },
-      { name: "description", content: "As 252 cores de estampa da Juff com CMYK e hexadecimal." },
-      { property: "og:title", content: "Estampas — Biblioteca — Marketing Juff" },
-      { property: "og:description", content: "As 252 cores de estampa da Juff com CMYK e hexadecimal." },
+      { title: "Cores de estampa — Biblioteca — Marketing Juff" },
+      { name: "description", content: "Cores de estampa: as 252 cores da Juff com CMYK e hexadecimal." },
+      { property: "og:title", content: "Cores de estampa — Biblioteca — Marketing Juff" },
+      { property: "og:description", content: "Cores de estampa: as 252 cores da Juff com CMYK e hexadecimal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
