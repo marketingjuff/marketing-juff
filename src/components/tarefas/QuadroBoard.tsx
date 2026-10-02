@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -109,7 +110,7 @@ export function QuadroBoard({
   const fecharCard = () => {
     setCardAberto(null);
     if (cardInicial) {
-      navegarCard({ to: "/tarefas/quadros/$quadroId", params: { quadroId }, search: {}, replace: true });
+      navegarCard({ to: "/tarefas/quadros/$quadroId", params: { quadroId: quadro.id }, search: {}, replace: true });
     }
   };
   const [participantes, setParticipantes] = useState(false);
