@@ -80,8 +80,8 @@ export async function ligarPush(): Promise<EstadoPush> {
     {
       user_id: uid,
       endpoint: inscricao.endpoint,
-      p256dh: json.keys?.p256dh ?? "",
-      auth: json.keys?.auth ?? "",
+      p256dh: json.keys?.["p256dh"] ?? "",
+      auth: json.keys?.["auth"] ?? "",
       navegador: nomeNavegador(),
     },
     { onConflict: "endpoint" },

@@ -39,9 +39,9 @@ export const Route = createFileRoute("/api/public/push-enviar")({
 
           const { buildPushPayload } = await import("@block65/webcrypto-web-push");
           const vapid = {
-            subject: process.env.VAPID_SUBJECT ?? "mailto:marketing@juff.com.br",
-            publicKey: process.env.VAPID_PUBLIC_KEY,
-            privateKey: process.env.VAPID_PRIVATE_KEY,
+            subject: process.env["VAPID_SUBJECT"] ?? "mailto:marketing@juff.com.br",
+            publicKey: process.env["VAPID_PUBLIC_KEY"],
+            privateKey: process.env["VAPID_PRIVATE_KEY"],
           };
           const carga = {
             titulo: n.titulo,
