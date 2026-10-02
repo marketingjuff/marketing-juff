@@ -788,16 +788,19 @@ export type Database = {
       notificacao_preferencias: {
         Row: {
           ativo: boolean
+          push: boolean
           tipo: string
           user_id: string
         }
         Insert: {
           ativo?: boolean
+          push?: boolean
           tipo: string
           user_id: string
         }
         Update: {
           ativo?: boolean
+          push?: boolean
           tipo?: string
           user_id?: string
         }
@@ -819,6 +822,7 @@ export type Database = {
           dia: string
           id: string
           lida: boolean
+          push_enviado_em: string | null
           quadro_id: string | null
           tipo: string
           titulo: string
@@ -831,6 +835,7 @@ export type Database = {
           dia?: string
           id?: string
           lida?: boolean
+          push_enviado_em?: string | null
           quadro_id?: string | null
           tipo: string
           titulo?: string
@@ -843,6 +848,7 @@ export type Database = {
           dia?: string
           id?: string
           lida?: boolean
+          push_enviado_em?: string | null
           quadro_id?: string | null
           tipo?: string
           titulo?: string
@@ -908,6 +914,42 @@ export type Database = {
           permissions?: string[]
           role?: Database["public"]["Enums"]["app_role"]
           sigla?: string | null
+        }
+        Relationships: []
+      }
+      push_inscricoes: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          falhas: number
+          id: string
+          navegador: string
+          p256dh: string
+          ultimo_envio: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          falhas?: number
+          id?: string
+          navegador?: string
+          p256dh: string
+          ultimo_envio?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          falhas?: number
+          id?: string
+          navegador?: string
+          p256dh?: string
+          ultimo_envio?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1942,6 +1984,7 @@ export type Database = {
         Args: { _data: string; _regra: string }
         Returns: string
       }
+      push_marcar_falha: { Args: { _id: string }; Returns: undefined }
       recalc_story_status: { Args: { _story_id: string }; Returns: undefined }
       registrar_abertura_quadro: {
         Args: { p_quadro_id: string }
