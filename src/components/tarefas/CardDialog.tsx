@@ -237,7 +237,7 @@ export function CardDialog({
     ...historico.map((h) => ({ tipo: "atividade" as const, id: h.id, autor_id: h.autor_id, quando: h.created_at, acao: h.acao, detalhe: h.detalhe })),
   ]
     .filter((l) => (filtroLinha === "tudo" ? true : filtroLinha === "comentarios" ? l.tipo === "comentario" : l.tipo === "atividade"))
-    .sort((a, b) => a.quando.localeCompare(b.quando));
+    .sort((a, b) => b.quando.localeCompare(a.quando));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
