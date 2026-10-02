@@ -799,47 +799,78 @@ export function CardDialog({
               ) : null}
             <ul className="space-y-3">
               {linhas.length === 0 ? <li className="text-xs text-muted-foreground">Nada por aqui ainda.</li> : null}
-              {linhas.map((l) => (
-                <li key={`${l.tipo}-${l.id}`} className="group flex gap-2">
-                  <span
-                    className={cn(
-                      "flex size-6 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold",
-                      l.tipo === "atividade" && "opacity-60",
-                    )}
-                    style={{
-                      backgroundColor: pessoaDe(l.autor_id)?.cor_avatar ?? "#888780",
-                      color: pessoaDe(l.autor_id)?.cor_texto_avatar ?? "#ffffff",
-                    }}
-                  >
-                    {siglaPessoa(pessoaDe(l.autor_id) ?? { nome: "", sigla: null })}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    {l.tipo === "comentario" ? (
-                      <p className="whitespace-pre-wrap break-words text-xs">
-                        <span className="font-medium">{nomePessoa(l.autor_id)}</span> {l.texto}
-                      </p>
-                    ) : (
+              {linhas.map((l) => {
+                const meuComentario = l.tipo === "comentario" && l.autor_id === meuId;
+                if (l.tipo === "comentario") {
+                  return (
+                    <li
+                      key={`${l.tipo}-${l.id}`}
+                      className={cn("group flex gap-2", meuComentario && "flex-row-reverse")}
+                    >
+                      <span
+                        className="flex size-6 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold"
+                        style={{
+                          backgroundColor: pessoaDe(l.autor_id)?.cor_avatar ?? "#888780",
+                          color: pessoaDe(l.autor_id)?.cor_texto_avatar ?? "#ffffff",
+                        }}
+                      >
+                        {siglaPessoa(pessoaDe(l.autor_id) ?? { nome: "", sigla: null })}
+                      </span>
+                      <div className={cn("flex max-w-[85%] min-w-0 flex-col", meuComentario ? "items-end" : "items-start")}>
+                        <span className="text-[10px] text-muted-foreground">{nomePessoa(l.autor_id)}</span>
+                        <div
+                          className={cn(
+                            "whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-xs",
+                            meuComentario
+                              ? "rounded-br-sm bg-primary-soft text-foreground"
+                              : "rounded-bl-sm bg-muted text-foreground",
+                          )}
+                        >
+                          {l.texto}
+                        </div>
+                        <div
+                          className={cn(
+                            "flex items-center gap-2 text-[10px] text-muted-foreground",
+                            meuComentario ? "flex-row-reverse" : "",
+                          )}
+                        >
+                          <span>{dataHora(l.quando)}</span>
+                          {l.autor_id === meuId || isAdmin ? (
+                            <button
+                              type="button"
+                              className="opacity-0 group-hover:opacity-100"
+                              aria-label="Apagar comentário"
+                              onClick={() => rodar(() => deleteComentario(l.id))}
+                            >
+                              <X className="size-3" />
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                }
+                return (
+                  <li key={`${l.tipo}-${l.id}`} className="group flex gap-2">
+                    <span
+                      className="flex size-6 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold opacity-60"
+                      style={{
+                        backgroundColor: pessoaDe(l.autor_id)?.cor_avatar ?? "#888780",
+                        color: pessoaDe(l.autor_id)?.cor_texto_avatar ?? "#ffffff",
+                      }}
+                    >
+                      {siglaPessoa(pessoaDe(l.autor_id) ?? { nome: "", sigla: null })}
+                    </span>
+                    <div className="min-w-0 flex-1">
                       <p className="text-xs text-muted-foreground">
                         {nomePessoa(l.autor_id)} {l.acao.toLowerCase()}
                         {l.detalhe ? ` · ${l.detalhe}` : ""}
                       </p>
-                    )}
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                      {dataHora(l.quando)}
-                      {l.tipo === "comentario" && (l.autor_id === meuId || isAdmin) ? (
-                        <button
-                          type="button"
-                          className="opacity-0 group-hover:opacity-100"
-                          aria-label="Apagar comentário"
-                          onClick={() => rodar(() => deleteComentario(l.id))}
-                        >
-                          <X className="size-3" />
-                        </button>
-                      ) : null}
+                      <div className="text-[10px] text-muted-foreground">{dataHora(l.quando)}</div>
                     </div>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
 
             {mexer ? (
