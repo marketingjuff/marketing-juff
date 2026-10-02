@@ -52,7 +52,7 @@ export function CardMini({
           {tags.slice(0, 3).map((t) => (
             <span
               key={t.id}
-              className="inline-flex max-w-full items-center truncate rounded px-1.5 py-0.5 text-[10px] font-medium leading-tight"
+              className="inline-flex max-w-full items-center truncate rounded-[3px] px-1 py-px text-[9px] font-normal uppercase leading-[1.25] tracking-tight"
               style={{ backgroundColor: t.cor, color: t.cor_texto }}
               title={t.nome}
             >

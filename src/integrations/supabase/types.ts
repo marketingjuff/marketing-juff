@@ -1576,6 +1576,7 @@ export type Database = {
           id: string
           nome: string
           posicao: number
+          quadro_id: string | null
         }
         Insert: {
           arquivado?: boolean
@@ -1585,6 +1586,7 @@ export type Database = {
           id?: string
           nome: string
           posicao?: number
+          quadro_id?: string | null
         }
         Update: {
           arquivado?: boolean
@@ -1594,8 +1596,17 @@ export type Database = {
           id?: string
           nome?: string
           posicao?: number
+          quadro_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_etiquetas_quadro_id_fkey"
+            columns: ["quadro_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_quadros"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tarefa_historico: {
         Row: {
