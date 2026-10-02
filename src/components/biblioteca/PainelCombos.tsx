@@ -127,7 +127,7 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
       ) : null}
       {secoes.map(({ chave, rotulo, faixas, total }) => (
         <section key={chave} className="space-y-1.5">
-          <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{rotulo} · {total}</h4>
+          <h4 className="text-2xl font-semibold uppercase text-muted-foreground">{rotulo} · {total}</h4>
           <div className="flex flex-wrap gap-1.5">
           {faixas.flatMap(({ cid, lista }) => {
             const cor = corPorId.get(cid);
