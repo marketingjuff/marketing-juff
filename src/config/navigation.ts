@@ -36,7 +36,8 @@ export const PERMISSION_CATALOG: PermissionEntry[] = [
   { key: "biblioteca.produtos", grupo: "Biblioteca", label: "Produtos", nivelConfiguravel: true, modo: "tres" },
   { key: "biblioteca.marca", grupo: "Biblioteca", label: "Marca", nivelConfiguravel: true, modo: "tres" },
   { key: "biblioteca.arquivos", grupo: "Biblioteca", label: "Arquivos", nivelConfiguravel: true, modo: "tres" },
-  { key: "biblioteca.estampa", grupo: "Biblioteca", label: "Estampas", nivelConfiguravel: true, modo: "tres" },
+  { key: "biblioteca.catalogo_estampas", grupo: "Biblioteca", label: "Estampas", nivelConfiguravel: true, modo: "tres" },
+  { key: "biblioteca.estampa", grupo: "Biblioteca", label: "Cores de estampa", nivelConfiguravel: true, modo: "tres" },
 
   { key: "config.usuarios", grupo: "Configurações", label: "Usuários e permissões", nivelConfiguravel: false, modo: "editar" },
 ];
@@ -107,25 +108,25 @@ export const PRESETS: Preset[] = [
     id: "marketing_completo",
     label: "Marketing completo",
     descricao: "Tudo em edição, menos Configurações",
-    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "estrategia.ata", "biblioteca.produtos", "biblioteca.marca", "biblioteca.arquivos", "biblioteca.estampa"],
+    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "estrategia.ata", "biblioteca.produtos", "biblioteca.marca", "biblioteca.arquivos", "biblioteca.estampa", "biblioteca.catalogo_estampas"],
   },
   {
     id: "social",
     label: "Social",
     descricao: "Stories e Tarefas em edição, Ata e Biblioteca em leitura",
-    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "estrategia.ata:leitura", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura"],
+    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "estrategia.ata:leitura", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura", "biblioteca.catalogo_estampas:leitura"],
   },
   {
     id: "comercial",
     label: "Comercial",
     descricao: "Tarefas em edição e Biblioteca em leitura, sem Stories e sem Ata",
-    permissoes: ["tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura"],
+    permissoes: ["tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura", "biblioteca.catalogo_estampas:leitura"],
   },
   {
     id: "designer",
     label: "Designer",
     descricao: "Stories e Tarefas em edição, Biblioteca em leitura",
-    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura"],
+    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura", "biblioteca.catalogo_estampas:leitura"],
   },
   {
     id: "freelancer",
@@ -137,7 +138,7 @@ export const PRESETS: Preset[] = [
     id: "consulta",
     label: "Consulta",
     descricao: "Enxerga tudo, não edita nada",
-    permissoes: ["social.stories:leitura", "tarefas.quadros:leitura", "tarefas.meu_trabalho", "tarefas.calendario", "estrategia.ata:leitura", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura"],
+    permissoes: ["social.stories:leitura", "tarefas.quadros:leitura", "tarefas.meu_trabalho", "tarefas.calendario", "estrategia.ata:leitura", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura", "biblioteca.catalogo_estampas:leitura"],
   },
 ];
 
@@ -216,7 +217,8 @@ export const NAVIGATION: MasterTab[] = [
       { key: "cores", label: "Cores", to: "/biblioteca/cores", permission: "biblioteca.marca" },
       { key: "textos", label: "Textos", to: "/biblioteca/textos", permission: "biblioteca.marca" },
       { key: "arquivos", label: "Arquivos", to: "/biblioteca/arquivos", permission: "biblioteca.arquivos" },
-      { key: "estampas", label: "Estampas", to: "/biblioteca/estampas", permission: "biblioteca.estampa" },
+      { key: "catalogo-estampas", label: "Estampas", to: "/biblioteca/catalogo-estampas", permission: "biblioteca.catalogo_estampas" },
+      { key: "estampas", label: "Cores de estampa", to: "/biblioteca/estampas", permission: "biblioteca.estampa" },
     ],
   },
 ];

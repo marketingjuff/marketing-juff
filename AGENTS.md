@@ -11,3 +11,4 @@
 - Tarefas: acesso a quadro via funções `pode_ver_quadro/pode_editar_quadro(_quadro_id)` que usam auth.uid() internamente — nunca aceitar id de usuário vindo de fora (mesma regra das funções de papel).
 - Seleção de cores: usar o componente compartilhado `ColorPicker`, garantindo painel visual e hexadecimal minúsculo em todos os controles.
 - Push do navegador: o banco dispara (pg_net) a rota pública `/api/public/push-enviar`, que só envia notificação recém-nascida e ainda sem `push_enviado_em` — dispensa segredo compartilhado e garante um push por notificação; envio usa WebCrypto porque o servidor não roda Node.
+- Catálogo de estampas: receitas por grupo × cor de camiseta gravadas via RPCs `biblioteca_estampa_salvar_receita`/`biblioteca_combo_registrar`; arquivos na pasta `estampas/` do depósito `marca` (uma chamada por célula, sem duplicar combos).

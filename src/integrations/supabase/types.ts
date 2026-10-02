@@ -151,6 +151,79 @@ export type Database = {
           },
         ]
       }
+      biblioteca_combo_itens: {
+        Row: {
+          c: number
+          codigo: string
+          combo_id: string
+          k: number
+          m: number
+          ordem: number
+          y: number
+        }
+        Insert: {
+          c?: number
+          codigo: string
+          combo_id: string
+          k?: number
+          m?: number
+          ordem: number
+          y?: number
+        }
+        Update: {
+          c?: number
+          codigo?: string
+          combo_id?: string
+          k?: number
+          m?: number
+          ordem?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_combo_itens_combo_id_fkey"
+            columns: ["combo_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_combos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      biblioteca_combos: {
+        Row: {
+          codigo: string
+          cor_id: string | null
+          created_at: string
+          genero: string
+          id: string
+          posicao: number
+        }
+        Insert: {
+          codigo: string
+          cor_id?: string | null
+          created_at?: string
+          genero: string
+          id?: string
+          posicao?: number
+        }
+        Update: {
+          codigo?: string
+          cor_id?: string | null
+          created_at?: string
+          genero?: string
+          id?: string
+          posicao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_combos_cor_id_fkey"
+            columns: ["cor_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_cores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       biblioteca_cores: {
         Row: {
           ativo: boolean
@@ -181,6 +254,30 @@ export type Database = {
           nome_olist?: string
           posicao?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      biblioteca_estampa_categorias: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          posicao: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          posicao?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          posicao?: number
         }
         Relationships: []
       }
@@ -231,6 +328,281 @@ export type Database = {
           y?: number
         }
         Relationships: []
+      }
+      biblioteca_estampa_cores_camiseta: {
+        Row: {
+          cor_id: string
+          estampa_id: string
+          posicao: number
+        }
+        Insert: {
+          cor_id: string
+          estampa_id: string
+          posicao?: number
+        }
+        Update: {
+          cor_id?: string
+          estampa_id?: string
+          posicao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_estampa_cores_camiseta_cor_id_fkey"
+            columns: ["cor_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_cores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "biblioteca_estampa_cores_camiseta_estampa_id_fkey"
+            columns: ["estampa_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_estampas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      biblioteca_estampa_grupo_modelos: {
+        Row: {
+          estampa_id: string
+          grupo_id: string
+          produto_id: string
+        }
+        Insert: {
+          estampa_id: string
+          grupo_id: string
+          produto_id: string
+        }
+        Update: {
+          estampa_id?: string
+          grupo_id?: string
+          produto_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_estampa_grupo_modelos_estampa_id_fkey"
+            columns: ["estampa_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_estampas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "biblioteca_estampa_grupo_modelos_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_estampa_grupos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "biblioteca_estampa_grupo_modelos_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      biblioteca_estampa_grupos: {
+        Row: {
+          estampa_id: string
+          id: string
+          nome: string
+          posicao: number
+        }
+        Insert: {
+          estampa_id: string
+          id?: string
+          nome?: string
+          posicao?: number
+        }
+        Update: {
+          estampa_id?: string
+          id?: string
+          nome?: string
+          posicao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_estampa_grupos_estampa_id_fkey"
+            columns: ["estampa_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_estampas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      biblioteca_estampa_papeis: {
+        Row: {
+          estampa_id: string
+          id: string
+          nome: string
+          ordem: number
+        }
+        Insert: {
+          estampa_id: string
+          id?: string
+          nome?: string
+          ordem: number
+        }
+        Update: {
+          estampa_id?: string
+          id?: string
+          nome?: string
+          ordem?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_estampa_papeis_estampa_id_fkey"
+            columns: ["estampa_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_estampas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      biblioteca_estampa_receita_itens: {
+        Row: {
+          c: number
+          codigo: string
+          k: number
+          m: number
+          ordem: number
+          receita_id: string
+          y: number
+        }
+        Insert: {
+          c?: number
+          codigo: string
+          k?: number
+          m?: number
+          ordem: number
+          receita_id: string
+          y?: number
+        }
+        Update: {
+          c?: number
+          codigo?: string
+          k?: number
+          m?: number
+          ordem?: number
+          receita_id?: string
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_estampa_receita_itens_receita_id_fkey"
+            columns: ["receita_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_estampa_receitas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      biblioteca_estampa_receitas: {
+        Row: {
+          combo_id: string | null
+          cor_id: string
+          estampa_id: string
+          grupo_id: string
+          id: string
+        }
+        Insert: {
+          combo_id?: string | null
+          cor_id: string
+          estampa_id: string
+          grupo_id: string
+          id?: string
+        }
+        Update: {
+          combo_id?: string | null
+          cor_id?: string
+          estampa_id?: string
+          grupo_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_estampa_receitas_combo_id_fkey"
+            columns: ["combo_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_combos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "biblioteca_estampa_receitas_cor_id_fkey"
+            columns: ["cor_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_cores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "biblioteca_estampa_receitas_estampa_id_fkey"
+            columns: ["estampa_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_estampas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "biblioteca_estampa_receitas_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_estampa_grupos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      biblioteca_estampas: {
+        Row: {
+          categoria_id: string | null
+          created_at: string
+          ficha_caminho: string | null
+          id: string
+          imagem_caminho: string | null
+          nome: string
+          posicao: number
+          situacao: string
+          tamanho_adulto: string
+          tamanho_feminino: string
+          tamanho_infantil: string
+          updated_at: string
+        }
+        Insert: {
+          categoria_id?: string | null
+          created_at?: string
+          ficha_caminho?: string | null
+          id?: string
+          imagem_caminho?: string | null
+          nome: string
+          posicao?: number
+          situacao?: string
+          tamanho_adulto?: string
+          tamanho_feminino?: string
+          tamanho_infantil?: string
+          updated_at?: string
+        }
+        Update: {
+          categoria_id?: string | null
+          created_at?: string
+          ficha_caminho?: string | null
+          id?: string
+          imagem_caminho?: string | null
+          nome?: string
+          posicao?: number
+          situacao?: string
+          tamanho_adulto?: string
+          tamanho_feminino?: string
+          tamanho_infantil?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_estampas_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_estampa_categorias"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       biblioteca_medidas: {
         Row: {
@@ -1925,6 +2297,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      biblioteca_combo_registrar: {
+        Args: { p_cor_id: string; p_genero: string; p_itens: Json }
+        Returns: {
+          codigo: string
+          criado: boolean
+          id: string
+        }[]
+      }
+      biblioteca_combo_uso: {
+        Args: never
+        Returns: {
+          combo_id: string
+          estampas: string[]
+          total: number
+        }[]
+      }
+      biblioteca_estampa_salvar_receita: {
+        Args: {
+          p_combo_id: string
+          p_cor_id: string
+          p_estampa_id: string
+          p_grupo_id: string
+          p_itens: Json
+        }
+        Returns: string
+      }
+      biblioteca_proximo_codigo_combo: { Args: never; Returns: string }
       biblioteca_salvar_cores: {
         Args: { p_cores: Json; p_produto_id: string }
         Returns: undefined
