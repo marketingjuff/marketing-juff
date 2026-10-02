@@ -211,6 +211,13 @@
       "when": 1790965195513,
       "tag": "0029_push_notificacoes",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1790967088179,
+      "tag": "0030_notificacoes_comentario_avisa_sempre",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS public.idx_notificacoes_sem_repetir;
+CREATE UNIQUE INDEX idx_notificacoes_sem_repetir ON public.notificacoes USING btree (user_id, tipo, card_id, dia) WHERE (card_id IS NOT NULL AND tipo NOT IN ('comentario','card_atribuido'));
