@@ -57,12 +57,14 @@ export function CardMini({
   pessoas,
   onClick,
   arrastando = false,
+  exigeResponsavel = false,
 }: {
   card: Card;
   etiquetas: Map<string, Etiqueta>;
   pessoas: Map<string, Pessoa>;
   onClick?: () => void;
   arrastando?: boolean;
+  exigeResponsavel?: boolean;
 }) {
   const atrasado = estaAtrasado(card);
   const breve = venceHoje(card) || venceAmanha(card);
@@ -161,6 +163,14 @@ export function CardMini({
             title={resp.nome}
           >
             {siglaPessoa(resp)}
+          </span>
+        ) : null}
+        {exigeResponsavel && !card.responsavel_id ? (
+          <span
+            className="ml-auto rounded border border-destructive px-1 py-px text-[10px] font-medium text-destructive"
+            title="Escolha um responsável para poder mover este card"
+          >
+            sem responsável
           </span>
         ) : null}
       </div>
