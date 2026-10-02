@@ -34,14 +34,36 @@ export function SinoNotificacoes() {
   const { data: lista = [] } = useQuery(notificacoesQueryOptions);
   const naoLidas = lista.filter((n) => !n.lida).length;
 
+  type Linha = { chave: string; n: Notificacao; ids: string[]; quantos: number };
+  const linhas: Linha[] = [];
+  const porCard = new Map<string, number>();
+  for (const n of lista) {
+    const agrupavel = n.tipo === "comentario" && !n.lida && !!n.card_id;
+    if (!agrupavel) {
+      linhas.push({ chave: n.id, n, ids: [n.id], quantos: 1 });
+      continue;
+    }
+    const alvo = porCard.get(n.card_id!);
+    if (alvo === undefined) {
+      porCard.set(n.card_id!, linhas.length);
+      linhas.push({ chave: `c-${n.card_id}`, n, ids: [n.id], quantos: 1 });
+    } else {
+      const l = linhas[alvo]!;
+      l.ids.push(n.id);
+      l.quantos += 1;
+      if (n.created_at > l.n.created_at) l.n = n;
+    }
+  }
+
   const chave = ["notificacoes", "lista"] as const;
 
-  function lerOtimista(id: string) {
+  function lerOtimista(ids: string[]) {
     const antes = qc.getQueryData<Notificacao[]>(chave);
+    const conjunto = new Set(ids);
     qc.setQueryData<Notificacao[]>(chave, (l) =>
-      (l ?? []).map((n) => (n.id === id ? { ...n, lida: true } : n)),
+      (l ?? []).map((n) => (conjunto.has(n.id) ? { ...n, lida: true } : n)),
     );
-    marcarLida(id).catch(() => {
+    Promise.all(ids.map((id) => marcarLida(id))).catch(() => {
       qc.setQueryData(chave, antes);
       toast.error("Não deu para marcar como lida");
     });
@@ -83,13 +105,15 @@ export function SinoNotificacoes() {
           <p className="px-3 py-6 text-center text-sm text-muted-foreground">Nada por aqui.</p>
         ) : (
           <ul className="max-h-96 divide-y divide-border overflow-y-auto">
-            {lista.map((n) => {
+            {linhas.map((linha) => {
+              const n = linha.n;
               const Icone = ICONES[n.tipo] ?? Bell;
+              const titulo = linha.quantos > 1 ? `${linha.quantos} comentários novos` : n.titulo;
               const conteudo = (
                 <span className="flex w-full items-start gap-2 px-3 py-2 text-left">
                   <Icone className={cn("mt-0.5 size-4 shrink-0", n.lida ? "text-muted-foreground" : "text-primary")} />
                   <span className="min-w-0 flex-1">
-                    <span className={cn("block truncate text-sm", !n.lida && "font-medium")}>{n.titulo}</span>
+                    <span className={cn("block truncate text-sm", !n.lida && "font-medium")}>{titulo}</span>
                     <span className="block truncate text-xs text-muted-foreground">{n.detalhe}</span>
                     <span className="block text-[11px] text-muted-foreground">{quandoFoi(n.created_at)}</span>
                   </span>
@@ -97,21 +121,21 @@ export function SinoNotificacoes() {
               );
 
               return (
-                <li key={n.id} className={cn(!n.lida && "bg-muted/40")}>
+                <li key={linha.chave} className={cn(!n.lida && "bg-muted/40")}>
                   {n.quadro_id ? (
                     <Link
                       to="/tarefas/quadros/$quadroId"
                       params={{ quadroId: n.quadro_id }}
                       className="block hover:bg-muted"
                       onClick={() => {
-                        lerOtimista(n.id);
+                        lerOtimista(linha.ids);
                         setAberto(false);
                       }}
                     >
                       {conteudo}
                     </Link>
                   ) : (
-                    <button type="button" className="block w-full hover:bg-muted" onClick={() => lerOtimista(n.id)}>
+                    <button type="button" className="block w-full hover:bg-muted" onClick={() => lerOtimista(linha.ids)}>
                       {conteudo}
                     </button>
                   )}
