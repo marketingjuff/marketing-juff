@@ -64,28 +64,52 @@ export async function apagarNotificacao(id: string): Promise<void> {
 
 // ---------------- preferências ----------------
 
+export type PrefCanais = { sininho: boolean; push: boolean };
+
+const PUSH_PADRAO: TipoNotificacao[] = ["card_atribuido", "comentario"];
+
 export const preferenciasQueryOptions = queryOptions({
   queryKey: ["notificacoes", "preferencias"],
-  queryFn: async (): Promise<Record<string, boolean>> => {
+  queryFn: async (): Promise<Record<string, PrefCanais>> => {
     const { data, error } = await supabase
       .from("notificacao_preferencias")
-      .select("tipo, ativo");
+      .select("tipo, ativo, push");
     if (error) throw error;
-    const out: Record<string, boolean> = {};
-    for (const t of TIPOS_NOTIFICACAO) out[t.valor] = true;
-    for (const linha of data ?? []) out[linha.tipo] = linha.ativo;
+    const out: Record<string, PrefCanais> = {};
+    for (const t of TIPOS_NOTIFICACAO) {
+      out[t.valor] = { sininho: true, push: PUSH_PADRAO.includes(t.valor) };
+    }
+    for (const linha of data ?? []) {
+      out[linha.tipo] = { sininho: linha.ativo, push: linha.push ?? false };
+    }
     return out;
   },
   ...PADRAO,
 });
 
-export async function salvarPreferencia(tipo: TipoNotificacao, ativo: boolean): Promise<void> {
+export async function salvarPreferencia(
+  tipo: TipoNotificacao,
+  canal: "sininho" | "push",
+  valor: boolean,
+): Promise<void> {
   const { data: auth } = await supabase.auth.getUser();
   const uid = auth.user?.id;
   if (!uid) throw new Error("sem sessão");
+  const { data: atual } = await supabase
+    .from("notificacao_preferencias")
+    .select("ativo, push")
+    .eq("user_id", uid)
+    .eq("tipo", tipo)
+    .maybeSingle();
+  const linha = {
+    user_id: uid,
+    tipo,
+    ativo: canal === "sininho" ? valor : (atual?.ativo ?? true),
+    push: canal === "push" ? valor : (atual?.push ?? PUSH_PADRAO.includes(tipo)),
+  };
   const { error } = await supabase
     .from("notificacao_preferencias")
-    .upsert({ user_id: uid, tipo, ativo }, { onConflict: "user_id,tipo" });
+    .upsert(linha, { onConflict: "user_id,tipo" });
   if (error) throw error;
 }
 

@@ -28,6 +28,7 @@ import { Route as AuthenticatedTarefasCalendarioRouteImport } from './routes/_au
 import { Route as AuthenticatedTarefasMeuDiaRouteImport } from './routes/_authenticated/tarefas/meu-dia'
 import { Route as AuthenticatedTarefasMeuTrabalhoRouteImport } from './routes/_authenticated/tarefas/meu-trabalho'
 import { Route as AuthenticatedTarefasQuadrosRouteImport } from './routes/_authenticated/tarefas/quadros'
+import { Route as ApiPublicPushEnviarRouteImport } from './routes/api/public/push-enviar'
 import { Route as AuthenticatedTarefasQuadrosQuadroIdRouteImport } from './routes/_authenticated/tarefas/quadros_.$quadroId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -139,6 +140,11 @@ const AuthenticatedTarefasQuadrosRoute =
     path: '/tarefas/quadros',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicPushEnviarRoute = ApiPublicPushEnviarRouteImport.update({
+  id: '/api/public/push-enviar',
+  path: '/api/public/push-enviar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedTarefasQuadrosQuadroIdRoute =
   AuthenticatedTarefasQuadrosQuadroIdRouteImport.update({
     id: '/tarefas/quadros_/$quadroId',
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/tarefas/meu-dia': typeof AuthenticatedTarefasMeuDiaRoute
   '/tarefas/meu-trabalho': typeof AuthenticatedTarefasMeuTrabalhoRoute
   '/tarefas/quadros': typeof AuthenticatedTarefasQuadrosRoute
+  '/api/public/push-enviar': typeof ApiPublicPushEnviarRoute
   '/tarefas/quadros/$quadroId': typeof AuthenticatedTarefasQuadrosQuadroIdRoute
 }
 export interface FileRoutesByTo {
@@ -186,6 +193,7 @@ export interface FileRoutesByTo {
   '/tarefas/meu-dia': typeof AuthenticatedTarefasMeuDiaRoute
   '/tarefas/meu-trabalho': typeof AuthenticatedTarefasMeuTrabalhoRoute
   '/tarefas/quadros': typeof AuthenticatedTarefasQuadrosRoute
+  '/api/public/push-enviar': typeof ApiPublicPushEnviarRoute
   '/tarefas/quadros/$quadroId': typeof AuthenticatedTarefasQuadrosQuadroIdRoute
 }
 export interface FileRoutesById {
@@ -209,6 +217,7 @@ export interface FileRoutesById {
   '/_authenticated/tarefas/meu-dia': typeof AuthenticatedTarefasMeuDiaRoute
   '/_authenticated/tarefas/meu-trabalho': typeof AuthenticatedTarefasMeuTrabalhoRoute
   '/_authenticated/tarefas/quadros': typeof AuthenticatedTarefasQuadrosRoute
+  '/api/public/push-enviar': typeof ApiPublicPushEnviarRoute
   '/_authenticated/tarefas/quadros_/$quadroId': typeof AuthenticatedTarefasQuadrosQuadroIdRoute
 }
 export interface FileRouteTypes {
@@ -232,6 +241,7 @@ export interface FileRouteTypes {
     | '/tarefas/meu-dia'
     | '/tarefas/meu-trabalho'
     | '/tarefas/quadros'
+    | '/api/public/push-enviar'
     | '/tarefas/quadros/$quadroId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/tarefas/meu-dia'
     | '/tarefas/meu-trabalho'
     | '/tarefas/quadros'
+    | '/api/public/push-enviar'
     | '/tarefas/quadros/$quadroId'
   id:
     | '__root__'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tarefas/meu-dia'
     | '/_authenticated/tarefas/meu-trabalho'
     | '/_authenticated/tarefas/quadros'
+    | '/api/public/push-enviar'
     | '/_authenticated/tarefas/quadros_/$quadroId'
   fileRoutesById: FileRoutesById
 }
@@ -282,6 +294,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicPushEnviarRoute: typeof ApiPublicPushEnviarRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -419,6 +432,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTarefasQuadrosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/push-enviar': {
+      id: '/api/public/push-enviar'
+      path: '/api/public/push-enviar'
+      fullPath: '/api/public/push-enviar'
+      preLoaderRoute: typeof ApiPublicPushEnviarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/tarefas/quadros_/$quadroId': {
       id: '/_authenticated/tarefas/quadros_/$quadroId'
       path: '/tarefas/quadros/$quadroId'
@@ -477,6 +497,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicPushEnviarRoute: ApiPublicPushEnviarRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
