@@ -3,7 +3,7 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { SecaoCamiseta, SecaoPaleta } from "@/components/biblioteca/BlocosCores";
 import { BotaoZip } from "@/components/biblioteca/BotaoZip";
-import { hasPermission, profileQueryOptions } from "@/lib/auth";
+import { canEdit, hasPermission, profileQueryOptions } from "@/lib/auth";
 import { paletaQueryOptions } from "@/lib/biblioteca-marca";
 import { coresQueryOptions } from "@/lib/biblioteca";
 
@@ -25,7 +25,8 @@ export const Route = createFileRoute("/_authenticated/biblioteca/cores")({
 function CoresPage() {
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
   const pode = hasPermission(profile, "biblioteca.marca");
-  const admin = profile?.role === "admin";
+  const podeEditar = canEdit(profile, "biblioteca.marca");
+  const admin = profile?.role === "admin" && podeEditar;
   const { data: paleta = [] } = useQuery({ ...paletaQueryOptions, enabled: pode });
   const { data: coresCamiseta = [] } = useQuery({ ...coresQueryOptions, enabled: pode });
 
@@ -39,6 +40,11 @@ function CoresPage() {
 
   return (
     <AppShell largura="ampla">
+        {!podeEditar ? (
+          <p className="mb-4 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            Você está em modo de consulta. Pode ver, copiar e baixar, mas não alterar.
+          </p>
+        ) : null}
       <div className="mb-4 flex justify-end"><BotaoZip origem="cores" /></div>
       <div className="space-y-6">
         <SecaoCamiseta cores={coresCamiseta} />
