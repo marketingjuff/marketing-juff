@@ -82,6 +82,9 @@ export function CardMini({
         arrastando && "rotate-1 shadow-lg",
       )}
     >
+      {card.cor ? (
+        <div className="-mx-2 -mt-2 mb-1.5 h-1.5 rounded-t-lg" style={{ backgroundColor: card.cor }} />
+      ) : null}
       {tags.length > 0 ? (
         <div className="mb-1.5 flex flex-wrap gap-1">
           {tags.slice(0, 3).map((t) => (
