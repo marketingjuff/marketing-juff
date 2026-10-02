@@ -45,12 +45,14 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <h3 className="text-sm font-semibold">Combos de estampa</h3>
-        <span className="text-sm text-muted-foreground">{combos.length} no catálogo</span>
-        <Input placeholder="Buscar código" value={busca} onChange={(e) => setBusca(e.target.value)} className="ml-auto h-8 w-40" />
-        {editavel ? <Button size="sm" className="gap-1" onClick={() => setEditando("novo")}><Plus className="size-4" /> Novo combo</Button> : null}
+    <div className="space-y-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:flex">
+        <div className="flex min-w-0 items-baseline gap-2">
+          <h3 className="truncate text-sm font-semibold">Combos de estampa</h3>
+          <span className="shrink-0 text-xs text-muted-foreground">{combos.length} no catálogo</span>
+        </div>
+        {editavel ? <Button size="sm" className="shrink-0 gap-1 sm:order-3" onClick={() => setEditando("novo")}><Plus className="size-4" /> Novo combo</Button> : null}
+        <Input placeholder="Buscar código" value={busca} onChange={(e) => setBusca(e.target.value)} className="col-span-2 h-8 w-full sm:ml-auto sm:w-40" />
       </div>
       {editando ? (
         <FormCombo
@@ -69,38 +71,41 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
           porCor.set(k, [...(porCor.get(k) ?? []), c]);
         }
         return (
-          <section key={g} className="space-y-2">
+          <section key={g} className="space-y-1.5">
             <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{ROTULO_GENERO[g]} · {doGenero.length}</h4>
             {[...porCor.entries()].map(([cid, lista]) => {
               const cor = corPorId.get(cid);
               return (
-                <div key={cid} className="rounded-lg border border-border p-2">
-                  <div className="mb-2 flex items-center gap-2 text-sm capitalize"><Bolinha hex={cor?.hex ?? null} /> {cor?.nome ?? "Sem cor de camiseta"}</div>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <div key={cid} className="rounded-lg border border-border p-1.5">
+                  <div className="mb-1 flex items-center gap-1.5 px-0.5 text-xs font-medium capitalize"><Bolinha hex={cor?.hex ?? null} tamanho={11} /> {cor?.nome ?? "Sem cor de camiseta"}</div>
+                  <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5">
                     {lista.map((c) => (
-                      <div key={c.id} className="rounded-md border border-border bg-background p-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold">{c.codigo}</span>
+                      <div key={c.id} className="rounded-md border border-border bg-background px-2 py-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-semibold">{c.codigo}</span>
                           <Amostra fundo={cor?.hex ?? "#888888"} itens={c.itens} porCodigo={porCodigo} />
                           <div className="ml-auto flex">
-                            {editavel ? <Button variant="ghost" size="icon" className="size-7" onClick={() => setEditando(c)}><Pencil className="size-3.5" /></Button> : null}
-                            {editavel ? <Button variant="ghost" size="icon" className="size-7" onClick={() => apagar(c)}><Trash2 className="size-3.5" /></Button> : null}
+                            {editavel ? <Button variant="ghost" size="icon" className="size-6" title="Editar combo" onClick={() => setEditando(c)}><Pencil className="size-3" /></Button> : null}
+                            {editavel ? <Button variant="ghost" size="icon" className="size-6" title="Apagar combo" onClick={() => apagar(c)}><Trash2 className="size-3" /></Button> : null}
                           </div>
                         </div>
-                        {c.itens.map((it, i) => (
-                          <div key={i} className="flex items-center gap-2 text-xs">
-                            <Bolinha hex={hexDoCodigo(porCodigo, it.codigo)} /> <span className="w-10 font-semibold">{it.codigo}</span>
-                            <span className="tabular-nums text-muted-foreground">{textoCmykItem(it)}</span>
-                          </div>
-                        ))}
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <button type="button" className="mt-1 text-[11px] text-primary hover:underline" disabled={!c.uso}>Presente em {c.uso} estampa{c.uso === 1 ? "" : "s"}</button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-56 text-sm">
-                            <ul className="space-y-0.5">{c.estampas.map((e) => <li key={e}>{e}</li>)}</ul>
-                          </PopoverContent>
-                        </Popover>
+                        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
+                          {c.itens.map((it, i) => (
+                            <span key={i} className="flex items-center gap-1 text-[11px] leading-4">
+                              <Bolinha hex={hexDoCodigo(porCodigo, it.codigo)} tamanho={10} />
+                              <strong>{it.codigo}</strong>
+                              <span className="tabular-nums text-muted-foreground">{textoCmykItem(it)}</span>
+                            </span>
+                          ))}
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button type="button" className="ml-auto shrink-0 text-[10px] leading-4 text-primary hover:underline" disabled={!c.uso}>{c.uso} estampa{c.uso === 1 ? "" : "s"}</button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-56 text-sm">
+                              <ul className="space-y-0.5">{c.estampas.map((e) => <li key={e}>{e}</li>)}</ul>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                       </div>
                     ))}
                   </div>
