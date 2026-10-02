@@ -110,7 +110,7 @@ export function QuadroBoard({
   const fecharCard = () => {
     setCardAberto(null);
     if (cardInicial) {
-      navegarCard({ to: "/tarefas/quadros/$quadroId", params: { quadroId: quadro.id }, search: {}, replace: true });
+      navegarCard({ to: "/tarefas/quadros/$quadroId", params: { quadroId: quadro.id }, search: { card: undefined }, replace: true });
     }
   };
   const [participantes, setParticipantes] = useState(false);
