@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ColorPicker } from "@/components/ui/color-picker";
+import { useCardAoVivo } from "@/hooks/use-card-ao-vivo";
+import { useCampoEmEdicao } from "@/hooks/use-campo-em-edicao";
+import { profileQueryOptions } from "@/lib/auth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Archive, RefreshCw, ChevronDown, Download, ExternalLink, Plus, Trash2, Upload, X } from "lucide-react";
+import { Archive, RefreshCw, Download, User, Tag, Clock, CheckSquare, Paperclip, SlidersHorizontal, ExternalLink, Plus, Trash2, Upload, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -19,7 +24,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Select,
   SelectContent,
@@ -30,6 +34,8 @@ import {
 import { cn } from "@/lib/utils";
 import {
   ESFORCOS,
+  CORES_ETIQUETA,
+  siglaPessoa,
   PRIORIDADES,
   addComentario,
   addItemChecklist,
@@ -135,6 +141,14 @@ export function CardDialog({
     }
   }, [card?.id, card?.titulo, card?.descricao]);
 
+  const { data: perfil } = useQuery(profileQueryOptions);
+  useCardAoVivo(card?.id ?? null, card?.quadro_id ?? null, ativo);
+  const { travados, digitando } = useCampoEmEdicao(card?.id ?? null, ativo, perfil?.id ?? "", perfil?.nome ?? "Alguém");
+  const [filtroLinha, setFiltroLinha] = useState<"tudo" | "comentarios" | "atividades">("tudo");
+  useEffect(() => {
+    setFiltroLinha("tudo");
+  }, [card?.id]);
+
   if (!card) return null;
   const c = localCard && localCard.id === card.id ? localCard : card;
   const mexer = podeMexerNoCard(c, role, meuId, editable);
@@ -213,35 +227,366 @@ export function CardDialog({
 
   const feitos = checklist.filter((i) => i.feito).length;
   const colunasDestino = quadroDestino?.colunas ?? [];
+  const pessoaDe = (id: string | null) => pessoas.find((p) => p.id === id);
+
+  type LinhaAtividade =
+    | { tipo: "comentario"; id: string; autor_id: string | null; quando: string; texto: string }
+    | { tipo: "atividade"; id: string; autor_id: string | null; quando: string; acao: string; detalhe: string };
+  const linhas: LinhaAtividade[] = [
+    ...comentarios.map((co) => ({ tipo: "comentario" as const, id: co.id, autor_id: co.autor_id, quando: co.created_at, texto: co.texto })),
+    ...historico.map((h) => ({ tipo: "atividade" as const, id: h.id, autor_id: h.autor_id, quando: h.created_at, acao: h.acao, detalhe: h.detalhe })),
+  ]
+    .filter((l) => (filtroLinha === "tudo" ? true : filtroLinha === "comentarios" ? l.tipo === "comentario" : l.tipo === "atividade"))
+    .sort((a, b) => a.quando.localeCompare(b.quando));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto">
+      <DialogContent className="max-h-[92vh] max-w-6xl overflow-y-auto p-0">
         <DialogTitle className="sr-only">{c.titulo || "Card"}</DialogTitle>
-        <div className="grid gap-6 md:grid-cols-[1fr_16rem]">
+        <div className="grid gap-0 md:grid-cols-[minmax(0,1.9fr)_minmax(0,1fr)]">
           {/* Coluna principal */}
-          <div className="min-w-0 space-y-5">
-            <Input
-              value={titulo}
-              disabled={!mexer}
-              className="border-transparent px-1 text-lg font-semibold shadow-none focus-visible:border-input"
-              onChange={(e) => setTitulo(e.target.value)}
-              onBlur={() => titulo !== c.titulo && salvar({ titulo })}
-            />
+          <div className="min-w-0 space-y-4 p-5">
+            <div className="pr-6">
+              <Input
+                value={titulo}
+                disabled={!mexer || !!travados["titulo"]}
+                className="border-transparent px-1 text-lg font-semibold shadow-none focus-visible:border-input"
+                onChange={(e) => {
+                  setTitulo(e.target.value);
+                  digitando("titulo");
+                }}
+                onBlur={() => titulo !== c.titulo && salvar({ titulo })}
+              />
+              <AvisoEscrevendo quem={travados["titulo"]} />
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5" disabled={!mexer}>
+                    <User className="size-4" /> Membros
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 space-y-2">
+                  <Campo label="Responsável">
+                    <Select
+                      disabled={!mexer}
+                      value={c.responsavel_id ?? NENHUM}
+                      onValueChange={(v) => {
+                        const novo = v === NENHUM ? null : v;
+                        salvar({ responsavel_id: novo }, ["Trocou responsável", `${nomePessoa(c.responsavel_id)} → ${nomePessoa(novo)}`]);
+                      }}
+                    >
+                      <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NENHUM}>Ninguém</SelectItem>
+                        {pessoas.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>{p.nome || "Sem nome"}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Campo>
+                </PopoverContent>
+              </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5" disabled={!mexer}>
+                    <Tag className="size-4" /> Etiquetas
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72 space-y-2">
+                  <Campo label="Etiquetas">
+                    <div className="flex flex-wrap gap-1">
+                      {etiquetasVisiveis.map((e) => {
+                        const on = c.etiquetas.includes(e.id);
+                        return (
+                          <button
+                            key={e.id}
+                            type="button"
+                            disabled={!mexer}
+                            onClick={() => {
+                              const novas = on ? c.etiquetas.filter((x) => x !== e.id) : [...c.etiquetas, e.id];
+                              rodar(
+                                () => setEtiquetasDoCard(c.id, novas),
+                                (card) => ({ ...card, etiquetas: novas }),
+                              );
+                            }}
+                            className={cn(
+                              "rounded px-1.5 py-0.5 text-[11px] transition-opacity",
+                              !on && "opacity-40",
+                            )}
+                            style={{ backgroundColor: e.cor, color: e.cor_texto }}
+                          >
+                            {e.nome}
+                          </button>
+                        );
+                      })}
+                      {etiquetasVisiveis.length === 0 ? (
+                        <span className="text-[11px] text-muted-foreground">
+                          Nenhuma etiqueta para este quadro. Crie em Configurações.
+                        </span>
+                      ) : null}
+                    </div>
+                  </Campo>
+                </PopoverContent>
+              </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5" disabled={!mexer}>
+                    <Clock className="size-4" /> Datas
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="max-h-[70vh] w-72 space-y-3 overflow-y-auto">
+                  <CampoData
+                    label="Data de início"
+                    data={c.data_inicio}
+                    hora={c.hora_inicio}
+                    disabled={!mexer}
+                    onChange={(d, h) => salvar({ data_inicio: d, hora_inicio: h })}
+                  />
+                  <CampoData
+                    label="Data de entrega"
+                    data={c.data_entrega}
+                    hora={c.hora_entrega}
+                    disabled={!mexer}
+                    onChange={(d, h) =>
+                      salvar({ data_entrega: d, hora_entrega: h, ...(d ? {} : { recorrencia: "nunca" as const }) }, [
+                        "Mudou entrega",
+                        `${formatarDataHora(c.data_entrega, c.hora_entrega) || "sem data"} → ${formatarDataHora(d, h) || "sem data"}`,
+                      ])
+                    }
+                  />
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">Recorrente</p>
+                    <Select
+                      disabled={!mexer || !c.data_entrega}
+                      value={c.recorrencia ?? "nunca"}
+                      onValueChange={(v) => salvar({ recorrencia: v as Card["recorrencia"] })}
+                    >
+                      <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {RECORRENCIAS.map((r) => (
+                          <SelectItem key={r.valor} value={r.valor}>{r.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {!c.data_entrega ? (
+                      <p className="text-[11px] text-muted-foreground">
+                        Marque uma data de entrega para poder repetir
+                      </p>
+                    ) : null}
+                    {ehRecorrente(c) ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-1 w-full gap-1"
+                        disabled={!mexer}
+                        onClick={async () => {
+                          try {
+                            const prox = await avancarCard(c.id);
+                            toast.success(prox ? `Próxima em ${formatarData(prox)}` : "Card atualizado");
+                          } catch {
+                            toast.error("Não deu para avançar");
+                          } finally {
+                            invalidar();
+                          }
+                        }}
+                      >
+                        <RefreshCw className="size-4" /> Já fiz, ir para a próxima
+                      </Button>
+                    ) : null}
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">Lembrete</p>
+                    <Select
+                      disabled={!mexer || !c.data_entrega}
+                      value={c.lembrete_min === null || c.lembrete_min === undefined ? "nenhum" : String(c.lembrete_min)}
+                      onValueChange={(v) => salvar({ lembrete_min: v === "nenhum" ? null : Number(v) })}
+                    >
+                      <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {LEMBRETES.map((l) => (
+                          <SelectItem key={String(l.valor)} value={l.valor === null ? "nenhum" : String(l.valor)}>
+                            {l.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-[11px] text-muted-foreground">
+                      {!c.data_entrega
+                        ? "Marque uma data de entrega para poder ser lembrado"
+                        : !c.hora_entrega
+                          ? "Sem hora marcada, o aviso aparece no sino à meia noite do dia da entrega"
+                          : "O aviso vai para o responsável pelo card"}
+                    </p>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                disabled={!mexer}
+                onClick={() => document.getElementById("bloco-checklist")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+              >
+                <CheckSquare className="size-4" /> Checklist
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                disabled={!mexer}
+                onClick={() => document.getElementById("bloco-anexos")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+              >
+                <Paperclip className="size-4" /> Anexo
+              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5" disabled={!mexer}>
+                    <SlidersHorizontal className="size-4" /> Mais
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="max-h-[70vh] w-72 space-y-3 overflow-y-auto">
+                  <Campo label="Cor do card">
+                    <div className="flex items-center gap-2">
+                      <ColorPicker
+                        value={c.cor ?? "#378add"}
+                        onChange={(v) => salvar({ cor: v.toLowerCase() })}
+                        label="Cor do card"
+                        presets={CORES_ETIQUETA}
+                      />
+                      {c.cor ? (
+                        <Button size="sm" variant="ghost" onClick={() => salvar({ cor: null })}>
+                          Tirar cor
+                        </Button>
+                      ) : null}
+                    </div>
+                  </Campo>
+                  <Campo label="Prioridade">
+                    <Select disabled={!mexer} value={c.prioridade ?? NENHUM}
+                      onValueChange={(v) => salvar({ prioridade: v === NENHUM ? null : (v as Card["prioridade"]) })}>
+                      <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NENHUM}>Sem prioridade</SelectItem>
+                        {PRIORIDADES.map((p) => <SelectItem key={p.valor} value={p.valor}>{p.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </Campo>
+                  <Campo label="Esforço">
+                    <Select disabled={!mexer} value={c.esforco ?? NENHUM}
+                      onValueChange={(v) => salvar({ esforco: v === NENHUM ? null : (v as Card["esforco"]) })}>
+                      <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NENHUM}>Não definido</SelectItem>
+                        {ESFORCOS.map((p) => <SelectItem key={p.valor} value={p.valor}>{p.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </Campo>
+                  <Campo label="Adiar até">
+                    <Input type="date" className="h-8" disabled={!mexer} value={c.adiado_ate ?? ""}
+                      onChange={(e) => salvar({ adiado_ate: e.target.value || null })} />
+                  </Campo>
+                  <Campo label="Depende de">
+                    <Input className="h-8" disabled={!mexer} defaultValue={c.depende_de} key={`dep-${c.id}`}
+                      onBlur={(e) => e.target.value !== c.depende_de && salvar({ depende_de: e.target.value })} />
+                  </Campo>
+                  <Campo label="Link externo">
+                    <Input className="h-8" disabled={!mexer} defaultValue={c.link_externo} key={`lnk-${c.id}`}
+                      placeholder="https://"
+                      onBlur={(e) => e.target.value !== c.link_externo && salvar({ link_externo: e.target.value })} />
+                    {c.link_externo ? (
+                      <a href={c.link_externo} target="_blank" rel="noreferrer" className="block truncate text-xs text-primary underline">
+                        {c.link_externo}
+                      </a>
+                    ) : null}
+                  </Campo>
+                  <Campo label="Quadro">
+                    <Select disabled={!mexer} value={quadroSel} onValueChange={setQuadroSel}>
+                      <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {quadros.map((q) => <SelectItem key={q.id} value={q.id}>{q.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </Campo>
+                  <Campo label="Coluna">
+                    <Select
+                      disabled={!mexer || colunasDestino.length === 0}
+                      value={quadroSel === c.quadro_id ? c.coluna_id : ""}
+                      onValueChange={(v) => {
+                        const origem = quadroSel === c.quadro_id ? colunasDestino.find((x) => x.id === c.coluna_id)?.nome : "outro quadro";
+                        const destino = colunasDestino.find((x) => x.id === v)?.nome ?? "";
+                        salvar(
+                          { quadro_id: quadroSel, coluna_id: v, posicao: 9999 },
+                          ["Moveu", `${origem ?? ""} → ${destino}`],
+                        );
+                      }}
+                    >
+                      <SelectTrigger className="h-8"><SelectValue placeholder="Escolha a coluna" /></SelectTrigger>
+                      <SelectContent>
+                        {colunasDestino.map((col) => <SelectItem key={col.id} value={col.id}>{col.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </Campo>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {c.responsavel_id || c.etiquetas.length > 0 || c.data_entrega || c.prioridade ? (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {c.responsavel_id ? (
+                  <span
+                    className="flex size-6 items-center justify-center rounded-full text-[9px] font-semibold"
+                    style={{
+                      backgroundColor: pessoaDe(c.responsavel_id)?.cor_avatar ?? "#378add",
+                      color: pessoaDe(c.responsavel_id)?.cor_texto_avatar ?? "#ffffff",
+                    }}
+                    title={nomePessoa(c.responsavel_id)}
+                  >
+                    {siglaPessoa(pessoaDe(c.responsavel_id) ?? { nome: "", sigla: null })}
+                  </span>
+                ) : null}
+                {c.etiquetas
+                  .map((id) => etiquetas.find((e) => e.id === id))
+                  .filter((e): e is NonNullable<typeof e> => !!e)
+                  .map((e) => (
+                    <span
+                      key={e.id}
+                      className="rounded-[3px] px-1 py-px text-[10px] font-medium uppercase"
+                      style={{ backgroundColor: e.cor, color: e.cor_texto }}
+                    >
+                      {e.nome}
+                    </span>
+                  ))}
+                {c.data_entrega ? (
+                  <span className="rounded border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                    entrega {formatarDataHora(c.data_entrega, c.hora_entrega)}
+                  </span>
+                ) : null}
+                {c.prioridade ? (
+                  <span className="rounded border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                    {PRIORIDADES.find((p) => p.valor === c.prioridade)?.label ?? c.prioridade}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
 
             <div className="space-y-1.5">
               <Label>Descrição</Label>
               <Textarea
-                rows={12}
-                className="min-h-[18rem] resize-y"
+                rows={16}
+                className="min-h-[24rem] resize-y"
                 value={descricao}
-                disabled={!mexer}
-                onChange={(e) => setDescricao(e.target.value)}
+                disabled={!mexer || !!travados["descricao"]}
+                onChange={(e) => {
+                  setDescricao(e.target.value);
+                  digitando("descricao");
+                }}
                 onBlur={() => descricao !== c.descricao && salvar({ descricao })}
               />
+              <AvisoEscrevendo quem={travados["descricao"]} />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2" id="bloco-checklist">
               <div className="flex items-center justify-between">
                 <Label>Checklist</Label>
                 {checklist.length > 0 ? (
@@ -301,7 +646,7 @@ export function CardDialog({
               ) : null}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2" id="bloco-anexos">
               <Label>Anexos</Label>
               {mexer ? (
                 <div
@@ -363,37 +708,47 @@ export function CardDialog({
                 ))}
               </ul>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label>Comentários</Label>
-              <ul className="space-y-2">
-                {comentarios.map((m) => (
-                  <li key={m.id} className="rounded-lg bg-secondary/60 p-2 text-sm">
-                    <div className="mb-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="font-medium text-foreground">{nomePessoa(m.autor_id)}</span>
-                      {dataHora(m.created_at)}
-                      {m.autor_id === meuId || isAdmin ? (
-                        <button
-                          type="button"
-                          className="ml-auto"
-                          aria-label="Apagar comentário"
-                          onClick={() => rodar(() => deleteComentario(m.id))}
-                        >
-                          <X className="size-3" />
-                        </button>
-                      ) : null}
-                    </div>
-                    <p className="whitespace-pre-wrap">{m.texto}</p>
-                  </li>
+          {/* Comentários e atividade */}
+          <aside className="space-y-3 border-l border-border bg-muted/30 p-5 text-sm">
+            {editable && !mexer ? (
+              <p className="text-xs text-muted-foreground">Só o responsável mexe neste card.</p>
+            ) : null}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label>Comentários e atividade</Label>
+              <div className="inline-flex overflow-hidden rounded-md border border-border text-[11px]">
+                {([
+                  ["tudo", "Tudo"],
+                  ["comentarios", "Só comentários"],
+                  ["atividades", "Só atividades"],
+                ] as const).map(([valor, rotulo], i) => (
+                  <button
+                    key={valor}
+                    type="button"
+                    onClick={() => setFiltroLinha(valor)}
+                    className={cn(
+                      "px-2 py-1",
+                      i > 0 && "border-l border-border",
+                      filtroLinha === valor ? "bg-primary-soft font-medium text-foreground" : "text-muted-foreground",
+                    )}
+                  >
+                    {rotulo}
+                  </button>
                 ))}
-              </ul>
+              </div>
+            </div>
               {editable ? (
                 <div className="space-y-2">
                   <Textarea
                     rows={2}
                     value={comentario}
                     placeholder="Escreva um comentário"
-                    onChange={(e) => setComentario(e.target.value)}
+                    disabled={!!travados["comentario"]}
+                    onChange={(e) => {
+                      setComentario(e.target.value);
+                      digitando("comentario");
+                    }}
                   />
                   <Button
                     size="sm"
@@ -406,215 +761,53 @@ export function CardDialog({
                   >
                     Comentar
                   </Button>
+                  <AvisoEscrevendo quem={travados["comentario"]} />
                 </div>
               ) : null}
-            </div>
-          </div>
-
-          {/* Lateral */}
-          <aside className="space-y-3 text-sm">
-            {editable && !mexer ? (
-              <p className="text-xs text-muted-foreground">Só o responsável mexe neste card.</p>
-            ) : null}
-            <Campo label="Responsável">
-              <Select
-                disabled={!mexer}
-                value={c.responsavel_id ?? NENHUM}
-                onValueChange={(v) => {
-                  const novo = v === NENHUM ? null : v;
-                  salvar({ responsavel_id: novo }, ["Trocou responsável", `${nomePessoa(c.responsavel_id)} → ${nomePessoa(novo)}`]);
-                }}
-              >
-                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NENHUM}>Ninguém</SelectItem>
-                  {pessoas.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.nome || "Sem nome"}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Campo>
-            <CampoData
-              label="Data de início"
-              data={c.data_inicio}
-              hora={c.hora_inicio}
-              disabled={!mexer}
-              onChange={(d, h) => salvar({ data_inicio: d, hora_inicio: h })}
-            />
-            <CampoData
-              label="Data de entrega"
-              data={c.data_entrega}
-              hora={c.hora_entrega}
-              disabled={!mexer}
-              onChange={(d, h) =>
-                salvar({ data_entrega: d, hora_entrega: h, ...(d ? {} : { recorrencia: "nunca" as const }) }, [
-                  "Mudou entrega",
-                  `${formatarDataHora(c.data_entrega, c.hora_entrega) || "sem data"} → ${formatarDataHora(d, h) || "sem data"}`,
-                ])
-              }
-            />
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">Recorrente</p>
-              <Select
-                disabled={!mexer || !c.data_entrega}
-                value={c.recorrencia ?? "nunca"}
-                onValueChange={(v) => salvar({ recorrencia: v as Card["recorrencia"] })}
-              >
-                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {RECORRENCIAS.map((r) => (
-                    <SelectItem key={r.valor} value={r.valor}>{r.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {!c.data_entrega ? (
-                <p className="text-[11px] text-muted-foreground">
-                  Marque uma data de entrega para poder repetir
-                </p>
-              ) : null}
-              {ehRecorrente(c) ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-1 w-full gap-1"
-                  disabled={!mexer}
-                  onClick={async () => {
-                    try {
-                      const prox = await avancarCard(c.id);
-                      toast.success(prox ? `Próxima em ${formatarData(prox)}` : "Card atualizado");
-                    } catch {
-                      toast.error("Não deu para avançar");
-                    } finally {
-                      invalidar();
-                    }
-                  }}
-                >
-                  <RefreshCw className="size-4" /> Já fiz, ir para a próxima
-                </Button>
-              ) : null}
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">Lembrete</p>
-              <Select
-                disabled={!mexer || !c.data_entrega}
-                value={c.lembrete_min === null || c.lembrete_min === undefined ? "nenhum" : String(c.lembrete_min)}
-                onValueChange={(v) => salvar({ lembrete_min: v === "nenhum" ? null : Number(v) })}
-              >
-                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {LEMBRETES.map((l) => (
-                    <SelectItem key={String(l.valor)} value={l.valor === null ? "nenhum" : String(l.valor)}>
-                      {l.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-[11px] text-muted-foreground">
-                {!c.data_entrega
-                  ? "Marque uma data de entrega para poder ser lembrado"
-                  : !c.hora_entrega
-                    ? "Sem hora marcada, o aviso aparece no sino à meia noite do dia da entrega"
-                    : "O aviso vai para o responsável pelo card"}
-              </p>
-            </div>
-            <Campo label="Prioridade">
-              <Select disabled={!mexer} value={c.prioridade ?? NENHUM}
-                onValueChange={(v) => salvar({ prioridade: v === NENHUM ? null : (v as Card["prioridade"]) })}>
-                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NENHUM}>Sem prioridade</SelectItem>
-                  {PRIORIDADES.map((p) => <SelectItem key={p.valor} value={p.valor}>{p.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </Campo>
-            <Campo label="Esforço">
-              <Select disabled={!mexer} value={c.esforco ?? NENHUM}
-                onValueChange={(v) => salvar({ esforco: v === NENHUM ? null : (v as Card["esforco"]) })}>
-                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NENHUM}>Não definido</SelectItem>
-                  {ESFORCOS.map((p) => <SelectItem key={p.valor} value={p.valor}>{p.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </Campo>
-            <Campo label="Etiquetas">
-              <div className="flex flex-wrap gap-1">
-                {etiquetasVisiveis.map((e) => {
-                  const on = c.etiquetas.includes(e.id);
-                  return (
-                    <button
-                      key={e.id}
-                      type="button"
-                      disabled={!mexer}
-                      onClick={() => {
-                        const novas = on ? c.etiquetas.filter((x) => x !== e.id) : [...c.etiquetas, e.id];
-                        rodar(
-                          () => setEtiquetasDoCard(c.id, novas),
-                          (card) => ({ ...card, etiquetas: novas }),
-                        );
-                      }}
-                      className={cn(
-                        "rounded px-1.5 py-0.5 text-[11px] transition-opacity",
-                        !on && "opacity-40",
-                      )}
-                      style={{ backgroundColor: e.cor, color: e.cor_texto }}
-                    >
-                      {e.nome}
-                    </button>
-                  );
-                })}
-                {etiquetasVisiveis.length === 0 ? (
-                  <span className="text-[11px] text-muted-foreground">
-                    Nenhuma etiqueta para este quadro. Crie em Configurações.
+            <ul className="space-y-3">
+              {linhas.length === 0 ? <li className="text-xs text-muted-foreground">Nada por aqui ainda.</li> : null}
+              {linhas.map((l) => (
+                <li key={`${l.tipo}-${l.id}`} className="group flex gap-2">
+                  <span
+                    className={cn(
+                      "flex size-6 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold",
+                      l.tipo === "atividade" && "opacity-60",
+                    )}
+                    style={{
+                      backgroundColor: pessoaDe(l.autor_id)?.cor_avatar ?? "#888780",
+                      color: pessoaDe(l.autor_id)?.cor_texto_avatar ?? "#ffffff",
+                    }}
+                  >
+                    {siglaPessoa(pessoaDe(l.autor_id) ?? { nome: "", sigla: null })}
                   </span>
-                ) : null}
-              </div>
-            </Campo>
-            <Campo label="Adiar até">
-              <Input type="date" className="h-8" disabled={!mexer} value={c.adiado_ate ?? ""}
-                onChange={(e) => salvar({ adiado_ate: e.target.value || null })} />
-            </Campo>
-            <Campo label="Depende de">
-              <Input className="h-8" disabled={!mexer} defaultValue={c.depende_de} key={`dep-${c.id}`}
-                onBlur={(e) => e.target.value !== c.depende_de && salvar({ depende_de: e.target.value })} />
-            </Campo>
-            <Campo label="Link externo">
-              <Input className="h-8" disabled={!mexer} defaultValue={c.link_externo} key={`lnk-${c.id}`}
-                placeholder="https://"
-                onBlur={(e) => e.target.value !== c.link_externo && salvar({ link_externo: e.target.value })} />
-              {c.link_externo ? (
-                <a href={c.link_externo} target="_blank" rel="noreferrer" className="block truncate text-xs text-primary underline">
-                  {c.link_externo}
-                </a>
-              ) : null}
-            </Campo>
-            <Campo label="Quadro">
-              <Select disabled={!mexer} value={quadroSel} onValueChange={setQuadroSel}>
-                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {quadros.map((q) => <SelectItem key={q.id} value={q.id}>{q.nome}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </Campo>
-            <Campo label="Coluna">
-              <Select
-                disabled={!mexer || colunasDestino.length === 0}
-                value={quadroSel === c.quadro_id ? c.coluna_id : ""}
-                onValueChange={(v) => {
-                  const origem = quadroSel === c.quadro_id ? colunasDestino.find((x) => x.id === c.coluna_id)?.nome : "outro quadro";
-                  const destino = colunasDestino.find((x) => x.id === v)?.nome ?? "";
-                  salvar(
-                    { quadro_id: quadroSel, coluna_id: v, posicao: 9999 },
-                    ["Moveu", `${origem ?? ""} → ${destino}`],
-                  );
-                }}
-              >
-                <SelectTrigger className="h-8"><SelectValue placeholder="Escolha a coluna" /></SelectTrigger>
-                <SelectContent>
-                  {colunasDestino.map((col) => <SelectItem key={col.id} value={col.id}>{col.nome}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </Campo>
+                  <div className="min-w-0 flex-1">
+                    {l.tipo === "comentario" ? (
+                      <p className="whitespace-pre-wrap break-words text-xs">
+                        <span className="font-medium">{nomePessoa(l.autor_id)}</span> {l.texto}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        {nomePessoa(l.autor_id)} {l.acao.toLowerCase()}
+                        {l.detalhe ? ` · ${l.detalhe}` : ""}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                      {dataHora(l.quando)}
+                      {l.tipo === "comentario" && (l.autor_id === meuId || isAdmin) ? (
+                        <button
+                          type="button"
+                          className="opacity-0 group-hover:opacity-100"
+                          aria-label="Apagar comentário"
+                          onClick={() => rodar(() => deleteComentario(l.id))}
+                        >
+                          <X className="size-3" />
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
 
             {mexer ? (
               <div className="space-y-2 border-t border-border pt-3">
@@ -645,28 +838,9 @@ export function CardDialog({
                 ) : null}
               </div>
             ) : null}
-
-            <Collapsible className="border-t border-border pt-3">
-              <CollapsibleTrigger className="flex w-full items-center justify-between text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Histórico <ChevronDown className="size-4" />
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <ul className="mt-2 space-y-1.5">
-                  {historico.length === 0 ? (
-                    <li className="text-xs text-muted-foreground">Sem registros.</li>
-                  ) : null}
-                  {historico.map((h) => (
-                    <li key={h.id} className="text-xs">
-                      <span className="font-medium">{nomePessoa(h.autor_id)}</span> {h.acao.toLowerCase()}
-                      {h.detalhe ? <span className="text-muted-foreground"> · {h.detalhe}</span> : null}
-                      <div className="text-[10px] text-muted-foreground">{dataHora(h.created_at)}</div>
-                    </li>
-                  ))}
-                </ul>
-              </CollapsibleContent>
-            </Collapsible>
           </aside>
         </div>
+
 
         <AlertDialog open={confirmar} onOpenChange={setConfirmar}>
           <AlertDialogContent>
@@ -706,4 +880,10 @@ function Campo({ label, children }: { label: string; children: React.ReactNode }
       {children}
     </div>
   );
+}
+
+
+function AvisoEscrevendo({ quem }: { quem?: string | undefined }) {
+  if (!quem) return null;
+  return <p className="mt-1 text-[11px] text-muted-foreground">{quem} está escrevendo agora</p>;
 }
