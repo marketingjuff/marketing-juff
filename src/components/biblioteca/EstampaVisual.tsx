@@ -94,7 +94,7 @@ export function CardCombo({ codigo, fundo, itens, porCodigo, tamanho = "m", uso,
   uso?: number;
   onVerUso?: () => void;
   marcaUni?: boolean;
-  onClick?: () => void;
+  onClick?: (() => void) | undefined;
   title?: string;
 }) {
   const m = MEDIDAS_CARD[tamanho];

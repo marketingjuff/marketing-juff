@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Bolinha, CardCombo, type TamanhoCard, EscolherCorEstampa, hexDoCodigo, useCoresEstampa } from "@/components/biblioteca/EstampaVisual";
 import { coresQueryOptions } from "@/lib/biblioteca";
 import {
@@ -136,7 +136,7 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
                 <div className="flex flex-wrap gap-1.5">
                   {lista.map(({ combo: c, uni }) => (
                     <Popover key={c.id} open={verUso === `${chave}:${c.id}`} onOpenChange={(o) => setVerUso(o ? `${chave}:${c.id}` : null)}>
-                      <PopoverTrigger asChild>
+                      <PopoverAnchor asChild>
                         <div className="relative">
                           <CardCombo
                             codigo={c.codigo}
@@ -152,7 +152,7 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
                           />
                           {editavel ? <Button variant="ghost" size="icon" className="absolute bottom-0.5 right-0.5 size-5 bg-background/80" title="Apagar combo" onClick={(e) => { e.stopPropagation(); apagar(c); }}><Trash2 className="size-3" /></Button> : null}
                         </div>
-                      </PopoverTrigger>
+                      </PopoverAnchor>
                       <PopoverContent className="w-56 text-sm" onOpenAutoFocus={(e) => e.preventDefault()}>
                         <ul className="space-y-0.5">{c.estampas.map((e) => <li key={e}>{e}</li>)}</ul>
                       </PopoverContent>
@@ -216,7 +216,7 @@ function FormCombo({ inicial, cores, onCancelar, onPronto }: {
           </div>
         ))}
         <Popover>
-          <PopoverTrigger asChild><Button variant="ghost" size="sm" className="gap-1"><Plus className="size-4" /> Cor</Button></PopoverTrigger>
+          <PopoverAnchor asChild><Button variant="ghost" size="sm" className="gap-1"><Plus className="size-4" /> Cor</Button></PopoverAnchor>
           <PopoverContent className="w-80"><EscolherCorEstampa onEscolher={(c) => setItens([...itens, { codigo: c.codigo, c: c.c, m: c.m, y: c.y, k: c.k }])} /></PopoverContent>
         </Popover>
       </div>
