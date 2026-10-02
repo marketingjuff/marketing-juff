@@ -29,7 +29,7 @@ export type Coluna = {
   arquivado: boolean;
 };
 
-export type Etiqueta = { id: string; nome: string; cor: string; cor_texto: string; arquivado: boolean; posicao: number };
+export type Etiqueta = { id: string; nome: string; cor: string; cor_texto: string; arquivado: boolean; posicao: number; quadro_id: string | null };
 
 export type Recorrencia =
   | "nunca"
@@ -698,7 +698,7 @@ export const etiquetasQueryOptions = queryOptions({
   queryFn: async (): Promise<Etiqueta[]> => {
     const { data, error } = await supabase
       .from("tarefa_etiquetas")
-      .select("id, nome, cor, cor_texto, arquivado, posicao")
+      .select("id, nome, cor, cor_texto, arquivado, posicao, quadro_id")
       .eq("arquivado", false)
       .order("posicao", { ascending: true });
     if (error) throw error;
@@ -706,17 +706,26 @@ export const etiquetasQueryOptions = queryOptions({
   },
 });
 
-export async function createEtiqueta(nome: string, cor: string, corTexto: string): Promise<void> {
-  const { data: ultima } = await supabase
-    .from("tarefa_etiquetas")
-    .select("posicao")
-    .order("posicao", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const { error } = await supabase
-    .from("tarefa_etiquetas")
-    .insert({ nome: nome.trim(), cor: cor.toLowerCase(), cor_texto: corTexto.toLowerCase(), posicao: (ultima?.posicao ?? 0) + 1 });
-  if (error) throw error;
+export async function createEtiqueta(
+  nome: string,
+  cor: string,
+  corTexto: string,
+  quadroId: string | null = null,
+): Promise<void> {
+  const base = supabase.from("tarefa_etiquetas").select("posicao").order("posicao", { ascending: false }).limit(1);
+  const { data: ultima } = await (quadroId ? base.eq("quadro_id", quadroId) : base.is("quadro_id", null)).maybeSingle();
+
+  const { error } = await supabase.from("tarefa_etiquetas").insert({
+    nome: nome.trim().toUpperCase(),
+    cor: cor.toLowerCase(),
+    cor_texto: corTexto.toLowerCase(),
+    quadro_id: quadroId,
+    posicao: (ultima?.posicao ?? 0) + 1,
+  });
+  if (error) {
+    if (error.code === "23505") throw new Error("Já existe uma etiqueta com esse nome neste grupo");
+    throw error;
+  }
 }
 
 export async function reordenarEtiquetas(ids: string[]): Promise<void> {
@@ -726,15 +735,32 @@ export async function reordenarEtiquetas(ids: string[]): Promise<void> {
 
 export async function updateEtiqueta(
   id: string,
-  values: Partial<Pick<Etiqueta, "nome" | "cor" | "cor_texto">>,
+  values: Partial<Pick<Etiqueta, "nome" | "cor" | "cor_texto" | "quadro_id">>,
 ): Promise<void> {
-  const { error } = await supabase.from("tarefa_etiquetas").update(values).eq("id", id);
-  if (error) throw error;
+  const limpo = { ...values };
+  if (limpo.nome !== undefined) limpo.nome = limpo.nome.trim().toUpperCase();
+  const { error } = await supabase.from("tarefa_etiquetas").update(limpo).eq("id", id);
+  if (error) {
+    if (error.code === "23505") throw new Error("Já existe uma etiqueta com esse nome neste grupo");
+    throw error;
+  }
 }
 
 export async function arquivarEtiqueta(id: string, arquivado: boolean): Promise<void> {
   const { error } = await supabase.from("tarefa_etiquetas").update({ arquivado }).eq("id", id);
   if (error) throw error;
+}
+
+/** Etiquetas que valem num quadro. As globais mais as daquele quadro. */
+export function etiquetasDoQuadro(todas: Etiqueta[], quadroId: string | null | undefined): Etiqueta[] {
+  if (!quadroId) return todas.filter((e) => e.quadro_id === null);
+  return todas.filter((e) => e.quadro_id === null || e.quadro_id === quadroId);
+}
+
+/** Primeira cor da paleta que ainda não está em uso no grupo. */
+export function corSugerida(todas: Etiqueta[], quadroId: string | null): string {
+  const usadas = new Set(todas.filter((e) => (e.quadro_id ?? null) === quadroId).map((e) => e.cor.toLowerCase()));
+  return CORES_ETIQUETA.find((c) => !usadas.has(c.toLowerCase())) ?? CORES_ETIQUETA[0]!;
 }
 
 // ---------------- checklist ----------------
