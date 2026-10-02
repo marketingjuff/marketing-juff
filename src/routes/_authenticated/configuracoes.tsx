@@ -185,16 +185,7 @@ function PermissionPanel({
                   : [
                       { v: "nenhum", label: "Sem acesso" },
                       { v: "edicao", label: "Edição" },
-                    ]; label: string }[] = item.nivelConfiguravel
-              ? [
-                  { v: "nenhum", label: "Sem acesso" },
-                  { v: "leitura", label: "Somente leitura" },
-                  { v: "edicao", label: "Edição" },
-                ]
-              : [
-                  { v: "nenhum", label: "Sem acesso" },
-                  { v: "edicao", label: "Edição" },
-                ];
+                    ];
             return (
               <div key={item.key} className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm">{item.label}</span>
