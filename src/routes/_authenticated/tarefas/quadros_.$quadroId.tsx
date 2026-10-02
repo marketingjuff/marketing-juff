@@ -9,7 +9,7 @@ import { quadroQueryOptions, registrarAberturaQuadro } from "@/lib/tarefas";
 
 export const Route = createFileRoute("/_authenticated/tarefas/quadros_/$quadroId")({
   validateSearch: (s: Record<string, unknown>) => ({
-    card: typeof s.card === "string" ? s.card : undefined,
+    card: typeof s["card"] === "string" ? (s["card"] as string) : undefined,
   }),
   head: () => ({
     meta: [
