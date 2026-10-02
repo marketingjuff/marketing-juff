@@ -66,12 +66,14 @@ export function QuadroBoard({
   isAdmin,
   meuId,
   role,
+  cardInicial,
 }: {
   dados: QuadroCompleto;
   editable: boolean;
   isAdmin: boolean;
   meuId: string;
   role?: string | undefined;
+  cardInicial?: string | undefined;
 }) {
   const qc = useQueryClient();
   const estruturar = podeEstruturar(role, editable);
@@ -99,7 +101,7 @@ export function QuadroBoard({
   const [fEtiq, setFEtiq] = useState(TODOS);
   const [soAtrasados, setSoAtrasados] = useState(false);
   const filtrando = !!busca.trim() || fResp !== TODOS || fEtiq !== TODOS || soAtrasados;
-  const [cardAberto, setCardAberto] = useState<string | null>(null);
+  const [cardAberto, setCardAberto] = useState<string | null>(cardInicial ?? null);
   const [participantes, setParticipantes] = useState(false);
   const [novaColuna, setNovaColuna] = useState("");
   const [reorganizando, setReorganizando] = useState<string | null>(null);

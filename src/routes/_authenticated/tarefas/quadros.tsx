@@ -110,6 +110,7 @@ function QuadrosPage() {
               <Link
                 to="/tarefas/quadros/$quadroId"
                 params={{ quadroId: q.id }}
+                search={{ card: undefined }}
                 className="absolute inset-0 flex flex-col justify-between p-3 text-primary-foreground"
               >
                 <div>
@@ -196,7 +197,7 @@ function QuadrosPage() {
         quadro={dialog?.quadro ?? null}
         somenteParticipantes={dialog?.participantes ?? false}
         onSaved={(id) => {
-          if (!dialog?.quadro) navigate({ to: "/tarefas/quadros/$quadroId", params: { quadroId: id } });
+          if (!dialog?.quadro) navigate({ to: "/tarefas/quadros/$quadroId", params: { quadroId: id }, search: { card: undefined } });
         }}
       />
 

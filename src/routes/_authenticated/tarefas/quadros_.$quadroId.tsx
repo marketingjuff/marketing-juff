@@ -8,6 +8,9 @@ import { canEdit, hasPermission, profileQueryOptions } from "@/lib/auth";
 import { quadroQueryOptions, registrarAberturaQuadro } from "@/lib/tarefas";
 
 export const Route = createFileRoute("/_authenticated/tarefas/quadros_/$quadroId")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    card: typeof s["card"] === "string" ? (s["card"] as string) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Quadro — Marketing Juff" },
@@ -24,6 +27,7 @@ export const Route = createFileRoute("/_authenticated/tarefas/quadros_/$quadroId
 
 function QuadroPage() {
   const { quadroId } = Route.useParams();
+  const { card: cardInicial } = Route.useSearch();
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
   const pode = hasPermission(profile, "tarefas.quadros");
   const navigate = useNavigate();
@@ -55,6 +59,7 @@ function QuadroPage() {
           isAdmin={profile?.role === "admin"}
           meuId={profile?.id ?? ""}
           role={profile?.role}
+          cardInicial={cardInicial}
         />
       ) : (
         <p className="text-sm text-muted-foreground">Carregando...</p>

@@ -126,6 +126,7 @@ export function SinoNotificacoes() {
                     <Link
                       to="/tarefas/quadros/$quadroId"
                       params={{ quadroId: n.quadro_id }}
+                      search={{ card: n.card_id ?? undefined }}
                       className="block hover:bg-muted"
                       onClick={() => {
                         lerOtimista(linha.ids);

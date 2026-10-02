@@ -84,6 +84,7 @@ export function ListaDecisoes({
                 <Link
                   to="/tarefas/quadros/$quadroId"
                   params={{ quadroId: card.quadro_id }}
+                  search={{ card: undefined }}
                   className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
                 >
                   <ExternalLink className="size-3.5" /> Card criado
