@@ -155,6 +155,13 @@
       "when": 1790885390869,
       "tag": "0021_fase4_acesso_quadros",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1790953546427,
+      "tag": "0022_etiquetas_por_quadro",
+      "breakpoints": true
     }
   ]
 }
