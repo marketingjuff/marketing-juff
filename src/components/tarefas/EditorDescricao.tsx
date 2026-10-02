@@ -41,7 +41,7 @@ function Barra({ editor }: { editor: Editor }) {
     <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-muted/30 p-1">
       <select
         className="h-7 rounded border border-border bg-background px-1 text-xs"
-        value={editor.getAttributes("textStyle").fontFamily ?? ""}
+        value={editor.getAttributes("textStyle")["fontFamily"] ?? ""}
         onChange={(e) => (e.target.value ? c().setFontFamily(e.target.value).run() : c().unsetFontFamily().run())}
       >
         {FONTES.map((f) => <option key={f.label} value={f.valor}>{f.label}</option>)}
