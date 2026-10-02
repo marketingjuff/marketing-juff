@@ -43,6 +43,7 @@ import {
   deleteCard,
   deleteComentario,
   deleteItemChecklist,
+  etiquetasDoQuadro,
   etiquetasQueryOptions,
   formatarData,
   formatarTamanho,
@@ -137,6 +138,7 @@ export function CardDialog({
   if (!card) return null;
   const c = localCard && localCard.id === card.id ? localCard : card;
   const mexer = podeMexerNoCard(c, role, meuId, editable);
+  const etiquetasVisiveis = etiquetasDoQuadro(etiquetas, c.quadro_id);
   const nomePessoa = (id: string | null) => pessoas.find((p) => p.id === id)?.nome ?? "Ninguém";
   const invalidar = () => {
     void qc.invalidateQueries({ queryKey: ["tarefas", "quadro", c.quadro_id] });
@@ -537,7 +539,7 @@ export function CardDialog({
             </Campo>
             <Campo label="Etiquetas">
               <div className="flex flex-wrap gap-1">
-                {etiquetas.map((e) => {
+                {etiquetasVisiveis.map((e) => {
                   const on = c.etiquetas.includes(e.id);
                   return (
                     <button
@@ -561,6 +563,11 @@ export function CardDialog({
                     </button>
                   );
                 })}
+                {etiquetasVisiveis.length === 0 ? (
+                  <span className="text-[11px] text-muted-foreground">
+                    Nenhuma etiqueta para este quadro. Crie em Configurações.
+                  </span>
+                ) : null}
               </div>
             </Campo>
             <Campo label="Adiar até">
