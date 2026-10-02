@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Archive, ChevronDown, GripVertical, Pencil, RotateCcw, Tag } from "lucide-react";
+import { Archive, ChevronDown, GripVertical, Pencil, Plus, RotateCcw, Tag } from "lucide-react";
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   AlertDialog,
@@ -26,8 +27,10 @@ import {
   CORES_ETIQUETA,
   HEX_RE,
   arquivarEtiqueta,
+  corSugerida,
   createEtiqueta,
   etiquetasQueryOptions,
+  quadrosQueryOptions,
   reordenarEtiquetas,
   updateEtiqueta,
   type Etiqueta,
@@ -38,7 +41,7 @@ const arquivadasQueryOptions = queryOptions({
   queryFn: async (): Promise<Etiqueta[]> => {
     const { data, error } = await supabase
       .from("tarefa_etiquetas")
-      .select("id, nome, cor, cor_texto, arquivado, posicao")
+      .select("id, nome, cor, cor_texto, arquivado, posicao, quadro_id")
       .eq("arquivado", true)
       .order("nome", { ascending: true });
     if (error) throw error;
@@ -46,12 +49,13 @@ const arquivadasQueryOptions = queryOptions({
   },
 });
 
-function LinhaEtiqueta({ etiqueta, podeEditar, onChanged }: { etiqueta: Etiqueta; podeEditar: boolean; onChanged: () => void }) {
+function LinhaEtiqueta({ etiqueta, quadros, podeEditar, onChanged }: { etiqueta: Etiqueta; quadros: { id: string; nome: string }[]; podeEditar: boolean; onChanged: () => void }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id: etiqueta.id });
   const [editando, setEditando] = useState(false);
   const [nome, setNome] = useState(etiqueta.nome);
   const [cor, setCor] = useState(etiqueta.cor);
   const [corTexto, setCorTexto] = useState(etiqueta.cor_texto);
+  const [quadroId, setQuadroId] = useState<string | null>(etiqueta.quadro_id);
   const [confirmar, setConfirmar] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -73,7 +77,18 @@ function LinhaEtiqueta({ etiqueta, podeEditar, onChanged }: { etiqueta: Etiqueta
   if (editando) {
     return (
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-2">
-        <Input value={nome} onChange={(e) => setNome(e.target.value)} className="h-8 w-48" autoFocus />
+        <Input value={nome} onChange={(e) => setNome(e.target.value.toUpperCase())} className="h-8 w-48" autoFocus />
+        <Select value={quadroId ?? "global"} onValueChange={(v) => setQuadroId(v === "global" ? null : v)}>
+          <SelectTrigger className="h-8 w-40 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="global">Global</SelectItem>
+            {quadros.map((q) => (
+              <SelectItem key={q.id} value={q.id}>{q.nome}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           Fundo <ColorPicker value={cor} onChange={setCor} label="Cor do fundo" presets={CORES_ETIQUETA} />
           Texto <ColorPicker value={corTexto} onChange={setCorTexto} label="Cor do texto" presets={["#ffffff", "#111111", ...CORES_ETIQUETA]} />
@@ -84,7 +99,7 @@ function LinhaEtiqueta({ etiqueta, podeEditar, onChanged }: { etiqueta: Etiqueta
             size="sm"
             disabled={busy || !nome.trim() || !HEX_RE.test(cor)}
             onClick={async () => {
-              if (await run(() => updateEtiqueta(etiqueta.id, { nome: nome.trim(), cor, cor_texto: corTexto }), "Etiqueta atualizada"))
+              if (await run(() => updateEtiqueta(etiqueta.id, { nome: nome.trim().toUpperCase(), cor, cor_texto: corTexto, quadro_id: quadroId }), "Etiqueta atualizada"))
                 setEditando(false);
             }}
           >
@@ -97,6 +112,7 @@ function LinhaEtiqueta({ etiqueta, podeEditar, onChanged }: { etiqueta: Etiqueta
               setNome(etiqueta.nome);
               setCor(etiqueta.cor);
               setCorTexto(etiqueta.cor_texto);
+              setQuadroId(etiqueta.quadro_id);
               setEditando(false);
             }}
           >
@@ -156,36 +172,54 @@ export function PainelEtiquetas() {
   const podeEditar = canEdit(profile, "tarefas.quadros");
   const { data: ativas = [] } = useQuery(etiquetasQueryOptions);
   const { data: arquivadas = [] } = useQuery(arquivadasQueryOptions);
+  const { data: quadros = [] } = useQuery(quadrosQueryOptions);
+  const [grupoNovo, setGrupoNovo] = useState<string | null>(null);
   const [nome, setNome] = useState("");
   const [cor, setCor] = useState(CORES_ETIQUETA[0]!);
   const [corTexto, setCorTexto] = useState("#ffffff");
   const [salvando, setSalvando] = useState(false);
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ["tarefas", "etiquetas"] });
-  const ordenadas = ativas;
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+  const grupos = [
+    { id: null as string | null, nome: "Globais", itens: ativas.filter((e) => e.quadro_id === null) },
+    ...quadros.map((q) => ({ id: q.id as string | null, nome: q.nome, itens: ativas.filter((e) => e.quadro_id === q.id) })),
+  ];
 
   function onDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const de = ordenadas.findIndex((e) => e.id === active.id);
-    const para = ordenadas.findIndex((e) => e.id === over.id);
+    const arrastada = ativas.find((e) => e.id === active.id);
+    const alvo = ativas.find((e) => e.id === over.id);
+    if (!arrastada || !alvo) return;
+    if ((arrastada.quadro_id ?? null) !== (alvo.quadro_id ?? null)) return;
+    const doGrupo = ativas.filter((e) => (e.quadro_id ?? null) === (arrastada.quadro_id ?? null));
+    const de = doGrupo.findIndex((e) => e.id === active.id);
+    const para = doGrupo.findIndex((e) => e.id === over.id);
     if (de < 0 || para < 0) return;
-    const nova = arrayMove(ordenadas, de, para);
-    qc.setQueryData(etiquetasQueryOptions.queryKey, nova);
-    reordenarEtiquetas(nova.map((e) => e.id)).catch((e) => {
+    const fila = arrayMove(doGrupo, de, para).map((e) => e.id);
+    const atualizada = ativas
+      .map((e) => {
+        if ((e.quadro_id ?? null) !== (arrastada.quadro_id ?? null)) return e;
+        const idx = fila.indexOf(e.id);
+        return idx >= 0 ? { ...e, posicao: idx + 1 } : e;
+      })
+      .sort((x, y) => x.posicao - y.posicao);
+    qc.setQueryData(etiquetasQueryOptions.queryKey, atualizada);
+    reordenarEtiquetas(fila).catch((e) => {
       toast.error((e as Error).message);
       invalidar();
     });
   }
 
-  async function criar() {
+  async function criar(emQuadro: string | null = grupoNovo) {
     if (!nome.trim() || !HEX_RE.test(cor) || !HEX_RE.test(corTexto)) return;
     setSalvando(true);
     try {
-      await createEtiqueta(nome, cor, corTexto);
+      await createEtiqueta(nome, cor, corTexto, emQuadro);
       toast.success("Etiqueta criada");
       setNome("");
+      setCor(corSugerida([...ativas, { ...(ativas[0] ?? {}), cor, quadro_id: emQuadro } as Etiqueta], emQuadro));
       invalidar();
     } catch (e) {
       toast.error((e as Error).message);
@@ -212,8 +246,27 @@ export function PainelEtiquetas() {
           disabled={!podeEditar}
           placeholder="Nome da etiqueta"
           className="h-8 w-48"
-          onChange={(e) => setNome(e.target.value)}
+          id="campo-nome-etiqueta"
+          onChange={(e) => setNome(e.target.value.toUpperCase())}
         />
+        <Select
+          value={grupoNovo ?? "global"}
+          onValueChange={(v) => {
+            const alvo = v === "global" ? null : v;
+            setGrupoNovo(alvo);
+            setCor(corSugerida(ativas, alvo));
+          }}
+        >
+          <SelectTrigger className="h-8 w-44 text-xs" disabled={!podeEditar}>
+            <SelectValue placeholder="Onde vale" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="global">Global, todos os quadros</SelectItem>
+            {quadros.map((q) => (
+              <SelectItem key={q.id} value={q.id}>{q.nome}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
          <div className="flex items-center gap-2 text-xs text-muted-foreground">
            Fundo <ColorPicker value={cor} onChange={setCor} disabled={!podeEditar} label="Cor do fundo" presets={CORES_ETIQUETA} />
            Texto <ColorPicker value={corTexto} onChange={setCorTexto} disabled={!podeEditar} label="Cor do texto" presets={["#ffffff", "#111111", ...CORES_ETIQUETA]} />
@@ -225,17 +278,50 @@ export function PainelEtiquetas() {
       </form>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <SortableContext items={ordenadas.map((e) => e.id)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-1.5">
-            {ordenadas.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhuma etiqueta cadastrada.</p>
-            ) : (
-              ordenadas.map((e) => (
-                 <LinhaEtiqueta key={`${e.id}-${e.nome}-${e.cor}-${e.cor_texto}`} etiqueta={e} podeEditar={podeEditar} onChanged={invalidar} />
-              ))
-            )}
-          </div>
-        </SortableContext>
+        <div className="space-y-4">
+          {grupos.map((g) => (
+            <div key={g.id ?? "global"} className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-medium">
+                  {g.nome}
+                  <span className="ml-1.5 text-xs font-normal text-muted-foreground">{g.itens.length}</span>
+                </h3>
+                {g.id === null ? <span className="text-[11px] text-muted-foreground">valem em qualquer quadro</span> : null}
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="ml-auto size-7"
+                  disabled={!podeEditar}
+                  aria-label={`Criar etiqueta em ${g.nome}`}
+                  onClick={() => {
+                    setGrupoNovo(g.id);
+                    setCor(corSugerida(ativas, g.id));
+                    document.getElementById("campo-nome-etiqueta")?.focus();
+                  }}
+                >
+                  <Plus className="size-4" />
+                </Button>
+              </div>
+              <SortableContext items={g.itens.map((e) => e.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-1.5">
+                  {g.itens.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Nenhuma etiqueta neste grupo.</p>
+                  ) : (
+                    g.itens.map((e) => (
+                      <LinhaEtiqueta
+                        key={`${e.id}-${e.nome}-${e.cor}-${e.cor_texto}-${e.quadro_id ?? "g"}`}
+                        etiqueta={e}
+                        quadros={quadros}
+                        podeEditar={podeEditar}
+                        onChanged={invalidar}
+                      />
+                    ))
+                  )}
+                </div>
+              </SortableContext>
+            </div>
+          ))}
+        </div>
       </DndContext>
 
       <Collapsible>
@@ -246,6 +332,9 @@ export function PainelEtiquetas() {
           {arquivadas.map((e) => (
             <div key={e.id} className="flex items-center gap-2 rounded-lg border border-border px-2 py-1.5">
                <span className="min-w-0 flex-1 truncate rounded px-2 py-1 text-xs font-medium" style={{ backgroundColor: e.cor, color: e.cor_texto }}>{e.nome}</span>
+              <span className="shrink-0 text-[11px] text-muted-foreground">
+                {e.quadro_id ? (quadros.find((q) => q.id === e.quadro_id)?.nome ?? "quadro removido") : "Global"}
+              </span>
               <Button
                 size="sm"
                 variant="outline"
