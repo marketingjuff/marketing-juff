@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const FILTRO_PADRAO: Genero[] = ["masculino", "feminino", "infantil"];
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Amostra, Bolinha, EscolherCorEstampa, hexDoCodigo, useCoresEstampa } from "@/components/biblioteca/EstampaVisual";
+import { Bolinha, CardCombo, type TamanhoCard, EscolherCorEstampa, hexDoCodigo, useCoresEstampa } from "@/components/biblioteca/EstampaVisual";
 import { coresQueryOptions } from "@/lib/biblioteca";
 import {
   GENEROS,
@@ -30,8 +32,61 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
   const [busca, setBusca] = useState("");
   const [editando, setEditando] = useState<Combo | "novo" | null>(null);
   const q = busca.trim().toUpperCase();
-  const filtrados = combos.filter((c) => !q || c.codigo.toUpperCase().includes(q));
-  const corPorId = new Map(cores.map((c) => [c.id, c]));
+  const filtrados = useMemo(() => combos.filter((c) => !q || c.codigo.toUpperCase().includes(q)), [combos, q]);
+  const corPorId = useMemo(() => new Map(cores.map((c) => [c.id, c])), [cores]);
+  const [filtro, setFiltro] = useState<Genero[]>(FILTRO_PADRAO);
+  const [tamanho, setTamanho] = useState<TamanhoCard>("m");
+  const [verUso, setVerUso] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      const f = JSON.parse(localStorage.getItem("juff:combos:filtro") ?? "null");
+      if (Array.isArray(f)) setFiltro(f.filter((x) => GENEROS.includes(x)));
+      const t = localStorage.getItem("juff:combos:tamanho");
+      if (t === "p" || t === "m" || t === "g") setTamanho(t);
+    } catch { /* ignora */ }
+  }, []);
+  function alternar(g: Genero) {
+    const n = filtro.includes(g) ? filtro.filter((x) => x !== g) : [...filtro, g];
+    setFiltro(n);
+    localStorage.setItem("juff:combos:filtro", JSON.stringify(n));
+  }
+  function mudarTamanho(t: TamanhoCard) {
+    setTamanho(t);
+    localStorage.setItem("juff:combos:tamanho", t);
+  }
+  const secoes = useMemo(() => {
+    const num = (c: string) => parseInt(c.replace(/\D/g, ""), 10) || 0;
+    const so = filtro.length === 1 && filtro[0] === "unissex";
+    const defs: { chave: string; rotulo: string; itens: { combo: Combo; uni: boolean }[] }[] = [];
+    const base = (["masculino", "feminino", "infantil"] as const).filter((g) => filtro.includes(g));
+    for (const g of base) {
+      defs.push({
+        chave: g,
+        rotulo: ROTULO_GENERO[g],
+        itens: filtrados
+          .filter((c) => c.genero === g || (!so && g !== "infantil" && c.genero === "unissex"))
+          .map((c) => ({ combo: c, uni: c.genero === "unissex" })),
+      });
+    }
+    if (filtro.includes("unissex")) defs.push({ chave: "unissex", rotulo: ROTULO_GENERO.unissex, itens: filtrados.filter((c) => c.genero === "unissex").map((c) => ({ combo: c, uni: false })) });
+    return defs
+      .filter((d) => d.itens.length)
+      .map((d) => {
+        const porCor = new Map<string, { combo: Combo; uni: boolean }[]>();
+        for (const it of d.itens) {
+          const k = it.combo.cor_id ?? "";
+          porCor.set(k, [...(porCor.get(k) ?? []), it]);
+        }
+        const faixas = [...porCor.entries()].map(([cid, lista]) => ({
+          cid,
+          lista: lista.sort((x, y) => y.combo.uso - x.combo.uso || num(x.combo.codigo) - num(y.combo.codigo)),
+          soma: lista.reduce((s, x) => s + x.combo.uso, 0),
+          nome: corPorId.get(cid)?.nome ?? "",
+        }));
+        faixas.sort((x, y) => y.soma - x.soma || y.lista.length - x.lista.length || x.nome.localeCompare(y.nome));
+        return { chave: d.chave, rotulo: d.rotulo, faixas, total: d.itens.length };
+      });
+  }, [filtrados, filtro, corPorId]);
 
   function apagar(c: Combo) {
     const msg = c.uso ? `O combo ${c.codigo} está em ${c.uso} estampa(s). As receitas continuam com as mesmas cores, só perdem o código. Apagar?` : `Apagar o combo ${c.codigo}?`;
@@ -52,7 +107,15 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
           <span className="shrink-0 text-xs text-muted-foreground">{combos.length} no catálogo</span>
         </div>
         {editavel ? <Button size="sm" className="shrink-0 gap-1 sm:order-3" onClick={() => setEditando("novo")}><Plus className="size-4" /> Novo combo</Button> : null}
-        <Input placeholder="Buscar código" value={busca} onChange={(e) => setBusca(e.target.value)} className="col-span-2 h-8 w-full sm:ml-auto sm:w-40" />
+        <div className="col-span-2 flex flex-wrap items-center gap-1 sm:order-2 sm:ml-auto">
+          {(["masculino", "feminino", "infantil", "unissex"] as const).map((g) => (
+            <Button key={g} size="sm" variant={filtro.includes(g) ? "default" : "outline"} className="h-8 px-2.5 text-xs" onClick={() => alternar(g)}>{ROTULO_GENERO[g]}</Button>
+          ))}
+          <select className="h-8 rounded-md border border-input bg-background px-2 text-xs" value={tamanho} onChange={(e) => mudarTamanho(e.target.value as TamanhoCard)} title="Tamanho dos cards">
+            <option value="p">Pequeno</option><option value="m">Médio</option><option value="g">Grande</option>
+          </select>
+        </div>
+        <Input placeholder="Buscar código" value={busca} onChange={(e) => setBusca(e.target.value)} className="col-span-2 h-8 w-full sm:order-2 sm:w-40" />
       </div>
       {editando ? (
         <FormCombo
@@ -62,59 +125,45 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
           onPronto={() => { setEditando(null); void qc.invalidateQueries({ queryKey: K }); }}
         />
       ) : null}
-      {GENEROS.map((g) => {
-        const doGenero = filtrados.filter((c) => c.genero === g);
-        if (!doGenero.length) return null;
-        const porCor = new Map<string, Combo[]>();
-        for (const c of doGenero) {
-          const k = c.cor_id ?? "";
-          porCor.set(k, [...(porCor.get(k) ?? []), c]);
-        }
-        return (
-          <section key={g} className="space-y-1.5">
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{ROTULO_GENERO[g]} · {doGenero.length}</h4>
-            {[...porCor.entries()].map(([cid, lista]) => {
-              const cor = corPorId.get(cid);
-              return (
-                <div key={cid} className="rounded-lg border border-border p-1.5">
-                  <div className="mb-1 flex items-center gap-1.5 px-0.5 text-xs font-medium capitalize"><Bolinha hex={cor?.hex ?? null} tamanho={11} /> {cor?.nome ?? "Sem cor de camiseta"} <span className="text-muted-foreground">· {lista.length}</span></div>
-                  <div className="grid gap-1 sm:grid-cols-2">
-                    {lista.map((c) => (
-                      <div key={c.id} className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-background px-2 py-1" title={c.itens.map((it) => `${it.codigo} ${textoCmykItem(it)}`).join(" · ")}>
-                        <span className="shrink-0 text-xs font-semibold">{c.codigo}</span>
-                        <Amostra fundo={cor?.hex ?? "#888888"} itens={c.itens} porCodigo={porCodigo} />
-                        <div className="flex min-w-0 flex-1 items-center gap-x-2 overflow-hidden whitespace-nowrap">
-                          {c.itens.map((it, i) => (
-                            <span key={i} className="flex shrink-0 items-center gap-1 text-[11px] leading-4">
-                              <Bolinha hex={hexDoCodigo(porCodigo, it.codigo)} tamanho={10} />
-                              <strong>{it.codigo}</strong>
-                              <span className="tabular-nums text-muted-foreground">{textoCmykItem(it)}</span>
-                            </span>
-                          ))}
+      {secoes.map(({ chave, rotulo, faixas, total }) => (
+        <section key={chave} className="space-y-1.5">
+          <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{rotulo} · {total}</h4>
+          {faixas.map(({ cid, lista }) => {
+            const cor = corPorId.get(cid);
+            return (
+              <div key={cid} className="rounded-lg border border-border p-1.5">
+                <div className="mb-1 flex items-center gap-1.5 px-0.5 text-xs font-medium capitalize"><Bolinha hex={cor?.hex ?? null} tamanho={11} /> {cor?.nome ?? "Sem cor de camiseta"} <span className="text-muted-foreground">· {lista.length}</span></div>
+                <div className="flex flex-wrap gap-1.5">
+                  {lista.map(({ combo: c, uni }) => (
+                    <Popover key={c.id} open={verUso === `${chave}:${c.id}`} onOpenChange={(o) => setVerUso(o ? `${chave}:${c.id}` : null)}>
+                      <PopoverTrigger asChild>
+                        <div className="relative">
+                          <CardCombo
+                            codigo={c.codigo}
+                            fundo={cor?.hex ?? "#888888"}
+                            itens={c.itens}
+                            porCodigo={porCodigo}
+                            tamanho={tamanho}
+                            uso={c.uso}
+                            onVerUso={() => setVerUso(`${chave}:${c.id}`)}
+                            marcaUni={uni}
+                            title={c.itens.map((it) => `${it.codigo} ${textoCmykItem(it)}`).join(" · ")}
+                            onClick={editavel ? () => setEditando(c) : undefined}
+                          />
+                          {editavel ? <Button variant="ghost" size="icon" className="absolute bottom-0.5 right-0.5 size-5 bg-background/80" title="Apagar combo" onClick={(e) => { e.stopPropagation(); apagar(c); }}><Trash2 className="size-3" /></Button> : null}
                         </div>
-                        {c.uso > 0 ? (
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <button type="button" className="shrink-0 text-[10px] leading-4 text-primary hover:underline" title="Ver estampas que usam este combo">{c.uso}×</button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-56 text-sm">
-                              <ul className="space-y-0.5">{c.estampas.map((e) => <li key={e}>{e}</li>)}</ul>
-                            </PopoverContent>
-                          </Popover>
-                        ) : null}
-                        <div className="shrink-0">
-                          {editavel ? <Button variant="ghost" size="icon" className="size-6" title="Editar combo" onClick={() => setEditando(c)}><Pencil className="size-3" /></Button> : null}
-                          {editavel ? <Button variant="ghost" size="icon" className="size-6" title="Apagar combo" onClick={() => apagar(c)}><Trash2 className="size-3" /></Button> : null}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-56 text-sm" onOpenAutoFocus={(e) => e.preventDefault()}>
+                        <ul className="space-y-0.5">{c.estampas.map((e) => <li key={e}>{e}</li>)}</ul>
+                      </PopoverContent>
+                    </Popover>
+                  ))}
                 </div>
-              );
-            })}
-          </section>
-        );
-      })}
+              </div>
+            );
+          })}
+        </section>
+      ))}
     </div>
   );
 }
