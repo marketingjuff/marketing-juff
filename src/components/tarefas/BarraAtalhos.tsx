@@ -1,39 +1,60 @@
-import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pin, PinOff, X } from "lucide-react";
+import { X } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
+import { masterDoCaminho } from "@/config/navigation";
 import {
-  atalhosQuadrosQueryOptions,
-  fixarQuadro,
-  fundoCss,
-  type AtalhoQuadro,
-} from "@/lib/tarefas";
-import {
+  CHAVE_BARRA,
   MIME_ATALHO,
-  atalhosPaginasQueryOptions,
+  atalhosBarraQueryOptions,
   criarAtalhoPagina,
+  criarAtalhoQuadro,
   excluirAtalhoPagina,
-  type AtalhoPagina,
+  limparRotulo,
+  renomearAtalho,
+  reordenarAtalhos,
+  type AtalhoBarra,
+  type ConteudoArrasto,
 } from "@/lib/atalhos-paginas";
 
-const CHAVE_PAG = ["atalhos-paginas"];
+const CINZA = "#b3b3b3";
+const MIME_MOVER = "application/x-juff-atalho-mover";
+
+/** Cor do anel: hexadecimal minúsculo; claro demais vira cinza. */
+function corAnel(hex: string | null | undefined): string {
+  const h = (hex ?? "").toLowerCase();
+  if (!/^#[0-9a-f]{6}$/.test(h)) return CINZA;
+  const c = [1, 3, 5].map((i) => {
+    const v = parseInt(h.slice(i, i + 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  });
+  const lum = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  return lum > 0.82 ? CINZA : h;
+}
+
+function corDoAtalho(a: AtalhoBarra): string {
+  if (a.quadro_id) return corAnel(a.quadro_cor);
+  return corAnel(a.destino ? masterDoCaminho(a.destino)?.cor : null);
+}
 
 export function BarraAtalhos() {
   const queryClient = useQueryClient();
-  const { data } = useQuery(atalhosQuadrosQueryOptions);
-  const { data: paginas = [] } = useQuery(atalhosPaginasQueryOptions);
-  const atalhos = data ?? [];
+  const { data: itens = [] } = useQuery(atalhosBarraQueryOptions);
+  const caminho = useRouterState({ select: (s) => s.location.pathname });
   const [arrastando, setArrastando] = useState(false);
   const [sobre, setSobre] = useState(false);
+  const [editando, setEditando] = useState<string | null>(null);
+  const movendo = useRef<string | null>(null);
 
   useEffect(() => {
     const ini = (e: DragEvent) => {
-      if (e.dataTransfer?.types.includes(MIME_ATALHO)) setArrastando(true);
+      const t = e.dataTransfer?.types ?? [];
+      if (t.includes(MIME_ATALHO) && !t.includes(MIME_MOVER)) setArrastando(true);
     };
-    const fim = () => { setArrastando(false); setSobre(false); };
+    const fim = () => { setArrastando(false); setSobre(false); movendo.current = null; };
     document.addEventListener("dragstart", ini);
     document.addEventListener("dragend", fim);
     document.addEventListener("drop", fim);
@@ -44,124 +65,166 @@ export function BarraAtalhos() {
     };
   }, []);
 
-  const mostrar = arrastando || paginas.length > 0 || atalhos.length >= 2;
-  if (!mostrar) return null;
-
-  async function alternar(atalho: AtalhoQuadro) {
-    const anterior = queryClient.getQueryData<AtalhoQuadro[]>(["tarefas", "atalhos"]);
-    queryClient.setQueryData<AtalhoQuadro[]>(["tarefas", "atalhos"], (atual) =>
-      (atual ?? []).map((a) =>
-        a.quadro_id === atalho.quadro_id ? { ...a, fixado: !a.fixado } : a,
-      ),
-    );
-    try {
-      await fixarQuadro(atalho.quadro_id, !atalho.fixado);
-      queryClient.invalidateQueries({ queryKey: ["tarefas", "atalhos"] });
-    } catch (error) {
-      if (anterior) queryClient.setQueryData(["tarefas", "atalhos"], anterior);
-      toast.error((error as Error).message);
-    }
-  }
+  const atual = () => queryClient.getQueryData<AtalhoBarra[]>(CHAVE_BARRA) ?? [];
+  const invalidar = () => void queryClient.invalidateQueries({ queryKey: CHAVE_BARRA });
 
   function soltar(e: React.DragEvent) {
     e.preventDefault();
     setSobre(false);
     setArrastando(false);
+    if (e.dataTransfer.types.includes(MIME_MOVER)) return;
     const bruto = e.dataTransfer.getData(MIME_ATALHO);
     if (!bruto) return;
-    const { destino, label } = JSON.parse(bruto) as { destino: string; label: string };
-    if (paginas.some((p) => p.destino === destino)) return;
-    const anterior = queryClient.getQueryData<AtalhoPagina[]>(CHAVE_PAG);
-    const posicao = paginas.length;
-    queryClient.setQueryData<AtalhoPagina[]>(CHAVE_PAG, [
-      ...(anterior ?? []),
-      { id: `tmp-${destino}`, destino, label, posicao },
-    ]);
-    criarAtalhoPagina(destino, label, posicao)
-      .then(() => void queryClient.invalidateQueries({ queryKey: CHAVE_PAG }))
-      .catch(() => {
-        queryClient.setQueryData(CHAVE_PAG, anterior);
-        toast.error("Não deu para criar o atalho");
-      });
+    let c: ConteudoArrasto;
+    try { c = JSON.parse(bruto); } catch { return; }
+    const anterior = atual();
+    const posicao = anterior.length ? Math.max(...anterior.map((a) => a.posicao)) + 1 : 0;
+    let promessa: Promise<void>;
+    let novo: AtalhoBarra;
+    if (c.tipo === "quadro") {
+      if (anterior.some((a) => a.quadro_id === c.quadro_id)) return;
+      novo = { id: `tmp-${c.quadro_id}`, posicao, label: limparRotulo(c.label), destino: null, quadro_id: c.quadro_id, quadro_cor: c.cor ?? null, quadro_arquivado: false };
+      promessa = criarAtalhoQuadro(c.quadro_id, novo.label, posicao);
+    } else if (c.tipo === "pagina") {
+      if (anterior.some((a) => a.destino === c.destino)) return;
+      novo = { id: `tmp-${c.destino}`, posicao, label: limparRotulo(c.label), destino: c.destino, quadro_id: null, quadro_cor: null, quadro_arquivado: false };
+      promessa = criarAtalhoPagina(c.destino, novo.label, posicao);
+    } else return;
+    queryClient.setQueryData<AtalhoBarra[]>(CHAVE_BARRA, [...anterior, novo]);
+    promessa.then(invalidar).catch(() => {
+      queryClient.setQueryData(CHAVE_BARRA, anterior);
+      toast.error("Não deu para criar o atalho");
+    });
   }
 
-  function remover(p: AtalhoPagina) {
-    const anterior = queryClient.getQueryData<AtalhoPagina[]>(CHAVE_PAG);
-    queryClient.setQueryData<AtalhoPagina[]>(CHAVE_PAG, (anterior ?? []).filter((x) => x.id !== p.id));
-    excluirAtalhoPagina(p.id).catch(() => {
-      queryClient.setQueryData(CHAVE_PAG, anterior);
+  function remover(a: AtalhoBarra) {
+    const anterior = atual();
+    queryClient.setQueryData<AtalhoBarra[]>(CHAVE_BARRA, anterior.filter((x) => x.id !== a.id));
+    excluirAtalhoPagina(a.id).catch(() => {
+      queryClient.setQueryData(CHAVE_BARRA, anterior);
       toast.error("Não deu para remover");
     });
   }
 
+  function moverSobre(alvoId: string) {
+    const origem = movendo.current;
+    if (!origem || origem === alvoId) return;
+    const lista = [...atual()];
+    const de = lista.findIndex((a) => a.id === origem);
+    const para = lista.findIndex((a) => a.id === alvoId);
+    if (de < 0 || para < 0) return;
+    const [item] = lista.splice(de, 1);
+    lista.splice(para, 0, item);
+    queryClient.setQueryData<AtalhoBarra[]>(CHAVE_BARRA, lista.map((a, i) => ({ ...a, posicao: i })));
+  }
+
+  function finalizarMover() {
+    if (!movendo.current) return;
+    movendo.current = null;
+    const lista = atual();
+    if (lista.some((a) => a.id.startsWith("tmp-"))) return;
+    reordenarAtalhos(lista.map((a) => a.id)).catch(() => {
+      invalidar();
+      toast.error("Não deu para salvar a ordem");
+    });
+  }
+
+  function renomear(a: AtalhoBarra, texto: string) {
+    setEditando(null);
+    const limpo = limparRotulo(texto);
+    if (!limpo || limpo === a.label) return;
+    const anterior = atual();
+    queryClient.setQueryData<AtalhoBarra[]>(CHAVE_BARRA, anterior.map((x) => (x.id === a.id ? { ...x, label: limpo } : x)));
+    renomearAtalho(a.id, limpo).catch(() => {
+      queryClient.setQueryData(CHAVE_BARRA, anterior);
+      toast.error("Não deu para renomear");
+    });
+  }
+
   const chip =
-    "flex max-w-[9rem] items-center gap-1.5 rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground";
+    "group relative flex items-center rounded-full border bg-card px-2 py-px text-xs font-normal text-muted-foreground transition-colors hover:text-foreground";
 
   return (
     <ul
       onDragOver={(e) => {
         if (!e.dataTransfer.types.includes(MIME_ATALHO)) return;
         e.preventDefault();
+        if (e.dataTransfer.types.includes(MIME_MOVER)) return;
         e.dataTransfer.dropEffect = "copy";
         setSobre(true);
       }}
       onDragLeave={() => setSobre(false)}
       onDrop={soltar}
       className={cn(
-        "flex min-h-8 items-center gap-1 overflow-x-auto rounded-md py-1.5 transition-colors",
+        "flex min-h-8 flex-wrap items-center gap-1 rounded-md py-1.5 transition-colors",
         arrastando && "outline-dashed outline-1 outline-primary",
         sobre && "bg-primary-soft",
       )}
     >
-      {paginas.map((p) => (
-        <li key={p.id} className="group flex shrink-0 items-center">
-          <Link
-            to={p.destino}
-            title={p.label}
-            className={chip}
-            activeProps={{ className: "border-primary bg-primary-soft text-foreground font-medium" }}
+      {itens.map((a) => {
+        const ativo = a.quadro_id
+          ? caminho === `/tarefas/quadros/${a.quadro_id}`
+          : caminho === a.destino;
+        const estilo = { borderColor: corDoAtalho(a) };
+        const classe = cn(chip, ativo && "bg-primary-soft text-primary");
+        return (
+          <li
+            key={a.id}
+            draggable={editando !== a.id}
+            onDragStart={(e) => {
+              movendo.current = a.id;
+              e.dataTransfer.setData(MIME_ATALHO, JSON.stringify({ tipo: "mover", id: a.id }));
+              e.dataTransfer.setData(MIME_MOVER, a.id);
+              e.dataTransfer.effectAllowed = "move";
+            }}
+            onDragEnter={() => moverSobre(a.id)}
+            onDragEnd={finalizarMover}
+            onDoubleClick={(e) => { e.preventDefault(); setEditando(a.id); }}
           >
-            <span className="truncate">{p.label}</span>
-          </Link>
-          <button
-            type="button"
-            onClick={() => remover(p)}
-            aria-label={`Remover ${p.label}`}
-            title="Remover da barra"
-            className="ml-0.5 shrink-0 rounded-full p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus:opacity-100 group-hover:opacity-100"
-          >
-            <X className="size-3" />
-          </button>
-        </li>
-      ))}
-      {atalhos.length >= 2 &&
-        atalhos.map((a) => (
-          <li key={a.quadro_id} className="group flex shrink-0 items-center">
-            <Link
-              to="/tarefas/quadros/$quadroId"
-              params={{ quadroId: a.quadro_id }}
-              search={{ card: undefined }}
-              title={a.nome}
-              className={chip}
-              activeProps={{ className: "border-primary bg-primary-soft text-foreground font-medium" }}
-            >
-              <span className="size-2.5 shrink-0 rounded-full" style={{ background: fundoCss(a) }} />
-              <span className="truncate">{a.nome}</span>
-            </Link>
-            <button
-              type="button"
-              onClick={() => alternar(a)}
-              aria-label={a.fixado ? `Soltar ${a.nome}` : `Fixar ${a.nome}`}
-              title={a.fixado ? "Soltar da barra" : "Fixar na barra"}
-              className={cn(
-                "ml-0.5 shrink-0 rounded-full p-0.5 text-muted-foreground transition-opacity hover:text-foreground",
-                a.fixado ? "opacity-100 text-foreground" : "opacity-0 group-hover:opacity-100 focus:opacity-100",
-              )}
-            >
-              {a.fixado ? <Pin className="size-3" /> : <PinOff className="size-3" />}
-            </button>
+            {editando === a.id ? (
+              <span className={classe} style={estilo}>
+                <input
+                  autoFocus
+                  defaultValue={a.label}
+                  maxLength={40}
+                  size={Math.max(a.label.length, 3)}
+                  onFocus={(e) => e.currentTarget.select()}
+                  onBlur={(e) => renomear(a, e.currentTarget.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") e.currentTarget.blur();
+                    if (e.key === "Escape") setEditando(null);
+                  }}
+                  className="bg-transparent text-xs text-foreground outline-none"
+                />
+              </span>
+            ) : (
+              <Link
+                to={a.quadro_id ? "/tarefas/quadros/$quadroId" : (a.destino ?? "/")}
+                params={a.quadro_id ? { quadroId: a.quadro_id } : undefined}
+                search={a.quadro_id ? { card: undefined } : undefined}
+                title={a.label}
+                draggable={false}
+                className={classe}
+                style={estilo}
+              >
+                <span className="max-w-[12rem] truncate">{a.label}</span>
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); remover(a); }}
+                  aria-label={`Remover ${a.label}`}
+                  title="Remover da barra"
+                  className="absolute -right-1 -top-1 hidden rounded-full border border-border bg-card p-px text-muted-foreground hover:text-destructive group-hover:block"
+                >
+                  <X className="size-2.5" />
+                </button>
+              </Link>
+            )}
           </li>
-        ))}
+        );
+      })}
+      {itens.length === 0 && !arrastando ? (
+        <li className="px-1 text-xs text-muted-foreground/60">Arraste um quadro ou uma aba para cá</li>
+      ) : null}
       {arrastando ? (
         <li className="shrink-0 px-2 text-xs text-muted-foreground">Solte aqui para criar um atalho</li>
       ) : null}
