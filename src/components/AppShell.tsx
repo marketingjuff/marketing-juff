@@ -37,7 +37,9 @@ export function AppShell({
   /** "ampla" aproveita melhor monitores grandes. */
   largura?: "padrao" | "ampla";
 }) {
-  const larguraClasse = largura === "ampla" ? "max-w-[110rem]" : "max-w-7xl";
+  void largura;
+  /** Mesma largura em todas as telas, para o topo não pular ao trocar de aba. */
+  const larguraClasse = "max-w-[110rem]";
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
   const router = useRouter();
   const caminho = useRouterState({ select: (s) => s.location.pathname });
