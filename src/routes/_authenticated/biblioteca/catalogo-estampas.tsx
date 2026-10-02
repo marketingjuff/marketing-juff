@@ -6,6 +6,7 @@ import { ArrowLeft, Copy, Download, FileText, ImagePlus, Plus, Save, Shuffle, Sp
 import { AppShell } from "@/components/AppShell";
 import { Bloco, CampoAutoSave } from "@/components/biblioteca/comum";
 import { Amostra, Bolinha, EscolherCorEstampa, hexDoCodigo, useCoresEstampa } from "@/components/biblioteca/EstampaVisual";
+import { PainelCombos } from "@/components/biblioteca/PainelCombos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -99,6 +100,7 @@ function Lista({ editavel }: { editavel: boolean }) {
   const { data: cores = [] } = useQuery(coresQueryOptions);
   const [busca, setBusca] = useState("");
   const [novo, setNovo] = useState("");
+  const [visao, setVisao] = useState<"estampas" | "combos">("estampas");
   const imgs = estampas.map((e) => e.imagem_caminho).filter(Boolean) as string[];
   const { data: urls = {} } = useQuery(urlsEstampaQueryOptions(imgs));
 
@@ -126,6 +128,26 @@ function Lista({ editavel }: { editavel: boolean }) {
 
   return (
     <div className="space-y-4">
+      <div className="flex gap-1 border-b border-border">
+        <Button
+          type="button"
+          variant="ghost"
+          className={cn("rounded-b-none", visao === "estampas" && "border-b-2 border-primary text-foreground")}
+          onClick={() => setVisao("estampas")}
+        >
+          Estampas
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          className={cn("rounded-b-none", visao === "combos" && "border-b-2 border-primary text-foreground")}
+          onClick={() => setVisao("combos")}
+        >
+          Combos de cores
+        </Button>
+      </div>
+      {visao === "combos" ? <PainelCombos editavel={editavel} /> : (
+        <>
       <div className="flex flex-wrap items-center gap-2">
         <Input placeholder="Buscar estampa" value={busca} onChange={(e) => setBusca(e.target.value)} className="h-9 max-w-xs" />
         {editavel ? (
@@ -162,6 +184,8 @@ function Lista({ editavel }: { editavel: boolean }) {
           </div>
         </Bloco>
       ))}
+        </>
+      )}
     </div>
   );
 }

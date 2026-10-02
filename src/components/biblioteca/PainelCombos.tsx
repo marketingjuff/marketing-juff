@@ -22,7 +22,7 @@ import {
 
 const K = combosQueryOptions.queryKey;
 
-export function PainelCombos() {
+export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
   const qc = useQueryClient();
   const { data: combos = [] } = useQuery(combosQueryOptions);
   const { data: cores = [] } = useQuery(coresQueryOptions);
@@ -50,7 +50,7 @@ export function PainelCombos() {
         <h3 className="text-sm font-semibold">Combos de estampa</h3>
         <span className="text-sm text-muted-foreground">{combos.length} no catálogo</span>
         <Input placeholder="Buscar código" value={busca} onChange={(e) => setBusca(e.target.value)} className="ml-auto h-8 w-40" />
-        <Button size="sm" className="gap-1" onClick={() => setEditando("novo")}><Plus className="size-4" /> Novo combo</Button>
+        {editavel ? <Button size="sm" className="gap-1" onClick={() => setEditando("novo")}><Plus className="size-4" /> Novo combo</Button> : null}
       </div>
       {editando ? (
         <FormCombo
@@ -83,8 +83,8 @@ export function PainelCombos() {
                           <span className="text-sm font-semibold">{c.codigo}</span>
                           <Amostra fundo={cor?.hex ?? "#888888"} itens={c.itens} porCodigo={porCodigo} />
                           <div className="ml-auto flex">
-                            <Button variant="ghost" size="icon" className="size-7" onClick={() => setEditando(c)}><Pencil className="size-3.5" /></Button>
-                            <Button variant="ghost" size="icon" className="size-7" onClick={() => apagar(c)}><Trash2 className="size-3.5" /></Button>
+                            {editavel ? <Button variant="ghost" size="icon" className="size-7" onClick={() => setEditando(c)}><Pencil className="size-3.5" /></Button> : null}
+                            {editavel ? <Button variant="ghost" size="icon" className="size-7" onClick={() => apagar(c)}><Trash2 className="size-3.5" /></Button> : null}
                           </div>
                         </div>
                         {c.itens.map((it, i) => (

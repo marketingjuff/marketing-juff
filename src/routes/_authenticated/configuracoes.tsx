@@ -29,7 +29,6 @@ import { PainelMeuDia } from "@/components/config/PainelMeuDia";
 import { PainelCamposEstrategia } from "@/components/config/PainelCamposEstrategia";
 import { PainelNotificacoes } from "@/components/config/PainelNotificacoes";
 import { PainelCoresProduto } from "@/components/config/PainelCoresProduto";
-import { PainelCombos } from "@/components/config/PainelCombos";
 import { MinhaBolinha } from "@/components/config/MinhaBolinha";
 import { CORES_ETIQUETA, etiquetasQueryOptions, quadrosDoUsuarioQueryOptions, quadrosQueryOptions, setQuadrosDoUsuario, siglaPessoa } from "@/lib/tarefas";
 import { ColorPicker } from "@/components/ui/color-picker";
@@ -121,7 +120,7 @@ const SECOES: SecaoConfig[] = [
   { key: "tarefas", label: "Tarefas", icone: LayoutGrid, subtitulo: "Etiquetas usadas nos cards de todos os quadros." },
   { key: "meu_dia", label: "Meu dia", icone: CalendarClock, subtitulo: "Seus recorrentes e os feriados da Juff." },
   { key: "estrategia", label: "Estratégia", icone: Telescope, subtitulo: "Campos da ata mensal de cada frente." },
-  { key: "biblioteca", label: "Biblioteca", icone: Library, subtitulo: "Cores oficiais de camiseta e catálogo de combos de estampa.", roles: ["admin"] },
+  { key: "biblioteca", label: "Biblioteca", icone: Library, subtitulo: "Cores oficiais de camiseta usadas na Biblioteca.", roles: ["admin"] },
   { key: "notificacoes", label: "Notificações", icone: Bell, subtitulo: "O que você quer receber no sininho." },
   { key: "usuarios", label: "Usuários e permissões", icone: Users, subtitulo: "Contas, papéis e permissões de acesso." },
 ];
@@ -354,12 +353,7 @@ function Configuracoes() {
         {secaoAtual.key === "tarefas" ? <PainelEtiquetas /> : null}
         {secaoAtual.key === "meu_dia" ? <PainelMeuDia /> : null}
         {secaoAtual.key === "estrategia" ? <PainelCamposEstrategia /> : null}
-        {secaoAtual.key === "biblioteca" ? (
-          <div className="space-y-8">
-            <PainelCoresProduto />
-            <PainelCombos />
-          </div>
-        ) : null}
+        {secaoAtual.key === "biblioteca" ? <PainelCoresProduto /> : null}
         {secaoAtual.key === "notificacoes" ? <PainelNotificacoes /> : null}
 
         {secaoAtual.key === "usuarios" && podeUsuarios ? (
