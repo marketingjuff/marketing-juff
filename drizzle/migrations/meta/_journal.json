@@ -176,6 +176,13 @@
       "when": 1790961082442,
       "tag": "0024_lov_database_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790961425023,
+      "tag": "0025_tarefa_cores_salvas",
+      "breakpoints": true
     }
   ]
 }

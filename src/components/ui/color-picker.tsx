@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pipette } from "lucide-react";
+import { Pipette, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,9 @@ export function ColorPicker({
   label = "Cor",
   disabled,
   presets = [],
+  salvas,
+  onSalvarAtual,
+  onRemoverSalva,
   className,
 }: {
   value: string;
@@ -53,6 +56,9 @@ export function ColorPicker({
   label?: string;
   disabled?: boolean | undefined;
   presets?: string[];
+  salvas?: string[];
+  onSalvarAtual?: (hex: string) => void;
+  onRemoverSalva?: (hex: string) => void;
   className?: string;
 }) {
   const corValida = HEX_RE.test(value.toLowerCase()) ? value.toLowerCase() : "#000000";
@@ -153,6 +159,52 @@ export function ColorPicker({
                 }}
               />
             ))}
+          </div>
+        ) : null}
+        {salvas?.length || onSalvarAtual ? (
+          <div className="space-y-1.5 border-t border-border pt-2">
+            <Label className="text-xs font-medium text-muted-foreground">Cores salvas</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {(salvas ?? []).map((cor) => (
+                <span key={cor} className="group relative">
+                  <button
+                    type="button"
+                    aria-label={`Usar cor salva ${cor}`}
+                    title={cor}
+                    className="size-6 rounded-full border border-border"
+                    style={{ backgroundColor: cor }}
+                    onClick={() => {
+                      const hex = cor.toLowerCase();
+                      setHsv(hexParaHsv(hex));
+                      setTexto(hex);
+                      onChange(hex);
+                    }}
+                  />
+                  {onRemoverSalva ? (
+                    <button
+                      type="button"
+                      aria-label={`Remover cor salva ${cor}`}
+                      title="Remover das salvas"
+                      className="absolute -right-1.5 -top-1.5 hidden size-3.5 items-center justify-center rounded-full bg-muted text-foreground shadow-sm group-hover:flex"
+                      onClick={() => onRemoverSalva(cor)}
+                    >
+                      <X className="size-2.5" />
+                    </button>
+                  ) : null}
+                </span>
+              ))}
+              {onSalvarAtual ? (
+                <button
+                  type="button"
+                  aria-label="Salvar cor atual"
+                  title="Salvar cor atual"
+                  className="flex size-6 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground"
+                  onClick={() => onSalvarAtual(corValida)}
+                >
+                  <Plus className="size-3.5" />
+                </button>
+              ) : null}
+            </div>
           </div>
         ) : null}
         <div>

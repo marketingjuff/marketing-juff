@@ -1573,6 +1573,38 @@ export type Database = {
           },
         ]
       }
+      tarefa_cores_salvas: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          hex: string
+          id: string
+          posicao: number
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          hex: string
+          id?: string
+          posicao: number
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          hex?: string
+          id?: string
+          posicao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_cores_salvas_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tarefa_etiquetas: {
         Row: {
           arquivado: boolean
