@@ -127,7 +127,7 @@ function FormCombo({ inicial, cores, onCancelar, onPronto }: {
   const [gravando, setGravando] = useState(false);
 
   async function gravar() {
-    if (!itens.length) return toast.error("Escolha ao menos uma cor.");
+    if (!itens.length) { toast.error("Escolha ao menos uma cor."); return; }
     setGravando(true);
     try {
       if (inicial) await salvarCombo(inicial.id, { genero, cor_id: corId || null }, itens);

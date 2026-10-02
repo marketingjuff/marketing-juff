@@ -46,7 +46,7 @@ import { baixarXlsx } from "@/lib/xlsx-simples";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/biblioteca/catalogo-estampas")({
-  validateSearch: (s: Record<string, unknown>): { id?: string } => (typeof s.id === "string" ? { id: s.id } : {}),
+  validateSearch: (s: Record<string, unknown>): { id?: string } => (typeof s["id"] === "string" ? { id: s["id"] } : {}),
   head: () => ({
     meta: [
       { title: "Estampas — Biblioteca — Marketing Juff" },
@@ -256,7 +256,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
     if (!atual) {
       const rot = ROTULO_GENERO[generoDoProduto(p)].toLowerCase();
       destino = e.grupos.find((g) => g.nome.toLowerCase() === rot) ?? e.grupos[0];
-      if (!destino) return toast.error("Crie um grupo primeiro.");
+      if (!destino) { toast.error("Crie um grupo primeiro."); return; }
     }
     mover(p.id, destino?.id ?? null);
   }
@@ -432,7 +432,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
                     const nome = prompt("Nome da categoria nova");
                     if (!nome?.trim()) return;
                     try { v = await criarCategoria(nome, categorias.length); void qc.invalidateQueries({ queryKey: categoriasEstampaQueryOptions.queryKey }); }
-                    catch (err) { return toast.error((err as Error).message); }
+                    catch (err) { toast.error((err as Error).message); return; }
                   }
                   patchEstampa({ categoria_id: v });
                 }}
@@ -610,7 +610,7 @@ function Celula({
   receita: Receita | undefined;
   n: number;
   combos: Combo[];
-  aviso?: string;
+  aviso?: string | undefined;
   porCodigo: ReturnType<typeof useCoresEstampa>["porCodigo"];
   editavel: boolean;
   onTrocar: (ordem: number, c: ItemCor) => void;
