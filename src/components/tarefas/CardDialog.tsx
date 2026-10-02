@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { EditorDescricao } from "./EditorDescricao";
 import {
   ESFORCOS,
   CORES_ETIQUETA,
@@ -606,16 +607,14 @@ export function CardDialog({
 
             <div className="space-y-1.5">
               <Label>Descrição</Label>
-              <Textarea
-                rows={16}
-                className="min-h-[24rem] resize-y"
+              <EditorDescricao
                 value={descricao}
                 disabled={!mexer || !!travados["descricao"]}
-                onChange={(e) => {
-                  setDescricao(e.target.value);
+                onChange={(html) => {
+                  setDescricao(html);
                   digitando("descricao");
                 }}
-                onBlur={() => descricao !== c.descricao && salvar({ descricao })}
+                onBlur={(html) => html !== c.descricao && salvar({ descricao: html })}
               />
               <AvisoEscrevendo quem={travados["descricao"]} />
             </div>
