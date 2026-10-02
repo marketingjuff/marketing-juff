@@ -32,29 +32,39 @@ export type Database = {
       atalhos_paginas: {
         Row: {
           created_at: string
-          destino: string
+          destino: string | null
           id: string
           label: string
           posicao: number
+          quadro_id: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
-          destino: string
+          destino?: string | null
           id?: string
           label: string
           posicao?: number
+          quadro_id?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
-          destino?: string
+          destino?: string | null
           id?: string
           label?: string
           posicao?: number
+          quadro_id?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "atalhos_paginas_quadro_id_fkey"
+            columns: ["quadro_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_quadros"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "atalhos_paginas_user_id_fkey"
             columns: ["user_id"]
@@ -1990,6 +2000,7 @@ export type Database = {
         Args: { p_quadro_id: string }
         Returns: undefined
       }
+      reordenar_atalhos: { Args: { p_ids: string[] }; Returns: undefined }
       tarefa_avancar_recorrentes: { Args: never; Returns: number }
       tarefa_card_avancar: { Args: { _id: string }; Returns: string }
       tarefa_reordenar_cards: {

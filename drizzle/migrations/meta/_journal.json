@@ -232,6 +232,13 @@
       "when": 1790968011949,
       "tag": "0032_resp_ao_entrar_plano_b",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1790969521922,
+      "tag": "0033_barra_atalhos_unica",
+      "breakpoints": true
     }
   ]
 }
