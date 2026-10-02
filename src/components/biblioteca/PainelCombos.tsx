@@ -128,6 +128,7 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
       {secoes.map(({ chave, rotulo, faixas, total }) => (
         <section key={chave} className="space-y-1.5">
           <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{rotulo} · {total}</h4>
+          <div className="grid gap-1.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", alignItems: "start" }}>
           {faixas.map(({ cid, lista }) => {
             const cor = corPorId.get(cid);
             return (
@@ -162,6 +163,7 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
               </div>
             );
           })}
+          </div>
         </section>
       ))}
     </div>
