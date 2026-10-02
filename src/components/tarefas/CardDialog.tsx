@@ -261,33 +261,25 @@ export function CardDialog({
             </div>
 
             <div className="flex flex-wrap gap-1.5">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1.5" disabled={!mexer}>
-                    <User className="size-4" /> Membros
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 space-y-2">
-                  <Campo label="Responsável">
-                    <Select
-                      disabled={!mexer}
-                      value={c.responsavel_id ?? NENHUM}
-                      onValueChange={(v) => {
-                        const novo = v === NENHUM ? null : v;
-                        salvar({ responsavel_id: novo }, ["Trocou responsável", `${nomePessoa(c.responsavel_id)} → ${nomePessoa(novo)}`]);
-                      }}
-                    >
-                      <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NENHUM}>Ninguém</SelectItem>
-                        {pessoas.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>{p.nome || "Sem nome"}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Campo>
-                </PopoverContent>
-              </Popover>
+              <Select
+                disabled={!mexer}
+                value={c.responsavel_id ?? NENHUM}
+                onValueChange={(v) => {
+                  const novo = v === NENHUM ? null : v;
+                  salvar({ responsavel_id: novo }, ["Trocou responsável", `${nomePessoa(c.responsavel_id)} → ${nomePessoa(novo)}`]);
+                }}
+              >
+                <SelectTrigger className="h-8 w-auto gap-1.5">
+                  <User className="size-4" />
+                  <SelectValue placeholder="Responsável" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NENHUM}>Ninguém</SelectItem>
+                  {pessoas.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.nome || "Sem nome"}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1.5" disabled={!mexer}>
