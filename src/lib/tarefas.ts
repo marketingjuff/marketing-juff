@@ -982,7 +982,6 @@ export function podeEstruturar(role: string | undefined, editavel: boolean): boo
   return editavel && (role === "admin" || role === "gestor");
 }
 
-/** Operador só mexe no card em que é responsável ou que criou. */
 /** Quem entra no quadro mexe em qualquer card dele. Estrutura continua com admin e gestor. */
 export function podeMexerNoCard(
   _card: { responsavel_id: string | null; criado_por?: string | null },
