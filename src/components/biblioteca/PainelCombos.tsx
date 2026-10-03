@@ -129,6 +129,7 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
         <section key={chave} className="space-y-1.5">
           <h4 className="text-2xl font-semibold uppercase text-muted-foreground">{rotulo} · {total}</h4>
           <div className="flex flex-wrap gap-1.5">
+          <CardCromia tamanho={tamanho} />
           {faixas.flatMap(({ cid, lista }) => {
             const cor = corPorId.get(cid);
             return lista.map(({ combo: c, uni }) => (
