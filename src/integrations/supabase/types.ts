@@ -383,6 +383,42 @@ export type Database = {
           },
         ]
       }
+      biblioteca_estampa_grupo_cores: {
+        Row: {
+          cor_id: string
+          grupo_id: string
+          id: string
+          posicao: number
+        }
+        Insert: {
+          cor_id: string
+          grupo_id: string
+          id?: string
+          posicao?: number
+        }
+        Update: {
+          cor_id?: string
+          grupo_id?: string
+          id?: string
+          posicao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_estampa_grupo_cores_cor_id_fkey"
+            columns: ["cor_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_cores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "biblioteca_estampa_grupo_cores_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_estampa_grupos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       biblioteca_estampa_grupo_modelos: {
         Row: {
           estampa_id: string

@@ -44,6 +44,7 @@ import {
   type Grupo,
   type ItemCor,
   type Receita,
+  definirCoresGrupo,
 } from "@/lib/biblioteca-estampas";
 import { supabase } from "@/integrations/supabase/client";
 import { baixarXlsx } from "@/lib/xlsx-simples";
@@ -318,6 +319,16 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
   }
 
   // ---- Cores de camiseta ----
+  function mudarCoresGrupo(gid: string, lista: string[]) {
+    const g = e.grupos.find((x) => x.id === gid);
+    if (!g) return;
+    otimista(
+      (x) => ({ ...x, grupos: x.grupos.map((y) => (y.id === gid ? { ...y, cores: lista } : y)) }),
+      () => definirCoresGrupo(gid, g.cores, lista),
+      () => void qc.invalidateQueries({ queryKey: K_LISTA }),
+    );
+  }
+
   function mudarCores(lista: string[]) {
     otimista((x) => ({ ...x, cores: lista }), () => definirCoresCamiseta(id, e.cores, lista), () => void qc.invalidateQueries({ queryKey: K_LISTA }));
   }
@@ -373,7 +384,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
 
   function sortearVazias() {
     let feitas = 0;
-    for (const g of e.grupos) for (const cid of e.cores) if (!receitaDe(g.id, cid) && sortear(g, cid, true)) feitas++;
+    for (const g of e.grupos) for (const cid of g.cores) if (!receitaDe(g.id, cid) && sortear(g, cid, true)) feitas++;
     toast.success(feitas ? `${feitas} células preenchidas` : "Nenhuma célula vazia com combo disponível.");
   }
 
@@ -412,9 +423,12 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
   }
 
   function copiarGrupo(origem: string, destino: string) {
+    const gOrig = e.grupos.find((g) => g.id === origem);
     const gDest = e.grupos.find((g) => g.id === destino);
-    const genDest = gDest ? generoDoGrupo(gDest.modelos, produtos) : null;
-    for (const cid of e.cores) {
+    if (!gOrig || !gDest) return;
+    const genDest = generoDoGrupo(gDest.modelos, produtos);
+    mudarCoresGrupo(destino, Array.from(new Set([...gDest.cores, ...gOrig.cores])));
+    for (const cid of gOrig.cores) {
       const r = receitaDe(origem, cid);
       if (!r) continue;
       const combo = combos.find((c) => c.id === r.combo_id);
@@ -423,7 +437,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
   }
 
   // ---- Exportação ----
-  const totalProdutos = e.grupos.reduce((s, g) => s + g.modelos.length, 0) * e.cores.length;
+  const totalProdutos = e.grupos.reduce((s, g) => s + g.modelos.length * g.cores.length, 0);
   async function exportar() {
     const cat = categorias.find((c) => c.id === e.categoria_id)?.nome ?? "";
     const cab = ["Nome do produto", "Modelo", "Cor da camiseta", "Estampa", "Categoria", ...e.papeis.flatMap((p) => [`${p.nome || `Cor ${p.ordem}`} código`, `${p.nome || `Cor ${p.ordem}`} CMYK`])];
@@ -432,7 +446,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
       for (const pid of g.modelos) {
         const p = produtos.find((x) => x.id === pid);
         if (!p) continue;
-        for (const cid of e.cores) {
+        for (const cid of g.cores) {
           const cor = corPorId.get(cid);
           if (!cor) continue;
           const r = receitaDe(g.id, cid);
@@ -624,28 +638,10 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
           </div>
         ) : (
         <div className="space-y-5">
-          {editavel ? (
-            <div className="flex flex-wrap items-center gap-1.5">
-              {e.cores.map((cid) => {
-                const cor = corPorId.get(cid);
-                if (!cor) return null;
-                return (
-                  <span key={cid} className="flex items-center gap-1.5 rounded-full border border-border py-1 pl-2 pr-1 text-xs capitalize">
-                    <Bolinha hex={cor.hex} /> {cor.nome}
-                    <button type="button" className="text-muted-foreground hover:text-destructive" title="Tirar cor da estampa" onClick={() => mudarCores(e.cores.filter((x) => x !== cid))}>
-                      <Trash2 className="size-3" />
-                    </button>
-                  </span>
-                );
-              })}
-              <AcrescentarCor cores={cores} usadas={e.cores} onEscolher={(c) => mudarCores([...e.cores, c])} />
-            </div>
-          ) : null}
-        
           {e.grupos.map((g) => {
             const gen = generoDoGrupo(g.modelos, produtos);
             const infantil = gen === "infantil";
-            const linha = e.cores
+            const linha = g.cores
               .map((cid) => ({ cid, cor: corPorId.get(cid), rec: receitaDe(g.id, cid) }))
               .filter((x) => x.cor);
             const temMarca = infantil && linha.some((x) => x.rec?.publico);
@@ -656,12 +652,45 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
                   linha.filter((x) => !x.rec?.publico),
                 ].filter((f) => f.length)
               : [linha];
+            const livres = cores.filter((c) => c.ativo && !g.cores.includes(c.id));
         
             return (
               <div key={g.id}>
                 <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {g.nome} {gen ? <span className="font-normal opacity-70">{ROTULO_GENERO[gen]}</span> : null}
                 </p>
+                {editavel ? (
+                  <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                    {g.cores.map((cid) => {
+                      const cor = corPorId.get(cid);
+                      if (!cor) return null;
+                      return (
+                        <span key={cid} className="flex items-center gap-1.5 rounded-full border border-border py-0.5 pl-2 pr-1 text-xs capitalize">
+                          <Bolinha hex={cor.hex} /> {cor.nome}
+                          <button type="button" className="text-muted-foreground hover:text-destructive" title="Tirar esta cor deste grupo" onClick={() => mudarCoresGrupo(g.id, g.cores.filter((x) => x !== cid))}>
+                            <Trash2 className="size-3" />
+                          </button>
+                        </span>
+                      );
+                    })}
+                    {livres.length ? (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button type="button" className="flex items-center gap-1 rounded-full border border-dashed border-muted-foreground/50 px-2.5 py-0.5 text-xs text-muted-foreground hover:text-foreground">
+                            <Plus className="size-3" /> Cor
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="max-h-80 w-60 overflow-y-auto p-1">
+                          {livres.map((c) => (
+                            <button key={c.id} type="button" className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm capitalize hover:bg-secondary" onClick={() => mudarCoresGrupo(g.id, [...g.cores, c.id])}>
+                              <Bolinha hex={c.hex} /> {c.nome}
+                            </button>
+                          ))}
+                        </PopoverContent>
+                      </Popover>
+                    ) : null}
+                  </div>
+                ) : null}
                 <div className="space-y-1.5">
                   {fileiras.map((fileira, fi) => (
                     <div key={fi} className="flex flex-wrap gap-1.5">
@@ -694,6 +723,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
                       })}
                     </div>
                   ))}
+                  {!linha.length ? <p className="text-xs text-muted-foreground">Nenhuma cor de camiseta neste grupo.</p> : null}
                 </div>
               </div>
             );
