@@ -30,6 +30,7 @@ export type Estampa = {
   tamanho_infantil: string;
   situacao: "ativo" | "descontinuado";
   posicao: number;
+  tipo: "codigo" | "cromia";
 };
 
 export type EstampaResumo = Estampa & { n_papeis: number; n_modelos: number; n_cores: number };
@@ -37,7 +38,7 @@ export type EstampaResumo = Estampa & { n_papeis: number; n_modelos: number; n_c
 export type ItemCor = { codigo: string; c: number; m: number; y: number; k: number };
 export type Papel = { id: string; ordem: number; nome: string };
 export type Grupo = { id: string; nome: string; posicao: number; modelos: string[] };
-export type Receita = { id: string; grupo_id: string; cor_id: string; combo_id: string | null; itens: ItemCor[] };
+export type Receita = { id: string; grupo_id: string; cor_id: string; combo_id: string | null; publico: "menino" | "menina" | null; itens: ItemCor[] };
 
 export type EstampaCompleta = Estampa & {
   papeis: Papel[];
@@ -73,7 +74,7 @@ export const categoriasEstampaQueryOptions = queryOptions({
   },
 });
 
-const CAMPOS = "id, nome, categoria_id, imagem_caminho, ficha_caminho, tamanho_adulto, tamanho_feminino, tamanho_infantil, situacao, posicao";
+const CAMPOS = "id, nome, categoria_id, imagem_caminho, ficha_caminho, tamanho_adulto, tamanho_feminino, tamanho_infantil, situacao, posicao, tipo";
 
 export const estampasQueryOptions = queryOptions({
   queryKey: ["biblioteca", "estampas-lista"] as const,
@@ -93,7 +94,7 @@ export const estampasQueryOptions = queryOptions({
       return mapa;
     };
     const np = conta(p.data), nm = conta(m.data), nc = conta(c.data);
-    return ((e.data ?? []) as Estampa[]).map((x) => ({
+    return ((e.data ?? []) as unknown as Estampa[]).map((x) => ({
       ...x,
       n_papeis: np.get(x.id) ?? 0,
       n_modelos: nm.get(x.id) ?? 0,
@@ -114,7 +115,7 @@ export function estampaQueryOptions(id: string) {
         supabase.from("biblioteca_estampa_grupos").select("id, nome, posicao").eq("estampa_id", id).order("posicao"),
         supabase.from("biblioteca_estampa_grupo_modelos").select("grupo_id, produto_id").eq("estampa_id", id),
         supabase.from("biblioteca_estampa_cores_camiseta").select("cor_id, posicao").eq("estampa_id", id).order("posicao"),
-        supabase.from("biblioteca_estampa_receitas").select("id, grupo_id, cor_id, combo_id").eq("estampa_id", id),
+        supabase.from("biblioteca_estampa_receitas").select("id, grupo_id, cor_id, combo_id, publico").eq("estampa_id", id),
       ]);
       for (const x of [e, p, g, gm, cc, r]) if (x.error) throw x.error;
       const ids = (r.data ?? []).map((x) => x.id);
@@ -133,14 +134,14 @@ export function estampaQueryOptions(id: string) {
         porReceita.set(it.receita_id, l);
       }
       return {
-        ...(e.data as Estampa),
+        ...(e.data as unknown as Estampa),
         papeis: p.data ?? [],
         grupos: (g.data ?? []).map((x) => ({
           ...x,
           modelos: (gm.data ?? []).filter((m) => m.grupo_id === x.id).map((m) => m.produto_id),
         })),
         cores: (cc.data ?? []).map((x) => x.cor_id),
-        receitas: (r.data ?? []).map((x) => ({ ...x, itens: porReceita.get(x.id) ?? [] })),
+        receitas: (r.data ?? []).map((x) => ({ ...x, publico: x.publico as Receita["publico"], itens: porReceita.get(x.id) ?? [] })),
       };
     },
   });
@@ -396,4 +397,14 @@ export function urlsEstampaQueryOptions(caminhos: string[]) {
       return mapa;
     },
   });
+}
+
+export async function salvarTipoEstampa(id: string, tipo: Estampa["tipo"]) {
+  const { error } = await supabase.from("biblioteca_estampas").update({ tipo }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function salvarPublicoReceita(receitaId: string, publico: Receita["publico"]) {
+  const { error } = await supabase.from("biblioteca_estampa_receitas").update({ publico }).eq("id", receitaId);
+  if (error) throw error;
 }
