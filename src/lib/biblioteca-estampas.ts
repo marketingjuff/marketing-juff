@@ -37,7 +37,7 @@ export type EstampaResumo = Estampa & { n_papeis: number; n_modelos: number; n_c
 
 export type ItemCor = { codigo: string; c: number; m: number; y: number; k: number };
 export type Papel = { id: string; ordem: number; nome: string };
-export type Grupo = { id: string; nome: string; posicao: number; modelos: string[] };
+export type Grupo = { id: string; nome: string; posicao: number; modelos: string[]; cores: string[] };
 export type Receita = { id: string; grupo_id: string; cor_id: string; combo_id: string | null; publico: "menino" | "menina" | null; itens: ItemCor[] };
 
 export type EstampaCompleta = Estampa & {
@@ -118,6 +118,15 @@ export function estampaQueryOptions(id: string) {
         supabase.from("biblioteca_estampa_receitas").select("id, grupo_id, cor_id, combo_id, publico").eq("estampa_id", id),
       ]);
       for (const x of [e, p, g, gm, cc, r]) if (x.error) throw x.error;
+      const gids = (g.data ?? []).map((x) => x.id);
+      const gc = gids.length
+        ? await supabase
+            .from("biblioteca_estampa_grupo_cores")
+            .select("grupo_id, cor_id, posicao")
+            .in("grupo_id", gids)
+            .order("posicao")
+        : { data: [], error: null };
+      if (gc.error) throw gc.error;
       const ids = (r.data ?? []).map((x) => x.id);
       const itens = ids.length
         ? await supabase
@@ -139,6 +148,7 @@ export function estampaQueryOptions(id: string) {
         grupos: (g.data ?? []).map((x) => ({
           ...x,
           modelos: (gm.data ?? []).filter((m) => m.grupo_id === x.id).map((m) => m.produto_id),
+          cores: (gc.data ?? []).filter((c) => c.grupo_id === x.id).map((c) => c.cor_id),
         })),
         cores: (cc.data ?? []).map((x) => x.cor_id),
         receitas: (r.data ?? []).map((x) => ({ ...x, publico: x.publico as Receita["publico"], itens: porReceita.get(x.id) ?? [] })),
@@ -230,11 +240,16 @@ export async function criarEstampa(nome: string, cores: CorBiblioteca[]): Promis
   const [g, c, p] = await Promise.all([
     supabase.from("biblioteca_estampa_grupos").insert(
       ["Masculino", "Feminino", "Infantil"].map((nome, i) => ({ estampa_id: id, nome, posicao: i })),
-    ),
+    ).select("id"),
     supabase.from("biblioteca_estampa_cores_camiseta").insert(obrig.map((c, i) => ({ estampa_id: id, cor_id: c.id, posicao: i }))),
     supabase.from("biblioteca_estampa_papeis").insert({ estampa_id: id, ordem: 1, nome: "Cor 1" }),
   ]);
   for (const x of [g, c, p]) if (x.error) throw x.error;
+  const gc = (g.data ?? []).flatMap((gr) => obrig.map((cor, i) => ({ grupo_id: gr.id, cor_id: cor.id, posicao: i })));
+  if (gc.length) {
+    const { error: e2 } = await supabase.from("biblioteca_estampa_grupo_cores").insert(gc);
+    if (e2) throw e2;
+  }
   return id;
 }
 
@@ -412,4 +427,23 @@ export async function salvarPublicoReceita(receitaId: string, publico: Receita["
 export async function apagarReceita(receitaId: string) {
   const { error } = await supabase.rpc("biblioteca_estampa_apagar_receita", { p_receita_id: receitaId });
   if (error) throw error;
+}
+
+export async function definirCoresGrupo(grupoId: string, atuais: string[], corIds: string[]) {
+  const sair = atuais.filter((c) => !corIds.includes(c));
+  const entrar = corIds.filter((c) => !atuais.includes(c));
+  if (sair.length) {
+    const { error } = await supabase
+      .from("biblioteca_estampa_grupo_cores")
+      .delete()
+      .eq("grupo_id", grupoId)
+      .in("cor_id", sair);
+    if (error) throw error;
+  }
+  if (entrar.length) {
+    const { error } = await supabase
+      .from("biblioteca_estampa_grupo_cores")
+      .insert(entrar.map((cor_id) => ({ grupo_id: grupoId, cor_id, posicao: corIds.indexOf(cor_id) })));
+    if (error) throw error;
+  }
 }
