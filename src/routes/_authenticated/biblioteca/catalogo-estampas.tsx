@@ -7,7 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { Bloco, CampoAutoSave } from "@/components/biblioteca/comum";
 import { Bolinha, CardReceita, useCoresEstampa, type TamanhoCard } from "@/components/biblioteca/EstampaVisual";
 import type { CorEstampa } from "@/lib/biblioteca-estampa";
-import { arrastavelEstampa } from "@/lib/atalhos-paginas";
+import { arrastavel, arrastavelEstampa } from "@/lib/atalhos-paginas";
 import { PainelCombos } from "@/components/biblioteca/PainelCombos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -142,6 +142,7 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
           variant="ghost"
           className={cn("rounded-b-none", visao === "estampas" && "border-b-2 border-primary text-foreground")}
           onClick={() => setVisao("estampas")}
+          {...arrastavel("/biblioteca/catalogo-estampas", "Estampas")}
         >
           Estampas
         </Button>
@@ -150,6 +151,7 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
           variant="ghost"
           className={cn("rounded-b-none", visao === "combos" && "border-b-2 border-primary text-foreground")}
           onClick={() => setVisao("combos")}
+          {...arrastavel("/biblioteca/catalogo-estampas?visao=combos", "Combos de cores")}
         >
           Combos de cores
         </Button>
