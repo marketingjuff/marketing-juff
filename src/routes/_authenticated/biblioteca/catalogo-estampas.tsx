@@ -367,6 +367,12 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
     return combos.filter((c) => c.genero === gen && c.cor_id === cid && c.itens.length === n);
   }
 
+  function aplicarCombo(g: Grupo, cid: string, c: Combo) {
+    const outras = c.estampas.filter((x) => x !== e.nome);
+    setAvisos((a) => ({ ...a, [chave(g.id, cid)]: outras.length ? `Já usado em ${outras.join(", ")}` : "" }));
+    gravarReceita(g.id, cid, c.id, c.itens);
+  }
+
   function sortear(g: Grupo, cid: string, silencioso = false) {
     const atual = receitaDe(g.id, cid)?.combo_id;
     const lista = candidatos(g, cid);
@@ -375,10 +381,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
       if (!silencioso) toast.info("Nenhum combo do catálogo serve para esta célula.");
       return false;
     }
-    const c = opcoes[Math.floor(Math.random() * opcoes.length)]!;
-    const outras = c.estampas.filter((x) => x !== e.nome);
-    setAvisos((a) => ({ ...a, [chave(g.id, cid)]: outras.length ? `Já usado em ${outras.join(", ")}` : "" }));
-    gravarReceita(g.id, cid, c.id, c.itens);
+    aplicarCombo(g, cid, opcoes[Math.floor(Math.random() * opcoes.length)]!);
     return true;
   }
 
