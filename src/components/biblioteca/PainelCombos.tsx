@@ -7,7 +7,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Bolinha, CardCombo, type TamanhoCard, EscolherCorEstampa, hexDoCodigo, useCoresEstampa } from "@/components/biblioteca/EstampaVisual";
+import { Bolinha, CardCombo, CardCromia, type TamanhoCard, EscolherCorEstampa, hexDoCodigo, useCoresEstampa } from "@/components/biblioteca/EstampaVisual";
 import { coresQueryOptions } from "@/lib/biblioteca";
 import {
   GENEROS,
