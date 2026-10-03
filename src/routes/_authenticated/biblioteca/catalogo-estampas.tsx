@@ -173,8 +173,11 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
           <p className="mb-1 text-lg font-semibold uppercase tracking-wide text-muted-foreground">
             {g.nome} <span className="opacity-70">· {g.itens.length}</span>
           </p>
-          <div className="flex flex-col gap-0">
-            {g.itens.map((e, i) => (
+          <div
+            className="flex flex-wrap gap-1.5 rounded-lg p-1"
+            style={{ backgroundImage: "repeating-linear-gradient(to bottom, transparent 0px, transparent 38px, var(--muted) 38px, var(--muted) 76px)" }}
+          >
+            {g.itens.map((e) => (
               <button
                 key={e.id}
                 type="button"
@@ -182,16 +185,13 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
                 title={`${e.nome}, ${e.n_papeis} ${e.n_papeis === 1 ? "cor" : "cores"}, ${e.n_modelos * e.n_cores} produtos — arraste até a barra de atalhos para fixar`}
                 onClick={() => void navigate({ to: "/biblioteca/catalogo-estampas", search: { id: e.id } })}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded-md px-3 py-0.5 text-left transition hover:bg-primary/10",
-                  i % 2 === 0 ? "bg-background" : "bg-muted/70",
+                  "flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-background px-3 text-left text-sm transition hover:border-primary",
                   e.situacao === "descontinuado" && "opacity-50",
                 )}
               >
-                <span className="text-base font-medium leading-tight">{e.nome}</span>
-                <span className="ml-auto flex items-center gap-1.5">
-                  {e.tipo === "cromia" ? <span className="text-[10px] font-medium text-muted-foreground">CROMIA</span> : null}
-                  <span className="text-xs tabular-nums text-muted-foreground">{e.n_modelos * e.n_cores}</span>
-                </span>
+                <span className="text-base font-medium leading-none">{e.nome}</span>
+                {e.tipo === "cromia" ? <span className="text-[10px] font-medium text-muted-foreground">CROMIA</span> : null}
+                <span className="text-xs tabular-nums text-muted-foreground">{e.n_modelos * e.n_cores}</span>
               </button>
             ))}
           </div>
