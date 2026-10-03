@@ -162,12 +162,28 @@ export const combosQueryOptions = queryOptions({
   staleTime: CINCO_MIN,
   refetchOnWindowFocus: false,
   queryFn: async (): Promise<Combo[]> => {
-    const [c, i, u] = await Promise.all([
-      supabase.from("biblioteca_combos").select("id, codigo, genero, cor_id, posicao").order("posicao"),
-      supabase.from("biblioteca_combo_itens").select("combo_id, ordem, codigo, c, m, y, k").order("ordem"),
-      supabase.rpc("biblioteca_combo_uso"),
-    ]);
-    for (const x of [c, i, u]) if (x.error) throw x.error;
+    // O banco devolve no máximo 1000 linhas por vez; busca em páginas para não cortar cores dos combos.
+    const todosItens = async () => {
+      const out: { combo_id: string; ordem: number; codigo: string; c: number; m: number; y: number; k: number }[] = [];
+      for (let de = 0; ; de += 1000) {
+        const r = await supabase.from("biblioteca_combo_itens").select("combo_id, ordem, codigo, c, m, y, k")
+          .order("combo_id").order("ordem").range(de, de + 999);
+        if (r.error) throw r.error;
+        out.push(...(r.data ?? []));
+        if ((r.data ?? []).length < 1000) return { data: out, error: null };
+      }
+    };
+    const todosCombos = async () => {
+      const out: { id: string; codigo: string; genero: string; cor_id: string | null; posicao: number }[] = [];
+      for (let de = 0; ; de += 1000) {
+        const r = await supabase.from("biblioteca_combos").select("id, codigo, genero, cor_id, posicao").order("posicao").range(de, de + 999);
+        if (r.error) throw r.error;
+        out.push(...(r.data ?? []));
+        if ((r.data ?? []).length < 1000) return { data: out, error: null };
+      }
+    };
+    const [c, i, u] = await Promise.all([todosCombos(), todosItens(), supabase.rpc("biblioteca_combo_uso")]);
+    if (u.error) throw u.error;
     const itens = new Map<string, ItemCor[]>();
     for (const it of i.data ?? []) {
       const l = itens.get(it.combo_id) ?? [];
