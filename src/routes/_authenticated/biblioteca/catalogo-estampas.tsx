@@ -187,7 +187,7 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
                   e.situacao === "descontinuado" && "opacity-50",
                 )}
               >
-                <span>{e.nome}</span>
+                <span className="text-base font-medium">{e.nome}</span>
                 {e.tipo === "cromia" ? <span className="text-[10px] font-medium text-muted-foreground">CROMIA</span> : null}
                 <span className="text-xs tabular-nums text-muted-foreground">{e.n_modelos * e.n_cores}</span>
               </button>
