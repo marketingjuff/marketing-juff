@@ -774,10 +774,12 @@ function SeletorCombo({ combos, porCodigo, genero, nCores, atual, onEscolher }: 
   const [busca, setBusca] = useState("");
   const lista = useMemo(() => {
     const termo = busca.trim().toLowerCase();
-    return combos
-      .filter((c) => c.genero === genero && c.itens.length === nCores)
-      .filter((c) => !termo || c.codigo.toLowerCase().includes(termo))
-      .slice(0, 60);
+    const cromia = combos.filter((c) => c.codigo === "CROMIA");
+    const normais = combos
+      .filter((c) => c.codigo !== "CROMIA" && c.genero === genero && c.itens.length === nCores)
+      .filter((c) => !termo || c.codigo.toLowerCase().includes(termo));
+    const especiais = cromia.filter((c) => !termo || "cromia".includes(termo));
+    return [...especiais, ...normais].slice(0, 60);
   }, [combos, genero, nCores, busca]);
   return (
     <Popover open={aberto} onOpenChange={setAberto}>
