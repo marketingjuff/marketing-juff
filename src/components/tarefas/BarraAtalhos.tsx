@@ -37,7 +37,7 @@ function corAnel(hex: string | null | undefined): string {
 
 function corDoAtalho(a: AtalhoBarra): string {
   if (a.quadro_id) return corAnel(a.quadro_cor);
-  return corAnel(a.destino ? masterDoCaminho(a.destino)?.cor : null);
+  return corAnel(a.destino ? masterDoCaminho(a.destino.split("?")[0]!)?.cor : null);
 }
 
 export function BarraAtalhos() {
