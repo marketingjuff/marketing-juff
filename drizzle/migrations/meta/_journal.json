@@ -253,6 +253,13 @@
       "when": 1790997783229,
       "tag": "0035_carga_fichas_estampas_estrutura",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1790998601006,
+      "tag": "0036_combos_sem_duplicar_por_cor",
+      "breakpoints": true
     }
   ]
 }
