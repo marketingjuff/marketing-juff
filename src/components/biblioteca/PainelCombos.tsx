@@ -32,7 +32,7 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
   const [busca, setBusca] = useState("");
   const [editando, setEditando] = useState<Combo | "novo" | null>(null);
   const q = busca.trim().toUpperCase();
-  const filtrados = useMemo(() => combos.filter((c) => !q || c.codigo.toUpperCase().includes(q)), [combos, q]);
+  const filtrados = useMemo(() => combos.filter((c) => c.codigo !== "CROMIA" && (!q || c.codigo.toUpperCase().includes(q))), [combos, q]);
   const corPorId = useMemo(() => new Map(cores.map((c) => [c.id, c])), [cores]);
   const [filtro, setFiltro] = useState<Genero[]>(FILTRO_PADRAO);
   const [tamanho, setTamanho] = useState<TamanhoCard>("m");
