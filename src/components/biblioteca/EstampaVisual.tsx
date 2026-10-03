@@ -432,7 +432,7 @@ export function CardReceita({
             className="flex items-center justify-center font-bold"
             style={{
               gridColumn: "span 6",
-              gridRow: "span 2",
+              gridRow: q <= 3 ? "span 2" : undefined,
               fontSize: m.fonteCor,
               lineHeight: 1,
               background: "linear-gradient(90deg, #f43f5e, #f59e0b, #4ade80, #22d3ee, #a855f7)",
