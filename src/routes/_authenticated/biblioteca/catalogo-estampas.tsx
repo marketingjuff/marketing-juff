@@ -183,7 +183,7 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
                 onClick={() => void navigate({ to: "/biblioteca/catalogo-estampas", search: { id: e.id } })}
                 className={cn(
                   "flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-sm transition hover:border-primary",
-                  i % 2 === 0 ? "bg-background" : "bg-muted/60",
+                  i % 2 === 0 ? "bg-background" : "bg-primary/25",
                   e.situacao === "descontinuado" && "opacity-50",
                 )}
               >
