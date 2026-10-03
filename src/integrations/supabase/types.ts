@@ -151,6 +151,27 @@ export type Database = {
           },
         ]
       }
+      biblioteca_carga_log: {
+        Row: {
+          criado_em: string
+          id: string
+          nome: string
+          relatorio: Json
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          nome: string
+          relatorio: Json
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          nome?: string
+          relatorio?: Json
+        }
+        Relationships: []
+      }
       biblioteca_combo_itens: {
         Row: {
           c: number
@@ -505,6 +526,7 @@ export type Database = {
           estampa_id: string
           grupo_id: string
           id: string
+          publico: string | null
         }
         Insert: {
           combo_id?: string | null
@@ -512,6 +534,7 @@ export type Database = {
           estampa_id: string
           grupo_id: string
           id?: string
+          publico?: string | null
         }
         Update: {
           combo_id?: string | null
@@ -519,6 +542,7 @@ export type Database = {
           estampa_id?: string
           grupo_id?: string
           id?: string
+          publico?: string | null
         }
         Relationships: [
           {
@@ -564,6 +588,7 @@ export type Database = {
           tamanho_adulto: string
           tamanho_feminino: string
           tamanho_infantil: string
+          tipo: string
           updated_at: string
         }
         Insert: {
@@ -578,6 +603,7 @@ export type Database = {
           tamanho_adulto?: string
           tamanho_feminino?: string
           tamanho_infantil?: string
+          tipo?: string
           updated_at?: string
         }
         Update: {
@@ -592,6 +618,7 @@ export type Database = {
           tamanho_adulto?: string
           tamanho_feminino?: string
           tamanho_infantil?: string
+          tipo?: string
           updated_at?: string
         }
         Relationships: [
@@ -2297,6 +2324,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      biblioteca_carga_cor: { Args: { t: string }; Returns: string }
+      biblioteca_carga_fichas: { Args: { p: Json }; Returns: Json }
       biblioteca_combo_registrar: {
         Args: { p_cor_id: string; p_genero: string; p_itens: Json }
         Returns: {
@@ -2323,6 +2352,7 @@ export type Database = {
         }
         Returns: string
       }
+      biblioteca_norm: { Args: { t: string }; Returns: string }
       biblioteca_proximo_codigo_combo: { Args: never; Returns: string }
       biblioteca_salvar_cores: {
         Args: { p_cores: Json; p_produto_id: string }
