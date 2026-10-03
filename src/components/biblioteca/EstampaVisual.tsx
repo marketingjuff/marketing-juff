@@ -347,7 +347,29 @@ export function CardReceita({
         </div>
 
         <div className="relative" style={{ height: m.lado }}>
-          {itens.slice(0, 6).map((it, k) => {
+          {cromia ? (
+            <>
+              <span
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                style={{
+                  width: m.bolinha * 1.6,
+                  height: m.bolinha * 1.6,
+                  background: "conic-gradient(#f43f5e, #f59e0b, #facc15, #4ade80, #22d3ee, #3b82f6, #a855f7, #f43f5e)",
+                  filter: "blur(5px)",
+                  opacity: 0.6,
+                }}
+              />
+              <span
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-black/10 shadow-sm"
+                style={{
+                  width: m.bolinha * 1.3,
+                  height: m.bolinha * 1.3,
+                  background: "conic-gradient(#f43f5e, #f59e0b, #facc15, #4ade80, #22d3ee, #3b82f6, #a855f7, #f43f5e)",
+                }}
+              />
+            </>
+          ) : null}
+          {!cromia && itens.slice(0, 6).map((it, k) => {
             const pos = face[k] ?? [50, 50];
             const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
             return (
@@ -368,7 +390,7 @@ export function CardReceita({
           })}
 
           {editavel ? (
-            <div className="absolute inset-0 hidden flex-col items-center justify-center gap-1.5 bg-black/55 text-white group-hover:flex">
+            <div className="absolute inset-0 hidden flex-col items-center justify-center gap-1.5 bg-black/55 text-white group-hover:flex group-has-[[data-state=open]]:flex">
               <div className="flex items-center gap-2">
                 {seletorCombo}
                 <button type="button" title="Embaralhar" className="rounded p-0.5 hover:bg-white/20" onClick={onSortear}>
