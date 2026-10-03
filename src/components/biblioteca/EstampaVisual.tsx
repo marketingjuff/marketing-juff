@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Save, Shuffle, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -242,7 +242,7 @@ export function CardReceita({
   onSalvar: () => void;
   onLimpar: () => void;
   onPublico: (p: "menino" | "menina" | null) => void;
-  seletorCombo?: React.ReactNode;
+  seletorCombo?: ReactNode;
 }) {
   const m = MEDIDAS_CARD[tamanho];
   const alturaFaixa = FAIXA_RECEITA[tamanho];
