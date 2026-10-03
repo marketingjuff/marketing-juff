@@ -408,3 +408,8 @@ export async function salvarPublicoReceita(receitaId: string, publico: Receita["
   const { error } = await supabase.from("biblioteca_estampa_receitas").update({ publico }).eq("id", receitaId);
   if (error) throw error;
 }
+
+export async function apagarReceita(receitaId: string) {
+  const { error } = await supabase.rpc("biblioteca_estampa_apagar_receita", { p_receita_id: receitaId });
+  if (error) throw error;
+}

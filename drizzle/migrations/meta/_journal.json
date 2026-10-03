@@ -260,6 +260,13 @@
       "when": 1790998601006,
       "tag": "0036_combos_sem_duplicar_por_cor",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1790999386120,
+      "tag": "0037_apagar_receita",
+      "breakpoints": true
     }
   ]
 }

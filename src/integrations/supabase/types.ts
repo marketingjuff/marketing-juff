@@ -2342,6 +2342,10 @@ export type Database = {
           total: number
         }[]
       }
+      biblioteca_estampa_apagar_receita: {
+        Args: { p_receita_id: string }
+        Returns: undefined
+      }
       biblioteca_estampa_salvar_receita: {
         Args: {
           p_combo_id: string
