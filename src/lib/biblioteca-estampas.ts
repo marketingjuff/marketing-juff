@@ -105,7 +105,7 @@ export const estampasQueryOptions = queryOptions({
 
 export function estampaQueryOptions(id: string) {
   return queryOptions({
-    queryKey: ["biblioteca", "estampa", id] as const,
+    queryKey: ["biblioteca", "estampa", id, "v2"] as const,
     staleTime: CINCO_MIN,
     refetchOnWindowFocus: false,
     queryFn: async (): Promise<EstampaCompleta> => {
