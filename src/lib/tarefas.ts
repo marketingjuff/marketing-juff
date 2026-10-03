@@ -773,10 +773,10 @@ export async function arquivarEtiqueta(id: string, arquivado: boolean): Promise<
   if (error) throw error;
 }
 
-/** Etiquetas que valem num quadro. As globais mais as daquele quadro. */
+/** Etiquetas próprias de um quadro. */
 export function etiquetasDoQuadro(todas: Etiqueta[], quadroId: string | null | undefined): Etiqueta[] {
-  if (!quadroId) return todas.filter((e) => e.quadro_id === null);
-  return todas.filter((e) => e.quadro_id === null || e.quadro_id === quadroId);
+  if (!quadroId) return [];
+  return todas.filter((e) => e.quadro_id === quadroId);
 }
 
 /** Primeira cor da paleta que ainda não está em uso no grupo. */

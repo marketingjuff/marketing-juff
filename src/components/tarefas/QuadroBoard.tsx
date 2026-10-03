@@ -83,6 +83,10 @@ export function QuadroBoard({
   const { data: etiquetasLista = [] } = useQuery(etiquetasQueryOptions);
   const { data: pessoasLista = [] } = useQuery(pessoasQueryOptions);
   const etiquetas = useMemo(() => new Map(etiquetasLista.map((e) => [e.id, e])), [etiquetasLista]);
+  const etiquetasDoQuadro = useMemo(
+    () => etiquetasLista.filter((e) => e.quadro_id === quadro.id),
+    [etiquetasLista, quadro.id],
+  );
   const pessoas = useMemo(() => new Map(pessoasLista.map((p) => [p.id, p])), [pessoasLista]);
 
   const [colunas, setColunas] = useState<Coluna[]>(dados.colunas);
@@ -386,8 +390,8 @@ export function QuadroBoard({
           <Select value={fEtiq} onValueChange={setFEtiq}>
             <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value={TODOS}>Todas etiquetas</SelectItem>
-              {etiquetasLista.map((e) => <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>)}
+              <SelectItem value={TODOS}>Etiquetas do quadro</SelectItem>
+              {etiquetasDoQuadro.map((e) => <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>)}
             </SelectContent>
           </Select>
           <label className="flex items-center gap-1.5 text-sm">
