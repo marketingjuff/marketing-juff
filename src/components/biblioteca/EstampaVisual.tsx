@@ -287,7 +287,7 @@ const FAIXA_RECEITA: Record<TamanhoCard, number> = { p: 18, m: 22, g: 26 };
  */
 export function CardReceita({
   fundo, nomeCor, itens, porCodigo, codigo, temReceita, tamanho = "m", editavel,
-  aviso, infantil, publico, podeSalvar, onTrocar, onSortear, onSalvar, onLimpar, onPublico, seletorCombo,
+  aviso, infantil, publico, podeSalvar, onTrocar, onSortear, onSalvar, onLimpar, onPublico, seletorCombo, cromia,
 }: {
   fundo: string;
   nomeCor: string;
@@ -307,6 +307,8 @@ export function CardReceita({
   onLimpar: () => void;
   onPublico: (p: "menino" | "menina" | null) => void;
   seletorCombo?: ReactNode;
+  /** Receita ligada ao combo especial CROMIA: círculo cromático sobre a cor da camiseta. */
+  cromia?: boolean;
 }) {
   const m = MEDIDAS_CARD[tamanho];
   const alturaFaixa = FAIXA_RECEITA[tamanho];
