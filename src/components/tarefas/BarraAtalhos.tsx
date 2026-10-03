@@ -172,9 +172,11 @@ export function BarraAtalhos() {
       )}
     >
       {itens.map((a) => {
+        const [destinoPath, destinoQs] = (a.destino ?? "").split("?");
+        const destinoSearch = destinoQs ? Object.fromEntries(new URLSearchParams(destinoQs)) : undefined;
         const ativo = a.quadro_id
           ? caminho === `/tarefas/quadros/${a.quadro_id}`
-          : caminho === a.destino;
+          : caminho === destinoPath;
         const estilo = { borderColor: corDoAtalho(a) };
         const classe = cn(chip, ativo && "bg-primary-soft text-primary");
         return (
