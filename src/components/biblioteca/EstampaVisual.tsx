@@ -348,26 +348,14 @@ export function CardReceita({
 
         <div className="relative" style={{ height: m.lado }}>
           {cromia ? (
-            <>
-              <span
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-                style={{
-                  width: m.bolinha * 1.6,
-                  height: m.bolinha * 1.6,
-                  background: "conic-gradient(#f43f5e, #f59e0b, #facc15, #4ade80, #22d3ee, #3b82f6, #a855f7, #f43f5e)",
-                  filter: "blur(5px)",
-                  opacity: 0.6,
-                }}
-              />
-              <span
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-black/10 shadow-sm"
-                style={{
-                  width: m.bolinha * 1.3,
-                  height: m.bolinha * 1.3,
-                  background: "conic-gradient(#f43f5e, #f59e0b, #facc15, #4ade80, #22d3ee, #3b82f6, #a855f7, #f43f5e)",
-                }}
-              />
-            </>
+            <span
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                width: m.bolinha * 2.6,
+                height: m.bolinha * 2.6,
+                background: "conic-gradient(#f43f5e, #f59e0b, #facc15, #4ade80, #22d3ee, #3b82f6, #a855f7, #f43f5e)",
+              }}
+            />
           ) : null}
           {!cromia && itens.slice(0, 6).map((it, k) => {
             const pos = face[k] ?? [50, 50];
