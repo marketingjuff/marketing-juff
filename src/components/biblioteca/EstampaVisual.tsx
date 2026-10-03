@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Save, Shuffle, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { estampaQueryOptions as coresEstampaQueryOptions, type CorEstampa } from "@/lib/biblioteca-estampa";
 import type { ItemCor } from "@/lib/biblioteca-estampas";
 import { textoSobreCor } from "@/config/produtos";

@@ -623,7 +623,82 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
             </div>
           </div>
         ) : (
+        <div className="space-y-5">
+          {editavel ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {e.cores.map((cid) => {
+                const cor = corPorId.get(cid);
+                if (!cor) return null;
+                return (
+                  <span key={cid} className="flex items-center gap-1.5 rounded-full border border-border py-1 pl-2 pr-1 text-xs capitalize">
+                    <Bolinha hex={cor.hex} /> {cor.nome}
+                    <button type="button" className="text-muted-foreground hover:text-destructive" title="Tirar cor da estampa" onClick={() => mudarCores(e.cores.filter((x) => x !== cid))}>
+                      <Trash2 className="size-3" />
+                    </button>
+                  </span>
+                );
+              })}
+              <AcrescentarCor cores={cores} usadas={e.cores} onEscolher={(c) => mudarCores([...e.cores, c])} />
+            </div>
+          ) : null}
         
+          {e.grupos.map((g) => {
+            const gen = generoDoGrupo(g.modelos, produtos);
+            const infantil = gen === "infantil";
+            const linha = e.cores
+              .map((cid) => ({ cid, cor: corPorId.get(cid), rec: receitaDe(g.id, cid) }))
+              .filter((x) => x.cor);
+            const temMarca = infantil && linha.some((x) => x.rec?.publico);
+            const fileiras = temMarca
+              ? [
+                  linha.filter((x) => x.rec?.publico === "menino"),
+                  linha.filter((x) => x.rec?.publico === "menina"),
+                  linha.filter((x) => !x.rec?.publico),
+                ].filter((f) => f.length)
+              : [linha];
+        
+            return (
+              <div key={g.id}>
+                <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {g.nome} {gen ? <span className="font-normal opacity-70">{ROTULO_GENERO[gen]}</span> : null}
+                </p>
+                <div className="space-y-1.5">
+                  {fileiras.map((fileira, fi) => (
+                    <div key={fi} className="flex flex-wrap gap-1.5">
+                      {fileira.map(({ cid, cor, rec }) => {
+                        const itens: ItemCor[] = Array.from({ length: n }, (_, i) => rec?.itens[i] ?? { codigo: "", c: 0, m: 0, y: 0, k: 0 });
+                        const combo = combos.find((c) => c.id === rec?.combo_id);
+                        const completa = itens.every((i) => i.codigo);
+                        return (
+                          <CardReceita
+                            key={cid}
+                            fundo={cor!.hex}
+                            nomeCor={cor!.nome}
+                            itens={itens}
+                            porCodigo={porCodigo}
+                            codigo={combo ? combo.codigo : null}
+                            temReceita={!!rec}
+                            tamanho={tamCard}
+                            editavel={editavel}
+                            aviso={avisos[chave(g.id, cid)]}
+                            infantil={infantil}
+                            publico={rec?.publico ?? null}
+                            podeSalvar={!!rec && !combo && completa}
+                            onTrocar={(ordem, c) => trocarCor(g.id, cid, ordem, c)}
+                            onSortear={() => sortear(g, cid)}
+                            onSalvar={() => { if (rec) void salvarCombo(g, cid, { ...rec, itens }); }}
+                            onLimpar={() => limparReceita(g.id, cid)}
+                            onPublico={(p) => mudarPublico(g.id, cid, p)}
+                          />
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
         )}
       </Bloco>
 
