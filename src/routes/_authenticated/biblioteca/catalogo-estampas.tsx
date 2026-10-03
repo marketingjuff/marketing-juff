@@ -34,6 +34,8 @@ import {
   salvarEstampa,
   salvarGrupo,
   salvarReceita,
+  salvarTipoEstampa,
+  salvarPublicoReceita,
   textoCmykItem,
   urlsEstampaQueryOptions,
   type Combo,
@@ -176,7 +178,7 @@ function Lista({ editavel }: { editavel: boolean }) {
                   )}
                 </div>
                 <div className="p-2">
-                  <div className="truncate text-sm font-medium">{e.nome}</div>
+                  <div className="flex items-center gap-1"><span className="truncate text-sm font-medium">{e.nome}</span>{e.tipo === "cromia" ? <span className="shrink-0 text-[10px] font-medium text-muted-foreground">CROMIA</span> : null}</div>
                   <div className="text-xs text-muted-foreground">{e.n_papeis} cores · {e.n_modelos * e.n_cores} produtos</div>
                 </div>
               </button>
@@ -321,7 +323,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
         ...x,
         receitas: r
           ? x.receitas.map((y) => (y.id === r.id ? { ...y, combo_id: comboId, itens } : y))
-          : [...x.receitas, { id: `tmp-${gid}-${cid}`, grupo_id: gid, cor_id: cid, combo_id: comboId, itens }],
+          : [...x.receitas, { id: `tmp-${gid}-${cid}`, grupo_id: gid, cor_id: cid, combo_id: comboId, publico: null, itens }],
       }),
       () => salvarReceita(id, gid, cid, comboId, itens),
       () => {
@@ -562,10 +564,25 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
 
       <Bloco titulo="Receitas" acoes={editavel ? (
         <div className="flex flex-wrap gap-1">
+          <div className="flex rounded-md border border-border p-0.5">
+            {(["codigo", "cromia"] as const).map((t) => (
+              <button key={t} type="button" className={cn("rounded px-2 py-1 text-xs", e.tipo === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary")} onClick={() => e.tipo !== t && otimista((x) => ({ ...x, tipo: t }), () => salvarTipoEstampa(id, t), () => void qc.invalidateQueries({ queryKey: K_LISTA }))}>
+                {t === "codigo" ? "Código" : "Cromia"}
+              </button>
+            ))}
+          </div>
           <Button variant="ghost" size="sm" className="gap-1" onClick={sortearVazias}><Sparkles className="size-4" /> Sortear vazias</Button>
           <CopiarGrupo grupos={e.grupos} onCopiar={copiarGrupo} />
         </div>
       ) : undefined}>
+        {e.tipo === "cromia" ? (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Estampa em cromia, não usa receita de código.</p>
+            <div className="flex flex-wrap gap-2">
+              {e.cores.map((cid) => { const cor = corPorId.get(cid); return cor ? <span key={cid} className="flex items-center gap-1 text-sm capitalize"><Bolinha hex={cor.hex} /> {cor.nome}</span> : null; })}
+            </div>
+          </div>
+        ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-separate border-spacing-1">
             <thead>
@@ -597,6 +614,20 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
                     </td>
                     {e.grupos.map((g) => (
                       <td key={g.id} className="align-top">
+                        {(() => {
+                          const rec = receitaDe(g.id, cid);
+                          if (!rec || generoDoGrupo(g.modelos, produtos) !== "infantil") return null;
+                          return (
+                            <div className="mb-1 flex gap-1">
+                              {(["menino", "menina"] as const).map((pb) => (
+                                <button key={pb} type="button" disabled={!editavel} className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium uppercase", rec.publico === pb ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary")}
+                                  onClick={() => { const novo = rec.publico === pb ? null : pb; otimista((x) => ({ ...x, receitas: x.receitas.map((y) => (y.id === rec.id ? { ...y, publico: novo } : y)) }), () => salvarPublicoReceita(rec.id, novo)); }}>
+                                  {pb}
+                                </button>
+                              ))}
+                            </div>
+                          );
+                        })()}
                         <Celula
                           cor={cor}
                           receita={receitaDe(g.id, cid)}
@@ -617,6 +648,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
             </tbody>
           </table>
         </div>
+        )}
         {editavel ? <AcrescentarCor cores={cores} usadas={e.cores} onEscolher={(c) => mudarCores([...e.cores, c])} /> : null}
       </Bloco>
 
