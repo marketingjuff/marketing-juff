@@ -211,7 +211,8 @@ export function BarraAtalhos() {
               </span>
             ) : (
               <Link
-                to={a.quadro_id ? `/tarefas/quadros/${a.quadro_id}` : (a.destino ?? "/")}
+                to={(a.quadro_id ? `/tarefas/quadros/${a.quadro_id}` : destinoPath || "/") as never}
+                search={destinoSearch as never}
                 title={a.label}
                 draggable={false}
                 className={classe}
