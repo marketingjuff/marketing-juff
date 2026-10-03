@@ -24,12 +24,12 @@ import {
 
 const K = combosQueryOptions.queryKey;
 
-export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
+export function PainelCombos({ editavel = true, destaque = null }: { editavel?: boolean; destaque?: string | null }) {
   const qc = useQueryClient();
   const { data: combos = [] } = useQuery(combosQueryOptions);
   const { data: cores = [] } = useQuery(coresQueryOptions);
   const { porCodigo } = useCoresEstampa();
-  const [busca, setBusca] = useState("");
+  const [busca, setBusca] = useState(destaque ?? "");
   const [editando, setEditando] = useState<Combo | "novo" | null>(null);
   const q = busca.trim().toUpperCase();
   const filtrados = useMemo(() => combos.filter((c) => c.codigo !== "CROMIA" && (!q || c.codigo.toUpperCase().includes(q))), [combos, q]);
@@ -135,7 +135,7 @@ export function PainelCombos({ editavel = true }: { editavel?: boolean }) {
             return lista.map(({ combo: c, uni }) => (
                 <Popover key={c.id} open={verUso === `${chave}:${c.id}`} onOpenChange={(o) => setVerUso(o ? `${chave}:${c.id}` : null)}>
                   <PopoverAnchor asChild>
-                    <div className="group flex flex-col items-center">
+                    <div className="group flex flex-col items-center" {...arrastavelCombo(c.codigo)} title={`${c.codigo} — arraste até a barra de atalhos para fixar`}>
                       <CardCombo
                         codigo={c.codigo}
                         fundo={cor?.hex ?? "#888888"}
