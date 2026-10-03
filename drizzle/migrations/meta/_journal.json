@@ -267,6 +267,13 @@
       "when": 1790999386120,
       "tag": "0037_apagar_receita",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1791000445166,
+      "tag": "0038_estampa_grupo_cores",
+      "breakpoints": true
     }
   ]
 }
