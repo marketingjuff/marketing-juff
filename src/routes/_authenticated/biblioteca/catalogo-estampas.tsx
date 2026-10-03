@@ -717,7 +717,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
                             publico={rec?.publico ?? null}
                             podeSalvar={!!rec && !combo && completa}
                             onTrocar={(ordem, c) => trocarCor(g.id, cid, ordem, c)}
-                            seletorCombo={<SeletorCombo combos={combos} genero={gen} nCores={n} atual={rec?.combo_id ?? null} onEscolher={(c) => aplicarCombo(g, cid, c)} />}
+                            seletorCombo={<SeletorCombo combos={combos} porCodigo={porCodigo} genero={gen} nCores={n} atual={rec?.combo_id ?? null} onEscolher={(c) => aplicarCombo(g, cid, c)} />}
                             onSortear={() => sortear(g, cid)}
                             onSalvar={() => { if (rec) void salvarCombo(g, cid, { ...rec, itens }); }}
                             onLimpar={() => limparReceita(g.id, cid)}
@@ -761,8 +761,9 @@ function AcrescentarCor({ cores, usadas, onEscolher }: { cores: CorBiblioteca[];
 }
 
 /** Popover para puxar um combo CB existente direto para a célula. */
-function SeletorCombo({ combos, genero, nCores, atual, onEscolher }: {
+function SeletorCombo({ combos, porCodigo, genero, nCores, atual, onEscolher }: {
   combos: Combo[];
+  porCodigo: Map<string, CorEstampa>;
   genero: ReturnType<typeof generoDoGrupo>;
   nCores: number;
   atual: string | null;
@@ -794,7 +795,7 @@ function SeletorCombo({ combos, genero, nCores, atual, onEscolher }: {
             >
               <span className="flex -space-x-1">
                 {c.itens.slice(0, 6).map((it, i) => (
-                  <span key={i} className="size-3.5 rounded-full border border-black/10" style={{ backgroundColor: porCodigoGlobal?.get(it.codigo.toUpperCase())?.hex ?? "#888888" }} />
+                  <span key={i} className="size-3.5 rounded-full border border-black/10" style={{ backgroundColor: porCodigo.get(it.codigo.toUpperCase())?.hex ?? "#888888" }} />
                 ))}
               </span>
               <span className="font-medium">{c.codigo}</span>
