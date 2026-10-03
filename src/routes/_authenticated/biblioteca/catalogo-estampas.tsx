@@ -717,6 +717,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
                             publico={rec?.publico ?? null}
                             podeSalvar={!!rec && !combo && completa}
                             onTrocar={(ordem, c) => trocarCor(g.id, cid, ordem, c)}
+                            seletorCombo={<SeletorCombo combos={combos} genero={gen} nCores={n} atual={rec?.combo_id ?? null} onEscolher={(c) => aplicarCombo(g, cid, c)} />}
                             onSortear={() => sortear(g, cid)}
                             onSalvar={() => { if (rec) void salvarCombo(g, cid, { ...rec, itens }); }}
                             onLimpar={() => limparReceita(g.id, cid)}
@@ -754,6 +755,54 @@ function AcrescentarCor({ cores, usadas, onEscolher }: { cores: CorBiblioteca[];
             <Bolinha hex={c.hex} /> {c.nome}
           </button>
         ))}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/** Popover para puxar um combo CB existente direto para a célula. */
+function SeletorCombo({ combos, genero, nCores, atual, onEscolher }: {
+  combos: Combo[];
+  genero: ReturnType<typeof generoDoGrupo>;
+  nCores: number;
+  atual: string | null;
+  onEscolher: (c: Combo) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const [busca, setBusca] = useState("");
+  const lista = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    return combos
+      .filter((c) => c.genero === genero && c.itens.length === nCores)
+      .filter((c) => !termo || c.codigo.toLowerCase().includes(termo))
+      .slice(0, 60);
+  }, [combos, genero, nCores, busca]);
+  return (
+    <Popover open={aberto} onOpenChange={setAberto}>
+      <PopoverTrigger asChild>
+        <button type="button" title="Puxar combo da lista" className="rounded px-1 py-0.5 text-[10px] font-bold leading-none hover:bg-white/20">CB</button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-1" align="start">
+        <Input autoFocus value={busca} onChange={(ev) => setBusca(ev.target.value)} placeholder="Buscar CB…" className="mb-1 h-8" />
+        <div className="max-h-72 overflow-y-auto">
+          {lista.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className={cn("flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-secondary", c.id === atual && "bg-secondary")}
+              onClick={() => { onEscolher(c); setAberto(false); setBusca(""); }}
+            >
+              <span className="flex -space-x-1">
+                {c.itens.slice(0, 6).map((it, i) => (
+                  <span key={i} className="size-3.5 rounded-full border border-black/10" style={{ backgroundColor: porCodigoGlobal?.get(it.codigo.toUpperCase())?.hex ?? "#888888" }} />
+                ))}
+              </span>
+              <span className="font-medium">{c.codigo}</span>
+              {c.uso ? <span className="ml-auto text-xs text-muted-foreground">{c.uso}×</span> : null}
+            </button>
+          ))}
+          {!lista.length ? <p className="px-2 py-3 text-xs text-muted-foreground">Nenhum combo com {nCores} cor(es) neste gênero.</p> : null}
+        </div>
       </PopoverContent>
     </Popover>
   );
