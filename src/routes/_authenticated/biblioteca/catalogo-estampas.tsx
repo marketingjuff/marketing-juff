@@ -170,10 +170,10 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
       {grupos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma estampa ainda.</p> : null}
       {grupos.map((g) => (
         <div key={g.id ?? "sem"}>
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="mb-1 text-lg font-semibold uppercase tracking-wide text-muted-foreground">
             {g.nome} <span className="opacity-70">· {g.itens.length}</span>
           </p>
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0">
             {g.itens.map((e, i) => (
               <button
                 key={e.id}
@@ -182,12 +182,12 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
                 title={`${e.nome}, ${e.n_papeis} ${e.n_papeis === 1 ? "cor" : "cores"}, ${e.n_modelos * e.n_cores} produtos — arraste até a barra de atalhos para fixar`}
                 onClick={() => void navigate({ to: "/biblioteca/catalogo-estampas", search: { id: e.id } })}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left transition hover:bg-primary/10",
+                  "flex w-full items-center gap-2 rounded-md px-3 py-0.5 text-left transition hover:bg-primary/10",
                   i % 2 === 0 ? "bg-background" : "bg-muted/70",
                   e.situacao === "descontinuado" && "opacity-50",
                 )}
               >
-                <span className="text-base font-medium">{e.nome}</span>
+                <span className="text-base font-medium leading-tight">{e.nome}</span>
                 <span className="ml-auto flex items-center gap-1.5">
                   {e.tipo === "cromia" ? <span className="text-[10px] font-medium text-muted-foreground">CROMIA</span> : null}
                   <span className="text-xs tabular-nums text-muted-foreground">{e.n_modelos * e.n_cores}</span>
