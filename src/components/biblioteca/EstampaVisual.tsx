@@ -214,6 +214,70 @@ export function CardCombo({ codigo, fundo, itens, porCodigo, tamanho = "m", uso,
     </div>
   );
 }
+
+/**
+ * Card especial "Cromia": degradê com círculo cromático no centro.
+ * Não puxa cor de lugar nenhum — vale para qualquer gênero e qualquer camiseta.
+ */
+export function CardCromia({ tamanho = "m", title }: { tamanho?: TamanhoCard; title?: string }) {
+  const m = MEDIDAS_CARD[tamanho];
+  const d = Math.round(m.lado * 0.52);
+  return (
+    <div
+      title={title ?? "Cromia: combo especial, serve para qualquer gênero e qualquer cor de camiseta"}
+      className="shrink-0 overflow-hidden rounded-md border border-border"
+      style={{ width: m.lado }}
+    >
+      <div
+        style={{
+          height: m.faixa + m.lado,
+          background: "linear-gradient(135deg, #fdfbfb 0%, #e8e8ec 45%, #dcdce4 100%)",
+        }}
+      >
+        <div
+          className="flex flex-col justify-center px-1.5"
+          style={{ height: m.faixa, backgroundColor: "rgba(0,0,0,0.06)", color: "#3f3f46" }}
+        >
+          <strong style={{ fontSize: m.fonte }} className="leading-none">CROMIA</strong>
+          <span className="font-bold leading-tight opacity-60" style={{ fontSize: m.fonteUso }}>especial</span>
+        </div>
+        <div className="relative flex items-center justify-center" style={{ height: m.lado }}>
+          <span
+            className="absolute rounded-full"
+            style={{
+              width: d + 10,
+              height: d + 10,
+              background: "conic-gradient(#f43f5e, #f59e0b, #facc15, #4ade80, #22d3ee, #3b82f6, #a855f7, #f43f5e)",
+              filter: "blur(6px)",
+              opacity: 0.55,
+            }}
+          />
+          <span
+            className="relative rounded-full border border-black/10 shadow-sm"
+            style={{
+              width: d,
+              height: d,
+              background: "conic-gradient(#f43f5e, #f59e0b, #facc15, #4ade80, #22d3ee, #3b82f6, #a855f7, #f43f5e)",
+            }}
+          />
+        </div>
+      </div>
+      <div
+        className="flex items-center justify-center font-bold"
+        style={{
+          height: m.fatia * 2,
+          fontSize: m.fonteCor,
+          lineHeight: 1,
+          background: "linear-gradient(90deg, #f43f5e, #f59e0b, #4ade80, #22d3ee, #a855f7)",
+          color: "#ffffff",
+          textShadow: "0 1px 2px rgba(0,0,0,0.35)",
+        }}
+      >
+        qualquer cor
+      </div>
+    </div>
+  );
+}
 /** Altura da faixa de código do card de receita. Menor que a do combo porque não tem linha de uso. */
 const FAIXA_RECEITA: Record<TamanhoCard, number> = { p: 18, m: 22, g: 26 };
 
