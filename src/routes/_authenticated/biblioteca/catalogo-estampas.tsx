@@ -111,8 +111,6 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
   const [busca, setBusca] = useState("");
   const [novo, setNovo] = useState("");
   const [visao, setVisao] = useState<"estampas" | "combos">(visaoInicial);
-  const imgs = estampas.map((e) => e.imagem_caminho).filter(Boolean) as string[];
-  const { data: urls = {} } = useQuery(urlsEstampaQueryOptions(imgs));
 
   const q = busca.trim().toLowerCase();
   const filtradas = estampas
@@ -137,7 +135,7 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex gap-1 border-b border-border">
         <Button
           type="button"
@@ -169,32 +167,30 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
       </div>
       {grupos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma estampa ainda.</p> : null}
       {grupos.map((g) => (
-        <Bloco key={g.id ?? "sem"} titulo={`${g.nome} · ${g.itens.length}`}>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+        <div key={g.id ?? "sem"}>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {g.nome} <span className="opacity-70">· {g.itens.length}</span>
+          </p>
+          <div className="flex flex-wrap gap-1.5">
             {g.itens.map((e) => (
               <button
                 key={e.id}
                 type="button"
                 {...arrastavelEstampa(e.id, e.nome)}
-                title={`${e.nome} — arraste até a barra de atalhos para fixar`}
+                title={`${e.nome}, ${e.n_papeis} ${e.n_papeis === 1 ? "cor" : "cores"}, ${e.n_modelos * e.n_cores} produtos — arraste até a barra de atalhos para fixar`}
                 onClick={() => void navigate({ to: "/biblioteca/catalogo-estampas", search: { id: e.id } })}
-                className={cn("overflow-hidden rounded-lg border border-border bg-background text-left transition hover:border-primary", e.situacao === "descontinuado" && "opacity-50")}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-sm transition hover:border-primary",
+                  e.situacao === "descontinuado" && "opacity-50",
+                )}
               >
-                <div className="flex aspect-square items-center justify-center bg-muted">
-                  {e.imagem_caminho && urls[e.imagem_caminho] ? (
-                    <img src={urls[e.imagem_caminho]} alt={e.nome} className="size-full object-contain" />
-                  ) : (
-                    <ImagePlus className="size-6 text-muted-foreground" />
-                  )}
-                </div>
-                <div className="p-2">
-                  <div className="flex items-center gap-1"><span className="truncate text-sm font-medium">{e.nome}</span>{e.tipo === "cromia" ? <span className="shrink-0 text-[10px] font-medium text-muted-foreground">CROMIA</span> : null}</div>
-                  <div className="text-xs text-muted-foreground">{e.n_papeis} cores · {e.n_modelos * e.n_cores} produtos</div>
-                </div>
+                <span>{e.nome}</span>
+                {e.tipo === "cromia" ? <span className="text-[10px] font-medium text-muted-foreground">CROMIA</span> : null}
+                <span className="text-xs tabular-nums text-muted-foreground">{e.n_modelos * e.n_cores}</span>
               </button>
             ))}
           </div>
-        </Bloco>
+        </div>
       ))}
         </>
       )}
