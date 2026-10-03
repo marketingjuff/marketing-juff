@@ -427,7 +427,23 @@ export function CardReceita({
       </div>
 
       <div className="grid" style={{ gridTemplateColumns: "repeat(6, 1fr)", gridAutoRows: `${m.fatia}px` }}>
-        {itens.slice(0, 6).map((it, k) => {
+        {cromia ? (
+          <span
+            className="flex items-center justify-center font-bold"
+            style={{
+              gridColumn: "span 6",
+              gridRow: "span 2",
+              fontSize: m.fonteCor,
+              lineHeight: 1,
+              background: "linear-gradient(90deg, #f43f5e, #f59e0b, #4ade80, #22d3ee, #a855f7)",
+              color: "#ffffff",
+              textShadow: "0 1px 2px rgba(0,0,0,0.35)",
+            }}
+          >
+            qualquer cor
+          </span>
+        ) : null}
+        {!cromia && itens.slice(0, 6).map((it, k) => {
           const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
           const cor = h ?? "#d4d4d8";
           const estilo = {
