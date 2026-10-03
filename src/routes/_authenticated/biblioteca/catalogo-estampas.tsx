@@ -1,11 +1,11 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowLeft, Copy, Download, FileText, ImagePlus, Plus, Save, Shuffle, Sparkles, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Bloco, CampoAutoSave } from "@/components/biblioteca/comum";
-import { Amostra, Bolinha, EscolherCorEstampa, hexDoCodigo, useCoresEstampa } from "@/components/biblioteca/EstampaVisual";
+import { Amostra, Bolinha, CardReceita, EscolherCorEstampa, hexDoCodigo, useCoresEstampa, type TamanhoCard } from "@/components/biblioteca/EstampaVisual";
 import { PainelCombos } from "@/components/biblioteca/PainelCombos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import {
   ROTULO_GENERO,
   apagarEstampa,
   apagarGrupo,
+  apagarReceita,
   categoriasEstampaQueryOptions,
   combosQueryOptions,
   criarCategoria,
@@ -206,6 +207,15 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
   const { data: combos = [] } = useQuery(combosQueryOptions);
   const { porCodigo } = useCoresEstampa();
   const [avisos, setAvisos] = useState<Record<string, string>>({});
+  const [tamCard, setTamCard] = useState<TamanhoCard>("m");
+  useEffect(() => {
+    const t = localStorage.getItem("juff:receitas:tamanho");
+    if (t === "p" || t === "m" || t === "g") setTamCard(t);
+  }, []);
+  function mudarTamCard(t: TamanhoCard) {
+    setTamCard(t);
+    localStorage.setItem("juff:receitas:tamanho", t);
+  }
   const caminhos = [est?.imagem_caminho, est?.ficha_caminho].filter(Boolean) as string[];
   const { data: urls = {} } = useQuery(urlsEstampaQueryOptions(caminhos));
   const imgRef = useRef<HTMLInputElement>(null);
@@ -376,6 +386,29 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
     } catch (err) {
       toast.error((err as Error).message);
     }
+  }
+
+  function limparReceita(gid: string, cid: string) {
+    const r = receitaDe(gid, cid);
+    if (!r) return;
+    setAvisos((a) => ({ ...a, [chave(gid, cid)]: "" }));
+    otimista(
+      (x) => ({ ...x, receitas: x.receitas.filter((y) => y.id !== r.id) }),
+      () => apagarReceita(r.id),
+      () => {
+        void qc.invalidateQueries({ queryKey: K });
+        void qc.invalidateQueries({ queryKey: K_COMBOS });
+      },
+    );
+  }
+
+  function mudarPublico(gid: string, cid: string, p: Receita["publico"]) {
+    const r = receitaDe(gid, cid);
+    if (!r) return;
+    otimista(
+      (x) => ({ ...x, receitas: x.receitas.map((y) => (y.id === r.id ? { ...y, publico: p } : y)) }),
+      () => salvarPublicoReceita(r.id, p),
+    );
   }
 
   function copiarGrupo(origem: string, destino: string) {
@@ -565,6 +598,13 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
       <Bloco titulo="Receitas" acoes={editavel ? (
         <div className="flex flex-wrap gap-1">
           <div className="flex rounded-md border border-border p-0.5">
+            {(["p", "m", "g"] as const).map((t) => (
+              <button key={t} type="button" className={cn("rounded px-2 py-1 text-xs uppercase", tamCard === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary")} onClick={() => mudarTamCard(t)}>
+                {t}
+              </button>
+            ))}
+          </div>
+          <div className="flex rounded-md border border-border p-0.5">
             {(["codigo", "cromia"] as const).map((t) => (
               <button key={t} type="button" className={cn("rounded px-2 py-1 text-xs", e.tipo === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary")} onClick={() => e.tipo !== t && otimista((x) => ({ ...x, tipo: t }), () => salvarTipoEstampa(id, t), () => void qc.invalidateQueries({ queryKey: K_LISTA }))}>
                 {t === "codigo" ? "Código" : "Cromia"}
@@ -583,123 +623,13 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
             </div>
           </div>
         ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-separate border-spacing-1">
-            <thead>
-              <tr>
-                <th className="w-40 text-left text-xs font-medium text-muted-foreground">Camiseta</th>
-                {e.grupos.map((g) => {
-                  const gen = generoDoGrupo(g.modelos, produtos);
-                  return (
-                    <th key={g.id} className="min-w-56 text-left text-sm font-semibold">
-                      {g.nome} <span className="text-[10px] font-normal uppercase text-muted-foreground">{gen ? ROTULO_GENERO[gen] : ""}</span>
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              {e.cores.map((cid) => {
-                const cor = corPorId.get(cid);
-                if (!cor) return null;
-                return (
-                  <tr key={cid}>
-                    <td className="align-top">
-                      <div className="flex items-center gap-2 pt-2 text-sm">
-                        <Bolinha hex={cor.hex} tamanho={18} /> <span className="capitalize">{cor.nome}</span>
-                        {editavel ? (
-                          <button type="button" className="ml-auto text-muted-foreground hover:text-destructive" title="Tirar cor" onClick={() => mudarCores(e.cores.filter((x) => x !== cid))}><Trash2 className="size-3.5" /></button>
-                        ) : null}
-                      </div>
-                    </td>
-                    {e.grupos.map((g) => (
-                      <td key={g.id} className="align-top">
-                        {(() => {
-                          const rec = receitaDe(g.id, cid);
-                          if (!rec || generoDoGrupo(g.modelos, produtos) !== "infantil") return null;
-                          return (
-                            <div className="mb-1 flex gap-1">
-                              {(["menino", "menina"] as const).map((pb) => (
-                                <button key={pb} type="button" disabled={!editavel} className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium uppercase", rec.publico === pb ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary")}
-                                  onClick={() => { const novo = rec.publico === pb ? null : pb; otimista((x) => ({ ...x, receitas: x.receitas.map((y) => (y.id === rec.id ? { ...y, publico: novo } : y)) }), () => salvarPublicoReceita(rec.id, novo)); }}>
-                                  {pb}
-                                </button>
-                              ))}
-                            </div>
-                          );
-                        })()}
-                        <Celula
-                          cor={cor}
-                          receita={receitaDe(g.id, cid)}
-                          n={n}
-                          combos={combos}
-                          aviso={avisos[chave(g.id, cid)]}
-                          porCodigo={porCodigo}
-                          editavel={editavel}
-                          onTrocar={(ordem, c) => trocarCor(g.id, cid, ordem, c)}
-                          onSortear={() => sortear(g, cid)}
-                          onSalvar={(r) => void salvarCombo(g, cid, r)}
-                        />
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        
         )}
-        {editavel ? <AcrescentarCor cores={cores} usadas={e.cores} onEscolher={(c) => mudarCores([...e.cores, c])} /> : null}
       </Bloco>
 
       <Bloco titulo={`Produtos gerados · ${totalProdutos}`} acoes={<Button size="sm" variant="outline" className="gap-1" onClick={() => void exportar()}><Download className="size-4" /> Exportar planilha</Button>}>
         <p className="text-xs text-muted-foreground">Uma linha por modelo e cor de camiseta, com código e CMYK de cada cor da estampa.</p>
       </Bloco>
-    </div>
-  );
-}
-
-function Celula({
-  cor, receita, n, combos, aviso, porCodigo, editavel, onTrocar, onSortear, onSalvar,
-}: {
-  cor: CorBiblioteca;
-  receita: Receita | undefined;
-  n: number;
-  combos: Combo[];
-  aviso?: string | undefined;
-  porCodigo: ReturnType<typeof useCoresEstampa>["porCodigo"];
-  editavel: boolean;
-  onTrocar: (ordem: number, c: ItemCor) => void;
-  onSortear: () => void;
-  onSalvar: (r: Receita) => void;
-}) {
-  const itens: ItemCor[] = Array.from({ length: n }, (_, i) => receita?.itens[i] ?? { codigo: "", c: 0, m: 0, y: 0, k: 0 });
-  const combo = combos.find((c) => c.id === receita?.combo_id);
-  const completa = itens.every((i) => i.codigo);
-  return (
-    <div className={cn("space-y-1 rounded-lg border border-border bg-background p-2", aviso && "border-amber-500")}>
-      <div className="flex items-center gap-2">
-        <Amostra fundo={cor.hex} itens={itens} porCodigo={porCodigo} />
-        <span className="text-xs text-muted-foreground">{combo ? combo.codigo : receita ? "sem código" : ""}</span>
-        <div className="ml-auto flex gap-0.5">
-          {editavel ? <Button variant="ghost" size="icon" className="size-7" title="Embaralhar" onClick={onSortear}><Shuffle className="size-3.5" /></Button> : null}
-          {editavel && receita && !combo && completa ? <Button variant="ghost" size="icon" className="size-7" title="Salvar combo" onClick={() => onSalvar({ ...receita, itens })}><Save className="size-3.5" /></Button> : null}
-        </div>
-      </div>
-      {!receita ? <p className="text-[11px] text-muted-foreground">Escolha as cores ou sorteie.</p> : null}
-      {itens.map((it, i) => (
-        <Popover key={i}>
-          <PopoverTrigger asChild disabled={!editavel}>
-            <button type="button" className="flex w-full items-center gap-2 rounded px-1 py-0.5 text-left text-xs hover:bg-secondary">
-              <Bolinha hex={it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null} />
-              <span className="w-10 font-semibold">{it.codigo || "—"}</span>
-              <span className="tabular-nums text-muted-foreground">{it.codigo ? textoCmykItem(it) : "escolher"}</span>
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80"><EscolherCorEstampa onEscolher={(c) => onTrocar(i, c)} /></PopoverContent>
-        </Popover>
-      ))}
-      {aviso ? <p className="text-[11px] text-amber-600">{aviso}</p> : null}
     </div>
   );
 }

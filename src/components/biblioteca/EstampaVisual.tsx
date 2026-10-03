@@ -212,3 +212,161 @@ export function CardCombo({ codigo, fundo, itens, porCodigo, tamanho = "m", uso,
     </div>
   );
 }
+/** Altura da faixa de código do card de receita. Menor que a do combo porque não tem linha de uso. */
+const FAIXA_RECEITA: Record<TamanhoCard, number> = { p: 18, m: 22, g: 26 };
+
+/**
+ * Card de uma receita dentro da estampa. Mesmo desenho do CardCombo, faixa de código em cima,
+ * dado no meio e faixa de cores embaixo, com as ações aparecendo por cima do dado no mouse.
+ */
+export function CardReceita({
+  fundo, nomeCor, itens, porCodigo, codigo, temReceita, tamanho = "m", editavel,
+  aviso, infantil, publico, podeSalvar, onTrocar, onSortear, onSalvar, onLimpar, onPublico,
+}: {
+  fundo: string;
+  nomeCor: string;
+  itens: ItemCor[];
+  porCodigo: Map<string, CorEstampa>;
+  codigo: string | null;
+  temReceita: boolean;
+  tamanho?: TamanhoCard;
+  editavel: boolean;
+  aviso?: string | undefined;
+  infantil: boolean;
+  publico: "menino" | "menina" | null;
+  podeSalvar: boolean;
+  onTrocar: (ordem: number, c: CorEstampa) => void;
+  onSortear: () => void;
+  onSalvar: () => void;
+  onLimpar: () => void;
+  onPublico: (p: "menino" | "menina" | null) => void;
+}) {
+  const m = MEDIDAS_CARD[tamanho];
+  const alturaFaixa = FAIXA_RECEITA[tamanho];
+  const bg = HEX.test(fundo) ? fundo : "#888888";
+  const txt = textoSobreCor(bg);
+  const claro = txt === "#ffffff";
+  const q = Math.min(Math.max(itens.length, 1), 6);
+  const face = FACE_DADO[q] ?? FACE_DADO[6]!;
+  const fatias = FATIAS_CARD[q] ?? FATIAS_CARD[6]!;
+
+  const legenda = [
+    nomeCor,
+    ...itens.map((i) => {
+      if (!i.codigo) return "sem cor";
+      const c = porCodigo.get(i.codigo.toUpperCase());
+      return `${i.codigo}${c?.nome ? ` ${c.nome}` : ""}  ${i.c} ${i.m} ${i.y} ${i.k}`;
+    }),
+    aviso || "",
+  ].filter(Boolean).join("\n");
+
+  return (
+    <div
+      title={legenda}
+      className={`group relative shrink-0 overflow-hidden rounded-md border ${temReceita ? "border-border" : "border-dashed border-muted-foreground/50"} ${aviso ? "ring-2 ring-amber-500" : ""}`}
+      style={{ width: m.lado }}
+    >
+      <div style={{ backgroundColor: bg, color: txt }}>
+        <div
+          className="flex items-center justify-between px-1.5 leading-none"
+          style={{ height: alturaFaixa, backgroundColor: claro ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.10)" }}
+        >
+          <strong style={{ fontSize: m.fonte }}>{codigo ?? (temReceita ? "sem código" : "")}</strong>
+          {infantil && publico ? (
+            <span className="uppercase opacity-70" style={{ fontSize: m.fonteUni }}>{publico === "menino" ? "men" : "mna"}</span>
+          ) : null}
+        </div>
+
+        <div className="relative" style={{ height: m.lado }}>
+          {itens.slice(0, 6).map((it, k) => {
+            const pos = face[k] ?? [50, 50];
+            const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
+            return (
+              <span
+                key={k}
+                className="absolute rounded-full border border-black/10"
+                style={{
+                  width: m.bolinha,
+                  height: m.bolinha,
+                  left: `${pos[0]}%`,
+                  top: `${pos[1]}%`,
+                  transform: "translate(-50%,-50%)",
+                  backgroundColor: h ?? "transparent",
+                  backgroundImage: h ? undefined : "repeating-linear-gradient(45deg,#d4d4d8 0 2px,transparent 2px 5px)",
+                }}
+              />
+            );
+          })}
+
+          {editavel ? (
+            <div className="absolute inset-0 hidden flex-col items-center justify-center gap-1.5 bg-black/55 text-white group-hover:flex">
+              <div className="flex items-center gap-2">
+                <button type="button" title="Embaralhar" className="rounded p-0.5 hover:bg-white/20" onClick={onSortear}>
+                  <Shuffle className="size-4" />
+                </button>
+                {podeSalvar ? (
+                  <button type="button" title="Salvar combo" className="rounded p-0.5 hover:bg-white/20" onClick={onSalvar}>
+                    <Save className="size-4" />
+                  </button>
+                ) : null}
+                {temReceita ? (
+                  <button type="button" title="Limpar receita" className="rounded p-0.5 hover:bg-white/20" onClick={onLimpar}>
+                    <Trash2 className="size-4" />
+                  </button>
+                ) : null}
+              </div>
+              {infantil && temReceita ? (
+                <div className="flex gap-1">
+                  {(["menino", "menina"] as const).map((pb) => (
+                    <button
+                      key={pb}
+                      type="button"
+                      className={`rounded px-1.5 py-0.5 text-[9px] uppercase leading-none ${publico === pb ? "bg-white text-black" : "border border-white/50"}`}
+                      onClick={() => onPublico(publico === pb ? null : pb)}
+                    >
+                      {pb}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="grid" style={{ gridTemplateColumns: "repeat(6, 1fr)", gridAutoRows: `${m.fatia}px` }}>
+        {itens.slice(0, 6).map((it, k) => {
+          const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
+          const cor = h ?? "#d4d4d8";
+          const estilo = {
+            gridColumn: `span ${fatias[k] ?? 2}`,
+            gridRow: q <= 3 ? "span 2" : undefined,
+            fontSize: m.fonteCor,
+            lineHeight: 1,
+            backgroundColor: cor,
+            color: textoSobreCor(cor),
+          } as const;
+          if (!editavel) {
+            return (
+              <span key={k} className="flex items-center justify-center font-bold" style={estilo}>
+                {it.codigo || "?"}
+              </span>
+            );
+          }
+          return (
+            <Popover key={k}>
+              <PopoverTrigger asChild>
+                <button type="button" className="flex items-center justify-center font-bold hover:brightness-110" style={estilo}>
+                  {it.codigo || "?"}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <EscolherCorEstampa onEscolher={(c) => onTrocar(k, c)} />
+              </PopoverContent>
+            </Popover>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
