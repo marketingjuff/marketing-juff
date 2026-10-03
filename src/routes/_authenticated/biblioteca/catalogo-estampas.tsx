@@ -52,7 +52,11 @@ import { baixarXlsx } from "@/lib/xlsx-simples";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/biblioteca/catalogo-estampas")({
-  validateSearch: (s: Record<string, unknown>): { id?: string } => (typeof s["id"] === "string" ? { id: s["id"] } : {}),
+  validateSearch: (s: Record<string, unknown>): { id?: string; visao?: string; combo?: string } => ({
+    ...(typeof s["id"] === "string" ? { id: s["id"] } : {}),
+    ...(typeof s["visao"] === "string" ? { visao: s["visao"] } : {}),
+    ...(typeof s["combo"] === "string" ? { combo: s["combo"] } : {}),
+  }),
   head: () => ({
     meta: [
       { title: "Estampas — Biblioteca — Marketing Juff" },
