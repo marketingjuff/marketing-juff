@@ -390,9 +390,16 @@ export async function apagarCombo(id: string) {
 }
 
 export async function criarCategoria(nome: string, posicao: number): Promise<string> {
+  const limpo = nome.trim();
+  const { data: existente } = await supabase
+    .from("biblioteca_estampa_categorias")
+    .select("id")
+    .ilike("nome", limpo)
+    .maybeSingle();
+  if (existente) return existente.id;
   const { data, error } = await supabase
     .from("biblioteca_estampa_categorias")
-    .insert({ nome: nome.trim(), posicao })
+    .insert({ nome: limpo, posicao })
     .select("id")
     .single();
   if (error) throw error;
