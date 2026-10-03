@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Save, Shuffle, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -223,7 +223,7 @@ const FAIXA_RECEITA: Record<TamanhoCard, number> = { p: 18, m: 22, g: 26 };
  */
 export function CardReceita({
   fundo, nomeCor, itens, porCodigo, codigo, temReceita, tamanho = "m", editavel,
-  aviso, infantil, publico, podeSalvar, onTrocar, onSortear, onSalvar, onLimpar, onPublico,
+  aviso, infantil, publico, podeSalvar, onTrocar, onSortear, onSalvar, onLimpar, onPublico, seletorCombo,
 }: {
   fundo: string;
   nomeCor: string;
@@ -242,6 +242,7 @@ export function CardReceita({
   onSalvar: () => void;
   onLimpar: () => void;
   onPublico: (p: "menino" | "menina" | null) => void;
+  seletorCombo?: ReactNode;
 }) {
   const m = MEDIDAS_CARD[tamanho];
   const alturaFaixa = FAIXA_RECEITA[tamanho];
@@ -303,6 +304,7 @@ export function CardReceita({
           {editavel ? (
             <div className="absolute inset-0 hidden flex-col items-center justify-center gap-1.5 bg-black/55 text-white group-hover:flex">
               <div className="flex items-center gap-2">
+                {seletorCombo}
                 <button type="button" title="Embaralhar" className="rounded p-0.5 hover:bg-white/20" onClick={onSortear}>
                   <Shuffle className="size-4" />
                 </button>
