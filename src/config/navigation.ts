@@ -217,7 +217,7 @@ export const NAVIGATION: MasterTab[] = [
       { key: "cores", label: "Cores", to: "/biblioteca/cores", permission: "biblioteca.marca" },
       { key: "textos", label: "Textos", to: "/biblioteca/textos", permission: "biblioteca.marca" },
       { key: "arquivos", label: "Arquivos", to: "/biblioteca/arquivos", permission: "biblioteca.arquivos" },
-      { key: "catalogo-estampas", label: "Estampas", to: "/biblioteca/catalogo-estampas", permission: "biblioteca.catalogo_estampas" },
+      { key: "catalogo-estampas", label: "Editor de Estampas", to: "/biblioteca/catalogo-estampas", permission: "biblioteca.catalogo_estampas" },
       { key: "estampas", label: "Cores de estampa", to: "/biblioteca/estampas", permission: "biblioteca.estampa" },
     ],
   },
