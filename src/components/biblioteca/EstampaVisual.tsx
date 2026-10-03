@@ -287,7 +287,7 @@ const FAIXA_RECEITA: Record<TamanhoCard, number> = { p: 18, m: 22, g: 26 };
  */
 export function CardReceita({
   fundo, nomeCor, itens, porCodigo, codigo, temReceita, tamanho = "m", editavel,
-  aviso, infantil, publico, podeSalvar, onTrocar, onSortear, onSalvar, onLimpar, onPublico, seletorCombo,
+  aviso, infantil, publico, podeSalvar, onTrocar, onSortear, onSalvar, onLimpar, onPublico, seletorCombo, cromia,
 }: {
   fundo: string;
   nomeCor: string;
@@ -307,6 +307,8 @@ export function CardReceita({
   onLimpar: () => void;
   onPublico: (p: "menino" | "menina" | null) => void;
   seletorCombo?: ReactNode;
+  /** Receita ligada ao combo especial CROMIA: círculo cromático sobre a cor da camiseta. */
+  cromia?: boolean;
 }) {
   const m = MEDIDAS_CARD[tamanho];
   const alturaFaixa = FAIXA_RECEITA[tamanho];
@@ -345,7 +347,29 @@ export function CardReceita({
         </div>
 
         <div className="relative" style={{ height: m.lado }}>
-          {itens.slice(0, 6).map((it, k) => {
+          {cromia ? (
+            <>
+              <span
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                style={{
+                  width: m.bolinha * 1.6,
+                  height: m.bolinha * 1.6,
+                  background: "conic-gradient(#f43f5e, #f59e0b, #facc15, #4ade80, #22d3ee, #3b82f6, #a855f7, #f43f5e)",
+                  filter: "blur(5px)",
+                  opacity: 0.6,
+                }}
+              />
+              <span
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-black/10 shadow-sm"
+                style={{
+                  width: m.bolinha * 1.3,
+                  height: m.bolinha * 1.3,
+                  background: "conic-gradient(#f43f5e, #f59e0b, #facc15, #4ade80, #22d3ee, #3b82f6, #a855f7, #f43f5e)",
+                }}
+              />
+            </>
+          ) : null}
+          {!cromia && itens.slice(0, 6).map((it, k) => {
             const pos = face[k] ?? [50, 50];
             const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
             return (
@@ -366,7 +390,7 @@ export function CardReceita({
           })}
 
           {editavel ? (
-            <div className="absolute inset-0 hidden flex-col items-center justify-center gap-1.5 bg-black/55 text-white group-hover:flex">
+            <div className="absolute inset-0 hidden flex-col items-center justify-center gap-1.5 bg-black/55 text-white group-hover:flex group-has-[[data-state=open]]:flex">
               <div className="flex items-center gap-2">
                 {seletorCombo}
                 <button type="button" title="Embaralhar" className="rounded p-0.5 hover:bg-white/20" onClick={onSortear}>
@@ -403,7 +427,23 @@ export function CardReceita({
       </div>
 
       <div className="grid" style={{ gridTemplateColumns: "repeat(6, 1fr)", gridAutoRows: `${m.fatia}px` }}>
-        {itens.slice(0, 6).map((it, k) => {
+        {cromia ? (
+          <span
+            className="flex items-center justify-center font-bold"
+            style={{
+              gridColumn: "span 6",
+              gridRow: "span 2",
+              fontSize: m.fonteCor,
+              lineHeight: 1,
+              background: "linear-gradient(90deg, #f43f5e, #f59e0b, #4ade80, #22d3ee, #a855f7)",
+              color: "#ffffff",
+              textShadow: "0 1px 2px rgba(0,0,0,0.35)",
+            }}
+          >
+            qualquer cor
+          </span>
+        ) : null}
+        {!cromia && itens.slice(0, 6).map((it, k) => {
           const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
           const cor = h ?? "#d4d4d8";
           const estilo = {

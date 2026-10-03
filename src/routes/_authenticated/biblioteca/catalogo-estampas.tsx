@@ -710,6 +710,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
                             itens={itens}
                             porCodigo={porCodigo}
                             codigo={combo ? combo.codigo : null}
+                            cromia={combo?.codigo === "CROMIA"}
                             temReceita={!!rec}
                             tamanho={tamCard}
                             editavel={editavel}
