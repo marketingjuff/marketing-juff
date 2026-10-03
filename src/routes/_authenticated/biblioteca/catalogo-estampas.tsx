@@ -777,7 +777,8 @@ function SeletorCombo({ combos, porCodigo, genero, nCores, atual, onEscolher }: 
     const termo = busca.trim().toLowerCase();
     const cromia = combos.filter((c) => c.codigo === "CROMIA");
     const normais = combos
-      .filter((c) => c.codigo !== "CROMIA" && c.genero === genero && c.itens.length === nCores)
+      // Ao digitar um código, busca em todos; sem busca, sugere só os compatíveis.
+      .filter((c) => c.codigo !== "CROMIA" && (termo ? true : c.genero === genero && (nCores === 0 || c.itens.length === nCores)))
       .filter((c) => !termo || c.codigo.toLowerCase().includes(termo));
     const especiais = cromia.filter((c) => !termo || "cromia".includes(termo));
     return [...especiais, ...normais].slice(0, 60);
@@ -806,7 +807,7 @@ function SeletorCombo({ combos, porCodigo, genero, nCores, atual, onEscolher }: 
               {c.uso ? <span className="ml-auto text-xs text-muted-foreground">{c.uso}×</span> : null}
             </button>
           ))}
-          {!lista.length ? <p className="px-2 py-3 text-xs text-muted-foreground">Nenhum combo com {nCores} cor(es) neste gênero.</p> : null}
+          {!lista.length ? <p className="px-2 py-3 text-xs text-muted-foreground">Nenhum combo encontrado.</p> : null}
         </div>
       </PopoverContent>
     </Popover>
