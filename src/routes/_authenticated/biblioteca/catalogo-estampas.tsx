@@ -7,6 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { Bloco, CampoAutoSave } from "@/components/biblioteca/comum";
 import { Bolinha, CardReceita, useCoresEstampa, type TamanhoCard } from "@/components/biblioteca/EstampaVisual";
 import type { CorEstampa } from "@/lib/biblioteca-estampa";
+import { arrastavelEstampa } from "@/lib/atalhos-paginas";
 import { PainelCombos } from "@/components/biblioteca/PainelCombos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

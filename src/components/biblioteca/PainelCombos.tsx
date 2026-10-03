@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Bolinha, CardCombo, CardCromia, type TamanhoCard, EscolherCorEstampa, hexDoCodigo, useCoresEstampa } from "@/components/biblioteca/EstampaVisual";
 import { coresQueryOptions } from "@/lib/biblioteca";
+import { arrastavelCombo } from "@/lib/atalhos-paginas";
 import {
   GENEROS,
   ROTULO_GENERO,
