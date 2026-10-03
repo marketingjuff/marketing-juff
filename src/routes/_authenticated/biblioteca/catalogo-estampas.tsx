@@ -7,6 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { Bloco, CampoAutoSave } from "@/components/biblioteca/comum";
 import { Bolinha, CardReceita, useCoresEstampa, type TamanhoCard } from "@/components/biblioteca/EstampaVisual";
 import type { CorEstampa } from "@/lib/biblioteca-estampa";
+import { arrastavelEstampa } from "@/lib/atalhos-paginas";
 import { PainelCombos } from "@/components/biblioteca/PainelCombos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,7 +53,11 @@ import { baixarXlsx } from "@/lib/xlsx-simples";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/biblioteca/catalogo-estampas")({
-  validateSearch: (s: Record<string, unknown>): { id?: string } => (typeof s["id"] === "string" ? { id: s["id"] } : {}),
+  validateSearch: (s: Record<string, unknown>): { id?: string; visao?: string; combo?: string } => ({
+    ...(typeof s["id"] === "string" ? { id: s["id"] } : {}),
+    ...(typeof s["visao"] === "string" ? { visao: s["visao"] } : {}),
+    ...(typeof s["combo"] === "string" ? { combo: s["combo"] } : {}),
+  }),
   head: () => ({
     meta: [
       { title: "Estampas — Biblioteca — Marketing Juff" },
@@ -75,7 +80,7 @@ function CatalogoPage() {
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
   const pode = hasPermission(profile, PERM);
   const editavel = canEdit(profile, PERM);
-  const { id } = Route.useSearch();
+  const { id, visao, combo } = Route.useSearch();
   if (!pode) {
     return (
       <AppShell largura="ampla">
@@ -90,14 +95,14 @@ function CatalogoPage() {
           Você está em modo de consulta. Pode ver, copiar e baixar, mas não alterar.
         </p>
       ) : null}
-      {id ? <Ficha id={id} editavel={editavel} /> : <Lista editavel={editavel} />}
+      {id ? <Ficha id={id} editavel={editavel} /> : <Lista editavel={editavel} visaoInicial={visao === "combos" ? "combos" : "estampas"} comboInicial={combo ?? null} />}
     </AppShell>
   );
 }
 
 // ---------------- Lista ----------------
 
-function Lista({ editavel }: { editavel: boolean }) {
+function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { editavel: boolean; visaoInicial?: "estampas" | "combos"; comboInicial?: string | null }) {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const { data: estampas = [] } = useQuery(estampasQueryOptions);
@@ -105,7 +110,7 @@ function Lista({ editavel }: { editavel: boolean }) {
   const { data: cores = [] } = useQuery(coresQueryOptions);
   const [busca, setBusca] = useState("");
   const [novo, setNovo] = useState("");
-  const [visao, setVisao] = useState<"estampas" | "combos">("estampas");
+  const [visao, setVisao] = useState<"estampas" | "combos">(visaoInicial);
   const imgs = estampas.map((e) => e.imagem_caminho).filter(Boolean) as string[];
   const { data: urls = {} } = useQuery(urlsEstampaQueryOptions(imgs));
 
@@ -151,7 +156,7 @@ function Lista({ editavel }: { editavel: boolean }) {
           Combos de cores
         </Button>
       </div>
-      {visao === "combos" ? <PainelCombos editavel={editavel} /> : (
+      {visao === "combos" ? <PainelCombos editavel={editavel} destaque={comboInicial} /> : (
         <>
       <div className="flex flex-wrap items-center gap-2">
         <Input placeholder="Buscar estampa" value={busca} onChange={(e) => setBusca(e.target.value)} className="h-9 max-w-xs" />
@@ -170,6 +175,8 @@ function Lista({ editavel }: { editavel: boolean }) {
               <button
                 key={e.id}
                 type="button"
+                {...arrastavelEstampa(e.id, e.nome)}
+                title={`${e.nome} — arraste até a barra de atalhos para fixar`}
                 onClick={() => void navigate({ to: "/biblioteca/catalogo-estampas", search: { id: e.id } })}
                 className={cn("overflow-hidden rounded-lg border border-border bg-background text-left transition hover:border-primary", e.situacao === "descontinuado" && "opacity-50")}
               >

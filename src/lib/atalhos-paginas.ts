@@ -22,6 +22,8 @@ export type AtalhoBarra = {
 export type ConteudoArrasto =
   | { tipo: "pagina"; destino: string; label: string }
   | { tipo: "quadro"; quadro_id: string; label: string; cor?: string | null | undefined }
+  | { tipo: "estampa"; estampa_id: string; label: string }
+  | { tipo: "combo"; codigo: string }
   | { tipo: "mover"; id: string };
 
 export const atalhosBarraQueryOptions = queryOptions({
@@ -107,4 +109,14 @@ export function arrastavel(destino: string, label: string) {
 /** Props para tornar um quadro arrastável até a barra de atalhos. */
 export function arrastavelQuadro(quadroId: string, label: string, cor?: string | null) {
   return montar({ tipo: "quadro", quadro_id: quadroId, label, cor });
+}
+
+/** Props para tornar uma estampa arrastável até a barra de atalhos. */
+export function arrastavelEstampa(estampaId: string, label: string) {
+  return montar({ tipo: "estampa", estampa_id: estampaId, label });
+}
+
+/** Props para tornar um combo de cores arrastável até a barra de atalhos. */
+export function arrastavelCombo(codigo: string) {
+  return montar({ tipo: "combo", codigo });
 }

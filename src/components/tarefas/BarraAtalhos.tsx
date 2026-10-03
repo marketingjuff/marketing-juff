@@ -37,7 +37,7 @@ function corAnel(hex: string | null | undefined): string {
 
 function corDoAtalho(a: AtalhoBarra): string {
   if (a.quadro_id) return corAnel(a.quadro_cor);
-  return corAnel(a.destino ? masterDoCaminho(a.destino)?.cor : null);
+  return corAnel(a.destino ? masterDoCaminho(a.destino.split("?")[0]!)?.cor : null);
 }
 
 export function BarraAtalhos() {
@@ -85,6 +85,16 @@ export function BarraAtalhos() {
       if (anterior.some((a) => a.quadro_id === c.quadro_id)) return;
       novo = { id: `tmp-${c.quadro_id}`, posicao, label: limparRotulo(c.label), destino: null, quadro_id: c.quadro_id, quadro_cor: c.cor ?? null, quadro_arquivado: false };
       promessa = criarAtalhoQuadro(c.quadro_id, novo.label, posicao);
+    } else if (c.tipo === "estampa") {
+      const destino = `/biblioteca/catalogo-estampas?id=${c.estampa_id}`;
+      if (anterior.some((a) => a.destino === destino)) return;
+      novo = { id: `tmp-${c.estampa_id}`, posicao, label: limparRotulo(c.label), destino, quadro_id: null, quadro_cor: null, quadro_arquivado: false };
+      promessa = criarAtalhoPagina(destino, novo.label, posicao);
+    } else if (c.tipo === "combo") {
+      const destino = `/biblioteca/catalogo-estampas?visao=combos&combo=${encodeURIComponent(c.codigo)}`;
+      if (anterior.some((a) => a.destino === destino)) return;
+      novo = { id: `tmp-${c.codigo}`, posicao, label: limparRotulo(c.codigo), destino, quadro_id: null, quadro_cor: null, quadro_arquivado: false };
+      promessa = criarAtalhoPagina(destino, novo.label, posicao);
     } else if (c.tipo === "pagina") {
       if (anterior.some((a) => a.destino === c.destino)) return;
       novo = { id: `tmp-${c.destino}`, posicao, label: limparRotulo(c.label), destino: c.destino, quadro_id: null, quadro_cor: null, quadro_arquivado: false };
@@ -162,9 +172,11 @@ export function BarraAtalhos() {
       )}
     >
       {itens.map((a) => {
+        const [destinoPath, destinoQs] = (a.destino ?? "").split("?");
+        const destinoSearch = destinoQs ? Object.fromEntries(new URLSearchParams(destinoQs)) : undefined;
         const ativo = a.quadro_id
           ? caminho === `/tarefas/quadros/${a.quadro_id}`
-          : caminho === a.destino;
+          : caminho === destinoPath;
         const estilo = { borderColor: corDoAtalho(a) };
         const classe = cn(chip, ativo && "bg-primary-soft text-primary");
         return (
@@ -199,7 +211,8 @@ export function BarraAtalhos() {
               </span>
             ) : (
               <Link
-                to={a.quadro_id ? `/tarefas/quadros/${a.quadro_id}` : (a.destino ?? "/")}
+                to={(a.quadro_id ? `/tarefas/quadros/${a.quadro_id}` : destinoPath || "/") as never}
+                search={destinoSearch as never}
                 title={a.label}
                 draggable={false}
                 className={classe}
