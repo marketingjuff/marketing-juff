@@ -174,7 +174,7 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
             {g.nome} <span className="opacity-70">· {g.itens.length}</span>
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {g.itens.map((e) => (
+            {g.itens.map((e, i) => (
               <button
                 key={e.id}
                 type="button"
@@ -182,7 +182,8 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
                 title={`${e.nome}, ${e.n_papeis} ${e.n_papeis === 1 ? "cor" : "cores"}, ${e.n_modelos * e.n_cores} produtos — arraste até a barra de atalhos para fixar`}
                 onClick={() => void navigate({ to: "/biblioteca/catalogo-estampas", search: { id: e.id } })}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-sm transition hover:border-primary",
+                  "flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-sm transition hover:border-primary",
+                  i % 2 === 0 ? "bg-background" : "bg-muted/60",
                   e.situacao === "descontinuado" && "opacity-50",
                 )}
               >
