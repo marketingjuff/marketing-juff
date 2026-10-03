@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Copy, Download, FileText, ImagePlus, Plus, Sparkles, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, Download, FileText, FolderPlus, ImagePlus, Plus, Sparkles, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Bloco, CampoAutoSave } from "@/components/biblioteca/comum";
 import { Bolinha, CardReceita, useCoresEstampa, type TamanhoCard } from "@/components/biblioteca/EstampaVisual";
@@ -120,6 +120,18 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
     ...categorias.map((c) => ({ id: c.id, nome: c.nome })),
     { id: null as string | null, nome: "Sem categoria" },
   ].map((g) => ({ ...g, itens: filtradas.filter((e) => e.categoria_id === g.id) })).filter((g) => g.itens.length);
+
+  async function novaCategoria() {
+    const nome = prompt("Nome da categoria nova");
+    if (!nome?.trim()) return;
+    try {
+      await criarCategoria(nome, categorias.length);
+      void qc.invalidateQueries({ queryKey: categoriasEstampaQueryOptions.queryKey });
+      toast.success("Categoria criada.");
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
 
   async function criar() {
     const nome = novo.trim();
