@@ -162,6 +162,7 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
         <Input placeholder="Buscar estampa" value={busca} onChange={(e) => setBusca(e.target.value)} className="h-9 max-w-xs" />
         {editavel ? (
           <div className="ml-auto flex gap-1">
+            <Button variant="outline" className="gap-1" onClick={() => void novaCategoria()}><FolderPlus className="size-4" /> Nova categoria</Button>
             <Input placeholder="Nome da estampa nova" value={novo} onChange={(e) => setNovo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && void criar()} className="h-9 w-56" />
             <Button onClick={() => void criar()} className="gap-1"><Plus className="size-4" /> Criar estampa</Button>
           </div>
