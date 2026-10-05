@@ -117,14 +117,7 @@ export function AppShell({
                           {master.label}
                         </span>
                       </Link>
-                    ) : (
-                      <span className="inline-block cursor-not-allowed rounded-lg px-4 py-1.5 text-xs font-semibold tracking-widest text-muted-foreground/40">
-                        <span className="inline-flex items-center gap-1.5">
-                          <IconeMaster className="size-3.5" />
-                          {master.label}
-                        </span>
-                      </span>
-                    )}
+                    ) : null}
                   </li>
                 );
               })}
@@ -178,15 +171,7 @@ export function AppShell({
             <ul className="flex items-center gap-1 py-2">
               {subTabsVisiveis.map((sub) => {
                 const allowed = hasPermission(profile, sub.permission);
-                if (!allowed) {
-                  return (
-                    <li key={sub.key}>
-                      <span className="rounded-md px-3 py-1.5 text-sm text-muted-foreground/50">
-                        {sub.label}
-                      </span>
-                    </li>
-                  );
-                }
+                if (!allowed) return null;
                 return (
                   <li key={sub.key}>
                     <Link
