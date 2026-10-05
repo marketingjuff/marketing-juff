@@ -18,7 +18,7 @@ import {
 } from "@/lib/tarefas";
 import { useLayoutEffect, useRef, useState } from "react";
 
-const ACHATAMENTO = 0.6;
+const ACHATAMENTO = 0.78;
 
 function EtiquetaCompacta({ nome, cor, corTexto }: { nome: string; cor: string; corTexto: string }) {
   const texto = useRef<HTMLSpanElement>(null);
