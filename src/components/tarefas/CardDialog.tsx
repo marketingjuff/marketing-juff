@@ -166,9 +166,9 @@ export function CardDialog({
   const { data: perfil } = useQuery(profileQueryOptions);
   useCardAoVivo(card?.id ?? null, card?.quadro_id ?? null, ativo);
   const { travados, digitando } = useCampoEmEdicao(card?.id ?? null, ativo, perfil?.id ?? "", perfil?.nome ?? "Alguém");
-  const [filtroLinha, setFiltroLinha] = useState<"tudo" | "comentarios" | "atividades">("tudo");
+  const [filtroLinha, setFiltroLinha] = useState<"tudo" | "comentarios" | "atividades">("comentarios");
   useEffect(() => {
-    setFiltroLinha("tudo");
+    setFiltroLinha("comentarios");
   }, [card?.id]);
 
   if (!card) return null;
