@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AlarmClock, Bell, CircleAlert, Clock, MessageSquare, Pause, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,27 @@ export function SinoNotificacoes() {
   const qc = useQueryClient();
   const [aberto, setAberto] = useState(false);
   const { data: lista = [] } = useQuery(notificacoesQueryOptions);
+
+  useEffect(() => {
+    let canal: ReturnType<typeof supabase.channel> | null = null;
+    let vivo = true;
+    supabase.auth.getUser().then(({ data }) => {
+      const uid = data.user?.id;
+      if (!uid || !vivo) return;
+      canal = supabase
+        .channel(`notificacoes-${uid}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "notificacoes", filter: `user_id=eq.${uid}` },
+          () => qc.invalidateQueries({ queryKey: ["notificacoes", "lista"] }),
+        )
+        .subscribe();
+    });
+    return () => {
+      vivo = false;
+      if (canal) supabase.removeChannel(canal);
+    };
+  }, [qc]);
   const naoLidas = lista.filter((n) => !n.lida).length;
 
   type Linha = { chave: string; n: Notificacao; ids: string[]; quantos: number };

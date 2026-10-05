@@ -288,6 +288,13 @@
       "when": 1791207752621,
       "tag": "0040_realtime_checklist",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1791230499433,
+      "tag": "0041_notificacoes_realtime",
+      "breakpoints": true
     }
   ]
 }
