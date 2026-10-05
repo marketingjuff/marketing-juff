@@ -59,6 +59,7 @@
 }
 
 :root {
+  --cromia-circle: conic-gradient(#f43f5e, #f59e0b, #facc15, #4ade80, #22d3ee, #3b82f6, #a855f7, #f43f5e);
   --radius: 0.75rem;
   --background: oklch(0.985 0.004 80);
   --foreground: oklch(0.18 0.03 258);
