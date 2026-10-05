@@ -167,6 +167,7 @@ export function CardDialog({
   useCardAoVivo(card?.id ?? null, card?.quadro_id ?? null, ativo);
   const { travados, digitando } = useCampoEmEdicao(card?.id ?? null, ativo, perfil?.id ?? "", perfil?.nome ?? "Alguém");
   const [filtroLinha, setFiltroLinha] = useState<"tudo" | "comentarios" | "atividades">("comentarios");
+  console.log("FILTRO-MARKER");
   useEffect(() => {
     setFiltroLinha("tudo");
   }, [card?.id]);
