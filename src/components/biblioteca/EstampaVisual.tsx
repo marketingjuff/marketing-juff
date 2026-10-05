@@ -221,7 +221,7 @@ export function CardCombo({ codigo, fundo, itens, porCodigo, tamanho = "m", uso,
  */
 export function CardCromia({ tamanho = "m", title }: { tamanho?: TamanhoCard; title?: string }) {
   const m = MEDIDAS_CARD[tamanho];
-  const d = Math.round(m.lado * 0.52);
+  const d = m.bolinha * 2.6;
   return (
     <div
       title={title ?? "Cromia: combo especial, serve para qualquer gênero e qualquer cor de camiseta"}
@@ -243,21 +243,11 @@ export function CardCromia({ tamanho = "m", title }: { tamanho?: TamanhoCard; ti
         </div>
         <div className="relative flex items-center justify-center" style={{ height: m.lado }}>
           <span
-            className="absolute rounded-full"
-            style={{
-              width: d + 10,
-              height: d + 10,
-              background: "conic-gradient(#f43f5e, #f59e0b, #facc15, #4ade80, #22d3ee, #3b82f6, #a855f7, #f43f5e)",
-              filter: "blur(6px)",
-              opacity: 0.55,
-            }}
-          />
-          <span
-            className="relative rounded-full border border-black/10 shadow-sm"
+            className="relative rounded-full"
             style={{
               width: d,
               height: d,
-              background: "conic-gradient(#f43f5e, #f59e0b, #facc15, #4ade80, #22d3ee, #3b82f6, #a855f7, #f43f5e)",
+              background: "var(--cromia-circle)",
             }}
           />
         </div>
@@ -353,7 +343,7 @@ export function CardReceita({
               style={{
                 width: m.bolinha * 2.6,
                 height: m.bolinha * 2.6,
-                background: "conic-gradient(#f43f5e, #f59e0b, #facc15, #4ade80, #22d3ee, #3b82f6, #a855f7, #f43f5e)",
+                background: "var(--cromia-circle)",
               }}
             />
           ) : null}
