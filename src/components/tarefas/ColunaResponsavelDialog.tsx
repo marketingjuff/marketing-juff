@@ -31,7 +31,7 @@ export function ColunaResponsavelDialog({
     setOrigem(coluna.resp_coluna_origem_id ?? "");
   }, [aberto, coluna]);
 
-  const outras = colunas.filter((c) => c.id !== coluna?.id);
+  const outras = colunas.map((c) => (c.id === coluna?.id ? { ...c, nome: `${c.nome} (quem fez da última vez)` } : c));
   const faltaOrigem = regra === "quem_ficou" && !origem;
 
   async function salvar() {
@@ -90,7 +90,7 @@ export function ColunaResponsavelDialog({
               </SelectContent>
             </Select>
             <p className="text-[11px] text-muted-foreground">
-              Se o card nunca passou por essa coluna, o responsável fica como está.
+              Se o card nunca passou por essa coluna, o responsável vira quem arrastou.
             </p>
           </div>
         ) : null}
