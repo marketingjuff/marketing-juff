@@ -100,6 +100,7 @@ export function AppShell({
                     (!sub.roles || (profile ? sub.roles.includes(profile.role) : false)) &&
                     hasPermission(profile, sub.permission),
                 );
+                if (!primeiro) return null;
                 const IconeMaster = ICONES_MASTER[master.icone];
                 return (
                   <li key={master.key}>
