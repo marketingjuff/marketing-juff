@@ -1,0 +1,1 @@
+GRANT UPDATE (sigla, cor_avatar, cor_texto_avatar) ON public.profiles TO authenticated;
