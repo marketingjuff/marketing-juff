@@ -1000,7 +1000,7 @@ function mapComContexto(c: any): CardComContexto {
   };
 }
 
-const CTX_SELECT = `${CARD_SELECT}, tarefa_quadros(nome, arquivado), tarefa_colunas(nome)`;
+const CTX_SELECT = `${CARD_SELECT}, tarefa_quadros!tarefa_cards_quadro_id_fkey(nome, arquivado), tarefa_colunas!tarefa_cards_coluna_id_fkey(nome)`;
 
 export const meusCardsQueryOptions = (userId: string) =>
   queryOptions({
