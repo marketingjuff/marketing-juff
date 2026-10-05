@@ -8,8 +8,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { clearMustChangePassword } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export const Route = createFileRoute("/_authenticated/trocar-senha")({
   head: () => ({
@@ -72,9 +72,8 @@ function TrocarSenha() {
         <form onSubmit={salvar} className="mt-5 space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="nova">Nova senha</Label>
-            <Input
+            <PasswordInput
               id="nova"
-              type="password"
               autoComplete="new-password"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
@@ -82,9 +81,8 @@ function TrocarSenha() {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="confirma">Confirme a nova senha</Label>
-            <Input
+            <PasswordInput
               id="confirma"
-              type="password"
               autoComplete="new-password"
               value={confirma}
               onChange={(e) => setConfirma(e.target.value)}

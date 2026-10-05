@@ -62,6 +62,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -391,7 +392,7 @@ function Configuracoes() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="senha">Senha inicial</Label>
-                    <Input
+                    <PasswordInput
                       id="senha"
                       required
                       minLength={8}
@@ -581,7 +582,7 @@ function UserRow({
         <div className="space-y-1.5">
           <Label>Definir nova senha</Label>
           <div className="flex gap-2">
-            <Input
+            <PasswordInput
               value={novaSenha}
               minLength={8}
               placeholder="mínimo 8 caracteres"
