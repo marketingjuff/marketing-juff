@@ -119,7 +119,9 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
   const grupos = [
     ...categorias.map((c) => ({ id: c.id, nome: c.nome })),
     { id: null as string | null, nome: "Sem categoria" },
-  ].map((g) => ({ ...g, itens: filtradas.filter((e) => e.categoria_id === g.id) })).filter((g) => g.itens.length);
+  ].map((g) => ({ ...g, itens: filtradas.filter((e) => e.categoria_id === g.id) }))
+    // categorias vazias continuam visíveis; só "Sem categoria" some quando não há nada
+    .filter((g) => g.itens.length || g.id !== null);
 
   async function novaCategoria() {
     const nome = prompt("Nome da categoria nova");
