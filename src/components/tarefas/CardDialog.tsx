@@ -326,7 +326,7 @@ export function CardDialog({
                               );
                             }}
                             className={cn(
-                              "rounded px-1.5 py-0.5 text-[11px] transition-opacity",
+                              "font-nunito rounded px-1.5 py-0.5 text-xs transition-opacity",
                               !on && "opacity-40",
                             )}
                             style={(() => { const cs = coresDaEtiqueta(e, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}
@@ -586,7 +586,7 @@ export function CardDialog({
                   .map((e) => (
                     <span
                       key={e.id}
-                      className="rounded-[3px] px-1 py-px text-[10px] font-medium uppercase"
+                      className="font-nunito rounded-[3px] px-1 py-px text-[11px] font-medium uppercase"
                       style={(() => { const cs = coresDaEtiqueta(e, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}
                     >
                       {e.nome}

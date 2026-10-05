@@ -110,7 +110,7 @@ function LinhaEtiqueta({ etiqueta, quadros, pessoas, podeEditar, onChanged }: { 
           Fundo <ColorPicker value={cor} onChange={setCor} disabled={!!pessoaId} label="Cor do fundo" presets={CORES_ETIQUETA} />
           Texto <ColorPicker value={corTexto} onChange={setCorTexto} disabled={!!pessoaId} label="Cor do texto" presets={["#ffffff", "#111111", ...CORES_ETIQUETA]} />
         </div>
-        <span className="rounded px-2 py-1 text-xs font-medium" style={(() => { const cs = coresDaEtiqueta({ cor, cor_texto: corTexto, pessoa_id: pessoaId }, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}>{nome || "Prévia"}</span>
+        <span className="rounded px-2 py-1 font-nunito text-[13px] font-medium" style={(() => { const cs = coresDaEtiqueta({ cor, cor_texto: corTexto, pessoa_id: pessoaId }, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}>{nome || "Prévia"}</span>
         {pessoaId ? (
           <span className="w-full text-[11px] text-muted-foreground">
             Cor travada na cor da pessoa. Troque na ficha dela em Usuários e permissões.
@@ -162,7 +162,7 @@ function LinhaEtiqueta({ etiqueta, quadros, pessoas, podeEditar, onChanged }: { 
       >
         <GripVertical className="size-4" />
       </button>
-       <span className="min-w-0 flex-1 truncate rounded px-2 py-1 text-xs font-medium" style={(() => { const cs = coresDaEtiqueta(etiqueta, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}>{etiqueta.nome}</span>
+       <span className="min-w-0 flex-1 truncate rounded px-2 py-1 font-nunito text-[13px] font-medium" style={(() => { const cs = coresDaEtiqueta(etiqueta, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}>{etiqueta.nome}</span>
       {etiqueta.pessoa_id ? (
         <span className="shrink-0 text-[11px] text-muted-foreground">
           {pessoas.find((p) => p.id === etiqueta.pessoa_id)?.nome ?? "pessoa removida"}
@@ -363,7 +363,7 @@ export function PainelEtiquetas() {
            Fundo <ColorPicker value={cor} onChange={setCor} disabled={!podeEditar || !!pessoaNova} label="Cor do fundo" presets={CORES_ETIQUETA} />
            Texto <ColorPicker value={corTexto} onChange={setCorTexto} disabled={!podeEditar || !!pessoaNova} label="Cor do texto" presets={["#ffffff", "#111111", ...CORES_ETIQUETA]} />
          </div>
-         <span className="rounded px-2 py-1 text-xs font-medium" style={(() => { const cs = coresDaEtiqueta({ cor, cor_texto: corTexto, pessoa_id: grupoNovo ? pessoaNova : null }, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}>{nome || "Prévia"}</span>
+         <span className="rounded px-2 py-1 font-nunito text-[13px] font-medium" style={(() => { const cs = coresDaEtiqueta({ cor, cor_texto: corTexto, pessoa_id: grupoNovo ? pessoaNova : null }, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}>{nome || "Prévia"}</span>
          <Button type="submit" size="sm" disabled={!podeEditar || salvando || !nome.trim() || !HEX_RE.test(cor) || !HEX_RE.test(corTexto)}>
           Criar
         </Button>
@@ -430,7 +430,7 @@ export function PainelEtiquetas() {
         <CollapsibleContent className="mt-2 space-y-1.5">
           {arquivadas.map((e) => (
             <div key={e.id} className="flex items-center gap-2 rounded-lg border border-border px-2 py-1.5">
-               <span className="min-w-0 flex-1 truncate rounded px-2 py-1 text-xs font-medium" style={(() => { const cs = coresDaEtiqueta(e, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}>{e.nome}</span>
+               <span className="min-w-0 flex-1 truncate rounded px-2 py-1 font-nunito text-[13px] font-medium" style={(() => { const cs = coresDaEtiqueta(e, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}>{e.nome}</span>
               <span className="shrink-0 text-[11px] text-muted-foreground">
                 {e.quadro_id ? (quadros.find((q) => q.id === e.quadro_id)?.nome ?? "quadro removido") : "Global"}
               </span>

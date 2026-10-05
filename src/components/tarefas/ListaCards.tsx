@@ -43,7 +43,7 @@ export function ListaCards({
                 return e ? (
                   <span
                     key={id}
-                    className="rounded px-1.5 py-0.5 text-[10px]"
+                    className="font-nunito rounded px-1.5 py-0.5 text-[11px]"
                     style={(() => { const cs = coresDaEtiqueta(e, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}
                   >
                     {e.nome}
