@@ -1,4 +1,5 @@
 import { arrastavelQuadro } from "@/lib/atalhos-paginas";
+import { useQuadroAoVivo } from "@/hooks/use-quadro-ao-vivo";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -80,6 +81,7 @@ export function QuadroBoard({
   const qc = useQueryClient();
   const estruturar = podeEstruturar(role, editable);
   const { quadro } = dados;
+  useQuadroAoVivo(quadro.id);
   const { data: etiquetasLista = [] } = useQuery(etiquetasQueryOptions);
   const { data: pessoasLista = [] } = useQuery(pessoasQueryOptions);
   const etiquetas = useMemo(() => new Map(etiquetasLista.map((e) => [e.id, e])), [etiquetasLista]);
