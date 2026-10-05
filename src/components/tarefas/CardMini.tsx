@@ -42,7 +42,7 @@ function EtiquetaCompacta({ nome, cor, corTexto }: { nome: string; cor: string; 
       >
         <span
           ref={texto}
-          className="block whitespace-nowrap text-[10px] font-medium uppercase leading-[1.3]"
+          className="font-nunito block whitespace-nowrap text-[11px] font-medium uppercase leading-[1.35]"
           style={{ transform: `scaleX(${ACHATAMENTO})`, transformOrigin: "left center" }}
         >
           {nome}
@@ -97,7 +97,7 @@ export function CardMini({
           ))}
           {tags.length > 3 ? (
             <span
-              className="inline-flex items-center rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium leading-tight text-muted-foreground"
+              className="font-nunito inline-flex items-center rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium leading-tight text-muted-foreground"
               title={tags.slice(3).map((t) => t.nome).join(", ")}
             >
               +{tags.length - 3}
