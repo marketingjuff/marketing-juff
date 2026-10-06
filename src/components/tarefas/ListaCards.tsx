@@ -24,10 +24,12 @@ function corLegivel(hex: string | null | undefined): string {
 }
 
 /** Fundo da linha: tintura bem clarinha da cor do quadro; sem cor de quadro fica neutro. */
-function fundoDaLinha(c: CardComContexto): string | undefined {
-  const cor = corLegivel(c.quadro_cor);
-  if (cor === CINZA) return undefined;
-  return `color-mix(in srgb, ${cor} 30%, #ffffff)`;
+function fundoDaLinha(c: CardComContexto): { fundo: string; escuro: boolean } | undefined {
+  const h = (c.quadro_cor ?? "").toLowerCase();
+  if (!/^#[0-9a-f]{6}$/.test(h)) return undefined;
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const yiq = (r! * 299 + g! * 587 + b! * 114) / 1000;
+  return { fundo: h, escuro: yiq < 150 };
 }
 
 export function ListaCards({
@@ -53,12 +55,12 @@ export function ListaCards({
             type="button"
             onClick={() => onAbrir(c)}
             className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-left"
-            style={fundo ? { backgroundColor: fundo } : undefined}
+            style={fundo ? { backgroundColor: fundo.fundo, color: fundo.escuro ? "#ffffff" : undefined } : undefined}
           >
             <span className={cn("min-w-0 flex-1 truncate text-sm", c.concluido && "line-through opacity-60")}>
               {c.titulo || "Sem título"}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className={cn("text-xs", fundo?.escuro ? "opacity-80" : "text-muted-foreground")}>
               {c.quadro_nome} · {c.coluna_nome}
             </span>
             <span className="flex gap-1">
@@ -79,7 +81,7 @@ export function ListaCards({
               <span
                 className={cn(
                   "text-xs tabular-nums",
-                  estaAtrasado(c) ? "font-medium text-destructive" : "text-muted-foreground",
+                  estaAtrasado(c) ? "font-medium text-destructive" : fundo?.escuro ? "opacity-80" : "text-muted-foreground",
                 )}
               >
                 {formatarData(c.data_entrega)}

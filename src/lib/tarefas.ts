@@ -997,11 +997,11 @@ function mapComContexto(c: any): CardComContexto {
     ...mapCard(c),
     quadro_nome: c.tarefa_quadros?.nome ?? "",
     coluna_nome: c.tarefa_colunas?.nome ?? "",
-    quadro_cor: c.tarefa_quadros?.fundo_cor1 ?? null,
+    quadro_cor: c.tarefa_quadros?.fundo_cor2 || c.tarefa_quadros?.fundo_cor1 || null,
   };
 }
 
-const CTX_SELECT = `${CARD_SELECT}, tarefa_quadros!tarefa_cards_quadro_id_fkey(nome, arquivado, fundo_cor1), tarefa_colunas!tarefa_cards_coluna_id_fkey(nome)`;
+const CTX_SELECT = `${CARD_SELECT}, tarefa_quadros!tarefa_cards_quadro_id_fkey(nome, arquivado, fundo_cor1, fundo_cor2), tarefa_colunas!tarefa_cards_coluna_id_fkey(nome)`;
 
 export const meusCardsQueryOptions = (userId: string) =>
   queryOptions({
