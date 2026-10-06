@@ -1,4 +1,6 @@
 import { arrastavelQuadro } from "@/lib/atalhos-paginas";
+import { canEdit, profileQueryOptions } from "@/lib/auth";
+import { NovaEtiquetaForm } from "./NovaEtiquetaForm";
 import { useQuadroAoVivo } from "@/hooks/use-quadro-ao-vivo";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
@@ -19,7 +21,7 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable";
-import { Lock, Palette, Plus, Search, Users } from "lucide-react";
+import { Lock, Palette, Plus, Search, Tag, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -83,6 +85,8 @@ export function QuadroBoard({
   const { quadro } = dados;
   useQuadroAoVivo(quadro.id);
   const { data: etiquetasLista = [] } = useQuery(etiquetasQueryOptions);
+  const { data: perfil } = useQuery(profileQueryOptions);
+  const criarEtiquetas = editable && canEdit(perfil ?? null, "tarefas.quadros");
   const { data: pessoasLista = [] } = useQuery(pessoasQueryOptions);
   const etiquetas = useMemo(() => new Map(etiquetasLista.map((e) => [e.id, e])), [etiquetasLista]);
   const etiquetasDoQuadro = useMemo(
@@ -349,6 +353,16 @@ export function QuadroBoard({
         </h1>
         <span className="text-sm text-muted-foreground">{cards.length} cards</span>
         <div className="ml-auto flex flex-wrap items-center gap-2">
+          {criarEtiquetas ? (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button size="sm" variant="outline" className="gap-1"><Tag className="size-4" /> Nova etiqueta</Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 max-w-[calc(100vw-2rem)]">
+                <NovaEtiquetaForm key={quadro.id} quadroId={quadro.id} etiquetas={etiquetasLista} />
+              </PopoverContent>
+            </Popover>
+          ) : null}
           {estruturar ? (
             <>
               <Popover>
