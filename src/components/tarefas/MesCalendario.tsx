@@ -302,6 +302,11 @@ export function MesCalendario({
                             ) : null}
                             {c.titulo || "Sem título"}
                           </span>
+                          {c.responsavel_id && siglas.has(c.responsavel_id) ? (
+                            <span className="ml-1.5 shrink-0 text-[10px] font-semibold opacity-75">
+                              {siglas.get(c.responsavel_id)}
+                            </span>
+                          ) : null}
                           {arrasta && !s.cortadoDir ? (
                             <span
                               className="absolute inset-y-0 right-0 w-1.5 cursor-ew-resize"
