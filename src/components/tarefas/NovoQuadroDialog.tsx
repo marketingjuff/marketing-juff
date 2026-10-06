@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FundoPicker, type FundoValor } from "./FundoPicker";
+import { CHAVE_BARRA } from "@/lib/atalhos-paginas";
 import {
   createQuadro,
   pessoasQueryOptions,
