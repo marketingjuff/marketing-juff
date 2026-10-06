@@ -19,6 +19,7 @@ import {
   apagarEstampa,
   apagarGrupo,
   apagarReceita,
+  assinatura,
   categoriasEstampaQueryOptions,
   combosQueryOptions,
   criarCategoria,
