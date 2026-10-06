@@ -316,6 +316,13 @@
       "when": 1791304360498,
       "tag": "0044_trello_descricoes_marketing_juff",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1791309784162,
+      "tag": "0045_app_config",
+      "breakpoints": true
     }
   ]
 }
