@@ -1,9 +1,7 @@
-import { CheckCircle2, RefreshCw, CheckSquare, Clock, MessageSquare, Paperclip, Pause, Flag } from "lucide-react";
+import { CheckCircle2, RefreshCw, CheckSquare, MessageSquare, Paperclip, Pause, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  DIAS_PARADO_ALERTA,
   PRIORIDADES,
-  diasParado,
   estaAdiado,
   estaAtrasado,
   formatarDataHora,
@@ -80,7 +78,6 @@ export function CardMini({
 }) {
   const atrasado = estaAtrasado(card);
   const breve = venceHoje(card) || venceAmanha(card);
-  const parado = !card.concluido ? diasParado(card.coluna_desde) : 0;
   const adiado = estaAdiado(card);
   const prio = PRIORIDADES.find((p) => p.valor === card.prioridade);
   const resp = card.responsavel_id ? pessoas.get(card.responsavel_id) : undefined;
@@ -151,11 +148,6 @@ export function CardMini({
           </span>
         ) : null}
         {card.anexos_total > 0 ? <Paperclip className="size-3" /> : null}
-        {parado > DIAS_PARADO_ALERTA ? (
-          <span className="flex items-center gap-0.5 text-warning-foreground" title="Dias parado nesta coluna">
-            <Clock className="size-3" /> {parado}d parado
-          </span>
-        ) : null}
         {adiado ? (
           <span className="flex items-center gap-0.5">
             <Pause className="size-3" /> até {formatarDataHora(card.adiado_ate, null)}
