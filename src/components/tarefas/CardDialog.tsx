@@ -80,6 +80,15 @@ import {
 
 const NENHUM = "__nenhum__";
 
+function balaoCor(hex: string | null | undefined): { fundo: string; texto: string } {
+  const base = hex && /^#[0-9a-f]{6}$/i.test(hex) ? hex : "#888780";
+  const n = parseInt(base.slice(1), 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const mist = (c: number) => Math.round(c * 0.45 + 255 * 0.55);
+  const fundo = `#${[mist(r), mist(g), mist(b)].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+  return { fundo, texto: "#1f2937" };
+}
+
 function dataHora(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
     day: "2-digit",
@@ -263,9 +272,9 @@ export function CardDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-6xl overflow-y-auto p-0">
+      <DialogContent className="max-h-[92vh] max-w-[90rem] overflow-y-auto p-0">
         <DialogTitle className="sr-only">{c.titulo || "Card"}</DialogTitle>
-        <div className="grid gap-0 md:grid-cols-[minmax(0,1.9fr)_minmax(0,1fr)]">
+        <div className="grid gap-0 md:grid-cols-2">
           {/* Coluna principal */}
           <div className="min-w-0 space-y-4 p-5">
             <div className="pr-6">
