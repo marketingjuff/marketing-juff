@@ -1025,15 +1025,20 @@ export const cardsDoMesQueryOptions = (ano: number, mes: number) =>
   queryOptions({
     queryKey: ["tarefas", "mes", ano, mes],
     queryFn: async (): Promise<CardComContexto[]> => {
-      const ini = `${ano}-${String(mes + 1).padStart(2, "0")}-01`;
-      const fimD = new Date(ano, mes + 1, 0);
-      const fim = `${ano}-${String(mes + 1).padStart(2, "0")}-${String(fimD.getDate()).padStart(2, "0")}`;
+      // intervalo da grade visível: domingo da semana do dia 1 + 41 dias
+      const primeiro = new Date(ano, mes, 1);
+      const iniD = new Date(ano, mes, 1 - primeiro.getDay());
+      const fimD = new Date(iniD);
+      fimD.setDate(iniD.getDate() + 41);
+      const ini = isoDe(iniD);
+      const fim = isoDe(fimD);
       const { data, error } = await supabase
         .from("tarefa_cards")
         .select(CTX_SELECT)
         .eq("arquivado", false)
-        .gte("data_entrega", ini)
-        .lte("data_entrega", fim)
+        .or(
+          `and(data_entrega.gte.${ini},data_entrega.lte.${fim}),and(data_inicio.lte.${fim},data_entrega.gte.${ini})`,
+        )
         .order("data_entrega", { ascending: true });
       if (error) throw error;
       return (data ?? [])
@@ -1151,4 +1156,99 @@ export function formatarTamanho(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+// ---------------- calendário: barras de período ----------------
+
+/** #1a1a1a em fundo claro, #ffffff em fundo escuro (corte em 55%). */
+export function corTextoContraste(hex: string): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex ?? "");
+  if (!m || !m[1]) return "#1a1a1a";
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return lum > 0.55 ? "#1a1a1a" : "#ffffff";
+}
+
+function diaUtc(iso: string): number {
+  const [a = 0, m = 1, d = 1] = iso.split("-").map(Number);
+  return Date.UTC(a, m - 1, d) / 86_400_000;
+}
+
+export function somarDiasIso(iso: string, dias: number): string {
+  const [a = 0, m = 1, d = 1] = iso.split("-").map(Number);
+  return isoDe(new Date(a, m - 1, d + dias));
+}
+
+export function diferencaDias(de: string, ate: string): number {
+  return Math.round(diaUtc(ate) - diaUtc(de));
+}
+
+/** Dias ocupados pelo período, contando as duas pontas. Sem início devolve 1. */
+export function duracaoDias(dataInicio: string | null, dataEntrega: string | null): number {
+  if (!dataInicio || !dataEntrega) return 1;
+  return Math.max(1, diferencaDias(dataInicio, dataEntrega) + 1);
+}
+
+export type SegmentoSemana<T> = {
+  card: T;
+  colIni: number;
+  colFim: number;
+  cortadoEsq: boolean;
+  cortadoDir: boolean;
+};
+
+/** Distribui os cards da semana em faixas sem sobreposição. */
+export function montarFaixasSemana<T extends { data_inicio: string | null; data_entrega: string | null }>(
+  cards: T[],
+  dias: string[],
+): SegmentoSemana<T>[][] {
+  const s0 = dias[0] ?? "";
+  const s6 = dias[6] ?? "";
+  const segs: SegmentoSemana<T>[] = [];
+  for (const card of cards) {
+    if (!card.data_entrega) continue;
+    const ini = card.data_inicio && card.data_inicio <= card.data_entrega ? card.data_inicio : card.data_entrega;
+    const fim = card.data_entrega;
+    if (fim < s0 || ini > s6) continue;
+    const colIni = ini < s0 ? 0 : diferencaDias(s0, ini);
+    const colFim = fim > s6 ? 6 : diferencaDias(s0, fim);
+    segs.push({ card, colIni, colFim, cortadoEsq: ini < s0, cortadoDir: fim > s6 });
+  }
+  segs.sort((a, b) => a.colIni - b.colIni || (b.colFim - b.colIni) - (a.colFim - a.colIni));
+  const faixas: SegmentoSemana<T>[][] = [];
+  for (const s of segs) {
+    let f = faixas.find((fx) => fx.every((o) => s.colIni > o.colFim || s.colFim < o.colIni));
+    if (!f) {
+      f = [];
+      faixas.push(f);
+    }
+    f.push(s);
+  }
+  return faixas;
+}
+
+const CHAVE_FAIXA_TOPO = "calendario_dias_faixa_topo";
+
+export const diasFaixaTopoQueryOptions = queryOptions({
+  queryKey: ["app_config", CHAVE_FAIXA_TOPO],
+  queryFn: async (): Promise<number> => {
+    const { data, error } = await supabase
+      .from("app_config")
+      .select("valor")
+      .eq("chave", CHAVE_FAIXA_TOPO)
+      .maybeSingle();
+    if (error) throw error;
+    const n = Number(data?.valor);
+    return Number.isFinite(n) && n > 0 ? n : 20;
+  },
+  staleTime: 60_000,
+  refetchOnWindowFocus: false,
+});
+
+export async function salvarDiasFaixaTopo(dias: number): Promise<void> {
+  const { error } = await supabase
+    .from("app_config")
+    .upsert({ chave: CHAVE_FAIXA_TOPO, valor: String(dias), atualizado_em: new Date().toISOString() }, { onConflict: "chave" });
+  if (error) throw error;
 }

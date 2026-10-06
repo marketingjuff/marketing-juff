@@ -90,6 +90,7 @@ function CalendarioPage() {
             setMes(m);
           }}
           onAbrir={(c) => setAberto(c.id)}
+          podeArrastar={canEdit(profile, "tarefas.quadros")}
         />
       </div>
       <CardDialog
