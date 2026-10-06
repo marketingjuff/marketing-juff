@@ -84,7 +84,7 @@ function balaoCor(hex: string | null | undefined): { fundo: string; texto: strin
   const base = hex && /^#[0-9a-f]{6}$/i.test(hex) ? hex : "#888780";
   const n = parseInt(base.slice(1), 16);
   const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-  const mist = (c: number) => Math.round(c * 0.45 + 255 * 0.55);
+  const mist = (c: number) => Math.round(c * 0.32 + 255 * 0.68);
   const fundo = `#${[mist(r), mist(g), mist(b)].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
   return { fundo, texto: "#1f2937" };
 }
@@ -855,7 +855,7 @@ export function CardDialog({
                         <span className="text-[12px] text-muted-foreground">{nomePessoa(l.autor_id)}</span>
                         <div
                           className={cn(
-                            "whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-[14px]",
+                            "whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-[14px] font-medium",
                             meuComentario ? "rounded-br-sm" : "rounded-bl-sm",
                           )}
                           style={(() => {
