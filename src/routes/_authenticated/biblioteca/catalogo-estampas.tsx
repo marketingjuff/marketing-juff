@@ -508,7 +508,11 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
         <div className="flex flex-col gap-4 md:flex-row">
           <div className="w-full shrink-0 md:w-48">
             <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
-              {e.imagem_caminho && urls[e.imagem_caminho] ? <img src={urls[e.imagem_caminho]} alt={e.nome} className="size-full object-contain" /> : <ImagePlus className="size-8 text-muted-foreground" />}
+              {e.imagem_caminho && urls[e.imagem_caminho] ? (
+                <a href={urls[e.imagem_caminho]} target="_blank" rel="noreferrer" className="block size-full cursor-zoom-in" title="Abrir estampa em nova guia">
+                  <img src={urls[e.imagem_caminho]} alt={e.nome} className="size-full object-contain" />
+                </a>
+              ) : <ImagePlus className="size-8 text-muted-foreground" />}
             </div>
             {editavel ? (
               <>
