@@ -14,3 +14,4 @@
 - Catálogo de estampas: receitas por grupo × cor de camiseta gravadas via RPCs `biblioteca_estampa_salvar_receita`/`biblioteca_combo_registrar`; arquivos na pasta `estampas/` do depósito `marca` (uma chamada por célula, sem duplicar combos).
 - Combos de cores de estampas são administrados dentro do catálogo de Estampas, porque fazem parte desse fluxo e não das configurações gerais.
 - Campos de senha usam o componente compartilhado `PasswordInput`, para manter a alternância mostrar/ocultar consistente em todo o sistema.
+- Seeding (Social): remessas mês×motivo com peças; marcação em lote e painel via RPCs `social_seeding_marcar_coluna`/`social_seeding_painel`, custo vigente por `social_seeding_custo_do_mes` — uma chamada por ação, sem laços na tela.

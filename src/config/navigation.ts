@@ -25,6 +25,7 @@ export type PermissionEntry = {
 
 export const PERMISSION_CATALOG: PermissionEntry[] = [
   { key: "social.stories", grupo: "Social", label: "Stories", nivelConfiguravel: true, modo: "tres" },
+  { key: "social.seeding", grupo: "Social", label: "Seeding", nivelConfiguravel: true, modo: "tres" },
 
   { key: "tarefas.quadros", grupo: "Tarefas", label: "Quadros", nivelConfiguravel: true, modo: "tres" },
   { key: "tarefas.meu_trabalho", grupo: "Tarefas", label: "Meu trabalho", nivelConfiguravel: false, modo: "ver" },
@@ -108,13 +109,13 @@ export const PRESETS: Preset[] = [
     id: "marketing_completo",
     label: "Marketing completo",
     descricao: "Tudo em edição, menos Configurações",
-    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "estrategia.ata", "biblioteca.produtos", "biblioteca.marca", "biblioteca.arquivos", "biblioteca.estampa", "biblioteca.catalogo_estampas"],
+    permissoes: ["social.stories", "social.seeding", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "estrategia.ata", "biblioteca.produtos", "biblioteca.marca", "biblioteca.arquivos", "biblioteca.estampa", "biblioteca.catalogo_estampas"],
   },
   {
     id: "social",
     label: "Social",
     descricao: "Stories e Tarefas em edição, Ata e Biblioteca em leitura",
-    permissoes: ["social.stories", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "estrategia.ata:leitura", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura", "biblioteca.catalogo_estampas:leitura"],
+    permissoes: ["social.stories", "social.seeding", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "estrategia.ata:leitura", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura", "biblioteca.catalogo_estampas:leitura"],
   },
   {
     id: "comercial",
@@ -138,7 +139,13 @@ export const PRESETS: Preset[] = [
     id: "consulta",
     label: "Consulta",
     descricao: "Enxerga tudo, não edita nada",
-    permissoes: ["social.stories:leitura", "tarefas.quadros:leitura", "tarefas.meu_trabalho", "tarefas.calendario", "estrategia.ata:leitura", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura", "biblioteca.catalogo_estampas:leitura"],
+    permissoes: ["social.stories:leitura", "social.seeding:leitura", "tarefas.quadros:leitura", "tarefas.meu_trabalho", "tarefas.calendario", "estrategia.ata:leitura", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura", "biblioteca.catalogo_estampas:leitura"],
+  },
+  {
+    id: "produtora_conteudo",
+    label: "Produtora de conteúdo",
+    descricao: "Só Seeding em edição, mais Biblioteca em leitura",
+    permissoes: ["social.seeding", "biblioteca.produtos:leitura", "biblioteca.estampa:leitura"],
   },
 ];
 
@@ -168,6 +175,7 @@ export const NAVIGATION: MasterTab[] = [
     cor: "#8354b5",
     subTabs: [
       { key: "stories", label: "Stories", to: "/social/stories", permission: "social.stories" },
+      { key: "seeding", label: "Seeding", to: "/social/seeding", permission: "social.seeding" },
     ],
   },
   {
