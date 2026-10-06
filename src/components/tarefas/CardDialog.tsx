@@ -154,6 +154,8 @@ export function CardDialog({
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [novoItem, setNovoItem] = useState("");
+  const [adicionandoItens, setAdicionandoItens] = useState(false);
+  const adicionandoItensRef = useRef(false);
   const [comentario, setComentario] = useState("");
   const [confirmar, setConfirmar] = useState(false);
   const [confirmTexto, setConfirmTexto] = useState("");
@@ -223,6 +225,28 @@ export function CardDialog({
     } catch (e) {
       if (local) aplicarLocal(() => antes);
       toast.error((e as Error).message);
+    }
+  }
+
+  async function adicionarItensChecklist(texto: string) {
+    const itens = texto.split(/\r\n|[\n\r\u2028\u2029]/).map((linha) => linha.trim()).filter(Boolean);
+    if (!itens.length || adicionandoItensRef.current) return;
+    adicionandoItensRef.current = true;
+    setAdicionandoItens(true);
+    setNovoItem("");
+    let salvos = 0;
+    try {
+      for (const item of itens) {
+        await addItemChecklist(c.id, item);
+        salvos += 1;
+      }
+    } catch (e) {
+      setNovoItem(itens.slice(salvos).join("\n"));
+      toast.error((e as Error).message);
+    } finally {
+      invalidar();
+      adicionandoItensRef.current = false;
+      setAdicionandoItens(false);
     }
   }
 
@@ -698,19 +722,25 @@ export function CardDialog({
                   className="flex gap-2"
                   onSubmit={(e) => {
                     e.preventDefault();
-                    if (!novoItem.trim()) return;
-                    const t = novoItem;
-                    setNovoItem("");
-                    rodar(() => addItemChecklist(c.id, t));
+                    void adicionarItensChecklist(novoItem);
                   }}
                 >
                   <Input
                     value={novoItem}
                     placeholder="Novo item"
                     className="h-8"
+                    disabled={adicionandoItens}
+                    onPaste={(e) => {
+                      const texto = e.clipboardData.getData("text/plain");
+                      if (!/[\n\r\u2028\u2029]/.test(texto)) return;
+                      e.preventDefault();
+                      const inicio = e.currentTarget.selectionStart ?? novoItem.length;
+                      const fim = e.currentTarget.selectionEnd ?? inicio;
+                      void adicionarItensChecklist(novoItem.slice(0, inicio) + texto + novoItem.slice(fim));
+                    }}
                     onChange={(e) => setNovoItem(e.target.value)}
                   />
-                  <Button type="submit" size="sm" variant="outline" aria-label="Adicionar item">
+                  <Button type="submit" size="sm" variant="outline" aria-label="Adicionar item" disabled={adicionandoItens}>
                     <Plus className="size-4" />
                   </Button>
                 </form>
