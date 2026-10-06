@@ -40,6 +40,13 @@ function corDoAtalho(a: AtalhoBarra): string {
   return corAnel(a.destino ? masterDoCaminho(a.destino.split("?")[0]!)?.cor : null);
 }
 
+/** Fundo bem clarinho: tingido com a cor do quadro; cinza quase branco nos demais. */
+function fundoDoAtalho(a: AtalhoBarra): string {
+  const cor = corDoAtalho(a);
+  if (a.quadro_id && cor !== CINZA) return `color-mix(in srgb, ${cor} 10%, #ffffff)`;
+  return "#f4f4f5";
+}
+
 export function BarraAtalhos() {
   const queryClient = useQueryClient();
   const { data: itens = [] } = useQuery(atalhosBarraQueryOptions);
@@ -177,8 +184,8 @@ export function BarraAtalhos() {
         const ativo = a.quadro_id
           ? caminho === `/tarefas/quadros/${a.quadro_id}`
           : caminho === destinoPath;
-        const estilo = { borderColor: corDoAtalho(a) };
-        const classe = cn(chip, ativo && "bg-primary-soft text-primary");
+        const estilo = { borderColor: corDoAtalho(a), backgroundColor: fundoDoAtalho(a) };
+        const classe = cn(chip, "bg-transparent", ativo && "text-primary");
         return (
           <li
             key={a.id}
