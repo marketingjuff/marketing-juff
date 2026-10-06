@@ -27,13 +27,11 @@ function corLegivel(hex: string | null | undefined): string {
 const CINZA_CLARO = [0xf0, 0xf0, 0xf1];
 
 /** Fundo da linha: cor secundária do quadro misturada com 40% de cinza claro. */
-function fundoDaLinha(c: CardComContexto): { fundo: string; escuro: boolean } | undefined {
+function fundoDaLinha(c: CardComContexto): string | undefined {
   const h = (c.quadro_cor ?? "").toLowerCase();
   if (!/^#[0-9a-f]{6}$/.test(h)) return undefined;
   const mistura = [1, 3, 5].map((i) => Math.round(parseInt(h.slice(i, i + 2), 16) * 0.6 + CINZA_CLARO[(i - 1) / 2]! * 0.4));
-  const hex = `#${mistura.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
-  const yiq = (mistura[0]! * 299 + mistura[1]! * 587 + mistura[2]! * 114) / 1000;
-  return { fundo: hex, escuro: yiq < 150 };
+  return `#${mistura.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 }
 
 export function ListaCards({
@@ -59,12 +57,12 @@ export function ListaCards({
             type="button"
             onClick={() => onAbrir(c)}
             className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-left"
-            style={fundo ? { backgroundColor: fundo.fundo, color: fundo.escuro ? "#ffffff" : undefined } : undefined}
+            style={fundo ? { backgroundColor: fundo } : undefined}
           >
             <span className={cn("min-w-0 flex-1 truncate text-sm", c.concluido && "line-through opacity-60")}>
               {c.titulo || "Sem título"}
             </span>
-            <span className={cn("text-xs", fundo?.escuro ? "opacity-80" : "text-muted-foreground")}>
+            <span className="text-xs text-muted-foreground">
               {c.quadro_nome} · {c.coluna_nome}
             </span>
             <span className="flex gap-1">
