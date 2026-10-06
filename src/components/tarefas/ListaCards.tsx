@@ -23,13 +23,17 @@ function corLegivel(hex: string | null | undefined): string {
   return lum > 0.93 ? CINZA : h;
 }
 
-/** Fundo da linha: tintura bem clarinha da cor do quadro; sem cor de quadro fica neutro. */
+/** Cinza claro usado para suavizar a cor do quadro. */
+const CINZA_CLARO = [0xf0, 0xf0, 0xf1];
+
+/** Fundo da linha: cor secundária do quadro misturada com 40% de cinza claro. */
 function fundoDaLinha(c: CardComContexto): { fundo: string; escuro: boolean } | undefined {
   const h = (c.quadro_cor ?? "").toLowerCase();
   if (!/^#[0-9a-f]{6}$/.test(h)) return undefined;
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-  const yiq = (r! * 299 + g! * 587 + b! * 114) / 1000;
-  return { fundo: h, escuro: yiq < 150 };
+  const mistura = [1, 3, 5].map((i) => Math.round(parseInt(h.slice(i, i + 2), 16) * 0.6 + CINZA_CLARO[(i - 1) / 2]! * 0.4));
+  const hex = `#${mistura.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+  const yiq = (mistura[0]! * 299 + mistura[1]! * 587 + mistura[2]! * 114) / 1000;
+  return { fundo: hex, escuro: yiq < 150 };
 }
 
 export function ListaCards({
