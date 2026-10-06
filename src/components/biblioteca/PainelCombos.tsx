@@ -14,6 +14,7 @@ import {
   GENEROS,
   ROTULO_GENERO,
   apagarCombo,
+  assinatura,
   combosQueryOptions,
   criarCombo,
   salvarCombo,
@@ -120,6 +121,7 @@ export function PainelCombos({ editavel = true, destaque = null }: { editavel?: 
       </div>
       {editando ? (
         <FormCombo
+          combos={combos}
           inicial={editando === "novo" ? null : editando}
           cores={cores}
           onCancelar={() => setEditando(null)}
@@ -165,8 +167,9 @@ export function PainelCombos({ editavel = true, destaque = null }: { editavel?: 
   );
 }
 
-function FormCombo({ inicial, cores, onCancelar, onPronto }: {
+function FormCombo({ inicial, combos, cores, onCancelar, onPronto }: {
   inicial: Combo | null;
+  combos: Combo[];
   cores: { id: string; nome: string; hex: string }[];
   onCancelar: () => void;
   onPronto: () => void;
@@ -181,12 +184,22 @@ function FormCombo({ inicial, cores, onCancelar, onPronto }: {
     if (!itens.length) { toast.error("Escolha ao menos uma cor."); return; }
     setGravando(true);
     try {
-      if (inicial) await salvarCombo(inicial.id, { genero, cor_id: corId || null }, itens);
-      else {
+      if (inicial) {
+        const outro = combos.find((c) => c.id !== inicial.id && assinatura(c.itens) === assinatura(itens));
+        if (outro) {
+          toast.warning(`Essas cores já existem no ${outro.codigo} — puxado o código já existente.`);
+          onPronto();
+          return;
+        }
+        await salvarCombo(inicial.id, { genero, cor_id: corId || null }, itens);
+      } else {
         const r = await criarCombo(genero, corId || null, itens);
-        toast.success(r.criado ? `Combo ${r.codigo} criado` : `Já existia como ${r.codigo}`);
+        if (r.criado) toast.success(`Combo ${r.codigo} criado`);
+        else {
+          const nome = cores.find((c) => c.id === combos.find((x) => x.id === r.id)?.cor_id)?.nome;
+          toast.warning(`Já existe o ${r.codigo}${nome ? ` (cor ${nome})` : ""} — puxado o código já existente.`);
+        }
       }
-      onPronto();
     } catch (e) {
       toast.error((e as Error).message);
     } finally {

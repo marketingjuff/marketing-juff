@@ -19,6 +19,7 @@ import {
   apagarEstampa,
   apagarGrupo,
   apagarReceita,
+  assinatura,
   categoriasEstampaQueryOptions,
   combosQueryOptions,
   criarCategoria,
@@ -383,6 +384,14 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
     const itens: ItemCor[] = Array.from({ length: n }, (_, i) => atual[i] ?? { codigo: "", c: 0, m: 0, y: 0, k: 0 });
     itens[ordem] = { codigo: cor.codigo, c: cor.c, m: cor.m, y: cor.y, k: cor.k };
     setAvisos((a) => ({ ...a, [chave(gid, cid)]: "" }));
+    if (itens.every((i) => i.codigo)) {
+      const existente = combos.find((c) => c.codigo !== "CROMIA" && assinatura(c.itens) === assinatura(itens));
+      if (existente) {
+        toast.warning(`Já existe o ${existente.codigo} — puxado o código já existente.`);
+        gravarReceita(gid, cid, existente.id, itens);
+        return;
+      }
+    }
     gravarReceita(gid, cid, null, itens);
   }
 
@@ -420,7 +429,11 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
       const gen = generoDoGrupo(g.modelos, produtos) ?? "unissex";
       const res = await registrarCombo(gen, cid, r.itens);
       gravarReceita(g.id, cid, res.id, r.itens);
-      toast.success(res.criado ? `Combo ${res.codigo} criado` : `Já existia como ${res.codigo}`);
+      if (res.criado) toast.success(`Combo ${res.codigo} criado`);
+      else {
+        const nome = corPorId.get(combos.find((c) => c.id === res.id)?.cor_id ?? "")?.nome;
+        toast.warning(`Já existe o ${res.codigo}${nome ? ` (cor ${nome})` : ""} — puxado o código já existente.`);
+      }
     } catch (err) {
       toast.error((err as Error).message);
     }
