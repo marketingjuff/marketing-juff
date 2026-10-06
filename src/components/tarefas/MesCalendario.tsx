@@ -14,9 +14,12 @@ import {
   estaAtrasado,
   isoDe,
   montarFaixasSemana,
+  pessoasQueryOptions,
+  siglaPessoa,
   somarDiasIso,
   updateCard,
   type CardComContexto,
+  type Pessoa,
 } from "@/lib/tarefas";
 
 const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -75,6 +78,8 @@ export function MesCalendario({
   const qc = useQueryClient();
   const [dia, setDia] = useState<string | null>(null);
   const { data: limite = 20 } = useQuery(diasFaixaTopoQueryOptions);
+  const { data: pessoas = [] } = useQuery(pessoasQueryOptions);
+  const siglas = new Map<string, string>(pessoas.map((p: Pessoa) => [p.id, siglaPessoa(p)]));
   const semanaRef = useRef<HTMLDivElement>(null);
   const [arrasto, setArrasto] = useState<{ id: string; modo: Modo; delta: number } | null>(null);
   const primeiro = new Date(ano, mes, 1);
@@ -206,6 +211,11 @@ export function MesCalendario({
                   <span className="ml-2 opacity-75">
                     {fmtCurto(c.data_inicio)} – {fmtCurto(c.data_entrega)}
                   </span>
+                  {c.responsavel_id && siglas.has(c.responsavel_id) ? (
+                    <span className="ml-1.5 shrink-0 text-[10px] font-semibold opacity-75">
+                      {siglas.get(c.responsavel_id)}
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
@@ -292,6 +302,11 @@ export function MesCalendario({
                             ) : null}
                             {c.titulo || "Sem título"}
                           </span>
+                          {c.responsavel_id && siglas.has(c.responsavel_id) ? (
+                            <span className="ml-1.5 shrink-0 text-[10px] font-semibold opacity-75">
+                              {siglas.get(c.responsavel_id)}
+                            </span>
+                          ) : null}
                           {arrasta && !s.cortadoDir ? (
                             <span
                               className="absolute inset-y-0 right-0 w-1.5 cursor-ew-resize"
