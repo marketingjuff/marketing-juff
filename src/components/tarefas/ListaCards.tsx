@@ -83,7 +83,7 @@ export function ListaCards({
               <span
                 className={cn(
                   "text-xs tabular-nums",
-                  estaAtrasado(c) ? "font-medium text-destructive" : fundo?.escuro ? "opacity-80" : "text-muted-foreground",
+                  estaAtrasado(c) ? "font-medium text-destructive" : "text-muted-foreground",
                 )}
               >
                 {formatarData(c.data_entrega)}
