@@ -94,7 +94,7 @@ function MeuTrabalhoPage() {
             <ListaCards cards={g.cards} onAbrir={(c) => setAberto(c.id)} />
           </section>
         ))}
-        <Collapsible className="space-y-2">
+        <Collapsible className="space-y-2" defaultOpen>
           <CollapsibleTrigger className="flex items-center gap-1 text-sm font-semibold">
             Sem data <span className="font-normal text-muted-foreground">({semData.length})</span>
             <ChevronDown className="size-4" />
