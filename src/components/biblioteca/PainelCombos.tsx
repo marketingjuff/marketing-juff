@@ -121,6 +121,7 @@ export function PainelCombos({ editavel = true, destaque = null }: { editavel?: 
       </div>
       {editando ? (
         <FormCombo
+          combos={combos}
           inicial={editando === "novo" ? null : editando}
           cores={cores}
           onCancelar={() => setEditando(null)}
@@ -166,8 +167,9 @@ export function PainelCombos({ editavel = true, destaque = null }: { editavel?: 
   );
 }
 
-function FormCombo({ inicial, cores, onCancelar, onPronto }: {
+function FormCombo({ inicial, combos, cores, onCancelar, onPronto }: {
   inicial: Combo | null;
+  combos: Combo[];
   cores: { id: string; nome: string; hex: string }[];
   onCancelar: () => void;
   onPronto: () => void;
