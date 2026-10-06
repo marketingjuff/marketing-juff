@@ -30,8 +30,8 @@ type Modo = "esq" | "dir" | "corpo";
 
 function fmtCurto(iso: string | null): string {
   if (!iso) return "";
-  const [, m, d] = iso.split("-").map(Number);
-  return `${d} ${MESES[m - 1].slice(0, 3).toLowerCase()}`;
+  const [, m = 1, d = 1] = iso.split("-").map(Number);
+  return `${d} ${(MESES[m - 1] ?? "").slice(0, 3).toLowerCase()}`;
 }
 
 function estiloBarra(c: CardComContexto): { className: string; style?: React.CSSProperties } {
@@ -86,8 +86,8 @@ export function MesCalendario({
     return d;
   });
   const semanas = Array.from({ length: 6 }, (_, i) => celulas.slice(i * 7, i * 7 + 7));
-  const gradeIni = isoDe(celulas[0]);
-  const gradeFim = isoDe(celulas[41]);
+  const gradeIni = isoDe(celulas[0]!);
+  const gradeFim = isoDe(celulas[41]!);
   const hoje = isoDe(new Date());
   const porDia = new Map<string, CardComContexto[]>();
   for (const c of cards) {
