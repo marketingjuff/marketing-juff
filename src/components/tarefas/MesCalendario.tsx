@@ -1,10 +1,23 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { ListaCards } from "./ListaCards";
-import { estaAtrasado, isoDe, type CardComContexto } from "@/lib/tarefas";
+import {
+  cardsDoMesQueryOptions,
+  corTextoContraste,
+  diasFaixaTopoQueryOptions,
+  duracaoDias,
+  estaAtrasado,
+  isoDe,
+  montarFaixasSemana,
+  somarDiasIso,
+  updateCard,
+  type CardComContexto,
+} from "@/lib/tarefas";
 
 const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const MESES = [
@@ -12,20 +25,58 @@ const MESES = [
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ];
 
+type Modo = "esq" | "dir" | "corpo";
+
+function fmtCurto(iso: string | null): string {
+  if (!iso) return "";
+  const [, m, d] = iso.split("-").map(Number);
+  return `${d} ${MESES[m - 1].slice(0, 3).toLowerCase()}`;
+}
+
+function estiloBarra(c: CardComContexto): { className: string; style?: React.CSSProperties } {
+  const fim = c.concluido ? " line-through opacity-60" : "";
+  if (estaAtrasado(c)) return { className: "bg-destructive/15 text-destructive" + fim };
+  if (c.quadro_cor) return { className: fim, style: { background: c.quadro_cor, color: corTextoContraste(c.quadro_cor) } };
+  return { className: "bg-primary-soft" + fim };
+}
+
+/** Novas datas a partir do arrasto, com travas início ≤ entrega. */
+function datasArrastadas(c: CardComContexto, modo: Modo, d: number) {
+  const ini = c.data_inicio;
+  const ent = c.data_entrega!;
+  if (modo === "corpo") return { data_inicio: ini ? somarDiasIso(ini, d) : null, data_entrega: somarDiasIso(ent, d) };
+  if (modo === "dir") {
+    let novo = somarDiasIso(ent, d);
+    if (ini && novo < ini) novo = ini;
+    if (!ini) return { data_inicio: null, data_entrega: novo };
+    return { data_inicio: ini, data_entrega: novo };
+  }
+  if (!ini) return { data_inicio: d < 0 ? somarDiasIso(ent, d) : null, data_entrega: ent };
+  let novo = somarDiasIso(ini, d);
+  if (novo > ent) novo = ent;
+  return { data_inicio: novo, data_entrega: ent };
+}
+
 export function MesCalendario({
   ano,
   mes,
   cards,
   onMudarMes,
   onAbrir,
+  podeArrastar = false,
 }: {
   ano: number;
   mes: number;
   cards: CardComContexto[];
   onMudarMes: (ano: number, mes: number) => void;
   onAbrir: (card: CardComContexto) => void;
+  podeArrastar?: boolean;
 }) {
+  const qc = useQueryClient();
   const [dia, setDia] = useState<string | null>(null);
+  const { data: limite = 20 } = useQuery(diasFaixaTopoQueryOptions);
+  const semanaRef = useRef<HTMLDivElement>(null);
+  const [arrasto, setArrasto] = useState<{ id: string; modo: Modo; delta: number } | null>(null);
   const primeiro = new Date(ano, mes, 1);
   const inicio = new Date(ano, mes, 1 - primeiro.getDay());
   const celulas = Array.from({ length: 42 }, (_, i) => {
@@ -33,6 +84,9 @@ export function MesCalendario({
     d.setDate(inicio.getDate() + i);
     return d;
   });
+  const semanas = Array.from({ length: 6 }, (_, i) => celulas.slice(i * 7, i * 7 + 7));
+  const gradeIni = isoDe(celulas[0]);
+  const gradeFim = isoDe(celulas[41]);
   const hoje = isoDe(new Date());
   const porDia = new Map<string, CardComContexto[]>();
   for (const c of cards) {
@@ -41,6 +95,69 @@ export function MesCalendario({
   }
   for (const [dia, lista] of porDia) {
     porDia.set(dia, [...lista].sort((a, b) => (a.hora_entrega ?? "").localeCompare(b.hora_entrega ?? "")));
+  }
+
+  // cards com prévia do arrasto aplicada
+  const visiveis = cards
+    .filter((c) => c.data_entrega)
+    .map((c) => (arrasto && arrasto.id === c.id ? { ...c, ...datasArrastadas(c, arrasto.modo, arrasto.delta) } : c));
+  const topo = visiveis
+    .filter((c) => duracaoDias(c.data_inicio, c.data_entrega) > limite)
+    .sort((a, b) => (a.data_inicio ?? "").localeCompare(b.data_inicio ?? ""));
+  const idsTopo = new Set(topo.map((c) => c.id));
+  const naGrade = visiveis
+    .filter((c) => !idsTopo.has(c.id))
+    .sort((a, b) => (a.hora_entrega ?? "").localeCompare(b.hora_entrega ?? ""));
+
+  function iniciar(e: React.PointerEvent, c: CardComContexto, modo: Modo) {
+    if (!podeArrastar || c.concluido || e.button !== 0) return;
+    e.stopPropagation();
+    const x0 = e.clientX;
+    const y0 = e.clientY;
+    const largura = (semanaRef.current?.offsetWidth ?? 700) / 7;
+    const alturaSemana = semanaRef.current?.offsetHeight ?? 96;
+    let delta = 0;
+    let moveu = false;
+    setArrasto({ id: c.id, modo, delta: 0 });
+    const mover = (ev: PointerEvent) => {
+      const dx = ev.clientX - x0;
+      const dy = ev.clientY - y0;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moveu = true;
+      const d = Math.round(dx / largura) + Math.round(dy / alturaSemana) * 7;
+      if (d !== delta) {
+        delta = d;
+        setArrasto({ id: c.id, modo, delta: d });
+      }
+    };
+    const soltar = () => {
+      window.removeEventListener("pointermove", mover);
+      window.removeEventListener("pointerup", soltar);
+      setArrasto(null);
+      if (!moveu) {
+        onAbrir(c);
+        return;
+      }
+      if (delta === 0) return;
+      const novas = datasArrastadas(c, modo, delta);
+      const mudou: { data_inicio?: string | null; data_entrega?: string } = {};
+      if (novas.data_inicio !== c.data_inicio) mudou.data_inicio = novas.data_inicio;
+      if (novas.data_entrega !== c.data_entrega) mudou.data_entrega = novas.data_entrega;
+      if (!Object.keys(mudou).length) return;
+      const chave = cardsDoMesQueryOptions(ano, mes).queryKey;
+      const antes = qc.getQueryData<CardComContexto[]>(chave);
+      qc.setQueryData<CardComContexto[]>(chave, (l) => l?.map((x) => (x.id === c.id ? { ...x, ...mudou } : x)));
+      updateCard(c.id, mudou)
+        .catch((err) => {
+          qc.setQueryData(chave, antes);
+          toast.error(err instanceof Error ? err.message : "Não foi possível mover o card");
+        })
+        .finally(() => {
+          void qc.invalidateQueries({ queryKey: chave });
+          void qc.invalidateQueries({ queryKey: ["tarefas", "quadro", c.quadro_id] });
+        });
+    };
+    window.addEventListener("pointermove", mover);
+    window.addEventListener("pointerup", soltar);
   }
 
   function mover(delta: number) {
@@ -138,7 +255,7 @@ export function MesCalendario({
               </div>
               <div className="pointer-events-none absolute inset-x-0 top-6 space-y-0.5 px-1">
                 {faixas.map((fx, fi) => (
-                  <div key={fi} className="grid h-5 grid-cols-7 gap-x-2">
+                  <div key={fi} className="grid h-5 grid-cols-7">
                     {fx.map((s) => {
                       const c = s.card;
                       const st = estiloBarra(c);
@@ -155,7 +272,7 @@ export function MesCalendario({
                           }}
                           onKeyDown={(e) => e.key === "Enter" && onAbrir(c)}
                           className={cn(
-                            "pointer-events-auto relative flex items-center truncate px-1 text-[11px] leading-5 select-none",
+                            "pointer-events-auto relative mx-0.5 flex items-center truncate px-1 text-[11px] leading-5 select-none",
                             st.className,
                             s.cortadoEsq ? "rounded-l-none" : "rounded-l",
                             s.cortadoDir ? "rounded-r-none" : "rounded-r",
