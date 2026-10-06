@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { ListaCards } from "./ListaCards";
 import {
   cardsDoMesQueryOptions,
-  corTextoContraste,
   diasFaixaTopoQueryOptions,
   duracaoDias,
   estaAtrasado,
