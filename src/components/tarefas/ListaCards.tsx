@@ -45,12 +45,15 @@ export function ListaCards({
   if (cards.length === 0) return <p className="py-2 text-sm text-muted-foreground">{vazio}</p>;
   return (
     <ul className="divide-y divide-border rounded-lg border border-border bg-card">
-      {cards.map((c) => (
+      {cards.map((c) => {
+        const fundo = fundoDaLinha(c);
+        return (
         <li key={c.id}>
           <button
             type="button"
             onClick={() => onAbrir(c)}
-            className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-left hover:bg-secondary/60"
+            className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-left"
+            style={fundo ? { backgroundColor: fundo } : undefined}
           >
             <span className={cn("min-w-0 flex-1 truncate text-sm", c.concluido && "line-through opacity-60")}>
               {c.titulo || "Sem título"}
