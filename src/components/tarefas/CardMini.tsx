@@ -27,7 +27,18 @@ export function EtiquetaCompacta({ nome, cor, corTexto }: { nome: string; cor: s
   useLayoutEffect(() => {
     const el = texto.current;
     if (!el) return;
-    setLargura(el.scrollWidth * ACHATAMENTO);
+    let ativo = true;
+    const medir = () => {
+      if (ativo) setLargura(Math.ceil(el.getBoundingClientRect().width) + 2);
+    };
+    medir();
+    const observer = new ResizeObserver(medir);
+    observer.observe(el);
+    void document.fonts.ready.then(medir);
+    return () => {
+      ativo = false;
+      observer.disconnect();
+    };
   }, [nome]);
 
   return (
@@ -42,7 +53,7 @@ export function EtiquetaCompacta({ nome, cor, corTexto }: { nome: string; cor: s
       >
         <span
           ref={texto}
-          className="font-nunito block whitespace-nowrap text-[11px] font-medium uppercase leading-[1.35]"
+           className="font-nunito block w-max whitespace-nowrap text-[11px] font-medium uppercase leading-[1.35]"
           style={{ transform: `scaleX(${ACHATAMENTO})`, transformOrigin: "left center" }}
         >
           {nome}
