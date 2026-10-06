@@ -9,6 +9,27 @@ import {
   type CardComContexto,
 } from "@/lib/tarefas";
 
+const CINZA = "#b3b3b3";
+
+/** Cor legível: hexadecimal minúsculo; claro demais vira cinza (igual à barra de atalhos). */
+function corLegivel(hex: string | null | undefined): string {
+  const h = (hex ?? "").toLowerCase();
+  if (!/^#[0-9a-f]{6}$/.test(h)) return CINZA;
+  const c = [1, 3, 5].map((i) => {
+    const v = parseInt(h.slice(i, i + 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  });
+  const lum = 0.2126 * c[0]! + 0.7152 * c[1]! + 0.0722 * c[2]!;
+  return lum > 0.93 ? CINZA : h;
+}
+
+/** Fundo da linha: tintura bem clarinha da cor do quadro; sem cor de quadro fica neutro. */
+function fundoDaLinha(c: CardComContexto): string | undefined {
+  const cor = corLegivel(c.quadro_cor);
+  if (cor === CINZA) return undefined;
+  return `color-mix(in srgb, ${cor} 16%, #ffffff)`;
+}
+
 export function ListaCards({
   cards,
   onAbrir,
