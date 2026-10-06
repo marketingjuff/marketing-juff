@@ -8,6 +8,7 @@ import {
   formatarData,
   type CardComContexto,
 } from "@/lib/tarefas";
+import { EtiquetaCompacta } from "./CardMini";
 
 const CINZA = "#b3b3b3";
 
@@ -21,17 +22,6 @@ function corLegivel(hex: string | null | undefined): string {
   });
   const lum = 0.2126 * c[0]! + 0.7152 * c[1]! + 0.0722 * c[2]!;
   return lum > 0.93 ? CINZA : h;
-}
-
-/** Cinza claro usado para suavizar a cor do quadro. */
-const CINZA_CLARO = [0xf0, 0xf0, 0xf1];
-
-/** Fundo da linha: cor secundária do quadro misturada com 40% de cinza claro. */
-function fundoDaLinha(c: CardComContexto): string | undefined {
-  const h = (c.quadro_cor ?? "").toLowerCase();
-  if (!/^#[0-9a-f]{6}$/.test(h)) return undefined;
-  const mistura = [1, 3, 5].map((i) => Math.round(parseInt(h.slice(i, i + 2), 16) * 0.5 + CINZA_CLARO[(i - 1) / 2]! * 0.5));
-  return `#${mistura.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 }
 
 export function ListaCards({
@@ -48,41 +38,42 @@ export function ListaCards({
   const mapa = new Map(etiquetas.map((e) => [e.id, e]));
   if (cards.length === 0) return <p className="py-2 text-sm text-muted-foreground">{vazio}</p>;
   return (
-    <ul className="divide-y divide-border rounded-lg border border-border bg-card">
+    <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
       {cards.map((c) => {
-        const fundo = fundoDaLinha(c);
+        const faixa = corLegivel(c.quadro_cor);
         return (
         <li key={c.id}>
           <button
             type="button"
             onClick={() => onAbrir(c)}
-            className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-left font-bold"
-            style={fundo ? { backgroundColor: fundo } : undefined}
+            className="flex w-full items-center gap-2 py-1 pr-2.5 text-left transition-colors hover:bg-muted/60"
+            style={{ borderLeft: `3px solid ${faixa}` }}
           >
-            <span className={cn("min-w-0 flex-1 truncate text-sm", c.concluido && "line-through opacity-60")}>
+            <span
+              className={cn(
+                "ml-2 min-w-0 shrink truncate text-[13px] font-medium leading-5",
+                c.concluido && "line-through opacity-60",
+              )}
+            >
               {c.titulo || "Sem título"}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="shrink-0 whitespace-nowrap text-[11px] leading-5 text-muted-foreground">
               {c.quadro_nome} · {c.coluna_nome}
             </span>
-            <span className="flex gap-1">
-              {c.etiquetas.map((id) => {
-                const e = mapa.get(id);
-                return e ? (
-                  <span
-                    key={id}
-                    className="font-nunito rounded px-1.5 py-0.5 text-[11px]"
-                    style={(() => { const cs = coresDaEtiqueta(e, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}
-                  >
-                    {e.nome}
-                  </span>
-                ) : null;
-              })}
-            </span>
+            {c.etiquetas.length > 0 ? (
+              <span className="flex min-w-0 shrink gap-1 overflow-hidden">
+                {c.etiquetas.map((id) => {
+                  const e = mapa.get(id);
+                  if (!e) return null;
+                  const cs = coresDaEtiqueta(e, pessoas);
+                  return <EtiquetaCompacta key={id} nome={e.nome} cor={cs.cor} corTexto={cs.cor_texto} />;
+                })}
+              </span>
+            ) : null}
             {c.data_entrega ? (
               <span
                 className={cn(
-                  "text-xs tabular-nums",
+                  "ml-auto shrink-0 pl-2 text-[11px] leading-5 tabular-nums",
                   estaAtrasado(c) ? "font-medium text-destructive" : "text-muted-foreground",
                 )}
               >

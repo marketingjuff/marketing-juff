@@ -20,7 +20,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 
 const ACHATAMENTO = 0.78;
 
-function EtiquetaCompacta({ nome, cor, corTexto }: { nome: string; cor: string; corTexto: string }) {
+export function EtiquetaCompacta({ nome, cor, corTexto }: { nome: string; cor: string; corTexto: string }) {
   const texto = useRef<HTMLSpanElement>(null);
   const [largura, setLargura] = useState<number | null>(null);
 
