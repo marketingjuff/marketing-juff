@@ -78,7 +78,6 @@ export function CardMini({
 }) {
   const atrasado = estaAtrasado(card);
   const breve = venceHoje(card) || venceAmanha(card);
-  const parado = !card.concluido ? diasParado(card.coluna_desde) : 0;
   const adiado = estaAdiado(card);
   const prio = PRIORIDADES.find((p) => p.valor === card.prioridade);
   const resp = card.responsavel_id ? pessoas.get(card.responsavel_id) : undefined;
