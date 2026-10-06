@@ -49,9 +49,19 @@ export function ListaCards({
             className="flex w-full items-center gap-2 py-1 pr-2.5 text-left transition-colors hover:bg-muted/60"
             style={{ borderLeft: `3px solid ${faixa}` }}
           >
+            {c.data_entrega ? (
+              <span
+                className={cn(
+                  "ml-2 shrink-0 whitespace-nowrap text-[13px] font-medium leading-5 tabular-nums",
+                  estaAtrasado(c) ? "text-destructive" : "text-foreground",
+                )}
+              >
+                {formatarData(c.data_entrega)}
+              </span>
+            ) : null}
             <span
               className={cn(
-                "ml-2 min-w-0 shrink truncate text-[13px] font-medium leading-5",
+                "min-w-0 shrink truncate text-[13px] font-medium leading-5",
                 c.concluido && "line-through opacity-60",
               )}
             >
@@ -68,16 +78,6 @@ export function ListaCards({
                   const cs = coresDaEtiqueta(e, pessoas);
                   return <EtiquetaCompacta key={id} nome={e.nome} cor={cs.cor} corTexto={cs.cor_texto} />;
                 })}
-              </span>
-            ) : null}
-            {c.data_entrega ? (
-              <span
-                className={cn(
-                  "ml-auto shrink-0 pl-2 text-[11px] leading-5 tabular-nums",
-                  estaAtrasado(c) ? "font-medium text-destructive" : "text-muted-foreground",
-                )}
-              >
-                {formatarData(c.data_entrega)}
               </span>
             ) : null}
           </button>
