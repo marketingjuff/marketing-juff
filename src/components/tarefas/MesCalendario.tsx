@@ -14,9 +14,12 @@ import {
   estaAtrasado,
   isoDe,
   montarFaixasSemana,
+  pessoasQueryOptions,
+  siglaPessoa,
   somarDiasIso,
   updateCard,
   type CardComContexto,
+  type Pessoa,
 } from "@/lib/tarefas";
 
 const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
