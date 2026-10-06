@@ -856,10 +856,12 @@ export function CardDialog({
                         <div
                           className={cn(
                             "whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-[14px]",
-                            meuComentario
-                              ? "rounded-br-sm bg-primary-soft text-foreground"
-                              : "rounded-bl-sm bg-muted text-foreground",
+                            meuComentario ? "rounded-br-sm" : "rounded-bl-sm",
                           )}
+                          style={(() => {
+                            const bc = balaoCor(pessoaDe(l.autor_id)?.cor_avatar);
+                            return { backgroundColor: bc.fundo, color: bc.texto };
+                          })()}
                         >
                           {l.texto}
                         </div>
