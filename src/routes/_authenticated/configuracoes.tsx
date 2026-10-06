@@ -26,6 +26,7 @@ import {
 
 import { AppShell } from "@/components/AppShell";
 import { PainelEtiquetas } from "@/components/config/PainelEtiquetas";
+import { PainelCalendario } from "@/components/config/PainelCalendario";
 import { PainelMeuDia } from "@/components/config/PainelMeuDia";
 import { PainelCamposEstrategia } from "@/components/config/PainelCamposEstrategia";
 import { PainelNotificacoes } from "@/components/config/PainelNotificacoes";
@@ -119,7 +120,7 @@ type SecaoConfig = {
 const SECOES: SecaoConfig[] = [
   { key: "geral", label: "Geral", icone: Settings, subtitulo: "Sua conta e um resumo do sistema." },
   { key: "social", label: "Social", icone: Sparkles, subtitulo: "Frases de CTA e links usados nos stories." },
-  { key: "tarefas", label: "Tarefas", icone: LayoutGrid, subtitulo: "Etiquetas usadas nos cards de todos os quadros." },
+  { key: "tarefas", label: "Tarefas", icone: LayoutGrid, subtitulo: "Calendário e etiquetas usadas nos cards de todos os quadros." },
   { key: "meu_dia", label: "Meu dia", icone: CalendarClock, subtitulo: "Seus recorrentes e os feriados da Juff." },
   { key: "estrategia", label: "Estratégia", icone: Telescope, subtitulo: "Campos da ata mensal de cada frente." },
   { key: "biblioteca", label: "Biblioteca", icone: Library, subtitulo: "Cores oficiais de camiseta usadas na Biblioteca.", roles: ["admin"] },
@@ -354,7 +355,12 @@ function Configuracoes() {
           </>
         ) : null}
 
-        {secaoAtual.key === "tarefas" ? <PainelEtiquetas /> : null}
+        {secaoAtual.key === "tarefas" ? (
+          <div className="space-y-6">
+            <PainelCalendario />
+            <PainelEtiquetas />
+          </div>
+        ) : null}
         {secaoAtual.key === "meu_dia" ? <PainelMeuDia /> : null}
         {secaoAtual.key === "estrategia" ? <PainelCamposEstrategia /> : null}
         {secaoAtual.key === "biblioteca" ? <PainelCoresProduto /> : null}
