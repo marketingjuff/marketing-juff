@@ -40,6 +40,13 @@ function corDoAtalho(a: AtalhoBarra): string {
   return corAnel(a.destino ? masterDoCaminho(a.destino.split("?")[0]!)?.cor : null);
 }
 
+/** Fundo bem clarinho: tingido com a cor do quadro; cinza quase branco nos demais. */
+function fundoDoAtalho(a: AtalhoBarra): string {
+  const cor = corDoAtalho(a);
+  if (a.quadro_id && cor !== CINZA) return `color-mix(in srgb, ${cor} 10%, #ffffff)`;
+  return "#f4f4f5";
+}
+
 export function BarraAtalhos() {
   const queryClient = useQueryClient();
   const { data: itens = [] } = useQuery(atalhosBarraQueryOptions);
