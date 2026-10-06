@@ -461,6 +461,35 @@ export function CardDialog({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="max-h-[70vh] w-72 space-y-3 overflow-y-auto">
+                  {mexer ? (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 gap-1"
+                        onClick={async () => {
+                          await rodar(() => arquivarCard(c.id, !c.arquivado));
+                          toast.success(c.arquivado ? "Card restaurado" : "Card arquivado");
+                          if (!c.arquivado) onOpenChange(false);
+                        }}
+                      >
+                        <Archive className="size-4" /> {c.arquivado ? "Desarquivar" : "Arquivar"}
+                      </Button>
+                      {isAdmin ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1 text-destructive"
+                          onClick={() => {
+                            setConfirmTexto("");
+                            setConfirmar(true);
+                          }}
+                        >
+                          <Trash2 className="size-4" /> Excluir
+                        </Button>
+                      ) : null}
+                    </div>
+                  ) : null}
                   <Campo label="Cor da faixa">
                     <div className="flex items-center gap-2">
                       <ColorPicker
@@ -870,35 +899,7 @@ export function CardDialog({
               })}
             </ul>
 
-            {mexer ? (
-              <div className="space-y-2 border-t border-border pt-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full gap-1"
-                  onClick={async () => {
-                    await rodar(() => arquivarCard(c.id, !c.arquivado));
-                    toast.success(c.arquivado ? "Card restaurado" : "Card arquivado");
-                    if (!c.arquivado) onOpenChange(false);
-                  }}
-                >
-                  <Archive className="size-4" /> {c.arquivado ? "Desarquivar" : "Arquivar card"}
-                </Button>
-                {isAdmin ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full gap-1 text-destructive"
-                    onClick={() => {
-                      setConfirmTexto("");
-                      setConfirmar(true);
-                    }}
-                  >
-                    <Trash2 className="size-4" /> Excluir de vez
-                  </Button>
-                ) : null}
-              </div>
-            ) : null}
+            {mexer ? null : null}
           </aside>
         </div>
 
