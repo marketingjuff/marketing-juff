@@ -87,7 +87,8 @@ export function ListaCards({
             ) : null}
           </button>
         </li>
-      ))}
+        );
+        })}
     </ul>
   );
 }
