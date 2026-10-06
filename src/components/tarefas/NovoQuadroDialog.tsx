@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FundoPicker, type FundoValor } from "./FundoPicker";
+import { CHAVE_BARRA } from "@/lib/atalhos-paginas";
 import {
   createQuadro,
   pessoasQueryOptions,
@@ -80,6 +81,7 @@ export function NovoQuadroDialog({
       if (id) await setMembrosQuadro(id, membros);
       if (id && somenteParticipantes) await updateQuadro(id, { acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador });
       await qc.invalidateQueries({ queryKey: ["tarefas"] });
+      await qc.invalidateQueries({ queryKey: CHAVE_BARRA });
       toast.success(quadro ? "Quadro atualizado" : "Quadro criado");
       onOpenChange(false);
       if (id) onSaved?.(id);
