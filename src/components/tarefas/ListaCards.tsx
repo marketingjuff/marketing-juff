@@ -27,7 +27,7 @@ function corLegivel(hex: string | null | undefined): string {
 function fundoDaLinha(c: CardComContexto): string | undefined {
   const cor = corLegivel(c.quadro_cor);
   if (cor === CINZA) return undefined;
-  return `color-mix(in srgb, ${cor} 16%, #ffffff)`;
+  return `color-mix(in srgb, ${cor} 30%, #ffffff)`;
 }
 
 export function ListaCards({
