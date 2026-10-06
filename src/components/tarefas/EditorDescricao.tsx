@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { TextStyle, Color, FontFamily } from "@tiptap/extension-text-style";
+import Link from "@tiptap/extension-link";
 import DOMPurify from "dompurify";
 import { Bold, Italic, Underline as UIcon, Strikethrough, List, ListOrdered, Quote, Heading2, Undo2, Redo2, RemoveFormatting } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -82,7 +83,18 @@ export function EditorDescricao({
 }: { value: string; disabled?: boolean; onChange: (html: string) => void; onBlur: (html: string) => void }) {
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [StarterKit, TextStyle, Color, FontFamily],
+    extensions: [
+      StarterKit,
+      TextStyle,
+      Color,
+      FontFamily,
+      Link.configure({
+        autolink: true,
+        linkOnPaste: true,
+        openOnClick: false,
+        HTMLAttributes: { target: "_blank", rel: "noopener noreferrer" },
+      }),
+    ],
     content: paraHtml(value),
     editable: !disabled,
     editorProps: { attributes: { class: "descricao-rica min-h-[22rem] px-3 py-2 outline-none" } },
