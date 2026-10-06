@@ -211,6 +211,11 @@ export function MesCalendario({
                   <span className="ml-2 opacity-75">
                     {fmtCurto(c.data_inicio)} – {fmtCurto(c.data_entrega)}
                   </span>
+                  {c.responsavel_id && siglas.has(c.responsavel_id) ? (
+                    <span className="ml-1.5 shrink-0 text-[10px] font-semibold opacity-75">
+                      {siglas.get(c.responsavel_id)}
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
