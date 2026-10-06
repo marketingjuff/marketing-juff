@@ -86,7 +86,7 @@ export function QuadroBoard({
   const { data: pessoasLista = [] } = useQuery(pessoasQueryOptions);
   const etiquetas = useMemo(() => new Map(etiquetasLista.map((e) => [e.id, e])), [etiquetasLista]);
   const etiquetasDoQuadro = useMemo(
-    () => etiquetasLista.filter((e) => e.quadro_id === quadro.id),
+    () => etiquetasLista.filter((e) => e.quadro_id == null || e.quadro_id === quadro.id),
     [etiquetasLista, quadro.id],
   );
   const pessoas = useMemo(() => new Map(pessoasLista.map((p) => [p.id, p])), [pessoasLista]);
