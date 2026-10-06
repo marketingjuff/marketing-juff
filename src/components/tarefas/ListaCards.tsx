@@ -30,7 +30,7 @@ const CINZA_CLARO = [0xf0, 0xf0, 0xf1];
 function fundoDaLinha(c: CardComContexto): string | undefined {
   const h = (c.quadro_cor ?? "").toLowerCase();
   if (!/^#[0-9a-f]{6}$/.test(h)) return undefined;
-  const mistura = [1, 3, 5].map((i) => Math.round(parseInt(h.slice(i, i + 2), 16) * 0.6 + CINZA_CLARO[(i - 1) / 2]! * 0.4));
+  const mistura = [1, 3, 5].map((i) => Math.round(parseInt(h.slice(i, i + 2), 16) * 0.5 + CINZA_CLARO[(i - 1) / 2]! * 0.5));
   return `#${mistura.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 }
 
@@ -56,7 +56,7 @@ export function ListaCards({
           <button
             type="button"
             onClick={() => onAbrir(c)}
-            className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-left"
+            className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-left font-bold"
             style={fundo ? { backgroundColor: fundo } : undefined}
           >
             <span className={cn("min-w-0 flex-1 truncate text-sm", c.concluido && "line-through opacity-60")}>
