@@ -80,6 +80,7 @@ export function NovoQuadroDialog({
       if (id) await setMembrosQuadro(id, membros);
       if (id && somenteParticipantes) await updateQuadro(id, { acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador });
       await qc.invalidateQueries({ queryKey: ["tarefas"] });
+      await qc.invalidateQueries({ queryKey: CHAVE_BARRA });
       toast.success(quadro ? "Quadro atualizado" : "Quadro criado");
       onOpenChange(false);
       if (id) onSaved?.(id);
