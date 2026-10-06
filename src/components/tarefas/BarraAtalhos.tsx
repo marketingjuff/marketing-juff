@@ -184,8 +184,8 @@ export function BarraAtalhos() {
         const ativo = a.quadro_id
           ? caminho === `/tarefas/quadros/${a.quadro_id}`
           : caminho === destinoPath;
-        const estilo = { borderColor: corDoAtalho(a) };
-        const classe = cn(chip, ativo && "bg-primary-soft text-primary");
+        const estilo = { borderColor: corDoAtalho(a), backgroundColor: fundoDoAtalho(a) };
+        const classe = cn(chip, "bg-transparent", ativo && "text-primary");
         return (
           <li
             key={a.id}
