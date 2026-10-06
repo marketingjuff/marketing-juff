@@ -37,7 +37,7 @@ function fmtCurto(iso: string | null): string {
 function estiloBarra(c: CardComContexto): { className: string; style?: React.CSSProperties } {
   const fim = c.concluido ? " line-through opacity-60" : "";
   if (estaAtrasado(c)) return { className: "bg-destructive/15 text-destructive" + fim };
-  if (c.quadro_cor) return { className: fim, style: { background: c.quadro_cor, color: corTextoContraste(c.quadro_cor) } };
+  if (c.quadro_cor) return { className: "font-bold" + fim, style: { background: c.quadro_cor, color: "#ffffff" } };
   return { className: "bg-primary-soft" + fim };
 }
 
