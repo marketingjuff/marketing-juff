@@ -151,11 +151,6 @@ export function CardMini({
           </span>
         ) : null}
         {card.anexos_total > 0 ? <Paperclip className="size-3" /> : null}
-        {parado > DIAS_PARADO_ALERTA ? (
-          <span className="flex items-center gap-0.5 text-warning-foreground" title="Dias parado nesta coluna">
-            <Clock className="size-3" /> {parado}d parado
-          </span>
-        ) : null}
         {adiado ? (
           <span className="flex items-center gap-0.5">
             <Pause className="size-3" /> até {formatarDataHora(card.adiado_ate, null)}
