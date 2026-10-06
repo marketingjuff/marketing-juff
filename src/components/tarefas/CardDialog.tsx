@@ -771,7 +771,7 @@ export function CardDialog({
               {editable ? (
                 <div className="space-y-2">
                   <Textarea
-                    rows={2}
+                    rows={6}
                     value={comentario}
                     placeholder="Escreva um comentário"
                     disabled={!!travados["comentario"]}
