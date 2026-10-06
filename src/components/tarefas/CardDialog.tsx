@@ -272,7 +272,7 @@ export function CardDialog({
               <Input
                 value={titulo}
                 disabled={!mexer || !!travados["titulo"]}
-                className="border-transparent px-1 text-lg font-semibold shadow-none focus-visible:border-input"
+                className="border-transparent px-1 text-[22px] font-semibold shadow-none focus-visible:border-input"
                 onChange={(e) => {
                   setTitulo(e.target.value);
                   digitando("titulo");
@@ -326,7 +326,7 @@ export function CardDialog({
                               );
                             }}
                             className={cn(
-                              "font-nunito rounded px-1.5 py-0.5 text-xs transition-opacity",
+                              "font-nunito rounded px-1.5 py-0.5 text-[14px] transition-opacity",
                               !on && "opacity-40",
                             )}
                             style={(() => { const cs = coresDaEtiqueta(e, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}
@@ -336,7 +336,7 @@ export function CardDialog({
                         );
                       })}
                       {etiquetasVisiveis.length === 0 ? (
-                        <span className="text-[11px] text-muted-foreground">
+                        <span className="text-[13px] text-muted-foreground">
                           Nenhuma etiqueta para este quadro. Crie em Configurações.
                         </span>
                       ) : null}
@@ -371,7 +371,7 @@ export function CardDialog({
                     }
                   />
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground">Recorrente</p>
+                    <p className="text-[14px] font-medium text-muted-foreground">Recorrente</p>
                     <Select
                       disabled={!mexer || !c.data_entrega}
                       value={c.recorrencia ?? "nunca"}
@@ -385,7 +385,7 @@ export function CardDialog({
                       </SelectContent>
                     </Select>
                     {!c.data_entrega ? (
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-[13px] text-muted-foreground">
                         Marque uma data de entrega para poder repetir
                       </p>
                     ) : null}
@@ -411,7 +411,7 @@ export function CardDialog({
                     ) : null}
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground">Lembrete</p>
+                    <p className="text-[14px] font-medium text-muted-foreground">Lembrete</p>
                     <Select
                       disabled={!mexer || !c.data_entrega}
                       value={c.lembrete_min === null || c.lembrete_min === undefined ? "nenhum" : String(c.lembrete_min)}
@@ -426,7 +426,7 @@ export function CardDialog({
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-[13px] text-muted-foreground">
                       {!c.data_entrega
                         ? "Marque uma data de entrega para poder ser lembrado"
                         : !c.hora_entrega
@@ -530,7 +530,7 @@ export function CardDialog({
                       placeholder="https://"
                       onBlur={(e) => e.target.value !== c.link_externo && salvar({ link_externo: e.target.value })} />
                     {c.link_externo ? (
-                      <a href={c.link_externo} target="_blank" rel="noreferrer" className="block truncate text-xs text-primary underline">
+                      <a href={c.link_externo} target="_blank" rel="noreferrer" className="block truncate text-[14px] text-primary underline">
                         {c.link_externo}
                       </a>
                     ) : null}
@@ -586,19 +586,19 @@ export function CardDialog({
                   .map((e) => (
                     <span
                       key={e.id}
-                      className="font-nunito rounded-[3px] px-1 py-px text-[11px] font-medium uppercase"
+                      className="font-nunito rounded-[3px] px-1 py-px text-[13px] font-medium uppercase"
                       style={(() => { const cs = coresDaEtiqueta(e, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}
                     >
                       {e.nome}
                     </span>
                   ))}
                 {c.data_entrega ? (
-                  <span className="rounded border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                  <span className="rounded border border-border px-1.5 py-0.5 text-[13px] text-muted-foreground">
                     entrega {formatarDataHora(c.data_entrega, c.hora_entrega)}
                   </span>
                 ) : null}
                 {c.prioridade ? (
-                  <span className="rounded border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                  <span className="rounded border border-border px-1.5 py-0.5 text-[13px] text-muted-foreground">
                     {PRIORIDADES.find((p) => p.valor === c.prioridade)?.label ?? c.prioridade}
                   </span>
                 ) : null}
@@ -623,7 +623,7 @@ export function CardDialog({
               <div className="flex items-center justify-between">
                 <Label>Checklist</Label>
                 {checklist.length > 0 ? (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[14px] text-muted-foreground">
                     {feitos}/{checklist.length}
                   </span>
                 ) : null}
@@ -633,7 +633,7 @@ export function CardDialog({
               ) : null}
               <ul className="space-y-1">
                 {checklist.map((i) => (
-                  <li key={i.id} className="group flex items-center gap-2 text-sm">
+                  <li key={i.id} className="group flex items-center gap-2 text-[17px]">
                     <Checkbox
                       checked={i.feito}
                       disabled={!mexer}
@@ -695,7 +695,7 @@ export function CardDialog({
                   }}
                   onClick={() => fileRef.current?.click()}
                   className={cn(
-                    "flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border p-3 text-xs text-muted-foreground",
+                    "flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border p-3 text-[14px] text-muted-foreground",
                     arrastandoArq && "border-primary bg-primary-soft",
                   )}
                 >
@@ -714,10 +714,10 @@ export function CardDialog({
                 {anexos.map((a) => (
                   <li
                     key={a.id}
-                    className="flex items-center gap-2 rounded-md border border-border px-2 py-1 text-sm"
+                    className="flex items-center gap-2 rounded-md border border-border px-2 py-1 text-[17px]"
                   >
                     <span className="min-w-0 flex-1 truncate">{a.nome}</span>
-                    <span className="text-xs text-muted-foreground">{formatarTamanho(a.tamanho)}</span>
+                    <span className="text-[14px] text-muted-foreground">{formatarTamanho(a.tamanho)}</span>
                     <Button size="icon" variant="ghost" className="size-7" aria-label="Abrir no navegador"
                       onClick={() => abrirAnexo(a.path)}>
                       <ExternalLink className="size-4" />
@@ -744,10 +744,10 @@ export function CardDialog({
           </div>
 
           {/* Comentários e atividade */}
-          <aside className="space-y-3 border-l border-border bg-muted/30 p-5 text-sm">
+          <aside className="space-y-3 border-l border-border bg-muted/30 p-5 text-[17px]">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Label>Comentários e atividade</Label>
-              <div className="inline-flex overflow-hidden rounded-md border border-border text-[11px]">
+              <div className="inline-flex overflow-hidden rounded-md border border-border text-[13px]">
                 {([
                   ["tudo", "Tudo"],
                   ["comentarios", "Só comentários"],
@@ -795,7 +795,7 @@ export function CardDialog({
                 </div>
               ) : null}
             <ul className="space-y-3">
-              {linhas.length === 0 ? <li className="text-xs text-muted-foreground">Nada por aqui ainda.</li> : null}
+              {linhas.length === 0 ? <li className="text-[14px] text-muted-foreground">Nada por aqui ainda.</li> : null}
               {linhas.map((l) => {
                 const meuComentario = l.tipo === "comentario" && l.autor_id === meuId;
                 if (l.tipo === "comentario") {
@@ -814,10 +814,10 @@ export function CardDialog({
                         {siglaPessoa(pessoaDe(l.autor_id) ?? { nome: "", sigla: null })}
                       </span>
                       <div className={cn("flex max-w-[85%] min-w-0 flex-col", meuComentario ? "items-end" : "items-start")}>
-                        <span className="text-[10px] text-muted-foreground">{nomePessoa(l.autor_id)}</span>
+                        <span className="text-[12px] text-muted-foreground">{nomePessoa(l.autor_id)}</span>
                         <div
                           className={cn(
-                            "whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-xs",
+                            "whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-[14px]",
                             meuComentario
                               ? "rounded-br-sm bg-primary-soft text-foreground"
                               : "rounded-bl-sm bg-muted text-foreground",
@@ -827,7 +827,7 @@ export function CardDialog({
                         </div>
                         <div
                           className={cn(
-                            "flex items-center gap-2 text-[10px] text-muted-foreground",
+                            "flex items-center gap-2 text-[12px] text-muted-foreground",
                             meuComentario ? "flex-row-reverse" : "",
                           )}
                         >
@@ -859,11 +859,11 @@ export function CardDialog({
                       {siglaPessoa(pessoaDe(l.autor_id) ?? { nome: "", sigla: null })}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[14px] text-muted-foreground">
                         {nomePessoa(l.autor_id)} {l.acao.toLowerCase()}
                         {l.detalhe ? ` · ${l.detalhe}` : ""}
                       </p>
-                      <div className="text-[10px] text-muted-foreground">{dataHora(l.quando)}</div>
+                      <div className="text-[12px] text-muted-foreground">{dataHora(l.quando)}</div>
                     </div>
                   </li>
                 );
@@ -937,7 +937,7 @@ export function CardDialog({
 function Campo({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <Label className="text-[14px] text-muted-foreground">{label}</Label>
       {children}
     </div>
   );
@@ -946,5 +946,5 @@ function Campo({ label, children }: { label: string; children: React.ReactNode }
 
 function AvisoEscrevendo({ quem }: { quem?: string | undefined }) {
   if (!quem) return null;
-  return <p className="mt-1 text-[11px] text-muted-foreground">{quem} está escrevendo agora</p>;
+  return <p className="mt-1 text-[13px] text-muted-foreground">{quem} está escrevendo agora</p>;
 }
