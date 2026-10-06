@@ -43,8 +43,8 @@ function corDoAtalho(a: AtalhoBarra): string {
 /** Fundo bem clarinho: tingido com a cor do quadro; cinza quase branco nos demais. */
 function fundoDoAtalho(a: AtalhoBarra): string {
   const cor = corDoAtalho(a);
-  if (a.quadro_id && cor !== CINZA) return `color-mix(in srgb, ${cor} 10%, #ffffff)`;
-  return "#f4f4f5";
+  if (a.quadro_id && cor !== CINZA) return `color-mix(in srgb, ${cor} 22%, #ffffff)`;
+  return "#f0f0f1";
 }
 
 export function BarraAtalhos() {
