@@ -15,3 +15,4 @@
 - Combos de cores de estampas são administrados dentro do catálogo de Estampas, porque fazem parte desse fluxo e não das configurações gerais.
 - Campos de senha usam o componente compartilhado `PasswordInput`, para manter a alternância mostrar/ocultar consistente em todo o sistema.
 - Seeding (Social): remessas mês×motivo com peças; marcação em lote e painel via RPCs `social_seeding_marcar_coluna`/`social_seeding_painel`, custo vigente por `social_seeding_custo_do_mes` — uma chamada por ação, sem laços na tela.
+- Board and card label creation share NovaEtiquetaForm and the existing label write permission; this keeps validation and board scoping consistent without broadening access.

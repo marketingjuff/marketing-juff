@@ -3,7 +3,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ColorPicker } from "@/components/ui/color-picker";
 import { useCardAoVivo } from "@/hooks/use-card-ao-vivo";
 import { useCampoEmEdicao } from "@/hooks/use-campo-em-edicao";
-import { profileQueryOptions } from "@/lib/auth";
+import { canEdit, profileQueryOptions } from "@/lib/auth";
+import { NovaEtiquetaForm } from "./NovaEtiquetaForm";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Archive, RefreshCw, Download, User, Tag, Clock, CheckSquare, Paperclip, SlidersHorizontal, ExternalLink, Plus, Trash2, Upload, X } from "lucide-react";
@@ -370,11 +371,21 @@ export function CardDialog({
                       })}
                       {etiquetasVisiveis.length === 0 ? (
                         <span className="text-[13px] text-muted-foreground">
-                          Nenhuma etiqueta para este quadro. Crie em Configurações.
+                          Nenhuma etiqueta para este quadro.
                         </span>
                       ) : null}
                     </div>
                   </Campo>
+                  {mexer && canEdit(perfil ?? null, "tarefas.quadros") ? (
+                    <div className="border-t border-border pt-3">
+                      <NovaEtiquetaForm key={c.id} quadroId={c.quadro_id} etiquetas={etiquetas} onCriada={async (id) => {
+                        const novas = [...new Set([...c.etiquetas, id])];
+                        await setEtiquetasDoCard(c.id, novas);
+                        aplicarLocal((card) => ({ ...card, etiquetas: novas }));
+                        invalidar();
+                      }} />
+                    </div>
+                  ) : null}
                 </PopoverContent>
               </Popover>
               <Popover>
