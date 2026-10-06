@@ -1025,15 +1025,20 @@ export const cardsDoMesQueryOptions = (ano: number, mes: number) =>
   queryOptions({
     queryKey: ["tarefas", "mes", ano, mes],
     queryFn: async (): Promise<CardComContexto[]> => {
-      const ini = `${ano}-${String(mes + 1).padStart(2, "0")}-01`;
-      const fimD = new Date(ano, mes + 1, 0);
-      const fim = `${ano}-${String(mes + 1).padStart(2, "0")}-${String(fimD.getDate()).padStart(2, "0")}`;
+      // intervalo da grade visível: domingo da semana do dia 1 + 41 dias
+      const primeiro = new Date(ano, mes, 1);
+      const iniD = new Date(ano, mes, 1 - primeiro.getDay());
+      const fimD = new Date(iniD);
+      fimD.setDate(iniD.getDate() + 41);
+      const ini = isoDe(iniD);
+      const fim = isoDe(fimD);
       const { data, error } = await supabase
         .from("tarefa_cards")
         .select(CTX_SELECT)
         .eq("arquivado", false)
-        .gte("data_entrega", ini)
-        .lte("data_entrega", fim)
+        .or(
+          `and(data_entrega.gte.${ini},data_entrega.lte.${fim}),and(data_inicio.lte.${fim},data_entrega.gte.${ini})`,
+        )
         .order("data_entrega", { ascending: true });
       if (error) throw error;
       return (data ?? [])
