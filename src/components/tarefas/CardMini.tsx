@@ -1,4 +1,4 @@
-import { CheckCircle2, RefreshCw, CheckSquare, Clock, MessageSquare, Paperclip, Pause, Flag } from "lucide-react";
+import { CheckCircle2, RefreshCw, CheckSquare, MessageSquare, Paperclip, Pause, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DIAS_PARADO_ALERTA,
