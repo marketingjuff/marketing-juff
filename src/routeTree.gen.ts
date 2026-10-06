@@ -24,6 +24,7 @@ import { Route as AuthenticatedBibliotecaMedidasRouteImport } from './routes/_au
 import { Route as AuthenticatedBibliotecaProdutosRouteImport } from './routes/_authenticated/biblioteca/produtos'
 import { Route as AuthenticatedBibliotecaTextosRouteImport } from './routes/_authenticated/biblioteca/textos'
 import { Route as AuthenticatedEstrategiaAtaRouteImport } from './routes/_authenticated/estrategia/ata'
+import { Route as AuthenticatedSocialSeedingRouteImport } from './routes/_authenticated/social/seeding'
 import { Route as AuthenticatedSocialStoriesRouteImport } from './routes/_authenticated/social/stories'
 import { Route as AuthenticatedTarefasCalendarioRouteImport } from './routes/_authenticated/tarefas/calendario'
 import { Route as AuthenticatedTarefasMeuDiaRouteImport } from './routes/_authenticated/tarefas/meu-dia'
@@ -117,6 +118,12 @@ const AuthenticatedEstrategiaAtaRoute =
     path: '/estrategia/ata',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSocialSeedingRoute =
+  AuthenticatedSocialSeedingRouteImport.update({
+    id: '/social/seeding',
+    path: '/social/seeding',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSocialStoriesRoute =
   AuthenticatedSocialStoriesRouteImport.update({
     id: '/social/stories',
@@ -174,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/biblioteca/produtos': typeof AuthenticatedBibliotecaProdutosRoute
   '/biblioteca/textos': typeof AuthenticatedBibliotecaTextosRoute
   '/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
+  '/social/seeding': typeof AuthenticatedSocialSeedingRoute
   '/social/stories': typeof AuthenticatedSocialStoriesRoute
   '/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
   '/tarefas/meu-dia': typeof AuthenticatedTarefasMeuDiaRoute
@@ -197,6 +205,7 @@ export interface FileRoutesByTo {
   '/biblioteca/produtos': typeof AuthenticatedBibliotecaProdutosRoute
   '/biblioteca/textos': typeof AuthenticatedBibliotecaTextosRoute
   '/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
+  '/social/seeding': typeof AuthenticatedSocialSeedingRoute
   '/social/stories': typeof AuthenticatedSocialStoriesRoute
   '/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
   '/tarefas/meu-dia': typeof AuthenticatedTarefasMeuDiaRoute
@@ -222,6 +231,7 @@ export interface FileRoutesById {
   '/_authenticated/biblioteca/produtos': typeof AuthenticatedBibliotecaProdutosRoute
   '/_authenticated/biblioteca/textos': typeof AuthenticatedBibliotecaTextosRoute
   '/_authenticated/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
+  '/_authenticated/social/seeding': typeof AuthenticatedSocialSeedingRoute
   '/_authenticated/social/stories': typeof AuthenticatedSocialStoriesRoute
   '/_authenticated/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
   '/_authenticated/tarefas/meu-dia': typeof AuthenticatedTarefasMeuDiaRoute
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/biblioteca/produtos'
     | '/biblioteca/textos'
     | '/estrategia/ata'
+    | '/social/seeding'
     | '/social/stories'
     | '/tarefas/calendario'
     | '/tarefas/meu-dia'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/biblioteca/produtos'
     | '/biblioteca/textos'
     | '/estrategia/ata'
+    | '/social/seeding'
     | '/social/stories'
     | '/tarefas/calendario'
     | '/tarefas/meu-dia'
@@ -294,6 +306,7 @@ export interface FileRouteTypes {
     | '/_authenticated/biblioteca/produtos'
     | '/_authenticated/biblioteca/textos'
     | '/_authenticated/estrategia/ata'
+    | '/_authenticated/social/seeding'
     | '/_authenticated/social/stories'
     | '/_authenticated/tarefas/calendario'
     | '/_authenticated/tarefas/meu-dia'
@@ -417,6 +430,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEstrategiaAtaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/social/seeding': {
+      id: '/_authenticated/social/seeding'
+      path: '/social/seeding'
+      fullPath: '/social/seeding'
+      preLoaderRoute: typeof AuthenticatedSocialSeedingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/social/stories': {
       id: '/_authenticated/social/stories'
       path: '/social/stories'
@@ -482,6 +502,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBibliotecaProdutosRoute: typeof AuthenticatedBibliotecaProdutosRoute
   AuthenticatedBibliotecaTextosRoute: typeof AuthenticatedBibliotecaTextosRoute
   AuthenticatedEstrategiaAtaRoute: typeof AuthenticatedEstrategiaAtaRoute
+  AuthenticatedSocialSeedingRoute: typeof AuthenticatedSocialSeedingRoute
   AuthenticatedSocialStoriesRoute: typeof AuthenticatedSocialStoriesRoute
   AuthenticatedTarefasCalendarioRoute: typeof AuthenticatedTarefasCalendarioRoute
   AuthenticatedTarefasMeuDiaRoute: typeof AuthenticatedTarefasMeuDiaRoute
@@ -504,6 +525,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBibliotecaProdutosRoute: AuthenticatedBibliotecaProdutosRoute,
   AuthenticatedBibliotecaTextosRoute: AuthenticatedBibliotecaTextosRoute,
   AuthenticatedEstrategiaAtaRoute: AuthenticatedEstrategiaAtaRoute,
+  AuthenticatedSocialSeedingRoute: AuthenticatedSocialSeedingRoute,
   AuthenticatedSocialStoriesRoute: AuthenticatedSocialStoriesRoute,
   AuthenticatedTarefasCalendarioRoute: AuthenticatedTarefasCalendarioRoute,
   AuthenticatedTarefasMeuDiaRoute: AuthenticatedTarefasMeuDiaRoute,

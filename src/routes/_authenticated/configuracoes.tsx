@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tansta
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
+import { PainelCustoSeeding, PainelImportarSeeding } from "@/components/config/PainelSeeding";
 import {
   KeyRound,
   LayoutGrid,
@@ -348,6 +349,8 @@ function Configuracoes() {
           <>
             <PainelCtas />
             <PainelLinks />
+            <PainelCustoSeeding />
+            <PainelImportarSeeding />
           </>
         ) : null}
 

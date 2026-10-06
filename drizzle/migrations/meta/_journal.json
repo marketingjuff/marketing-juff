@@ -295,6 +295,13 @@
       "when": 1791230499433,
       "tag": "0041_notificacoes_realtime",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1791297897558,
+      "tag": "0042_social_seeding",
+      "breakpoints": true
     }
   ]
 }

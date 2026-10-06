@@ -1398,6 +1398,152 @@ export type Database = {
         }
         Relationships: []
       }
+      social_seeding_custos: {
+        Row: {
+          mes: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          mes: string
+          updated_at?: string
+          valor?: number
+        }
+        Update: {
+          mes?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: []
+      }
+      social_seeding_pecas: {
+        Row: {
+          captada: boolean
+          cor_id: string | null
+          cor_nome: string | null
+          created_at: string
+          devolvida: boolean
+          enviada: boolean
+          estampa_id: string | null
+          estampa_nome: string | null
+          id: string
+          observacao: string | null
+          pedido: boolean
+          pessoa: string | null
+          posicao: number
+          produto_id: string | null
+          produto_nome: string | null
+          produzida: boolean
+          remessa_id: string
+          retorna: boolean
+          tamanho: string | null
+          updated_at: string
+        }
+        Insert: {
+          captada?: boolean
+          cor_id?: string | null
+          cor_nome?: string | null
+          created_at?: string
+          devolvida?: boolean
+          enviada?: boolean
+          estampa_id?: string | null
+          estampa_nome?: string | null
+          id?: string
+          observacao?: string | null
+          pedido?: boolean
+          pessoa?: string | null
+          posicao?: number
+          produto_id?: string | null
+          produto_nome?: string | null
+          produzida?: boolean
+          remessa_id: string
+          retorna?: boolean
+          tamanho?: string | null
+          updated_at?: string
+        }
+        Update: {
+          captada?: boolean
+          cor_id?: string | null
+          cor_nome?: string | null
+          created_at?: string
+          devolvida?: boolean
+          enviada?: boolean
+          estampa_id?: string | null
+          estampa_nome?: string | null
+          id?: string
+          observacao?: string | null
+          pedido?: boolean
+          pessoa?: string | null
+          posicao?: number
+          produto_id?: string | null
+          produto_nome?: string | null
+          produzida?: boolean
+          remessa_id?: string
+          retorna?: boolean
+          tamanho?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_seeding_pecas_cor_id_fkey"
+            columns: ["cor_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_cores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_seeding_pecas_estampa_id_fkey"
+            columns: ["estampa_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_estampas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_seeding_pecas_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_produtos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_seeding_pecas_remessa_id_fkey"
+            columns: ["remessa_id"]
+            isOneToOne: false
+            referencedRelation: "social_seeding_remessas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_seeding_remessas: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          id: string
+          mes: string
+          motivo: string
+          observacao: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          mes: string
+          motivo: string
+          observacao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          mes?: string
+          motivo?: string
+          observacao?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       stories: {
         Row: {
           adjust_comment: string | null
@@ -2470,6 +2616,15 @@ export type Database = {
         Returns: undefined
       }
       reordenar_atalhos: { Args: { p_ids: string[] }; Returns: undefined }
+      social_seeding_custo_do_mes: { Args: { p_mes: string }; Returns: number }
+      social_seeding_marcar_coluna: {
+        Args: { p_campo: string; p_remessa: string; p_valor: boolean }
+        Returns: undefined
+      }
+      social_seeding_painel: {
+        Args: { p_ate: string; p_de: string }
+        Returns: Json
+      }
       tarefa_avancar_recorrentes: { Args: never; Returns: number }
       tarefa_card_avancar: { Args: { _id: string }; Returns: string }
       tarefa_reordenar_cards: {
