@@ -78,6 +78,8 @@ export function MesCalendario({
   const qc = useQueryClient();
   const [dia, setDia] = useState<string | null>(null);
   const { data: limite = 20 } = useQuery(diasFaixaTopoQueryOptions);
+  const { data: pessoas = [] } = useQuery(pessoasQueryOptions);
+  const siglas = new Map<string, string>(pessoas.map((p: Pessoa) => [p.id, siglaPessoa(p)]));
   const semanaRef = useRef<HTMLDivElement>(null);
   const [arrasto, setArrasto] = useState<{ id: string; modo: Modo; delta: number } | null>(null);
   const primeiro = new Date(ano, mes, 1);
