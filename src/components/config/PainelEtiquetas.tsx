@@ -25,9 +25,6 @@ import { canEdit, profileQueryOptions } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import {
   CORES_ETIQUETA,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-
-
   HEX_RE,
   arquivarEtiqueta,
   coresDaEtiqueta,
