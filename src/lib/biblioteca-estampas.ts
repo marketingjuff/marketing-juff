@@ -157,6 +157,60 @@ export function estampaQueryOptions(id: string) {
   });
 }
 
+export type PendenciasEstampa = {
+  esperadas: number;
+  receitas: { itens: number; sem_codigo: boolean; combo: boolean }[];
+};
+
+/** Células da grade por estampa: quantas existem e quais receitas estão incompletas ou sem CB. */
+export const pendenciasEstampasQueryOptions = queryOptions({
+  // Prefixo do K_LISTA: invalidar "estampas-lista" atualiza isto junto.
+  queryKey: ["biblioteca", "estampas-lista", "pendencias"] as const,
+  staleTime: CINCO_MIN,
+  refetchOnWindowFocus: false,
+  queryFn: async (): Promise<Record<string, PendenciasEstampa>> => {
+    const paged = async <T>(builder: { range: (de: number, ate: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }> }): Promise<T[]> => {
+      const out: T[] = [];
+      for (let de = 0; ; de += 1000) {
+        const r = await builder.range(de, de + 999);
+        if (r.error) throw r.error;
+        out.push(...(r.data ?? []));
+        if ((r.data ?? []).length < 1000) return out;
+      }
+    };
+    const [g, gc, rs, its] = await Promise.all([
+      paged<{ id: string; estampa_id: string }>(supabase.from("biblioteca_estampa_grupos").select("id, estampa_id")),
+      paged<{ grupo_id: string; cor_id: string }>(supabase.from("biblioteca_estampa_grupo_cores").select("grupo_id, cor_id")),
+      paged<{ id: string; estampa_id: string; combo_id: string | null }>(supabase.from("biblioteca_estampa_receitas").select("id, estampa_id, combo_id")),
+      paged<{ receita_id: string; codigo: string }>(supabase.from("biblioteca_estampa_receita_itens").select("receita_id, codigo")),
+    ]);
+    const estampaDoGrupo = new Map(g.map((x) => [x.id, x.estampa_id]));
+    const celulas = new Map<string, Set<string>>();
+    for (const x of gc) {
+      const eid = estampaDoGrupo.get(x.grupo_id);
+      if (!eid) continue;
+      const set = celulas.get(eid) ?? new Set<string>();
+      set.add(`${x.grupo_id}:${x.cor_id}`);
+      celulas.set(eid, set);
+    }
+    const receitaItens = new Map<string, { itens: number; sem_codigo: boolean }>();
+    for (const it of its) {
+      const atual = receitaItens.get(it.receita_id) ?? { itens: 0, sem_codigo: false };
+      atual.itens += 1;
+      if (!it.codigo.trim()) atual.sem_codigo = true;
+      receitaItens.set(it.receita_id, atual);
+    }
+    const saida: Record<string, PendenciasEstampa> = {};
+    for (const r of rs) {
+      const e = saida[r.estampa_id] ?? (saida[r.estampa_id] = { esperadas: celulas.get(r.estampa_id)?.size ?? 0, receitas: [] });
+      const c = receitaItens.get(r.id);
+      e.receitas.push({ itens: c?.itens ?? 0, sem_codigo: c?.sem_codigo ?? false, combo: !!r.combo_id });
+    }
+    for (const eid of celulas.keys()) if (!(eid in saida)) saida[eid] = { esperadas: celulas.get(eid)!.size, receitas: [] };
+    return saida;
+  },
+});
+
 export const combosQueryOptions = queryOptions({
   queryKey: ["biblioteca", "combos"] as const,
   staleTime: CINCO_MIN,

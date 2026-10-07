@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Copy, Download, FileText, FolderPlus, ImagePlus, Plus, Sparkles, Trash2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, Copy, Download, FileText, FolderPlus, ImagePlus, Plus, Sparkles, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Bloco, CampoAutoSave } from "@/components/biblioteca/comum";
 import { Bolinha, CardReceita, useCoresEstampa, type TamanhoCard } from "@/components/biblioteca/EstampaVisual";
@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { canEdit, hasPermission, profileQueryOptions } from "@/lib/auth";
 import { coresQueryOptions, produtosQueryOptions, type CorBiblioteca, type ProdutoBiblioteca } from "@/lib/biblioteca";
-import {
+import { pendenciasEstampasQueryOptions,
   ROTULO_GENERO,
   apagarEstampa,
   apagarGrupo,
@@ -46,6 +46,7 @@ import {
   type EstampaCompleta,
   type Grupo,
   type ItemCor,
+  type EstampaResumo,
   type Receita,
   definirCoresGrupo,
 } from "@/lib/biblioteca-estampas";
@@ -109,13 +110,51 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
   const { data: estampas = [] } = useQuery(estampasQueryOptions);
   const { data: categorias = [] } = useQuery(categoriasEstampaQueryOptions);
   const { data: cores = [] } = useQuery(coresQueryOptions);
+  const { data: pend = {} } = useQuery(pendenciasEstampasQueryOptions);
   const [busca, setBusca] = useState("");
   const [novo, setNovo] = useState("");
   const [visao, setVisao] = useState<"estampas" | "combos">(visaoInicial);
+  const [filtro, setFiltro] = useState<"todas" | "pendente" | "sem_cb">("todas");
+
+  /** Pendências da estampa: células sem receita/receita incompleta (pendentes) e receitas completas sem CB (semCb). Cromia nunca pende. */
+  const statusDe = (e: EstampaResumo): { pendentes: number; semCb: number } | null => {
+    if (e.tipo === "cromia") return null;
+    const p = pend[e.id];
+    if (!p) return null;
+    const n = Math.max(e.n_papeis, 1);
+    let pendentes = p.esperadas;
+    let semCb = 0;
+    for (const r of p.receitas) {
+      if (r.itens >= n && !r.sem_codigo) {
+        pendentes -= 1;
+        if (!r.combo) semCb += 1;
+      }
+    }
+    return { pendentes: Math.max(pendentes, 0), semCb };
+  };
+
+  const contagem = useMemo(() => {
+    let pendentes = 0;
+    let semCb = 0;
+    for (const e of estampas) {
+      const st = statusDe(e);
+      if (!st) continue;
+      if (st.pendentes > 0) pendentes++;
+      else if (st.semCb > 0) semCb++;
+    }
+    return { pendentes, semCb };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [estampas, pend]);
 
   const q = busca.trim().toLowerCase();
   const filtradas = estampas
     .filter((e) => !q || e.nome.toLowerCase().includes(q))
+    .filter((e) => {
+      if (filtro === "todas") return true;
+      const st = statusDe(e);
+      if (filtro === "pendente") return !!st && st.pendentes > 0;
+      return !!st && st.pendentes === 0 && st.semCb > 0;
+    })
     .sort((a, b) => Number(a.situacao === "descontinuado") - Number(b.situacao === "descontinuado"));
   const grupos = [
     ...categorias.map((c) => ({ id: c.id, nome: c.nome })),
@@ -174,6 +213,23 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
       {visao === "combos" ? <PainelCombos editavel={editavel} destaque={comboInicial} /> : (
         <>
       <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-0.5 rounded-lg border border-border bg-background p-0.5">
+          {([
+            ["todas", "Todas"],
+            ["pendente", `Pendentes${contagem.pendentes ? ` · ${contagem.pendentes}` : ""}`],
+            ["sem_cb", `Sem CB${contagem.semCb ? ` · ${contagem.semCb}` : ""}`],
+          ] as const).map(([v, rot]) => (
+            <button
+              key={v}
+              type="button"
+              title={v === "pendente" ? "Estampas com receitas pendentes ou incompletas" : v === "sem_cb" ? "Estampas com receita completa sem código CB" : undefined}
+              onClick={() => setFiltro(v)}
+              className={cn("h-7 rounded-md px-2.5 text-xs font-medium transition", filtro === v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}
+            >
+              {rot}
+            </button>
+          ))}
+        </div>
         <Input placeholder="Buscar estampa" value={busca} onChange={(e) => setBusca(e.target.value)} className="h-9 max-w-xs" />
         {editavel ? (
           <div className="ml-auto flex gap-1">
@@ -183,7 +239,7 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
           </div>
         ) : null}
       </div>
-      {grupos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma estampa ainda.</p> : null}
+      {grupos.length === 0 ? <p className="text-sm text-muted-foreground">{filtro === "todas" ? "Nenhuma estampa ainda." : "Nenhuma estampa nesse filtro."}</p> : null}
       {grupos.map((g) => (
         <div key={g.id ?? "sem"}>
           <p className="mb-1 text-lg font-semibold uppercase tracking-wide text-muted-foreground">
@@ -208,6 +264,21 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
                 <span className="text-base font-medium leading-none">{e.nome}</span>
                 {e.tipo === "cromia" ? <span className="text-[10px] font-medium text-muted-foreground">CROMIA</span> : null}
                 <span className="text-xs tabular-nums text-muted-foreground">{e.n_modelos * e.n_cores}</span>
+                {(() => {
+                  const st = statusDe(e);
+                  if (!st) return null;
+                  if (st.pendentes > 0)
+                    return (
+                      <span title={`${st.pendentes} receita(s) pendente(s)`} className="flex items-center gap-0.5 rounded-full bg-warning/30 px-1.5 text-[10px] font-semibold text-warning-foreground">
+                        <AlertCircle className="size-3" />{st.pendentes}
+                      </span>
+                    );
+                  if (st.semCb > 0)
+                    return (
+                      <span title="Receita completa sem código CB" className="rounded-full border border-warning px-1.5 text-[10px] font-semibold text-warning-foreground">sem CB</span>
+                    );
+                  return null;
+                })()}
               </button>
             ))}
           </div>
@@ -375,6 +446,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
       () => {
         void qc.invalidateQueries({ queryKey: K });
         void qc.invalidateQueries({ queryKey: K_COMBOS });
+        void qc.invalidateQueries({ queryKey: K_LISTA });
       },
     );
   }
@@ -449,6 +521,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
       () => {
         void qc.invalidateQueries({ queryKey: K });
         void qc.invalidateQueries({ queryKey: K_COMBOS });
+        void qc.invalidateQueries({ queryKey: K_LISTA });
       },
     );
   }
