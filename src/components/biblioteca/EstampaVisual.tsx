@@ -308,9 +308,9 @@ export function CardReceita({
   const bg = HEX.test(fundo) ? fundo : "#888888";
   const txt = textoSobreCor(bg);
   const claro = txt === "#ffffff";
-  const q = Math.min(Math.max(itens.length, 1), 6);
-  const face = FACE_DADO[q] ?? FACE_DADO[6]!;
-  const fatias = FATIAS_CARD[q] ?? FATIAS_CARD[6]!;
+  const q = Math.min(Math.max(itens.length, 1), 7);
+  const face = FACE_DADO[q] ?? FACE_DADO[7]!;
+  const fatias = FATIAS_CARD[q] ?? FATIAS_CARD[7]!;
 
   const legenda = [
     nomeCor,
@@ -350,7 +350,7 @@ export function CardReceita({
               }}
             />
           ) : null}
-          {!cromia && itens.slice(0, 6).map((it, k) => {
+          {!cromia && itens.slice(0, 7).map((it, k) => {
             const pos = face[k] ?? [50, 50];
             const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
             return (
@@ -407,7 +407,7 @@ export function CardReceita({
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: "repeat(6, 1fr)", gridAutoRows: `${m.fatia}px` }}>
+      <div className="grid" style={{ gridTemplateColumns: `repeat(${q === 7 ? 12 : 6}, 1fr)`, gridAutoRows: `${m.fatia}px` }}>
         {cromia ? (
           <span
             className="flex items-center justify-center font-bold"
@@ -424,7 +424,7 @@ export function CardReceita({
             qualquer cor
           </span>
         ) : null}
-        {!cromia && itens.slice(0, 6).map((it, k) => {
+        {!cromia && itens.slice(0, 7).map((it, k) => {
           const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
           const cor = h ?? "#d4d4d8";
           const estilo = {
