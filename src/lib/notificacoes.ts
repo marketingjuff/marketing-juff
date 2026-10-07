@@ -15,7 +15,6 @@ export const TIPOS_NOTIFICACAO: { valor: TipoNotificacao; label: string; descric
   { valor: "lembrete", label: "Lembrete de entrega", descricao: "Na antecedência escolhida dentro do card. Sem hora marcada, à meia noite do dia." },
   { valor: "vence_amanha", label: "Vence amanhã", descricao: "Um dia antes da data de entrega." },
   { valor: "atrasado", label: "Card atrasado", descricao: "Passou da data de entrega e não foi concluído." },
-  { valor: "parado", label: "Card parado", descricao: "Cinco dias ou mais na mesma coluna." },
 ];
 
 export type Notificacao = {

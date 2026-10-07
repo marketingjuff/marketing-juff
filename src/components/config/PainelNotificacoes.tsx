@@ -145,7 +145,7 @@ export function PainelNotificacoes() {
       <p className="text-xs text-muted-foreground">
         Estas opções valem apenas para você. O sininho guarda o histórico, o aviso no computador
         aparece e some. A autorização do computador é feita em cada máquina que você usar.
-        Lembrete é verificado a cada quinze minutos. Vence amanhã, atrasado e parado são
+        Lembrete é verificado a cada quinze minutos. Vence amanhã e atrasado são
         calculados uma vez por dia, de madrugada.
       </p>
     </div>

@@ -17,6 +17,7 @@ export type Quadro = {
   acesso: "aberto" | "restrito";
   exige_responsavel: boolean;
   etiqueta_do_criador: boolean;
+  cards_privados: boolean;
   membros: string[];
   cards_total?: number;
 };
@@ -32,7 +33,7 @@ export type Coluna = {
   resp_coluna_origem_id: string | null;
 };
 
-export type Etiqueta = { id: string; nome: string; cor: string; cor_texto: string; arquivado: boolean; posicao: number; quadro_id: string | null; pessoa_id: string | null };
+export type Etiqueta = { id: string; nome: string; cor: string; cor_texto: string; arquivado: boolean; posicao: number; quadro_id: string | null; pessoa_id: string | null; fixa_topo: boolean };
 
 export type Recorrencia =
   | "nunca"
@@ -92,6 +93,7 @@ export type Card = {
   anexos_total: number;
   cor: string | null;
   cor_fundo: string | null;
+  membros: string[];
 };
 
 export type CardComContexto = Card & { quadro_nome: string; coluna_nome: string; quadro_cor: string | null };
@@ -208,7 +210,7 @@ async function uid(): Promise<string | null> {
 }
 
 const CARD_SELECT =
-  "*, tarefa_card_etiquetas(etiqueta_id), tarefa_checklist(feito), tarefa_comentarios(id), tarefa_anexos(id)";
+  "*, tarefa_card_etiquetas(etiqueta_id), tarefa_checklist(feito), tarefa_comentarios(id), tarefa_anexos(id), tarefa_card_membros(user_id)";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapCard(c: any): Card {
@@ -243,6 +245,7 @@ function mapCard(c: any): Card {
     anexos_total: (c.tarefa_anexos ?? []).length,
     cor: c.cor ?? null,
     cor_fundo: c.cor_fundo ?? null,
+    membros: (c.tarefa_card_membros ?? []).map((m: { user_id: string }) => m.user_id),
   };
 }
 
@@ -284,6 +287,7 @@ async function fetchQuadros(arquivado: boolean): Promise<Quadro[]> {
     acesso: (q.acesso ?? "aberto") as "aberto" | "restrito",
     exige_responsavel: q.exige_responsavel ?? false,
     etiqueta_do_criador: q.etiqueta_do_criador ?? false,
+    cards_privados: q.cards_privados ?? false,
     membros: (q.tarefa_quadro_membros ?? []).map((m: { user_id: string }) => m.user_id),
     cards_total: (q.tarefa_cards ?? []).filter((c: { arquivado: boolean }) => !c.arquivado).length,
   }));
@@ -347,6 +351,8 @@ export const quadroQueryOptions = (quadroId: string) =>
           acesso: (q.acesso ?? "aberto") as "aberto" | "restrito",
           exige_responsavel: q.exige_responsavel ?? false,
           etiqueta_do_criador: q.etiqueta_do_criador ?? false,
+          cards_privados: q.cards_privados ?? false,
+    cards_privados: q.cards_privados ?? false,
           membros: (q.tarefa_quadro_membros ?? []).map((m: { user_id: string }) => m.user_id),
         },
         colunas: (cols ?? []) as Coluna[],
@@ -357,7 +363,7 @@ export const quadroQueryOptions = (quadroId: string) =>
 
 export async function createQuadro(
   nome: string,
-  extra?: { descricao?: string; fundo_tipo?: FundoTipo; fundo_cor1?: string; fundo_cor2?: string; acesso?: "aberto" | "restrito"; exige_responsavel?: boolean; etiqueta_do_criador?: boolean },
+  extra?: { descricao?: string; fundo_tipo?: FundoTipo; fundo_cor1?: string; fundo_cor2?: string; acesso?: "aberto" | "restrito"; exige_responsavel?: boolean; etiqueta_do_criador?: boolean; cards_privados?: boolean },
 ): Promise<string> {
   const { count } = await supabase
     .from("tarefa_quadros")
@@ -376,7 +382,7 @@ export async function createQuadro(
   return data.id;
 }
 
-type QuadroEditavel = "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2" | "acesso" | "exige_responsavel" | "etiqueta_do_criador";
+type QuadroEditavel = "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2" | "acesso" | "exige_responsavel" | "etiqueta_do_criador" | "cards_privados";
 
 export async function updateQuadro(
   id: string,
@@ -392,6 +398,7 @@ export async function updateQuadro(
   if (values.acesso !== undefined) limpo.acesso = values.acesso;
   if (values.exige_responsavel !== undefined) limpo.exige_responsavel = values.exige_responsavel;
   if (values.etiqueta_do_criador !== undefined) limpo.etiqueta_do_criador = values.etiqueta_do_criador;
+  if (values.cards_privados !== undefined) limpo.cards_privados = values.cards_privados;
   const { error } = await supabase.from("tarefa_quadros").update(limpo).eq("id", id);
   if (error) throw error;
 }
@@ -665,6 +672,32 @@ export async function setEtiquetasDoCard(cardId: string, etiquetaIds: string[]):
   }
 }
 
+export async function setMembrosDoCard(cardId: string, userIds: string[]): Promise<void> {
+  const { data: atuais, error: e1 } = await supabase
+    .from("tarefa_card_membros")
+    .select("user_id")
+    .eq("card_id", cardId);
+  if (e1) throw e1;
+  const antes = new Set((atuais ?? []).map((m) => m.user_id as string));
+  const depois = new Set(userIds);
+  const entrar = userIds.filter((id) => !antes.has(id));
+  const sair = [...antes].filter((id) => !depois.has(id));
+  if (entrar.length) {
+    const { error } = await supabase
+      .from("tarefa_card_membros")
+      .insert(entrar.map((user_id) => ({ card_id: cardId, user_id })));
+    if (error) throw error;
+  }
+  if (sair.length) {
+    const { error } = await supabase
+      .from("tarefa_card_membros")
+      .delete()
+      .eq("card_id", cardId)
+      .in("user_id", sair);
+    if (error) throw error;
+  }
+}
+
 // ---------------- etiquetas ----------------
 
 export const etiquetasQueryOptions = queryOptions({
@@ -673,7 +706,7 @@ export const etiquetasQueryOptions = queryOptions({
   queryFn: async (): Promise<Etiqueta[]> => {
     const { data, error } = await supabase
       .from("tarefa_etiquetas")
-      .select("id, nome, cor, cor_texto, arquivado, posicao, quadro_id, pessoa_id")
+      .select("id, nome, cor, cor_texto, arquivado, posicao, quadro_id, pessoa_id, fixa_topo")
       .eq("arquivado", false)
       .order("posicao", { ascending: true });
     if (error) throw error;
@@ -722,6 +755,7 @@ export async function createEtiqueta(
   corTexto: string,
   quadroId: string | null = null,
   pessoaId: string | null = null,
+  fixaTopo: boolean = false,
 ): Promise<void> {
   const base = supabase.from("tarefa_etiquetas").select("posicao").order("posicao", { ascending: false }).limit(1);
   const { data: ultima } = await (quadroId ? base.eq("quadro_id", quadroId) : base.is("quadro_id", null)).maybeSingle();
@@ -733,6 +767,7 @@ export async function createEtiqueta(
     quadro_id: quadroId,
     pessoa_id: quadroId ? pessoaId : null,
     posicao: (ultima?.posicao ?? 0) + 1,
+    fixa_topo: fixaTopo,
   });
   if (error) {
     if (error.code === "23505") throw new Error("Já existe etiqueta com esse nome ou dessa pessoa neste quadro");
@@ -747,7 +782,7 @@ export async function reordenarEtiquetas(ids: string[]): Promise<void> {
 
 export async function updateEtiqueta(
   id: string,
-  values: Partial<Pick<Etiqueta, "nome" | "cor" | "cor_texto" | "quadro_id" | "pessoa_id">>,
+  values: Partial<Pick<Etiqueta, "nome" | "cor" | "cor_texto" | "quadro_id" | "pessoa_id" | "fixa_topo">>,
 ): Promise<void> {
   const limpo = { ...values };
   if (limpo.nome !== undefined) limpo.nome = limpo.nome.trim().toUpperCase();
@@ -1251,4 +1286,17 @@ export async function salvarDiasFaixaTopo(dias: number): Promise<void> {
     .from("app_config")
     .upsert({ chave: CHAVE_FAIXA_TOPO, valor: String(dias), atualizado_em: new Date().toISOString() }, { onConflict: "chave" });
   if (error) throw error;
+}
+
+/**
+ * Peso de subida do card. Zero quer dizer que não sobe.
+ * Quanto maior, mais alto. Desempata pela ordem das etiquetas em Configurações.
+ */
+export function pesoTopo(card: Pick<Card, "etiquetas">, etiquetas: Map<string, Etiqueta>): number {
+  let peso = 0;
+  for (const id of card.etiquetas) {
+    const e = etiquetas.get(id);
+    if (e?.fixa_topo) peso = Math.max(peso, 10_000 - e.posicao);
+  }
+  return peso;
 }

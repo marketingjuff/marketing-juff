@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -45,7 +46,7 @@ const arquivadasQueryOptions = queryOptions({
   queryFn: async (): Promise<Etiqueta[]> => {
     const { data, error } = await supabase
       .from("tarefa_etiquetas")
-      .select("id, nome, cor, cor_texto, arquivado, posicao, quadro_id, pessoa_id")
+      .select("id, nome, cor, cor_texto, arquivado, posicao, quadro_id, pessoa_id, fixa_topo")
       .eq("arquivado", true)
       .order("nome", { ascending: true });
     if (error) throw error;
@@ -61,6 +62,7 @@ function LinhaEtiqueta({ etiqueta, quadros, pessoas, podeEditar, onChanged }: { 
   const [corTexto, setCorTexto] = useState(etiqueta.cor_texto);
   const [quadroId, setQuadroId] = useState<string | null>(etiqueta.quadro_id);
   const [pessoaId, setPessoaId] = useState<string | null>(etiqueta.pessoa_id);
+  const [fixaTopo, setFixaTopo] = useState(etiqueta.fixa_topo);
   const [confirmar, setConfirmar] = useState(false);
   const [busy, setBusy] = useState(false);
   const presetsMarca = usePresetsMarca();
@@ -112,6 +114,10 @@ function LinhaEtiqueta({ etiqueta, quadros, pessoas, podeEditar, onChanged }: { 
           Fundo <ColorPicker value={cor} onChange={setCor} disabled={!!pessoaId} label="Cor do fundo" presets={presetsMarca} />
           Texto <ColorPicker value={corTexto} onChange={setCorTexto} disabled={!!pessoaId} label="Cor do texto" presets={["#ffffff", "#111111", ...presetsMarca]} />
         </div>
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Checkbox checked={fixaTopo} onCheckedChange={(v) => setFixaTopo(!!v)} />
+          Fixa no topo
+        </label>
         <span className="rounded px-2 py-1 font-nunito text-[13px] font-medium" style={(() => { const cs = coresDaEtiqueta({ cor, cor_texto: corTexto, pessoa_id: pessoaId }, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}>{nome || "Prévia"}</span>
         {pessoaId ? (
           <span className="w-full text-[11px] text-muted-foreground">
@@ -123,7 +129,7 @@ function LinhaEtiqueta({ etiqueta, quadros, pessoas, podeEditar, onChanged }: { 
             size="sm"
             disabled={busy || !nome.trim() || !HEX_RE.test(cor)}
             onClick={async () => {
-              if (await run(() => updateEtiqueta(etiqueta.id, { nome: nome.trim().toUpperCase(), cor, cor_texto: corTexto, quadro_id: quadroId, pessoa_id: quadroId ? pessoaId : null }), "Etiqueta atualizada"))
+              if (await run(() => updateEtiqueta(etiqueta.id, { nome: nome.trim().toUpperCase(), cor, cor_texto: corTexto, quadro_id: quadroId, pessoa_id: quadroId ? pessoaId : null, fixa_topo: fixaTopo }), "Etiqueta atualizada"))
                 setEditando(false);
             }}
           >
@@ -138,6 +144,7 @@ function LinhaEtiqueta({ etiqueta, quadros, pessoas, podeEditar, onChanged }: { 
               setCorTexto(etiqueta.cor_texto);
               setQuadroId(etiqueta.quadro_id);
               setPessoaId(etiqueta.pessoa_id);
+              setFixaTopo(etiqueta.fixa_topo);
               setEditando(false);
             }}
           >
@@ -168,6 +175,11 @@ function LinhaEtiqueta({ etiqueta, quadros, pessoas, podeEditar, onChanged }: { 
       {etiqueta.pessoa_id ? (
         <span className="shrink-0 text-[11px] text-muted-foreground">
           {pessoas.find((p) => p.id === etiqueta.pessoa_id)?.nome ?? "pessoa removida"}
+        </span>
+      ) : null}
+      {etiqueta.fixa_topo ? (
+        <span className="shrink-0 text-[11px] text-muted-foreground" title="Card com esta etiqueta sobe ao topo da coluna">
+          topo
         </span>
       ) : null}
       <Button size="icon" variant="ghost" className="size-7" disabled={!podeEditar} onClick={() => setEditando(true)} aria-label="Editar etiqueta">
@@ -376,6 +388,10 @@ export function PainelEtiquetas() {
           </p>
         ) : null}
       </form>
+      <p className="text-[11px] text-muted-foreground">
+        Etiqueta marcada como fixa no topo faz o card subir ao topo da coluna do quadro. Com mais de
+        uma etiqueta fixa no mesmo card, vence a que estiver mais acima nesta lista.
+      </p>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <div className="space-y-4">
