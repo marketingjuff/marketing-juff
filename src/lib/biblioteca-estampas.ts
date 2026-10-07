@@ -169,20 +169,20 @@ export const pendenciasEstampasQueryOptions = queryOptions({
   staleTime: CINCO_MIN,
   refetchOnWindowFocus: false,
   queryFn: async (): Promise<Record<string, PendenciasEstampa>> => {
-    const todas = async <T>(tabela: Parameters<typeof supabase.from>[0], campos: string): Promise<T[]> => {
+    const paged = async <T>(builder: { range: (de: number, ate: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }> }): Promise<T[]> => {
       const out: T[] = [];
       for (let de = 0; ; de += 1000) {
-        const r = await supabase.from(tabela).select(campos).range(de, de + 999);
+        const r = await builder.range(de, de + 999);
         if (r.error) throw r.error;
-        out.push(...((r.data ?? []) as T[]));
+        out.push(...(r.data ?? []));
         if ((r.data ?? []).length < 1000) return out;
       }
     };
     const [g, gc, rs, its] = await Promise.all([
-      todas<{ id: string; estampa_id: string }>("biblioteca_estampa_grupos", "id, estampa_id"),
-      todas<{ grupo_id: string; cor_id: string }>("biblioteca_estampa_grupo_cores", "grupo_id, cor_id"),
-      todas<{ id: string; estampa_id: string; combo_id: string | null }>("biblioteca_estampa_receitas", "id, estampa_id, combo_id"),
-      todas<{ receita_id: string; codigo: string }>("biblioteca_estampa_receita_itens", "receita_id, codigo"),
+      paged<{ id: string; estampa_id: string }>(supabase.from("biblioteca_estampa_grupos").select("id, estampa_id")),
+      paged<{ grupo_id: string; cor_id: string }>(supabase.from("biblioteca_estampa_grupo_cores").select("grupo_id, cor_id")),
+      paged<{ id: string; estampa_id: string; combo_id: string | null }>(supabase.from("biblioteca_estampa_receitas").select("id, estampa_id, combo_id")),
+      paged<{ receita_id: string; codigo: string }>(supabase.from("biblioteca_estampa_receita_itens").select("receita_id, codigo")),
     ]);
     const estampaDoGrupo = new Map(g.map((x) => [x.id, x.estampa_id]));
     const celulas = new Map<string, Set<string>>();
