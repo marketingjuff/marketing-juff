@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CORES_ETIQUETA, siglaPessoa } from "@/lib/tarefas";
+import { siglaPessoa } from "@/lib/tarefas";
+import { usePresetsMarca } from "@/hooks/use-presets-marca";
 
 /** Cada pessoa ajusta a própria bolinha (sigla, fundo e texto). */
 export function MinhaBolinha() {
@@ -27,6 +28,7 @@ export function MinhaBolinha() {
   const [fundo, setFundo] = useState("#378add");
   const [texto, setTexto] = useState("#ffffff");
   const [salvando, setSalvando] = useState(false);
+  const presetsMarca = usePresetsMarca();
 
   useEffect(() => {
     if (!data) return;
@@ -70,11 +72,11 @@ export function MinhaBolinha() {
         />
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           Fundo
-          <ColorPicker value={fundo} onChange={setFundo} label="Cor do fundo da bolinha" presets={CORES_ETIQUETA} />
+          <ColorPicker value={fundo} onChange={setFundo} label="Cor do fundo da bolinha" presets={presetsMarca} />
         </span>
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           Texto
-          <ColorPicker value={texto} onChange={setTexto} label="Cor do texto da bolinha" presets={["#ffffff", "#111111", ...CORES_ETIQUETA]} />
+          <ColorPicker value={texto} onChange={setTexto} label="Cor do texto da bolinha" presets={["#ffffff", "#111111", ...presetsMarca]} />
         </span>
         <Button size="sm" onClick={salvar} disabled={salvando}>Salvar</Button>
       </div>

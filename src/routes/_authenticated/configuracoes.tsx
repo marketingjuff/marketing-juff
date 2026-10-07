@@ -32,7 +32,8 @@ import { PainelCamposEstrategia } from "@/components/config/PainelCamposEstrateg
 import { PainelNotificacoes } from "@/components/config/PainelNotificacoes";
 import { PainelCoresProduto } from "@/components/config/PainelCoresProduto";
 import { MinhaBolinha } from "@/components/config/MinhaBolinha";
-import { CORES_ETIQUETA, etiquetasQueryOptions, quadrosDoUsuarioQueryOptions, quadrosQueryOptions, setQuadrosDoUsuario, siglaPessoa } from "@/lib/tarefas";
+import { etiquetasQueryOptions, quadrosDoUsuarioQueryOptions, quadrosQueryOptions, setQuadrosDoUsuario, siglaPessoa } from "@/lib/tarefas";
+import { usePresetsMarca } from "@/hooks/use-presets-marca";
 import { ColorPicker } from "@/components/ui/color-picker";
 import {
   PERMISSION_CATALOG,
@@ -528,6 +529,7 @@ function UserRow({
   const [sigla, setSigla] = useState(user.sigla ?? "");
   const [nome, setNome] = useState(user.nome);
   const [corAvatar, setCorAvatar] = useState(user.cor_avatar ?? "#378add");
+  const presetsMarca = usePresetsMarca();
   const [corTextoAvatar, setCorTextoAvatar] = useState(user.cor_texto_avatar ?? "#ffffff");
   const siglaMostrada = siglaPessoa({ nome: user.nome, sigla });
 
@@ -627,7 +629,7 @@ function UserRow({
                 value={corAvatar}
                 onChange={setCorAvatar}
                 label="Cor do fundo da bolinha"
-                presets={CORES_ETIQUETA}
+                presets={presetsMarca}
               />
             </span>
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -636,7 +638,7 @@ function UserRow({
                 value={corTextoAvatar}
                 onChange={setCorTextoAvatar}
                 label="Cor do texto da bolinha"
-                presets={["#ffffff", "#111111", ...CORES_ETIQUETA]}
+                presets={["#ffffff", "#111111", ...presetsMarca]}
               />
             </span>
             {role !== "admin" ? (

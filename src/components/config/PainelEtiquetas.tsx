@@ -38,6 +38,7 @@ import {
   updateEtiqueta,
   type Etiqueta,
 } from "@/lib/tarefas";
+import { usePresetsMarca } from "@/hooks/use-presets-marca";
 
 const arquivadasQueryOptions = queryOptions({
   queryKey: ["tarefas", "etiquetas", "arquivadas"],
@@ -62,6 +63,7 @@ function LinhaEtiqueta({ etiqueta, quadros, pessoas, podeEditar, onChanged }: { 
   const [pessoaId, setPessoaId] = useState<string | null>(etiqueta.pessoa_id);
   const [confirmar, setConfirmar] = useState(false);
   const [busy, setBusy] = useState(false);
+  const presetsMarca = usePresetsMarca();
 
   async function run(fn: () => Promise<void>, msg: string) {
     setBusy(true);
@@ -107,8 +109,8 @@ function LinhaEtiqueta({ etiqueta, quadros, pessoas, podeEditar, onChanged }: { 
           </Select>
         ) : null}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          Fundo <ColorPicker value={cor} onChange={setCor} disabled={!!pessoaId} label="Cor do fundo" presets={CORES_ETIQUETA} />
-          Texto <ColorPicker value={corTexto} onChange={setCorTexto} disabled={!!pessoaId} label="Cor do texto" presets={["#ffffff", "#111111", ...CORES_ETIQUETA]} />
+          Fundo <ColorPicker value={cor} onChange={setCor} disabled={!!pessoaId} label="Cor do fundo" presets={presetsMarca} />
+          Texto <ColorPicker value={corTexto} onChange={setCorTexto} disabled={!!pessoaId} label="Cor do texto" presets={["#ffffff", "#111111", ...presetsMarca]} />
         </div>
         <span className="rounded px-2 py-1 font-nunito text-[13px] font-medium" style={(() => { const cs = coresDaEtiqueta({ cor, cor_texto: corTexto, pessoa_id: pessoaId }, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}>{nome || "Prévia"}</span>
         {pessoaId ? (
@@ -220,6 +222,7 @@ export function PainelEtiquetas() {
   const [cor, setCor] = useState(CORES_ETIQUETA[0]!);
   const [corTexto, setCorTexto] = useState("#ffffff");
   const [salvando, setSalvando] = useState(false);
+  const presetsMarca = usePresetsMarca();
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ["tarefas", "etiquetas"] });
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
@@ -360,8 +363,8 @@ export function PainelEtiquetas() {
           </Select>
         ) : null}
          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-           Fundo <ColorPicker value={cor} onChange={setCor} disabled={!podeEditar || !!pessoaNova} label="Cor do fundo" presets={CORES_ETIQUETA} />
-           Texto <ColorPicker value={corTexto} onChange={setCorTexto} disabled={!podeEditar || !!pessoaNova} label="Cor do texto" presets={["#ffffff", "#111111", ...CORES_ETIQUETA]} />
+           Fundo <ColorPicker value={cor} onChange={setCor} disabled={!podeEditar || !!pessoaNova} label="Cor do fundo" presets={presetsMarca} />
+           Texto <ColorPicker value={corTexto} onChange={setCorTexto} disabled={!podeEditar || !!pessoaNova} label="Cor do texto" presets={["#ffffff", "#111111", ...presetsMarca]} />
          </div>
          <span className="rounded px-2 py-1 font-nunito text-[13px] font-medium" style={(() => { const cs = coresDaEtiqueta({ cor, cor_texto: corTexto, pessoa_id: grupoNovo ? pessoaNova : null }, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}>{nome || "Prévia"}</span>
          <Button type="submit" size="sm" disabled={!podeEditar || salvando || !nome.trim() || !HEX_RE.test(cor) || !HEX_RE.test(corTexto)}>
