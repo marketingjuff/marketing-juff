@@ -46,6 +46,7 @@ import { pendenciasEstampasQueryOptions,
   type EstampaCompleta,
   type Grupo,
   type ItemCor,
+  type EstampaResumo,
   type Receita,
   definirCoresGrupo,
 } from "@/lib/biblioteca-estampas";
@@ -109,13 +110,51 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
   const { data: estampas = [] } = useQuery(estampasQueryOptions);
   const { data: categorias = [] } = useQuery(categoriasEstampaQueryOptions);
   const { data: cores = [] } = useQuery(coresQueryOptions);
+  const { data: pend = {} } = useQuery(pendenciasEstampasQueryOptions);
   const [busca, setBusca] = useState("");
   const [novo, setNovo] = useState("");
   const [visao, setVisao] = useState<"estampas" | "combos">(visaoInicial);
+  const [filtro, setFiltro] = useState<"todas" | "pendente" | "sem_cb">("todas");
+
+  /** Pendências da estampa: células sem receita/receita incompleta (pendentes) e receitas completas sem CB (semCb). Cromia nunca pende. */
+  const statusDe = (e: EstampaResumo): { pendentes: number; semCb: number } | null => {
+    if (e.tipo === "cromia") return null;
+    const p = pend[e.id];
+    if (!p) return null;
+    const n = Math.max(e.n_papeis, 1);
+    let pendentes = p.esperadas;
+    let semCb = 0;
+    for (const r of p.receitas) {
+      if (r.itens >= n && !r.sem_codigo) {
+        pendentes -= 1;
+        if (!r.combo) semCb += 1;
+      }
+    }
+    return { pendentes: Math.max(pendentes, 0), semCb };
+  };
+
+  const contagem = useMemo(() => {
+    let pendentes = 0;
+    let semCb = 0;
+    for (const e of estampas) {
+      const st = statusDe(e);
+      if (!st) continue;
+      if (st.pendentes > 0) pendentes++;
+      else if (st.semCb > 0) semCb++;
+    }
+    return { pendentes, semCb };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [estampas, pend]);
 
   const q = busca.trim().toLowerCase();
   const filtradas = estampas
     .filter((e) => !q || e.nome.toLowerCase().includes(q))
+    .filter((e) => {
+      if (filtro === "todas") return true;
+      const st = statusDe(e);
+      if (filtro === "pendente") return !!st && st.pendentes > 0;
+      return !!st && st.pendentes === 0 && st.semCb > 0;
+    })
     .sort((a, b) => Number(a.situacao === "descontinuado") - Number(b.situacao === "descontinuado"));
   const grupos = [
     ...categorias.map((c) => ({ id: c.id, nome: c.nome })),
@@ -174,6 +213,23 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
       {visao === "combos" ? <PainelCombos editavel={editavel} destaque={comboInicial} /> : (
         <>
       <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-0.5 rounded-lg border border-border bg-background p-0.5">
+          {([
+            ["todas", "Todas"],
+            ["pendente", `Pendentes${contagem.pendentes ? ` · ${contagem.pendentes}` : ""}`],
+            ["sem_cb", `Sem CB${contagem.semCb ? ` · ${contagem.semCb}` : ""}`],
+          ] as const).map(([v, rot]) => (
+            <button
+              key={v}
+              type="button"
+              title={v === "pendente" ? "Estampas com receitas pendentes ou incompletas" : v === "sem_cb" ? "Estampas com receita completa sem código CB" : undefined}
+              onClick={() => setFiltro(v)}
+              className={cn("h-7 rounded-md px-2.5 text-xs font-medium transition", filtro === v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}
+            >
+              {rot}
+            </button>
+          ))}
+        </div>
         <Input placeholder="Buscar estampa" value={busca} onChange={(e) => setBusca(e.target.value)} className="h-9 max-w-xs" />
         {editavel ? (
           <div className="ml-auto flex gap-1">
