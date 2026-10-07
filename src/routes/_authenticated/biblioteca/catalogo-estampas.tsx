@@ -446,6 +446,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
       () => {
         void qc.invalidateQueries({ queryKey: K });
         void qc.invalidateQueries({ queryKey: K_COMBOS });
+        void qc.invalidateQueries({ queryKey: K_LISTA });
       },
     );
   }
@@ -520,6 +521,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
       () => {
         void qc.invalidateQueries({ queryKey: K });
         void qc.invalidateQueries({ queryKey: K_COMBOS });
+        void qc.invalidateQueries({ queryKey: K_LISTA });
       },
     );
   }
