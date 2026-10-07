@@ -54,6 +54,7 @@ export function NovoQuadroDialog({
   const [acesso, setAcesso] = useState<"aberto" | "restrito">("aberto");
   const [exigeResponsavel, setExigeResponsavel] = useState(false);
   const [etiquetaDoCriador, setEtiquetaDoCriador] = useState(false);
+  const [cardsPrivados, setCardsPrivados] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
@@ -69,6 +70,7 @@ export function NovoQuadroDialog({
     setAcesso(quadro?.acesso ?? "aberto");
     setExigeResponsavel(quadro?.exige_responsavel ?? false);
     setEtiquetaDoCriador(quadro?.etiqueta_do_criador ?? false);
+    setCardsPrivados(quadro?.cards_privados ?? false);
   }, [open, quadro]);
 
   async function salvar() {
@@ -76,11 +78,11 @@ export function NovoQuadroDialog({
     try {
       let id = quadro?.id;
       if (!somenteParticipantes) {
-        if (id) await updateQuadro(id, { nome: nome.trim() || "Novo quadro", descricao, acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, ...fundo });
-        else id = await createQuadro(nome, { descricao, acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, ...fundo });
+        if (id) await updateQuadro(id, { nome: nome.trim() || "Novo quadro", descricao, acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, cards_privados: cardsPrivados, ...fundo });
+        else id = await createQuadro(nome, { descricao, acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, cards_privados: cardsPrivados, ...fundo });
       }
       if (id) await setMembrosQuadro(id, membros);
-      if (id && somenteParticipantes) await updateQuadro(id, { acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador });
+      if (id && somenteParticipantes) await updateQuadro(id, { acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, cards_privados: cardsPrivados });
       if (id && !somenteParticipantes) registrarFundoRecente(fundo);
       await qc.invalidateQueries({ queryKey: ["tarefas"] });
       await qc.invalidateQueries({ queryKey: CHAVE_BARRA });
@@ -201,6 +203,21 @@ export function NovoQuadroDialog({
               <span className="block text-sm font-medium">Etiquetar quem cria</span>
               <span className="mt-0.5 block text-[11px] text-muted-foreground">
                 Card novo recebe sozinho a etiqueta da pessoa que criou, se ela tiver uma neste quadro.
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-2 rounded-lg border border-border p-2.5">
+            <Checkbox
+              checked={cardsPrivados}
+              onCheckedChange={(v) => setCardsPrivados(!!v)}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="block text-sm font-medium">Cards privados por pessoa</span>
+              <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                Operador enxerga só os cards em que é responsável ou membro. Admin e gestor enxergam
+                tudo. Card sem responsável e sem membro não aparece para operador nenhum. Com a
+                marcação ligada, o card ganha o campo Membros.
               </span>
             </span>
           </label>

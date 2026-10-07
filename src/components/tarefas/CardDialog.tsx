@@ -7,7 +7,7 @@ import { canEdit, profileQueryOptions } from "@/lib/auth";
 import { NovaEtiquetaForm } from "./NovaEtiquetaForm";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Archive, RefreshCw, Download, User, Tag, Clock, CheckSquare, Paperclip, SlidersHorizontal, ExternalLink, Plus, Trash2, Upload, X } from "lucide-react";
+import { Archive, Users, RefreshCw, Download, User, Tag, Clock, CheckSquare, Paperclip, SlidersHorizontal, ExternalLink, Plus, Trash2, Upload, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -38,6 +38,8 @@ import { usePresetsMarca } from "@/hooks/use-presets-marca";
 import {
   ESFORCOS,
   siglaPessoa,
+  setMembrosDoCard,
+  diasParado,
   PRIORIDADES,
   addComentario,
   addItemChecklist,
@@ -188,6 +190,7 @@ export function CardDialog({
   const c = localCard && localCard.id === card.id ? localCard : card;
   const mexer = podeMexerNoCard(c, role, meuId, editable);
   const etiquetasVisiveis = etiquetasDoQuadro(etiquetas, c.quadro_id);
+  const cardsPrivados = quadros.find((q) => q.id === c.quadro_id)?.cards_privados ?? false;
   const nomePessoa = (id: string | null) => pessoas.find((p) => p.id === id)?.nome ?? "Ninguém";
   const invalidar = () => {
     void qc.invalidateQueries({ queryKey: ["tarefas", "quadro", c.quadro_id] });
@@ -337,6 +340,45 @@ export function CardDialog({
                   ))}
                 </SelectContent>
               </Select>
+              {cardsPrivados ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1.5" disabled={!mexer}>
+                      <Users className="size-4" /> Membros
+                      {c.membros.length > 0 ? (
+                        <span className="rounded bg-muted px-1 text-[11px] leading-tight">
+                          {c.membros.length}
+                        </span>
+                      ) : null}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="max-h-[60vh] w-72 space-y-2 overflow-y-auto">
+                    <Label>Membros do card</Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      Quem está aqui enxerga e edita o card, igual a quem é responsável. O card não
+                      entra no Meu trabalho de quem é só membro.
+                    </p>
+                    {pessoas.map((p) => (
+                      <label key={p.id} className="flex items-center gap-2 text-sm">
+                        <Checkbox
+                          checked={c.membros.includes(p.id)}
+                          disabled={!mexer}
+                          onCheckedChange={(v) => {
+                            const novas = v
+                              ? [...c.membros, p.id]
+                              : c.membros.filter((x) => x !== p.id);
+                            void rodar(async () => {
+                              await setMembrosDoCard(c.id, novas);
+                              void registrarHistorico(c.id, v ? "Entrou como membro" : "Saiu de membro", nomePessoa(p.id));
+                            }, (x) => ({ ...x, membros: novas }));
+                          }}
+                        />
+                        {p.nome || "Sem nome"}
+                      </label>
+                    ))}
+                  </PopoverContent>
+                </Popover>
+              ) : null}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1.5" disabled={!mexer}>
@@ -607,6 +649,10 @@ export function CardDialog({
                       </SelectContent>
                     </Select>
                   </Campo>
+                  <p className="text-[11px] text-muted-foreground">
+                    Parado nesta coluna há {diasParado(c.coluna_desde)}{" "}
+                    {diasParado(c.coluna_desde) === 1 ? "dia" : "dias"}.
+                  </p>
                   {mexer ? (
                     <div className="flex gap-2 pt-2">
                       <Button
@@ -640,7 +686,7 @@ export function CardDialog({
               </Popover>
             </div>
 
-            {c.responsavel_id || c.etiquetas.length > 0 || c.data_entrega || c.prioridade ? (
+            {c.responsavel_id || c.etiquetas.length > 0 || c.data_entrega || c.prioridade || c.membros.length > 0 ? (
               <div className="flex flex-wrap items-center gap-1.5">
                 {c.responsavel_id ? (
                   <span
@@ -654,6 +700,21 @@ export function CardDialog({
                     {siglaPessoa(pessoaDe(c.responsavel_id) ?? { nome: "", sigla: null })}
                   </span>
                 ) : null}
+                {cardsPrivados
+                  ? c.membros.map((id) => (
+                      <span
+                        key={id}
+                        className="flex size-5 items-center justify-center rounded-full text-[8px] font-semibold opacity-70"
+                        style={{
+                          backgroundColor: pessoaDe(id)?.cor_avatar ?? "#888780",
+                          color: pessoaDe(id)?.cor_texto_avatar ?? "#ffffff",
+                        }}
+                        title={`${nomePessoa(id)}, membro`}
+                      >
+                        {siglaPessoa(pessoaDe(id) ?? { nome: "", sigla: null })}
+                      </span>
+                    ))
+                  : null}
                 {c.etiquetas
                   .map((id) => etiquetas.find((e) => e.id === id))
                   .filter((e): e is NonNullable<typeof e> => !!e)

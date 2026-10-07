@@ -337,6 +337,13 @@
       "when": 1791336952467,
       "tag": "0047_combo_unico_por_cor",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1791395945840,
+      "tag": "0048_fase6_cards_privados",
+      "breakpoints": true
     }
   ]
 }

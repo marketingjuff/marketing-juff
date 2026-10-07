@@ -21,7 +21,7 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable";
-import { Lock, Palette, Plus, Search, Tag, Users } from "lucide-react";
+import { EyeOff, Lock, Palette, Plus, Search, Tag, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -50,6 +50,7 @@ import {
   fundoCss,
   moverCard,
   ordenarCards,
+  pesoTopo,
   pessoasQueryOptions,
   registrarHistorico,
   reorderCards,
@@ -113,7 +114,8 @@ export function QuadroBoard({
   const [fResp, setFResp] = useState(TODOS);
   const [fEtiq, setFEtiq] = useState(TODOS);
   const [soAtrasados, setSoAtrasados] = useState(false);
-  const filtrando = !!busca.trim() || fResp !== TODOS || fEtiq !== TODOS || soAtrasados;
+  const [soMeus, setSoMeus] = useState(false);
+  const filtrando = !!busca.trim() || fResp !== TODOS || fEtiq !== TODOS || soAtrasados || soMeus;
   const [cardAberto, setCardAberto] = useState<string | null>(cardInicial ?? null);
   const navegarCard = useNavigate();
   useEffect(() => {
@@ -181,8 +183,10 @@ export function QuadroBoard({
         if (fResp !== TODOS && c.responsavel_id !== fResp) return false;
         if (fEtiq !== TODOS && !c.etiquetas.includes(fEtiq)) return false;
         if (soAtrasados && !estaAtrasado(c)) return false;
+        if (soMeus && c.responsavel_id !== meuId && !c.membros.includes(meuId)) return false;
         return true;
-      });
+      })
+      .sort((a, b) => pesoTopo(b, etiquetas) - pesoTopo(a, etiquetas));
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -351,6 +355,11 @@ export function QuadroBoard({
               <Lock className="size-3" /> {quadro.membros.length}
             </span>
           ) : null}
+          {quadro.cards_privados ? (
+            <span title="Cards privados por pessoa" className="flex items-center gap-0.5 text-xs font-normal text-muted-foreground">
+              <EyeOff className="size-3" />
+            </span>
+          ) : null}
         </h1>
         <span className="text-sm text-muted-foreground">{cards.length} cards</span>
         <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -416,6 +425,9 @@ export function QuadroBoard({
           </Select>
           <label className="flex items-center gap-1.5 text-sm">
             <Switch checked={soAtrasados} onCheckedChange={setSoAtrasados} /> Só atrasados
+          </label>
+          <label className="flex items-center gap-1.5 text-sm">
+            <Switch checked={soMeus} onCheckedChange={setSoMeus} /> Só os meus
           </label>
         </div>
       </div>
