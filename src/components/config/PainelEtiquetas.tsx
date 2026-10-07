@@ -41,6 +41,7 @@ import {
   updateEtiqueta,
   type Etiqueta,
 } from "@/lib/tarefas";
+import { usePresetsMarca } from "@/hooks/use-presets-marca";
 
 const arquivadasQueryOptions = queryOptions({
   queryKey: ["tarefas", "etiquetas", "arquivadas"],
