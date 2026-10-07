@@ -37,6 +37,7 @@ import { ColunaLista } from "./ColunaLista";
 import { CardMini } from "./CardMini";
 import { CardDialog } from "./CardDialog";
 import { FundoPicker } from "./FundoPicker";
+import { registrarFundoRecente } from "@/hooks/use-fundos-recentes";
 import { NovoQuadroDialog } from "./NovoQuadroDialog";
 import { ReorganizarCardsDialog } from "./ReorganizarCardsDialog";
 import { ColunaResponsavelDialog } from "./ColunaResponsavelDialog";
@@ -378,7 +379,10 @@ export function QuadroBoard({
                       fundo_cor1: quadro.fundo_cor1,
                       fundo_cor2: quadro.fundo_cor2,
                     }}
-                    onChange={(v) => rodar(() => updateQuadro(quadro.id, v))}
+                    onChange={(v) => rodar(async () => {
+                      await updateQuadro(quadro.id, v);
+                      registrarFundoRecente(v);
+                    })}
                   />
                 </PopoverContent>
               </Popover>
