@@ -330,6 +330,13 @@
       "when": 1791323514507,
       "tag": "0046_combo_dedupe_por_ordem",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1791336952467,
+      "tag": "0047_combo_unico_por_cor",
+      "breakpoints": true
     }
   ]
 }
