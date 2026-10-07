@@ -1990,6 +1990,39 @@ export type Database = {
           },
         ]
       }
+      tarefa_card_membros: {
+        Row: {
+          card_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_card_membros_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefa_card_membros_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tarefa_card_resp_coluna: {
         Row: {
           atualizado_em: string
@@ -2311,6 +2344,7 @@ export type Database = {
           cor: string
           cor_texto: string
           created_at: string
+          fixa_topo: boolean
           id: string
           nome: string
           pessoa_id: string | null
@@ -2322,6 +2356,7 @@ export type Database = {
           cor?: string
           cor_texto?: string
           created_at?: string
+          fixa_topo?: boolean
           id?: string
           nome: string
           pessoa_id?: string | null
@@ -2333,6 +2368,7 @@ export type Database = {
           cor?: string
           cor_texto?: string
           created_at?: string
+          fixa_topo?: boolean
           id?: string
           nome?: string
           pessoa_id?: string | null
@@ -2467,6 +2503,7 @@ export type Database = {
         Row: {
           acesso: string
           arquivado: boolean
+          cards_privados: boolean
           created_at: string
           criado_por: string | null
           descricao: string
@@ -2482,6 +2519,7 @@ export type Database = {
         Insert: {
           acesso?: string
           arquivado?: boolean
+          cards_privados?: boolean
           created_at?: string
           criado_por?: string | null
           descricao?: string
@@ -2497,6 +2535,7 @@ export type Database = {
         Update: {
           acesso?: string
           arquivado?: boolean
+          cards_privados?: boolean
           created_at?: string
           criado_por?: string | null
           descricao?: string
@@ -2645,6 +2684,14 @@ export type Database = {
       }
       tarefa_avancar_recorrentes: { Args: never; Returns: number }
       tarefa_card_avancar: { Args: { _id: string }; Returns: string }
+      tarefa_card_privado_visivel: {
+        Args: {
+          p_card_id: string
+          p_quadro_id: string
+          p_responsavel_id: string
+        }
+        Returns: boolean
+      }
       tarefa_reordenar_cards: {
         Args: { _coluna_id: string; _ids: string[] }
         Returns: undefined
@@ -2657,6 +2704,7 @@ export type Database = {
         Args: { _quadro_ids: string[]; _user_id: string }
         Returns: undefined
       }
+      tarefa_ve_tudo: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "gestor" | "operador"
