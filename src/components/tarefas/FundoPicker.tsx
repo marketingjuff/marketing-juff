@@ -1,9 +1,10 @@
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { cn } from "@/lib/utils";
-import { FUNDOS_QUADRO, fundoCss, type FundoTipo } from "@/lib/tarefas";
+import { fundoCss, type FundoTipo } from "@/lib/tarefas";
 import { usePresetsMarca } from "@/hooks/use-presets-marca";
+import { useFundosRecentes } from "@/hooks/use-fundos-recentes";
 
 export type FundoValor = { fundo_tipo: FundoTipo; fundo_cor1: string; fundo_cor2: string };
 
@@ -16,24 +17,29 @@ export function FundoPicker({
 }) {
   const degrade = value.fundo_tipo === "degrade";
   const presetsMarca = usePresetsMarca();
+  const recentes = useFundosRecentes();
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {FUNDOS_QUADRO.map((f) => {
-          const ativo = f.cor1 === value.fundo_cor1 && f.cor2 === value.fundo_cor2;
+        {recentes.map((f, i) => {
+          const ativo = f.fundo_tipo === value.fundo_tipo && f.fundo_cor1 === value.fundo_cor1 && (!degrade || f.fundo_cor2 === value.fundo_cor2);
+          const nome = `${f.fundo_tipo === "degrade" ? "Degradê" : "Cor sólida"} ${f.fundo_cor1}${f.fundo_tipo === "degrade" ? ` / ${f.fundo_cor2}` : ""}`;
           return (
-            <button
-              key={f.nome}
+            <Button
+              key={i}
+              variant="ghost"
+              size="icon"
               type="button"
-              title={f.nome}
-              aria-label={`Fundo ${f.nome}`}
-              onClick={() => onChange({ ...value, fundo_cor1: f.cor1, fundo_cor2: f.cor2 })}
+              title={nome}
+              aria-label={`Fundo salvo ${nome}`}
+              aria-pressed={ativo}
+              onClick={() => onChange(f)}
               className={cn(
-                "size-8 rounded-full border-2 transition-transform hover:scale-110",
+                "size-8 rounded-full border-2 p-0 transition-transform hover:scale-110",
                 ativo ? "border-foreground" : "border-transparent",
               )}
               style={{
-                background: fundoCss({ fundo_tipo: value.fundo_tipo, fundo_cor1: f.cor1, fundo_cor2: f.cor2 }),
+                background: fundoCss(f),
               }}
             />
           );
