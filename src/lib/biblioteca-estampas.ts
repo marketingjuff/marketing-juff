@@ -169,7 +169,7 @@ export const pendenciasEstampasQueryOptions = queryOptions({
   staleTime: CINCO_MIN,
   refetchOnWindowFocus: false,
   queryFn: async (): Promise<Record<string, PendenciasEstampa>> => {
-    const todas = async <T>(tabela: string, campos: string): Promise<T[]> => {
+    const todas = async <T>(tabela: Parameters<typeof supabase.from>[0], campos: string): Promise<T[]> => {
       const out: T[] = [];
       for (let de = 0; ; de += 1000) {
         const r = await supabase.from(tabela).select(campos).range(de, de + 999);
