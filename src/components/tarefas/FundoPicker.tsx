@@ -3,6 +3,7 @@ import { Switch } from "@/components/ui/switch";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { cn } from "@/lib/utils";
 import { FUNDOS_QUADRO, fundoCss, type FundoTipo } from "@/lib/tarefas";
+import { usePresetsMarca } from "@/hooks/use-presets-marca";
 
 export type FundoValor = { fundo_tipo: FundoTipo; fundo_cor1: string; fundo_cor2: string };
 
@@ -14,6 +15,7 @@ export function FundoPicker({
   onChange: (v: FundoValor) => void;
 }) {
   const degrade = value.fundo_tipo === "degrade";
+  const presetsMarca = usePresetsMarca();
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
@@ -49,14 +51,14 @@ export function FundoPicker({
         <ColorPicker
           label={degrade ? "Cor de cima" : "Cor"}
           value={value.fundo_cor1}
-          presets={FUNDOS_QUADRO.map((f) => f.cor1)}
+          presets={presetsMarca}
           onChange={(h) => onChange({ ...value, fundo_cor1: h })}
         />
         <ColorPicker
           label="Cor de baixo"
           value={value.fundo_cor2}
           disabled={!degrade}
-          presets={FUNDOS_QUADRO.map((f) => f.cor2)}
+          presets={presetsMarca}
           onChange={(h) => onChange({ ...value, fundo_cor2: h })}
         />
       </div>
