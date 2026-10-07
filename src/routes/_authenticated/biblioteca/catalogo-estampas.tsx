@@ -912,7 +912,7 @@ function SeletorCombo({ combos, porCodigo, genero, nCores, atual, onEscolher }: 
               onClick={() => { onEscolher(c); setAberto(false); setBusca(""); }}
             >
               <span className="flex -space-x-1">
-                {c.itens.slice(0, 6).map((it, i) => (
+                {c.itens.slice(0, 7).map((it, i) => (
                   <span key={i} className="size-3.5 rounded-full border border-black/10" style={{ backgroundColor: porCodigo.get(it.codigo.toUpperCase())?.hex ?? "#888888" }} />
                 ))}
               </span>
