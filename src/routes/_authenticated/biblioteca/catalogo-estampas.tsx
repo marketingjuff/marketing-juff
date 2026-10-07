@@ -196,9 +196,9 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
           variant="ghost"
           className={cn("rounded-b-none", visao === "estampas" && "border-b-2 border-primary text-foreground")}
           onClick={() => setVisao("estampas")}
-          {...arrastavel("/biblioteca/catalogo-estampas", "Estampas")}
+          {...arrastavel("/biblioteca/catalogo-estampas", "Estampas Juff Store")}
         >
-          Estampas
+          Estampas Juff Store
         </Button>
         <Button
           type="button"
