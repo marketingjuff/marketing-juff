@@ -185,13 +185,14 @@ function FormCombo({ inicial, combos, cores, onCancelar, onPronto }: {
     setGravando(true);
     try {
       if (inicial) {
-        const outro = combos.find((c) => c.id !== inicial.id && assinatura(c.itens) === assinatura(itens));
+        const outro = combos.find((c) => c.id !== inicial.id && assinatura(c.itens) === assinatura(itens) && (c.cor_id ?? "") === (corId || ""));
         if (outro) {
           toast.warning(`Essas cores já existem no ${outro.codigo} — puxado o código já existente.`);
           onPronto();
           return;
         }
         await salvarCombo(inicial.id, { genero, cor_id: corId || null }, itens);
+        onPronto();
       } else {
         const r = await criarCombo(genero, corId || null, itens);
         if (r.criado) toast.success(`Combo ${r.codigo} criado`);
@@ -199,6 +200,7 @@ function FormCombo({ inicial, combos, cores, onCancelar, onPronto }: {
           const nome = cores.find((c) => c.id === combos.find((x) => x.id === r.id)?.cor_id)?.nome;
           toast.warning(`Já existe o ${r.codigo}${nome ? ` (cor ${nome})` : ""} — puxado o código já existente.`);
         }
+        onPronto();
       }
     } catch (e) {
       toast.error((e as Error).message);
