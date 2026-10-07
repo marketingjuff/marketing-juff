@@ -158,7 +158,6 @@ export function estampaQueryOptions(id: string) {
 }
 
 export const combosQueryOptions = queryOptions({
-  queryKey: ["biblioteca", "combos"] as const,
   staleTime: CINCO_MIN,
   refetchOnWindowFocus: false,
   queryFn: async (): Promise<Combo[]> => {
