@@ -98,85 +98,93 @@ export function CardMini({
       {card.cor ? (
         <div className="-mx-2 -mt-2 mb-1.5 h-1.5 rounded-t-lg" style={{ backgroundColor: card.cor }} />
       ) : null}
-      {tags.length > 0 ? (
-        <div className="mb-1.5 flex flex-wrap gap-1">
-          {tags.slice(0, 3).map((t) => (
-            <EtiquetaCompacta key={t.id} nome={t.nome} cor={coresDaEtiqueta(t, pessoas).cor} corTexto={coresDaEtiqueta(t, pessoas).cor_texto} />
-          ))}
-          {tags.length > 3 ? (
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          {tags.length > 0 ? (
+            <div className="mb-1.5 flex flex-wrap gap-1">
+              {tags.slice(0, 3).map((t) => (
+                <EtiquetaCompacta key={t.id} nome={t.nome} cor={coresDaEtiqueta(t, pessoas).cor} corTexto={coresDaEtiqueta(t, pessoas).cor_texto} />
+              ))}
+              {tags.length > 3 ? (
+                <span
+                  className="font-nunito inline-flex items-center rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium leading-tight text-muted-foreground"
+                  title={tags.slice(3).map((t) => t.nome).join(", ")}
+                >
+                  +{tags.length - 3}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+          <p className="flex items-start gap-1 text-sm leading-snug">
+            {card.concluido ? <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-success" /> : null}
+            <span className="break-words">{card.titulo || "Sem título"}</span>
+          </p>
+        </div>
+        <div className="flex w-[76px] shrink-0 flex-col items-end gap-1 text-[11px] text-muted-foreground">
+          {resp ? (
             <span
-              className="font-nunito inline-flex items-center rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium leading-tight text-muted-foreground"
-              title={tags.slice(3).map((t) => t.nome).join(", ")}
+              className={cn(
+                "flex size-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold leading-none tracking-tight",
+                !resp.cor_avatar && "bg-primary text-primary-foreground",
+              )}
+              style={
+                resp.cor_avatar
+                  ? { backgroundColor: resp.cor_avatar, color: resp.cor_texto_avatar ?? "#ffffff" }
+                  : undefined
+              }
+              title={resp.nome}
             >
-              +{tags.length - 3}
+              {siglaPessoa(resp)}
+            </span>
+          ) : null}
+          {exigeResponsavel && !card.responsavel_id ? (
+            <span
+              className="rounded border border-destructive px-1 py-px text-center text-[10px] font-medium leading-tight text-destructive"
+              title="Escolha um responsável para poder mover este card"
+            >
+              sem resp.
+            </span>
+          ) : null}
+          {prio || card.checklist_total > 0 || card.comentarios_total > 0 || card.anexos_total > 0 ? (
+            <div className="flex flex-wrap items-center justify-end gap-x-1.5 gap-y-1">
+              {prio ? (
+                <span className="flex items-center" title={`Prioridade ${prio.label}`}>
+                  <Flag className="size-3" style={{ color: prio.cor }} />
+                </span>
+              ) : null}
+              {card.checklist_total > 0 ? (
+                <span className="flex items-center gap-0.5">
+                  <CheckSquare className="size-3" />
+                  {card.checklist_feitos}/{card.checklist_total}
+                </span>
+              ) : null}
+              {card.comentarios_total > 0 ? (
+                <span className="flex items-center gap-0.5">
+                  <MessageSquare className="size-3" />
+                  {card.comentarios_total}
+                </span>
+              ) : null}
+              {card.anexos_total > 0 ? <Paperclip className="size-3" /> : null}
+            </div>
+          ) : null}
+          {card.data_entrega ? (
+            <span
+              className={cn(
+                "inline-flex items-center gap-0.5 whitespace-nowrap rounded px-1",
+                atrasado && "bg-destructive/15 font-medium text-destructive",
+                !atrasado && breve && "bg-warning/25 font-medium text-foreground",
+              )}
+            >
+              {ehRecorrente(card) ? <RefreshCw className="size-3 shrink-0" /> : null}
+              {formatarDataHora(card.data_entrega, card.hora_entrega)}
+            </span>
+          ) : null}
+          {adiado ? (
+            <span className="flex items-center gap-0.5 whitespace-nowrap">
+              <Pause className="size-3" /> até {formatarDataHora(card.adiado_ate, null)}
             </span>
           ) : null}
         </div>
-      ) : null}
-      <p className="flex items-start gap-1 text-sm leading-snug">
-        {card.concluido ? <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-success" /> : null}
-        <span className="break-words">{card.titulo || "Sem título"}</span>
-      </p>
-      <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
-        {card.data_entrega ? (
-          <span
-            className={cn(
-              "inline-flex items-center gap-0.5 rounded px-1",
-              atrasado && "bg-destructive/15 font-medium text-destructive",
-              !atrasado && breve && "bg-warning/25 font-medium text-foreground",
-            )}
-          >
-            {ehRecorrente(card) ? <RefreshCw className="size-3 shrink-0" /> : null}
-            {formatarDataHora(card.data_entrega, card.hora_entrega)}
-          </span>
-        ) : null}
-        {prio ? (
-          <span className="flex items-center gap-0.5" title={`Prioridade ${prio.label}`}>
-            <Flag className="size-3" style={{ color: prio.cor }} />
-          </span>
-        ) : null}
-        {card.checklist_total > 0 ? (
-          <span className="flex items-center gap-0.5">
-            <CheckSquare className="size-3" />
-            {card.checklist_feitos}/{card.checklist_total}
-          </span>
-        ) : null}
-        {card.comentarios_total > 0 ? (
-          <span className="flex items-center gap-0.5">
-            <MessageSquare className="size-3" />
-            {card.comentarios_total}
-          </span>
-        ) : null}
-        {card.anexos_total > 0 ? <Paperclip className="size-3" /> : null}
-        {adiado ? (
-          <span className="flex items-center gap-0.5">
-            <Pause className="size-3" /> até {formatarDataHora(card.adiado_ate, null)}
-          </span>
-        ) : null}
-        {resp ? (
-          <span
-            className={cn(
-              "ml-auto flex size-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold leading-none tracking-tight",
-              !resp.cor_avatar && "bg-primary text-primary-foreground",
-            )}
-            style={
-              resp.cor_avatar
-                ? { backgroundColor: resp.cor_avatar, color: resp.cor_texto_avatar ?? "#ffffff" }
-                : undefined
-            }
-            title={resp.nome}
-          >
-            {siglaPessoa(resp)}
-          </span>
-        ) : null}
-        {exigeResponsavel && !card.responsavel_id ? (
-          <span
-            className="ml-auto rounded border border-destructive px-1 py-px text-[10px] font-medium text-destructive"
-            title="Escolha um responsável para poder mover este card"
-          >
-            sem responsável
-          </span>
-        ) : null}
       </div>
     </button>
   );
