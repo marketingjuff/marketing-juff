@@ -6,7 +6,15 @@ import { AlertCircle, ArrowLeft, Copy, Download, FileText, FolderPlus, ImagePlus
 import { AppShell } from "@/components/AppShell";
 import { Bloco, CampoAutoSave } from "@/components/biblioteca/comum";
 import { Bolinha, CardReceita, useCoresEstampa, type TamanhoCard } from "@/components/biblioteca/EstampaVisual";
-import { pendenciasEstampasQueryOptions, type Combo, type EstampaCompleta, type EstampaResumo, type Grupo, type ItemCor, type Receita,
+import type { CorEstampa } from "@/lib/biblioteca-estampa";
+import { arrastavel, arrastavelEstampa } from "@/lib/atalhos-paginas";
+import { PainelCombos } from "@/components/biblioteca/PainelCombos";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { canEdit, hasPermission, profileQueryOptions } from "@/lib/auth";
+import { coresQueryOptions, produtosQueryOptions, type CorBiblioteca, type ProdutoBiblioteca } from "@/lib/biblioteca";
+import { pendenciasEstampasQueryOptions,
   ROTULO_GENERO,
   apagarEstampa,
   apagarGrupo,
