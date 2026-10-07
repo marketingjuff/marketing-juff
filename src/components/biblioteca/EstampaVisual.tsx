@@ -98,6 +98,7 @@ const FACE_DADO: Record<number, [number, number][]> = {
   4: [[28, 28], [72, 28], [28, 72], [72, 72]],
   5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]],
   6: [[22, 30], [50, 30], [78, 30], [22, 72], [50, 72], [78, 72]],
+  7: [[22, 30], [50, 30], [78, 30], [22, 72], [50, 72], [78, 72], [50, 50]],
 };
 
 /**
@@ -112,6 +113,8 @@ const FATIAS_CARD: Record<number, number[]> = {
   4: [3, 3, 3, 3],
   5: [2, 2, 2, 3, 3],
   6: [2, 2, 2, 2, 2, 2],
+  // 7 cores usa grade de 12 colunas: 3 fatias em cima, 4 embaixo
+  7: [4, 4, 4, 3, 3, 3, 3],
 };
 
 /** Card de combo: faixa de código, dado com bolinhas e faixa de cores. */
