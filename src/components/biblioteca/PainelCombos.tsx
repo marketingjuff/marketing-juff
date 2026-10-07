@@ -66,7 +66,7 @@ export function PainelCombos({ editavel = true, destaque = null }: { editavel?: 
         chave: g,
         rotulo: ROTULO_GENERO[g],
         itens: filtrados
-          .filter((c) => c.genero === g || (!so && g !== "infantil" && c.genero === "unissex"))
+          .filter((c) => c.genero === g || (!so && c.genero === "unissex"))
           .map((c) => ({ combo: c, uni: c.genero === "unissex" })),
       });
     }
