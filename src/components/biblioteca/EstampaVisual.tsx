@@ -98,6 +98,7 @@ const FACE_DADO: Record<number, [number, number][]> = {
   4: [[28, 28], [72, 28], [28, 72], [72, 72]],
   5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]],
   6: [[22, 30], [50, 30], [78, 30], [22, 72], [50, 72], [78, 72]],
+  7: [[22, 30], [50, 30], [78, 30], [22, 72], [50, 72], [78, 72], [50, 50]],
 };
 
 /**
@@ -112,6 +113,8 @@ const FATIAS_CARD: Record<number, number[]> = {
   4: [3, 3, 3, 3],
   5: [2, 2, 2, 3, 3],
   6: [2, 2, 2, 2, 2, 2],
+  // 7 cores usa grade de 12 colunas: 3 fatias em cima, 4 embaixo
+  7: [4, 4, 4, 3, 3, 3, 3],
 };
 
 /** Card de combo: faixa de código, dado com bolinhas e faixa de cores. */
@@ -132,9 +135,9 @@ export function CardCombo({ codigo, fundo, itens, porCodigo, tamanho = "m", uso,
   const txt = textoSobreCor(bg);
   const claro = txt === "#ffffff";
   const n = uso ?? 0;
-  const q = Math.min(Math.max(itens.length, 1), 6);
-  const face = FACE_DADO[q] ?? FACE_DADO[6]!;
-  const fatias = FATIAS_CARD[q] ?? FATIAS_CARD[6]!;
+  const q = Math.min(Math.max(itens.length, 1), 7);
+  const face = FACE_DADO[q] ?? FACE_DADO[7]!;
+  const fatias = FATIAS_CARD[q] ?? FATIAS_CARD[7]!;
 
   return (
     <div
@@ -167,7 +170,7 @@ export function CardCombo({ codigo, fundo, itens, porCodigo, tamanho = "m", uso,
         </div>
 
         <div className="relative" style={{ height: m.lado }}>
-          {itens.slice(0, 6).map((it, k) => {
+          {itens.slice(0, 7).map((it, k) => {
             const pos = face[k] ?? [50, 50];
             const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
             return (
@@ -189,8 +192,8 @@ export function CardCombo({ codigo, fundo, itens, porCodigo, tamanho = "m", uso,
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: "repeat(6, 1fr)", gridAutoRows: `${m.fatia}px` }}>
-        {itens.slice(0, 6).map((it, k) => {
+      <div className="grid" style={{ gridTemplateColumns: `repeat(${q === 7 ? 12 : 6}, 1fr)`, gridAutoRows: `${m.fatia}px` }}>
+        {itens.slice(0, 7).map((it, k) => {
           const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
           const cor = h ?? "#d4d4d8";
           return (
@@ -305,9 +308,9 @@ export function CardReceita({
   const bg = HEX.test(fundo) ? fundo : "#888888";
   const txt = textoSobreCor(bg);
   const claro = txt === "#ffffff";
-  const q = Math.min(Math.max(itens.length, 1), 6);
-  const face = FACE_DADO[q] ?? FACE_DADO[6]!;
-  const fatias = FATIAS_CARD[q] ?? FATIAS_CARD[6]!;
+  const q = Math.min(Math.max(itens.length, 1), 7);
+  const face = FACE_DADO[q] ?? FACE_DADO[7]!;
+  const fatias = FATIAS_CARD[q] ?? FATIAS_CARD[7]!;
 
   const legenda = [
     nomeCor,
@@ -347,7 +350,7 @@ export function CardReceita({
               }}
             />
           ) : null}
-          {!cromia && itens.slice(0, 6).map((it, k) => {
+          {!cromia && itens.slice(0, 7).map((it, k) => {
             const pos = face[k] ?? [50, 50];
             const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
             return (
@@ -404,7 +407,7 @@ export function CardReceita({
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: "repeat(6, 1fr)", gridAutoRows: `${m.fatia}px` }}>
+      <div className="grid" style={{ gridTemplateColumns: `repeat(${q === 7 ? 12 : 6}, 1fr)`, gridAutoRows: `${m.fatia}px` }}>
         {cromia ? (
           <span
             className="flex items-center justify-center font-bold"
@@ -421,7 +424,7 @@ export function CardReceita({
             qualquer cor
           </span>
         ) : null}
-        {!cromia && itens.slice(0, 6).map((it, k) => {
+        {!cromia && itens.slice(0, 7).map((it, k) => {
           const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
           const cor = h ?? "#d4d4d8";
           const estilo = {
