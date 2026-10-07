@@ -397,7 +397,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
 
   function candidatos(g: Grupo, cid: string): Combo[] {
     const gen = generoDoGrupo(g.modelos, produtos);
-    return combos.filter((c) => c.genero === gen && c.cor_id === cid && c.itens.length === n);
+    return combos.filter((c) => (c.genero === gen || c.genero === "unissex") && c.cor_id === cid && c.itens.length === n);
   }
 
   function aplicarCombo(g: Grupo, cid: string, c: Combo) {
@@ -472,7 +472,7 @@ function Ficha({ id, editavel }: { id: string; editavel: boolean }) {
       const r = receitaDe(origem, cid);
       if (!r) continue;
       const combo = combos.find((c) => c.id === r.combo_id);
-      gravarReceita(destino, cid, combo && combo.genero === genDest ? combo.id : null, r.itens);
+      gravarReceita(destino, cid, combo && (combo.genero === genDest || combo.genero === "unissex") ? combo.id : null, r.itens);
     }
   }
 
@@ -818,7 +818,7 @@ function SeletorCombo({ combos, porCodigo, genero, nCores, atual, onEscolher }: 
     const cromia = combos.filter((c) => c.codigo === "CROMIA");
     const normais = combos
       // Ao digitar um código, busca em todos; sem busca, sugere só os compatíveis.
-      .filter((c) => c.codigo !== "CROMIA" && (termo ? true : c.genero === genero && (nCores === 0 || c.itens.length === nCores)))
+      .filter((c) => c.codigo !== "CROMIA" && (termo ? true : (c.genero === genero || c.genero === "unissex") && (nCores === 0 || c.itens.length === nCores)))
       .filter((c) => !termo || c.codigo.toLowerCase().includes(termo));
     const especiais = cromia.filter((c) => !termo || "cromia".includes(termo));
     return [...especiais, ...normais].slice(0, 60);
