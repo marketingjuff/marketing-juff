@@ -135,9 +135,9 @@ export function CardCombo({ codigo, fundo, itens, porCodigo, tamanho = "m", uso,
   const txt = textoSobreCor(bg);
   const claro = txt === "#ffffff";
   const n = uso ?? 0;
-  const q = Math.min(Math.max(itens.length, 1), 6);
-  const face = FACE_DADO[q] ?? FACE_DADO[6]!;
-  const fatias = FATIAS_CARD[q] ?? FATIAS_CARD[6]!;
+  const q = Math.min(Math.max(itens.length, 1), 7);
+  const face = FACE_DADO[q] ?? FACE_DADO[7]!;
+  const fatias = FATIAS_CARD[q] ?? FATIAS_CARD[7]!;
 
   return (
     <div
@@ -170,7 +170,7 @@ export function CardCombo({ codigo, fundo, itens, porCodigo, tamanho = "m", uso,
         </div>
 
         <div className="relative" style={{ height: m.lado }}>
-          {itens.slice(0, 6).map((it, k) => {
+          {itens.slice(0, 7).map((it, k) => {
             const pos = face[k] ?? [50, 50];
             const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
             return (
@@ -192,8 +192,8 @@ export function CardCombo({ codigo, fundo, itens, porCodigo, tamanho = "m", uso,
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: "repeat(6, 1fr)", gridAutoRows: `${m.fatia}px` }}>
-        {itens.slice(0, 6).map((it, k) => {
+      <div className="grid" style={{ gridTemplateColumns: `repeat(${q === 7 ? 12 : 6}, 1fr)`, gridAutoRows: `${m.fatia}px` }}>
+        {itens.slice(0, 7).map((it, k) => {
           const h = it.codigo ? hexDoCodigo(porCodigo, it.codigo) : null;
           const cor = h ?? "#d4d4d8";
           return (
