@@ -34,9 +34,9 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { EditorDescricao } from "./EditorDescricao";
+import { usePresetsMarca } from "@/hooks/use-presets-marca";
 import {
   ESFORCOS,
-  CORES_ETIQUETA,
   siglaPessoa,
   PRIORIDADES,
   addComentario,
@@ -127,6 +127,7 @@ export function CardDialog({
   const { data: anexos = [] } = useQuery({ ...anexosQueryOptions(cardId), enabled: ativo });
   const { data: historico = [] } = useQuery({ ...historicoQueryOptions(cardId), enabled: ativo });
   const { data: coresSalvas = [] } = useQuery({ ...coresSalvasQueryOptions, enabled: ativo });
+  const presetsMarca = usePresetsMarca();
   const guardarCor = async (hex: string) => {
     try {
       await criarCorSalva(hex);
@@ -511,7 +512,7 @@ export function CardDialog({
                         value={c.cor ?? "#378add"}
                         onChange={(v) => salvar({ cor: v.toLowerCase() })}
                         label="Cor da faixa"
-                        presets={CORES_ETIQUETA}
+                        presets={presetsMarca}
                         salvas={coresSalvas}
                         onSalvarAtual={guardarCor}
                         onRemoverSalva={tirarCorSalva}
@@ -529,7 +530,7 @@ export function CardDialog({
                         value={c.cor_fundo ?? "#378add"}
                         onChange={(v) => salvar({ cor_fundo: v.toLowerCase() })}
                         label="Cor do fundo"
-                        presets={CORES_ETIQUETA}
+                        presets={presetsMarca}
                         salvas={coresSalvas}
                         onSalvarAtual={guardarCor}
                         onRemoverSalva={tirarCorSalva}
