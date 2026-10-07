@@ -103,7 +103,10 @@ export function BarraAtalhos() {
       novo = { id: `tmp-${c.codigo}`, posicao, label: limparRotulo(c.codigo), destino, quadro_id: null, quadro_cor: null, quadro_arquivado: false };
       promessa = criarAtalhoPagina(destino, novo.label, posicao);
     } else if (c.tipo === "pagina") {
-      if (anterior.some((a) => a.destino === c.destino)) return;
+      if (anterior.some((a) => a.destino === c.destino)) {
+        toast.info("Esse atalho já está na barra");
+        return;
+      }
       novo = { id: `tmp-${c.destino}`, posicao, label: limparRotulo(c.label), destino: c.destino, quadro_id: null, quadro_cor: null, quadro_arquivado: false };
       promessa = criarAtalhoPagina(c.destino, novo.label, posicao);
     } else return;
