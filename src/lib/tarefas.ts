@@ -352,7 +352,6 @@ export const quadroQueryOptions = (quadroId: string) =>
           exige_responsavel: q.exige_responsavel ?? false,
           etiqueta_do_criador: q.etiqueta_do_criador ?? false,
           cards_privados: q.cards_privados ?? false,
-    cards_privados: q.cards_privados ?? false,
           membros: (q.tarefa_quadro_membros ?? []).map((m: { user_id: string }) => m.user_id),
         },
         colunas: (cols ?? []) as Coluna[],
