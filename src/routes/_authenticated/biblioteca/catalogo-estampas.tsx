@@ -239,7 +239,7 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
           </div>
         ) : null}
       </div>
-      {grupos.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma estampa ainda.</p> : null}
+      {grupos.length === 0 ? <p className="text-sm text-muted-foreground">{filtro === "todas" ? "Nenhuma estampa ainda." : "Nenhuma estampa nesse filtro."}</p> : null}
       {grupos.map((g) => (
         <div key={g.id ?? "sem"}>
           <p className="mb-1 text-lg font-semibold uppercase tracking-wide text-muted-foreground">
@@ -264,6 +264,21 @@ function Lista({ editavel, visaoInicial = "estampas", comboInicial = null }: { e
                 <span className="text-base font-medium leading-none">{e.nome}</span>
                 {e.tipo === "cromia" ? <span className="text-[10px] font-medium text-muted-foreground">CROMIA</span> : null}
                 <span className="text-xs tabular-nums text-muted-foreground">{e.n_modelos * e.n_cores}</span>
+                {(() => {
+                  const st = statusDe(e);
+                  if (!st) return null;
+                  if (st.pendentes > 0)
+                    return (
+                      <span title={`${st.pendentes} receita(s) pendente(s)`} className="flex items-center gap-0.5 rounded-full bg-warning/30 px-1.5 text-[10px] font-semibold text-warning-foreground">
+                        <AlertCircle className="size-3" />{st.pendentes}
+                      </span>
+                    );
+                  if (st.semCb > 0)
+                    return (
+                      <span title="Receita completa sem código CB" className="rounded-full border border-warning px-1.5 text-[10px] font-semibold text-warning-foreground">sem CB</span>
+                    );
+                  return null;
+                })()}
               </button>
             ))}
           </div>
