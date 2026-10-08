@@ -75,7 +75,7 @@ export function ColunaLista({
   podeArrastarCard: (c: Card) => boolean;
   dragDisabled: boolean;
   onAbrirCard: (id: string) => void;
-  onAddCard: (titulo: string) => void;
+  onAddCard: (titulo: string, noTopo: boolean) => void;
   onRenomear: (nome: string) => void;
   onToggleConclui: () => void;
   onArquivar: () => void;
@@ -93,6 +93,7 @@ export function ColunaLista({
   const [nome, setNome] = useState(coluna.nome);
   const [adicionando, setAdicionando] = useState(false);
   const [novo, setNovo] = useState("");
+  const [noTopo, setNoTopo] = useState(false);
 
   function confirmarNome() {
     setEditando(false);
@@ -154,6 +155,20 @@ export function ColunaLista({
           </h3>
         )}
         <span className="rounded-full px-1.5 text-xs tabular-nums text-muted-foreground">{cards.length}</span>
+        {editable ? (
+          <button
+            type="button"
+            aria-label="Adicionar card no topo"
+            title="Adicionar card no topo"
+            className="rounded-md p-0.5 text-muted-foreground/70 transition-colors hover:bg-secondary hover:text-foreground"
+            onClick={() => {
+              setNoTopo(true);
+              setAdicionando(true);
+            }}
+          >
+            <Plus className="size-3.5" />
+          </button>
+        ) : null}
         {estruturar ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -208,7 +223,7 @@ export function ColunaLista({
             className="mt-2 space-y-2"
             onSubmit={(e) => {
               e.preventDefault();
-              if (novo.trim()) onAddCard(novo.trim());
+              if (novo.trim()) onAddCard(novo.trim(), noTopo);
               setNovo("");
             }}
           >
@@ -231,7 +246,10 @@ export function ColunaLista({
             variant="ghost"
             size="sm"
             className="mt-1 justify-start gap-1 text-muted-foreground"
-            onClick={() => setAdicionando(true)}
+            onClick={() => {
+              setNoTopo(false);
+              setAdicionando(true);
+            }}
           >
             <Plus className="size-4" /> Adicionar card
           </Button>

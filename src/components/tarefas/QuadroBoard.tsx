@@ -462,7 +462,7 @@ export function QuadroBoard({
                   podeArrastarCard={(c) => podeMexerNoCard(c, role, meuId, editable)}
                   dragDisabled={filtrando}
                   onAbrirCard={setCardAberto}
-                  onAddCard={(t) => rodar(() => createCard(quadro.id, col.id, t))}
+                  onAddCard={(t, topo) => rodar(() => createCard(quadro.id, col.id, t, topo))}
                   onRenomear={(nome) => rodar(() => updateColuna(col.id, { nome }))}
                   onToggleConclui={() => rodar(() => updateColuna(col.id, { conclui: !col.conclui }))}
                   onArquivar={() => rodar(() => arquivarColuna(col.id, true))}
