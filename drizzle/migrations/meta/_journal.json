@@ -344,6 +344,13 @@
       "when": 1791395945840,
       "tag": "0048_fase6_cards_privados",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1791484937047,
+      "tag": "0049_nomes_olist",
+      "breakpoints": true
     }
   ]
 }

@@ -792,12 +792,15 @@ export type Database = {
           created_at: string
           id: string
           nome_base: string
+          nome_base_olist: string
           pontos: string[]
           posicao: number
           sufixo: string
+          sufixo_olist: string
           tamanhos: string[]
           tamanhos_xtra: string[]
           tecido: string
+          tecido_olist: string
           updated_at: string
           usa_sufixo: boolean
           usa_tecido: boolean
@@ -808,12 +811,15 @@ export type Database = {
           created_at?: string
           id?: string
           nome_base: string
+          nome_base_olist?: string
           pontos?: string[]
           posicao?: number
           sufixo?: string
+          sufixo_olist?: string
           tamanhos?: string[]
           tamanhos_xtra?: string[]
           tecido?: string
+          tecido_olist?: string
           updated_at?: string
           usa_sufixo?: boolean
           usa_tecido?: boolean
@@ -824,16 +830,34 @@ export type Database = {
           created_at?: string
           id?: string
           nome_base?: string
+          nome_base_olist?: string
           pontos?: string[]
           posicao?: number
           sufixo?: string
+          sufixo_olist?: string
           tamanhos?: string[]
           tamanhos_xtra?: string[]
           tecido?: string
+          tecido_olist?: string
           updated_at?: string
           usa_sufixo?: boolean
           usa_tecido?: boolean
           usa_xtra?: boolean
+        }
+        Relationships: []
+      }
+      biblioteca_tamanhos_olist: {
+        Row: {
+          nome_olist: string
+          tamanho: string
+        }
+        Insert: {
+          nome_olist?: string
+          tamanho: string
+        }
+        Update: {
+          nome_olist?: string
+          tamanho?: string
         }
         Relationships: []
       }
