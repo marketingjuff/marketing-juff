@@ -17,6 +17,7 @@ import { Route as AuthenticatedObjetivosRouteImport } from './routes/_authentica
 import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
 import { Route as AuthenticatedBibliotecaArquivosRouteImport } from './routes/_authenticated/biblioteca/arquivos'
 import { Route as AuthenticatedBibliotecaCatalogoEstampasRouteImport } from './routes/_authenticated/biblioteca/catalogo-estampas'
+import { Route as AuthenticatedBibliotecaConferenciaRouteImport } from './routes/_authenticated/biblioteca/conferencia'
 import { Route as AuthenticatedBibliotecaCoresRouteImport } from './routes/_authenticated/biblioteca/cores'
 import { Route as AuthenticatedBibliotecaEstampasRouteImport } from './routes/_authenticated/biblioteca/estampas'
 import { Route as AuthenticatedBibliotecaMarcaRouteImport } from './routes/_authenticated/biblioteca/marca'
@@ -74,6 +75,12 @@ const AuthenticatedBibliotecaCatalogoEstampasRoute =
   AuthenticatedBibliotecaCatalogoEstampasRouteImport.update({
     id: '/biblioteca/catalogo-estampas',
     path: '/biblioteca/catalogo-estampas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBibliotecaConferenciaRoute =
+  AuthenticatedBibliotecaConferenciaRouteImport.update({
+    id: '/biblioteca/conferencia',
+    path: '/biblioteca/conferencia',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedBibliotecaCoresRoute =
@@ -174,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/biblioteca/arquivos': typeof AuthenticatedBibliotecaArquivosRoute
   '/biblioteca/catalogo-estampas': typeof AuthenticatedBibliotecaCatalogoEstampasRoute
+  '/biblioteca/conferencia': typeof AuthenticatedBibliotecaConferenciaRoute
   '/biblioteca/cores': typeof AuthenticatedBibliotecaCoresRoute
   '/biblioteca/estampas': typeof AuthenticatedBibliotecaEstampasRoute
   '/biblioteca/marca': typeof AuthenticatedBibliotecaMarcaRoute
@@ -198,6 +206,7 @@ export interface FileRoutesByTo {
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/biblioteca/arquivos': typeof AuthenticatedBibliotecaArquivosRoute
   '/biblioteca/catalogo-estampas': typeof AuthenticatedBibliotecaCatalogoEstampasRoute
+  '/biblioteca/conferencia': typeof AuthenticatedBibliotecaConferenciaRoute
   '/biblioteca/cores': typeof AuthenticatedBibliotecaCoresRoute
   '/biblioteca/estampas': typeof AuthenticatedBibliotecaEstampasRoute
   '/biblioteca/marca': typeof AuthenticatedBibliotecaMarcaRoute
@@ -224,6 +233,7 @@ export interface FileRoutesById {
   '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
   '/_authenticated/biblioteca/arquivos': typeof AuthenticatedBibliotecaArquivosRoute
   '/_authenticated/biblioteca/catalogo-estampas': typeof AuthenticatedBibliotecaCatalogoEstampasRoute
+  '/_authenticated/biblioteca/conferencia': typeof AuthenticatedBibliotecaConferenciaRoute
   '/_authenticated/biblioteca/cores': typeof AuthenticatedBibliotecaCoresRoute
   '/_authenticated/biblioteca/estampas': typeof AuthenticatedBibliotecaEstampasRoute
   '/_authenticated/biblioteca/marca': typeof AuthenticatedBibliotecaMarcaRoute
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/trocar-senha'
     | '/biblioteca/arquivos'
     | '/biblioteca/catalogo-estampas'
+    | '/biblioteca/conferencia'
     | '/biblioteca/cores'
     | '/biblioteca/estampas'
     | '/biblioteca/marca'
@@ -274,6 +285,7 @@ export interface FileRouteTypes {
     | '/trocar-senha'
     | '/biblioteca/arquivos'
     | '/biblioteca/catalogo-estampas'
+    | '/biblioteca/conferencia'
     | '/biblioteca/cores'
     | '/biblioteca/estampas'
     | '/biblioteca/marca'
@@ -299,6 +311,7 @@ export interface FileRouteTypes {
     | '/_authenticated/trocar-senha'
     | '/_authenticated/biblioteca/arquivos'
     | '/_authenticated/biblioteca/catalogo-estampas'
+    | '/_authenticated/biblioteca/conferencia'
     | '/_authenticated/biblioteca/cores'
     | '/_authenticated/biblioteca/estampas'
     | '/_authenticated/biblioteca/marca'
@@ -379,6 +392,13 @@ declare module '@tanstack/react-router' {
       path: '/biblioteca/catalogo-estampas'
       fullPath: '/biblioteca/catalogo-estampas'
       preLoaderRoute: typeof AuthenticatedBibliotecaCatalogoEstampasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/biblioteca/conferencia': {
+      id: '/_authenticated/biblioteca/conferencia'
+      path: '/biblioteca/conferencia'
+      fullPath: '/biblioteca/conferencia'
+      preLoaderRoute: typeof AuthenticatedBibliotecaConferenciaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/biblioteca/cores': {
@@ -495,6 +515,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTrocarSenhaRoute: typeof AuthenticatedTrocarSenhaRoute
   AuthenticatedBibliotecaArquivosRoute: typeof AuthenticatedBibliotecaArquivosRoute
   AuthenticatedBibliotecaCatalogoEstampasRoute: typeof AuthenticatedBibliotecaCatalogoEstampasRoute
+  AuthenticatedBibliotecaConferenciaRoute: typeof AuthenticatedBibliotecaConferenciaRoute
   AuthenticatedBibliotecaCoresRoute: typeof AuthenticatedBibliotecaCoresRoute
   AuthenticatedBibliotecaEstampasRoute: typeof AuthenticatedBibliotecaEstampasRoute
   AuthenticatedBibliotecaMarcaRoute: typeof AuthenticatedBibliotecaMarcaRoute
@@ -518,6 +539,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBibliotecaArquivosRoute: AuthenticatedBibliotecaArquivosRoute,
   AuthenticatedBibliotecaCatalogoEstampasRoute:
     AuthenticatedBibliotecaCatalogoEstampasRoute,
+  AuthenticatedBibliotecaConferenciaRoute:
+    AuthenticatedBibliotecaConferenciaRoute,
   AuthenticatedBibliotecaCoresRoute: AuthenticatedBibliotecaCoresRoute,
   AuthenticatedBibliotecaEstampasRoute: AuthenticatedBibliotecaEstampasRoute,
   AuthenticatedBibliotecaMarcaRoute: AuthenticatedBibliotecaMarcaRoute,
