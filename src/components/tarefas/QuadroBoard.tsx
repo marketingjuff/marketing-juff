@@ -186,7 +186,11 @@ export function QuadroBoard({
         if (soMeus && c.responsavel_id !== meuId && !c.membros.includes(meuId)) return false;
         return true;
       })
-      .sort((a, b) => pesoTopo(b, etiquetas) - pesoTopo(a, etiquetas));
+      .sort((a, b) => {
+        const prioridadeEtiqueta = pesoTopo(b, etiquetas) - pesoTopo(a, etiquetas);
+        if (prioridadeEtiqueta) return prioridadeEtiqueta;
+        return Number(estaAtrasado(b)) - Number(estaAtrasado(a));
+      });
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
