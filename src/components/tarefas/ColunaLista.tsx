@@ -155,6 +155,20 @@ export function ColunaLista({
           </h3>
         )}
         <span className="rounded-full px-1.5 text-xs tabular-nums text-muted-foreground">{cards.length}</span>
+        {editable ? (
+          <button
+            type="button"
+            aria-label="Adicionar card no topo"
+            title="Adicionar card no topo"
+            className="rounded-md p-0.5 text-muted-foreground/70 transition-colors hover:bg-secondary hover:text-foreground"
+            onClick={() => {
+              setNoTopo(true);
+              setAdicionando(true);
+            }}
+          >
+            <Plus className="size-3.5" />
+          </button>
+        ) : null}
         {estruturar ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
