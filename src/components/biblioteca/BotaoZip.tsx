@@ -5,7 +5,8 @@ import { FolderArchive, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { coresQueryOptions, medidasQueryOptions, nomeCurto, produtosQueryOptions } from "@/lib/biblioteca";
+import { coresQueryOptions, medidasQueryOptions, nomeCurto, produtosQueryOptions, tamanhosOlistQueryOptions, type EstiloNome } from "@/lib/biblioteca";
+import { exportarXlsx } from "@/lib/biblioteca-export";
 import { paletaQueryOptions, textosQueryOptions } from "@/lib/biblioteca-marca";
 import { arquivosQueryOptions, gruposArquivoQueryOptions, baixarConteudo, nomeCompleto } from "@/lib/biblioteca-arquivos";
 import { estampaQueryOptions } from "@/lib/biblioteca-estampa";
@@ -14,7 +15,7 @@ import {
   pdfCoresCamiseta,
   pdfEstampa,
   pdfMedidasProduto,
-  pdfNomesProduto,
+  pdfNomesTodos,
   pdfPaleta,
   pdfTextos,
   type ItemZip,
@@ -45,6 +46,8 @@ export function BotaoZip({ origem }: { origem: Origem }) {
   const [coresCam, setCoresCam] = useState(false);
   const [nomes, setNomes] = useState<Set<string>>(new Set());
   const [medidas, setMedidas] = useState<Set<string>>(new Set());
+  const [formato, setFormato] = useState<"pdf" | "xlsx">("pdf");
+  const [estilo, setEstilo] = useState<EstiloNome>("fantasia");
 
   async function abrir() {
     const lista = await qc.ensureQueryData(produtosQueryOptions).catch(() => []);
@@ -64,11 +67,27 @@ export function BotaoZip({ origem }: { origem: Origem }) {
   async function gerar() {
     setGerando(true);
     try {
+      if (formato === "xlsx") {
+        const marcados = produtos.filter((p) => nomes.has(p.id));
+        if (!marcados.length) {
+          toast.error("Marque ao menos um produto em Nomes oficiais.");
+          return;
+        }
+        const [coresX, tamX] = await Promise.all([
+          qc.ensureQueryData(coresQueryOptions),
+          qc.ensureQueryData(tamanhosOlistQueryOptions),
+        ]);
+        await exportarXlsx(marcados, coresX, estilo, tamX);
+        setAberto(false);
+        toast.success("Planilha gerada.");
+        return;
+      }
       const itens: ItemZip[] = [];
-      const [cores, pal, txt] = await Promise.all([
+      const [cores, pal, txt, tamanhosOlist] = await Promise.all([
         coresCam || nomes.size ? qc.ensureQueryData(coresQueryOptions) : Promise.resolve([]),
         paleta ? qc.ensureQueryData(paletaQueryOptions) : Promise.resolve([]),
         textos ? qc.ensureQueryData(textosQueryOptions) : Promise.resolve([]),
+        qc.ensureQueryData(tamanhosOlistQueryOptions),
       ]);
       if (paleta) itens.push({ nomeArquivo: "Marca/Paleta manual de marca.pdf", blob: pdfPaleta(pal) });
       if (textos) itens.push({ nomeArquivo: "Marca/Frases e textos.pdf", blob: pdfTextos(txt) });
@@ -77,8 +96,13 @@ export function BotaoZip({ origem }: { origem: Origem }) {
         const est = await qc.ensureQueryData(estampaQueryOptions);
         itens.push({ nomeArquivo: "Marca/Cores de estampa.pdf", blob: pdfEstampa(est) });
       }
-      for (const p of produtos) {
-        if (nomes.has(p.id)) itens.push({ nomeArquivo: `Produtos/Nomes ${nomeCurto(p)}.pdf`, blob: pdfNomesProduto(p, cores) });
+      const marcados = produtos.filter((p) => nomes.has(p.id));
+      if (marcados.length) {
+        const rotulo = estilo === "olist" ? "Olist" : "fantasia";
+        itens.push({
+          nomeArquivo: `Produtos/Nomes de produto ${rotulo}.pdf`,
+          blob: pdfNomesTodos(marcados, cores, estilo, tamanhosOlist),
+        });
       }
       for (const p of produtos) {
         if (!medidas.has(p.id)) continue;
@@ -137,6 +161,27 @@ export function BotaoZip({ origem }: { origem: Origem }) {
             <DialogTitle>Exportar em ZIP</DialogTitle>
             <DialogDescription>Escolha o que entra no arquivo. Nada vira link público, o arquivo fica com você.</DialogDescription>
           </DialogHeader>
+          <div className="grid gap-3 rounded-lg border border-border bg-muted/30 p-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Formato</h3>
+              <div className="flex gap-1">
+                <Button type="button" size="sm" variant={formato === "pdf" ? "default" : "outline"} disabled={gerando} onClick={() => setFormato("pdf")}>PDF</Button>
+                <Button type="button" size="sm" variant={formato === "xlsx" ? "default" : "outline"} disabled={gerando} onClick={() => setFormato("xlsx")}>XLS</Button>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Nome do produto</h3>
+              <div className="flex flex-wrap gap-1">
+                <Button type="button" size="sm" variant={estilo === "fantasia" ? "default" : "outline"} disabled={gerando} onClick={() => setEstilo("fantasia")}>Nome fantasia</Button>
+                <Button type="button" size="sm" variant={estilo === "olist" ? "default" : "outline"} disabled={gerando} onClick={() => setEstilo("olist")}>Nome original da Olist</Button>
+              </div>
+            </div>
+          </div>
+          {formato === "xlsx" ? (
+            <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+              Em XLS sai um arquivo só, com os nomes de todos os produtos marcados. Paleta, textos, cores de estampa e arquivos da marca saem apenas em PDF.
+            </p>
+          ) : null}
           <div className="space-y-4">
             <section className="space-y-1.5">
               <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Marca</h3>
@@ -194,9 +239,9 @@ export function BotaoZip({ origem }: { origem: Origem }) {
             ) : null}
           </div>
           <DialogFooter className="items-center gap-2 sm:justify-between">
-            <span className="text-xs text-muted-foreground">{total} {total === 1 ? "arquivo" : "arquivos"}</span>
-            <Button disabled={!total || gerando} onClick={() => void gerar()} className="gap-1">
-              {gerando ? <><Loader2 className="size-4 animate-spin" /> Gerando</> : "Gerar ZIP"}
+            <span className="text-xs text-muted-foreground">{formato === "xlsx" ? `${nomes.size} ${nomes.size === 1 ? "produto" : "produtos"}` : `${total} ${total === 1 ? "arquivo" : "arquivos"}`}</span>
+            <Button disabled={(formato === "xlsx" ? !nomes.size : !total) || gerando} onClick={() => void gerar()} className="gap-1">
+              {gerando ? <><Loader2 className="size-4 animate-spin" /> Gerando</> : formato === "xlsx" ? "Gerar XLS" : "Gerar ZIP"}
             </Button>
           </DialogFooter>
         </DialogContent>

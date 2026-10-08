@@ -6,6 +6,8 @@ import {
   nomeCurto,
   ordenarTamanhos,
   type CorBiblioteca,
+  type EstiloNome,
+  type TamanhoOlist,
   type Medida,
   type ProdutoBiblioteca,
 } from "@/lib/biblioteca";
@@ -173,9 +175,14 @@ export function pdfTextos(textos: TextoMarca[]): Blob {
   return doc.output("blob");
 }
 
-export function pdfNomesProduto(p: ProdutoBiblioteca, cores: CorBiblioteca[]): Blob {
-  const variacoes = gerarVariacoes(p, cores);
-  const doc = novoDoc(nomeCurto(p), `${nomePai(p)}. ${variacoes.length} variações.`);
+export function pdfNomesProduto(
+  p: ProdutoBiblioteca,
+  cores: CorBiblioteca[],
+  estilo: EstiloNome = "fantasia",
+  tamanhosOlist: TamanhoOlist[] = [],
+): Blob {
+  const variacoes = gerarVariacoes(p, cores, estilo, tamanhosOlist);
+  const doc = novoDoc(nomeCurto(p), `${nomePai(p, estilo)}. ${variacoes.length} variações.`);
   let y = 38;
 
   doc.setFontSize(9);
@@ -189,6 +196,45 @@ export function pdfNomesProduto(p: ProdutoBiblioteca, cores: CorBiblioteca[]): B
       doc.setTextColor(0);
     }
     y += 5;
+  }
+
+  rodape(doc);
+  return doc.output("blob");
+}
+
+/** Um PDF só, com todos os produtos, cada um em página nova. */
+export function pdfNomesTodos(
+  produtos: ProdutoBiblioteca[],
+  cores: CorBiblioteca[],
+  estilo: EstiloNome = "fantasia",
+  tamanhosOlist: TamanhoOlist[] = [],
+): Blob {
+  const rotulo = estilo === "olist" ? "Nomes originais da Olist" : "Nomes fantasia";
+  const doc = novoDoc("Nomes de produto", rotulo);
+  let primeiro = true;
+
+  for (const p of produtos) {
+    if (!primeiro) doc.addPage();
+    primeiro = false;
+
+    let y = 25;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text(limparTexto(nomePai(p, estilo)), MARGEM, y);
+    y += 8;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    for (const v of gerarVariacoes(p, cores, estilo, tamanhosOlist)) {
+      y = quebra(doc, y, 6);
+      doc.text(limparTexto(v.nome), MARGEM, y);
+      if (v.categoria === "Outlet") {
+        doc.setTextColor(150);
+        doc.text("Outlet", LARGURA - MARGEM, y, { align: "right" });
+        doc.setTextColor(0);
+      }
+      y += 5;
+    }
   }
 
   rodape(doc);

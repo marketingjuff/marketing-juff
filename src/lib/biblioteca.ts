@@ -21,6 +21,9 @@ export type CorBiblioteca = {
   ativo: boolean;
 };
 
+/** Qual dos dois nomes sai na exportação. */
+export type EstiloNome = "fantasia" | "olist";
+
 export type ProdutoCor = { cor_id: string; categoria: Categoria };
 
 export type ProdutoBiblioteca = {
@@ -29,6 +32,9 @@ export type ProdutoBiblioteca = {
   tecido: string;
   usa_tecido: boolean;
   sufixo: string;
+  nome_base_olist: string;
+  tecido_olist: string;
+  sufixo_olist: string;
   usa_sufixo: boolean;
   usa_xtra: boolean;
   tamanhos_xtra: string[];
@@ -64,35 +70,52 @@ export type Variacao = {
  * hífen. O sufixo entra como pedaço próprio entre hífens, depois do tecido.
  * Produto com sufixo nunca recebe XTRA.
  */
-export function prefixoVariacao(p: ProdutoBiblioteca, tamanho?: string): string {
-  let s = p.nome_base;
-  if (p.usa_tecido && p.tecido) s += ` ${p.tecido}`;
+function pedacos(p: ProdutoBiblioteca, estilo: EstiloNome) {
+  const olist = estilo === "olist";
+  return {
+    base: (olist && p.nome_base_olist) || p.nome_base,
+    tecido: (olist && p.tecido_olist) || p.tecido,
+    sufixo: (olist && p.sufixo_olist) || p.sufixo,
+  };
+}
+
+export function prefixoVariacao(
+  p: ProdutoBiblioteca,
+  tamanho?: string,
+  estilo: EstiloNome = "fantasia",
+): string {
+  const { base, tecido, sufixo } = pedacos(p, estilo);
+  let s = base;
+  if (p.usa_tecido && tecido) s += ` ${tecido}`;
   const levaXtra =
     p.usa_xtra && !p.usa_sufixo && !!tamanho && p.tamanhos_xtra.includes(tamanho);
   if (levaXtra) s += " XTRA";
-  if (p.usa_sufixo && p.sufixo) s += ` - ${p.sufixo}`;
+  if (p.usa_sufixo && sufixo) s += ` - ${sufixo}`;
   return s;
 }
 
 /** Nome do produto pai. Nunca leva XTRA, cor nem tamanho. */
-export function nomePai(p: ProdutoBiblioteca): string {
-  let s = p.nome_base;
-  if (p.usa_tecido && p.tecido) s += ` ${p.tecido}`;
-  if (p.usa_sufixo && p.sufixo) s += ` - ${p.sufixo}`;
-  return `Juff Store - ${s}`;
+export function nomePai(p: ProdutoBiblioteca, estilo: EstiloNome = "fantasia"): string {
+  const { base, tecido, sufixo } = pedacos(p, estilo);
+  let s = base;
+  if (p.usa_tecido && tecido) s += ` ${tecido}`;
+  if (p.usa_sufixo && sufixo) s += ` - ${sufixo}`;
+  return s;
 }
 
-/** Nome exibido na lista de produtos, sem a marca da loja. */
-export function nomeCurto(p: ProdutoBiblioteca): string {
-  return p.usa_sufixo && p.sufixo ? `${p.nome_base} ${p.sufixo}` : p.nome_base;
+/** Nome exibido na lista de produtos, sem tecido. */
+export function nomeCurto(p: ProdutoBiblioteca, estilo: EstiloNome = "fantasia"): string {
+  const { base, sufixo } = pedacos(p, estilo);
+  return p.usa_sufixo && sufixo ? `${base} ${sufixo}` : base;
 }
 
 export function nomeOficial(
   p: ProdutoBiblioteca,
   corOlist: string,
   tamanho: string,
+  estilo: EstiloNome = "fantasia",
 ): string {
-  return `${prefixoVariacao(p, tamanho)} - ${corOlist} - ${tamanho}`;
+  return `${prefixoVariacao(p, tamanho, estilo)} - ${corOlist} - ${tamanho}`;
 }
 
 export function ordenarTamanhos(lista: string[]): string[] {
@@ -107,6 +130,8 @@ export function ordenarTamanhos(lista: string[]): string[] {
 export function gerarVariacoes(
   p: ProdutoBiblioteca,
   cores: CorBiblioteca[],
+  estilo: EstiloNome = "fantasia",
+  tamanhosOlist: TamanhoOlist[] = [],
 ): Variacao[] {
   const porId = new Map(cores.map((c) => [c.id, c]));
   const tamanhos = ordenarTamanhos(p.tamanhos);
@@ -118,8 +143,10 @@ export function gerarVariacoes(
   const out: Variacao[] = [];
   for (const m of marcadas) {
     for (const t of tamanhos) {
+      const corTexto = estilo === "olist" ? m.cor.nome_olist || m.cor.nome : m.cor.nome;
+      const tamTexto = estilo === "olist" ? tamanhoOlist(t, tamanhosOlist) : t;
       out.push({
-        nome: nomeOficial(p, m.cor.nome_olist, t),
+        nome: `${prefixoVariacao(p, t, estilo)} - ${corTexto} - ${tamTexto}`,
         cor: m.cor.nome,
         cor_olist: m.cor.nome_olist,
         tamanho: t,
@@ -176,7 +203,7 @@ export const produtosQueryOptions = queryOptions({
     const { data, error } = await supabase
       .from("biblioteca_produtos")
       .select(
-        "id, nome_base, tecido, usa_tecido, sufixo, usa_sufixo, usa_xtra, tamanhos_xtra, tamanhos, pontos, posicao, ativo, biblioteca_produto_cores(cor_id, categoria)",
+        "id, nome_base, tecido, usa_tecido, sufixo, usa_sufixo, nome_base_olist, tecido_olist, sufixo_olist, usa_xtra, tamanhos_xtra, tamanhos, pontos, posicao, ativo, biblioteca_produto_cores(cor_id, categoria)",
       )
       .order("posicao", { ascending: true });
     if (error) throw error;
@@ -187,6 +214,9 @@ export const produtosQueryOptions = queryOptions({
       usa_tecido: l.usa_tecido,
       sufixo: l.sufixo,
       usa_sufixo: l.usa_sufixo,
+      nome_base_olist: l.nome_base_olist ?? "",
+      tecido_olist: l.tecido_olist ?? "",
+      sufixo_olist: l.sufixo_olist ?? "",
       usa_xtra: l.usa_xtra,
       tamanhos_xtra: l.tamanhos_xtra ?? [],
       tamanhos: l.tamanhos ?? [],
@@ -217,6 +247,33 @@ export function medidasQueryOptions(produtoId: string) {
   });
 }
 
+export type TamanhoOlist = { tamanho: string; nome_olist: string };
+
+export const tamanhosOlistQueryOptions = queryOptions({
+  queryKey: ["biblioteca", "tamanhos-olist"] as const,
+  staleTime: 5 * 60 * 1000,
+  refetchOnWindowFocus: false,
+  queryFn: async (): Promise<TamanhoOlist[]> => {
+    const { data, error } = await supabase
+      .from("biblioteca_tamanhos_olist")
+      .select("tamanho, nome_olist");
+    if (error) throw error;
+    return (data ?? []) as TamanhoOlist[];
+  },
+});
+
+export async function salvarTamanhoOlist(tamanho: string, nomeOlist: string) {
+  const { error } = await supabase
+    .from("biblioteca_tamanhos_olist")
+    .upsert({ tamanho, nome_olist: nomeOlist });
+  if (error) throw error;
+}
+
+/** Traduz o tamanho para o nome da Olist. Sem tradução cadastrada, devolve o próprio. */
+export function tamanhoOlist(t: string, lista: TamanhoOlist[]): string {
+  return lista.find((x) => x.tamanho === t)?.nome_olist || t;
+}
+
 // ---------------- Gravações ----------------
 
 /** Grava só os campos que mudaram na ficha do produto. */
@@ -230,6 +287,9 @@ export async function salvarProduto(
       | "usa_tecido"
       | "sufixo"
       | "usa_sufixo"
+      | "nome_base_olist"
+      | "tecido_olist"
+      | "sufixo_olist"
       | "usa_xtra"
       | "tamanhos_xtra"
       | "tamanhos"

@@ -222,6 +222,7 @@ export const NAVIGATION: MasterTab[] = [
     subTabs: [
       { key: "produtos", label: "Produtos", to: "/biblioteca/produtos", permission: "biblioteca.produtos" },
       { key: "medidas", label: "Medidas", to: "/biblioteca/medidas", permission: "biblioteca.produtos" },
+      { key: "conferencia", label: "Conferência", to: "/biblioteca/conferencia", permission: "biblioteca.produtos" },
       { key: "cores", label: "Cores", to: "/biblioteca/cores", permission: "biblioteca.marca" },
       { key: "textos", label: "Textos", to: "/biblioteca/textos", permission: "biblioteca.marca" },
       { key: "arquivos", label: "Arquivos", to: "/biblioteca/arquivos", permission: "biblioteca.arquivos" },
