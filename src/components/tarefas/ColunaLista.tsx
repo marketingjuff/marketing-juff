@@ -75,7 +75,7 @@ export function ColunaLista({
   podeArrastarCard: (c: Card) => boolean;
   dragDisabled: boolean;
   onAbrirCard: (id: string) => void;
-  onAddCard: (titulo: string) => void;
+  onAddCard: (titulo: string, noTopo: boolean) => void;
   onRenomear: (nome: string) => void;
   onToggleConclui: () => void;
   onArquivar: () => void;
@@ -93,6 +93,7 @@ export function ColunaLista({
   const [nome, setNome] = useState(coluna.nome);
   const [adicionando, setAdicionando] = useState(false);
   const [novo, setNovo] = useState("");
+  const [noTopo, setNoTopo] = useState(false);
 
   function confirmarNome() {
     setEditando(false);
