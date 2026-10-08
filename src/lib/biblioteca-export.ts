@@ -1,57 +1,76 @@
 import {
-  ORDEM_TAMANHOS,
   gerarVariacoes,
   nomePai,
   nomeCurto,
   ordenarTamanhos,
+  tamanhoOlist,
   type CorBiblioteca,
+  type EstiloNome,
   type ProdutoBiblioteca,
+  type TamanhoOlist,
 } from "@/lib/biblioteca";
 import { baixarXlsx, type Aba } from "@/lib/xlsx-simples";
 
 /**
- * Aba 1, uma linha por variação, com o nome oficial e a categoria.
- * Aba 2, uma linha por produto e cor, com uma coluna por tamanho marcada com X.
+ * Aba 1, uma coluna só com o nome completo de cada variação.
+ * Aba 2, uma linha por produto e cor, com os tamanhos existentes em sequência.
  */
-export function montarAbas(produtos: ProdutoBiblioteca[], cores: CorBiblioteca[]): Aba[] {
-  const linhas1: (string | null)[][] = [["NOME OFICIAL DO PRODUTO", "CATEGORIA"]];
-  const linhas2: (string | null)[][] = [
-    ["PRODUTO", "PRODUTO E-COM", "COR", "CATEGORIA", ...ORDEM_TAMANHOS],
-  ];
+export function montarAbas(
+  produtos: ProdutoBiblioteca[],
+  cores: CorBiblioteca[],
+  estilo: EstiloNome = "fantasia",
+  tamanhosOlist: TamanhoOlist[] = [],
+): Aba[] {
+  const linhas1: (string | null)[][] = [];
+  const linhas2: (string | null)[][] = [];
 
   for (const p of produtos) {
-    const variacoes = gerarVariacoes(p, cores);
-    for (const v of variacoes) {
-      linhas1.push([v.nome, v.categoria]);
-    }
+    const variacoes = gerarVariacoes(p, cores, estilo, tamanhosOlist);
+    for (const v of variacoes) linhas1.push([v.nome]);
 
-    const tamanhos = ordenarTamanhos(p.tamanhos);
-    const porCor = new Map<string, { categoria: string; cor: string }>();
+    const tamanhos = ordenarTamanhos(p.tamanhos).map((t) =>
+      estilo === "olist" ? tamanhoOlist(t, tamanhosOlist) : t,
+    );
+    const vistas = new Set<string>();
     for (const v of variacoes) {
-      if (!porCor.has(v.cor_olist)) porCor.set(v.cor_olist, { categoria: v.categoria, cor: v.cor_olist });
-    }
-    for (const [corOlist, info] of porCor) {
-      linhas2.push([
-        nomeCurto(p),
-        nomePai(p),
-        corOlist,
-        info.categoria,
-        ...ORDEM_TAMANHOS.map((t) => (tamanhos.includes(t) ? "X" : "")),
-      ]);
+      const corTexto = estilo === "olist" ? v.cor_olist || v.cor : v.cor;
+      if (vistas.has(corTexto)) continue;
+      vistas.add(corTexto);
+      linhas2.push([`${nomePai(p, estilo)} ${corTexto}`, ...tamanhos]);
     }
   }
 
   return [
-    { nome: "NOMES OFICIAIS", linhas: linhas1 },
+    { nome: "NOMES", linhas: linhas1 },
     { nome: "RESUMO", linhas: linhas2 },
   ];
 }
 
-export async function exportarProduto(p: ProdutoBiblioteca, cores: CorBiblioteca[]) {
-  await baixarXlsx(`Juff ${nomeCurto(p)}`, montarAbas([p], cores));
+export async function exportarXlsx(
+  produtos: ProdutoBiblioteca[],
+  cores: CorBiblioteca[],
+  estilo: EstiloNome,
+  tamanhosOlist: TamanhoOlist[],
+) {
+  const sufixo = estilo === "olist" ? "nomes Olist" : "nomes fantasia";
+  await baixarXlsx(`Juff produtos ${sufixo}`, montarAbas(produtos, cores, estilo, tamanhosOlist));
 }
 
-export async function exportarTodos(produtos: ProdutoBiblioteca[], cores: CorBiblioteca[]) {
+export async function exportarProduto(
+  p: ProdutoBiblioteca,
+  cores: CorBiblioteca[],
+  estilo: EstiloNome = "fantasia",
+  tamanhosOlist: TamanhoOlist[] = [],
+) {
+  await baixarXlsx(`Juff ${nomeCurto(p)}`, montarAbas([p], cores, estilo, tamanhosOlist));
+}
+
+export async function exportarTodos(
+  produtos: ProdutoBiblioteca[],
+  cores: CorBiblioteca[],
+  estilo: EstiloNome = "fantasia",
+  tamanhosOlist: TamanhoOlist[] = [],
+) {
   const ativos = produtos.filter((p) => p.ativo);
-  await baixarXlsx("Juff produtos Olist", montarAbas(ativos, cores));
+  await exportarXlsx(ativos, cores, estilo, tamanhosOlist);
 }

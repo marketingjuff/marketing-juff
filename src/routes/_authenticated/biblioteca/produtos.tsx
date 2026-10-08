@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { BotaoZip } from "@/components/biblioteca/BotaoZip";
 import { Button } from "@/components/ui/button";
@@ -26,7 +25,6 @@ import {
   type ProdutoBiblioteca,
   type ProdutoCor,
 } from "@/lib/biblioteca";
-import { exportarProduto, exportarTodos } from "@/lib/biblioteca-export";
 
 export const Route = createFileRoute("/_authenticated/biblioteca/produtos")({
   head: () => ({
@@ -202,8 +200,6 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
 
       <Bloco titulo="Nomes oficiais" acoes={
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-1" onClick={() => void exportarProduto(p, cores)}><Download className="size-4" /> Exportar este produto</Button>
-          <Button variant="outline" size="sm" className="gap-1" onClick={() => void exportarTodos(produtos, cores)}><Download className="size-4" /> Exportar todos</Button>
           <BotaoZip origem="produtos" />
         </div>
       }>
