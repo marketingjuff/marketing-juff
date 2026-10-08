@@ -223,7 +223,7 @@ export function ColunaLista({
             className="mt-2 space-y-2"
             onSubmit={(e) => {
               e.preventDefault();
-              if (novo.trim()) onAddCard(novo.trim());
+              if (novo.trim()) onAddCard(novo.trim(), noTopo);
               setNovo("");
             }}
           >
