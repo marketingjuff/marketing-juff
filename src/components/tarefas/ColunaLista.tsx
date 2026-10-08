@@ -246,7 +246,10 @@ export function ColunaLista({
             variant="ghost"
             size="sm"
             className="mt-1 justify-start gap-1 text-muted-foreground"
-            onClick={() => setAdicionando(true)}
+            onClick={() => {
+              setNoTopo(false);
+              setAdicionando(true);
+            }}
           >
             <Plus className="size-4" /> Adicionar card
           </Button>
