@@ -541,7 +541,25 @@ export async function arquivarColuna(id: string, arquivado: boolean): Promise<vo
 
 // ---------------- cards ----------------
 
-export async function createCard(quadroId: string, colunaId: string, titulo: string): Promise<void> {
+export async function createCard(quadroId: string, colunaId: string, titulo: string, noTopo = false): Promise<void> {
+  if (noTopo) {
+    const { data: primeira } = await supabase
+      .from("tarefa_cards")
+      .select("posicao")
+      .eq("coluna_id", colunaId)
+      .order("posicao", { ascending: true })
+      .limit(1);
+    const { error } = await supabase.from("tarefa_cards").insert({
+      quadro_id: quadroId,
+      coluna_id: colunaId,
+      titulo: titulo.trim(),
+      posicao: (primeira?.[0]?.posicao ?? 0) - 1,
+      criado_por: await uid(),
+      lembrete_min: 0,
+    });
+    if (error) throw error;
+    return;
+  }
   const { data } = await supabase
     .from("tarefa_cards")
     .select("posicao")
