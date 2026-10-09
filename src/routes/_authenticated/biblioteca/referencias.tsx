@@ -30,6 +30,7 @@ import { MuralReferencias } from "@/components/biblioteca/MuralReferencias";
 import { canEdit, hasPermission, profileQueryOptions } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { baixarZip, pdfMoodboard } from "@/lib/biblioteca-pdf";
+import { baixarImagemDaWeb } from "@/lib/referencias.functions";
 import {
   LARGURA_COLUNA,
   apagarGrupoReferencia,
