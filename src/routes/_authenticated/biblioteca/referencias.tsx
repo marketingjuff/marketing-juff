@@ -476,12 +476,12 @@ function BlocoGrupo({
         sobre && "border-primary bg-primary-soft",
       )}
     >
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <div className="mb-4 flex flex-col items-center gap-2">
         {editandoNome && podeEditar ? (
           <Input
             autoFocus
             value={nome}
-            className="h-8 w-64"
+            className="h-12 w-full max-w-xl text-center text-2xl font-bold"
             onChange={(e) => setNome(e.target.value)}
             onBlur={() => {
               setEditandoNome(false);
@@ -501,16 +501,16 @@ function BlocoGrupo({
         ) : (
           <h2
             onDoubleClick={() => podeEditar && setEditandoNome(true)}
-            className="text-sm font-medium"
+            className="w-full break-words text-center text-2xl font-bold leading-snug text-foreground"
             title={podeEditar ? "Dois cliques para renomear" : undefined}
           >
             {grupo.nome}
-            <span className="ml-2 text-xs font-normal text-muted-foreground">
+            <span className="mt-1 block text-sm font-normal text-muted-foreground">
               {refs.length} {refs.length === 1 ? "referência" : "referências"}
             </span>
           </h2>
         )}
-        <div className="flex items-center gap-1">
+        <div className="flex w-full flex-wrap items-center justify-end gap-1">
           <Button
             variant="ghost"
             size="sm"
