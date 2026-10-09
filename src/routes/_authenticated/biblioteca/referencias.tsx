@@ -645,7 +645,28 @@ function Cartao({
       >
         <MolduraReferencia r={r} url={url} peca={peca} />
       </div>
+      {/* Passar o mouse já mostra o nome e a lixeira, sem precisar clicar. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center gap-1.5 rounded-b-lg border-t border-border bg-background/92 px-2 py-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+        <span className="min-w-0 truncate text-xs font-medium text-foreground">{r.nome}</span>
+        {podeEditar ? (
+          <button
+            type="button"
+            aria-label={`Apagar ${r.nome}`}
+            title="Apagar imagem"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onApagar();
+            }}
+            className="pointer-events-auto ml-auto shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Trash2 className="size-3.5" />
+          </button>
+        ) : null}
+      </div>
       {podeEditar ? (
+
         <Popover>
           <PopoverTrigger asChild>
             <button
