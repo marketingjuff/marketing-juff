@@ -214,10 +214,12 @@ export function pdfNomesTodos(
   let primeiro = true;
 
   for (const p of produtos) {
+    const comCabecalho = primeiro;
     if (!primeiro) doc.addPage();
     primeiro = false;
 
-    let y = 25;
+    // A primeira página tem título e subtítulo em cima; as outras não.
+    let y = comCabecalho ? 38 : 25;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.text(limparTexto(nomePai(p, estilo)), MARGEM, y);
