@@ -468,7 +468,22 @@ function BlocoGrupo({
         e.preventDefault();
         setSobre(false);
         onAcender();
-        onEnviar(Array.from(e.dataTransfer.files));
+        const arquivos = Array.from(e.dataTransfer.files);
+        if (arquivos.length) return onEnviar(arquivos);
+        const html = e.dataTransfer.getData("text/html");
+        const doHtml = html ? new DOMParser().parseFromString(html, "text/html").querySelector("img")?.src : "";
+        const url = doHtml || e.dataTransfer.getData("text/uri-list").split("\n")[0]?.trim() || e.dataTransfer.getData("text/plain").trim();
+        if (!url || !/^https?:\/\//.test(url)) return;
+        const t = toast.loading("Baixando imagem do site…");
+        baixarImagemDaWeb({ data: { url } })
+          .then(({ tipo, base64 }) => {
+            const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+            const ext = tipo.split("/")[1]?.replace("jpeg", "jpg").replace("svg+xml", "svg") ?? "jpg";
+            const nome = decodeURIComponent(new URL(url).pathname.split("/").pop() || "imagem").replace(/\.[a-z0-9]+$/i, "");
+            toast.dismiss(t);
+            onEnviar([new File([bytes], `${nome || "imagem"}.${ext}`, { type: tipo })]);
+          })
+          .catch(() => toast.error("Esse site não deixou baixar a imagem. Salve no computador e arraste o arquivo.", { id: t }));
       }}
       className={cn(
         "rounded-xl border bg-card p-4 transition-colors",
@@ -563,6 +578,7 @@ function BlocoGrupo({
                   >
                     <Upload className="size-5" />
                     colar, arrastar ou enviar
+                    <span className="text-[10px] opacity-80">(pode escolher várias fotos de uma vez)</span>
                     <input
                       ref={entrada}
                       type="file"
