@@ -392,3 +392,79 @@ export async function baixarZip(nomeArquivo: string, itens: ItemZip[]): Promise<
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+// ---------------- Moodboard de referências visuais ----------------
+
+/**
+ * Duas colunas de altura livre, com encaixe automático.
+ * A ordem da tela não é obrigatória aqui, quem decide é o encaixe,
+ * então o vão que sobra no pé da folha é preenchido por quem couber nele.
+ * Imagem bem deitada atravessa as duas colunas.
+ */
+export function pdfMoodboard(
+  nomeGrupo: string,
+  itens: { dataUrl: string; proporcao: number; span: number }[],
+): Blob {
+  const doc = novoDoc(`Moodboard ${nomeGrupo}`, `${itens.length} ${itens.length === 1 ? "referência" : "referências"}`);
+  const VAO_PDF = 5;
+  const TOPO_PRIMEIRA = 34;
+  const TOPO_SEGUINTE = 25;
+  const BASE = ALTURA - 20;
+  const util = LARGURA - MARGEM * 2;
+  const col = (util - VAO_PDF) / 2;
+
+  const pendentes = itens
+    .filter((i) => i.proporcao > 0 && i.dataUrl)
+    .map((i) => ({ ...i, alt: (i.span === 2 ? util : col) / i.proporcao }));
+
+  let topo = TOPO_PRIMEIRA;
+  let y: [number, number] = [topo, topo];
+
+  while (pendentes.length) {
+    const iCol = y[0] <= y[1] ? 0 : 1;
+    let escolhido = -1;
+    let maior = -1;
+
+    for (let k = 0; k < pendentes.length; k++) {
+      const p = pendentes[k]!;
+      const base = p.span === 2 ? Math.max(y[0], y[1]) : y[iCol];
+      if (base + p.alt <= BASE && p.alt > maior) {
+        maior = p.alt;
+        escolhido = k;
+      }
+    }
+
+    const folhaVazia = y[0] === topo && y[1] === topo;
+
+    if (escolhido === -1) {
+      if (folhaVazia) {
+        // Peça mais alta que a folha inteira. Entra encolhida para não travar o laço.
+        const p = pendentes.shift()!;
+        const alturaMax = BASE - topo;
+        const largura = p.span === 2 ? util : col;
+        const alt = Math.min(p.alt, alturaMax);
+        doc.addImage(p.dataUrl, "JPEG", MARGEM + (p.span === 2 ? 0 : iCol * (col + VAO_PDF)), topo, largura, alt);
+        y = [topo + alt + VAO_PDF, topo + alt + VAO_PDF];
+        continue;
+      }
+      doc.addPage();
+      topo = TOPO_SEGUINTE;
+      y = [topo, topo];
+      continue;
+    }
+
+    const p = pendentes.splice(escolhido, 1)[0]!;
+    if (p.span === 2) {
+      const yy = Math.max(y[0], y[1]);
+      doc.addImage(p.dataUrl, "JPEG", MARGEM, yy, util, p.alt);
+      y = [yy + p.alt + VAO_PDF, yy + p.alt + VAO_PDF];
+    } else {
+      const x = MARGEM + iCol * (col + VAO_PDF);
+      doc.addImage(p.dataUrl, "JPEG", x, y[iCol], col, p.alt);
+      y[iCol] = y[iCol] + p.alt + VAO_PDF;
+    }
+  }
+
+  rodape(doc);
+  return doc.output("blob");
+}

@@ -351,6 +351,13 @@
       "when": 1791484937047,
       "tag": "0049_nomes_olist",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1791552123239,
+      "tag": "0050_biblioteca_referencias",
+      "breakpoints": true
     }
   ]
 }

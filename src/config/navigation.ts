@@ -228,6 +228,7 @@ export const NAVIGATION: MasterTab[] = [
       { key: "arquivos", label: "Arquivos", to: "/biblioteca/arquivos", permission: "biblioteca.arquivos" },
       { key: "catalogo-estampas", label: "Editor de Estampas", to: "/biblioteca/catalogo-estampas", permission: "biblioteca.catalogo_estampas" },
       { key: "estampas", label: "Cores de estampa", to: "/biblioteca/estampas", permission: "biblioteca.estampa" },
+      { key: "referencias", label: "Referências visuais", to: "/biblioteca/referencias", permission: "biblioteca.arquivos" },
     ],
   },
 ];

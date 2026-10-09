@@ -23,6 +23,7 @@ import { Route as AuthenticatedBibliotecaEstampasRouteImport } from './routes/_a
 import { Route as AuthenticatedBibliotecaMarcaRouteImport } from './routes/_authenticated/biblioteca/marca'
 import { Route as AuthenticatedBibliotecaMedidasRouteImport } from './routes/_authenticated/biblioteca/medidas'
 import { Route as AuthenticatedBibliotecaProdutosRouteImport } from './routes/_authenticated/biblioteca/produtos'
+import { Route as AuthenticatedBibliotecaReferenciasRouteImport } from './routes/_authenticated/biblioteca/referencias'
 import { Route as AuthenticatedBibliotecaTextosRouteImport } from './routes/_authenticated/biblioteca/textos'
 import { Route as AuthenticatedEstrategiaAtaRouteImport } from './routes/_authenticated/estrategia/ata'
 import { Route as AuthenticatedSocialSeedingRouteImport } from './routes/_authenticated/social/seeding'
@@ -113,6 +114,12 @@ const AuthenticatedBibliotecaProdutosRoute =
     path: '/biblioteca/produtos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedBibliotecaReferenciasRoute =
+  AuthenticatedBibliotecaReferenciasRouteImport.update({
+    id: '/biblioteca/referencias',
+    path: '/biblioteca/referencias',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBibliotecaTextosRoute =
   AuthenticatedBibliotecaTextosRouteImport.update({
     id: '/biblioteca/textos',
@@ -187,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/biblioteca/marca': typeof AuthenticatedBibliotecaMarcaRoute
   '/biblioteca/medidas': typeof AuthenticatedBibliotecaMedidasRoute
   '/biblioteca/produtos': typeof AuthenticatedBibliotecaProdutosRoute
+  '/biblioteca/referencias': typeof AuthenticatedBibliotecaReferenciasRoute
   '/biblioteca/textos': typeof AuthenticatedBibliotecaTextosRoute
   '/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
   '/social/seeding': typeof AuthenticatedSocialSeedingRoute
@@ -212,6 +220,7 @@ export interface FileRoutesByTo {
   '/biblioteca/marca': typeof AuthenticatedBibliotecaMarcaRoute
   '/biblioteca/medidas': typeof AuthenticatedBibliotecaMedidasRoute
   '/biblioteca/produtos': typeof AuthenticatedBibliotecaProdutosRoute
+  '/biblioteca/referencias': typeof AuthenticatedBibliotecaReferenciasRoute
   '/biblioteca/textos': typeof AuthenticatedBibliotecaTextosRoute
   '/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
   '/social/seeding': typeof AuthenticatedSocialSeedingRoute
@@ -239,6 +248,7 @@ export interface FileRoutesById {
   '/_authenticated/biblioteca/marca': typeof AuthenticatedBibliotecaMarcaRoute
   '/_authenticated/biblioteca/medidas': typeof AuthenticatedBibliotecaMedidasRoute
   '/_authenticated/biblioteca/produtos': typeof AuthenticatedBibliotecaProdutosRoute
+  '/_authenticated/biblioteca/referencias': typeof AuthenticatedBibliotecaReferenciasRoute
   '/_authenticated/biblioteca/textos': typeof AuthenticatedBibliotecaTextosRoute
   '/_authenticated/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
   '/_authenticated/social/seeding': typeof AuthenticatedSocialSeedingRoute
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/biblioteca/marca'
     | '/biblioteca/medidas'
     | '/biblioteca/produtos'
+    | '/biblioteca/referencias'
     | '/biblioteca/textos'
     | '/estrategia/ata'
     | '/social/seeding'
@@ -291,6 +302,7 @@ export interface FileRouteTypes {
     | '/biblioteca/marca'
     | '/biblioteca/medidas'
     | '/biblioteca/produtos'
+    | '/biblioteca/referencias'
     | '/biblioteca/textos'
     | '/estrategia/ata'
     | '/social/seeding'
@@ -317,6 +329,7 @@ export interface FileRouteTypes {
     | '/_authenticated/biblioteca/marca'
     | '/_authenticated/biblioteca/medidas'
     | '/_authenticated/biblioteca/produtos'
+    | '/_authenticated/biblioteca/referencias'
     | '/_authenticated/biblioteca/textos'
     | '/_authenticated/estrategia/ata'
     | '/_authenticated/social/seeding'
@@ -436,6 +449,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBibliotecaProdutosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/biblioteca/referencias': {
+      id: '/_authenticated/biblioteca/referencias'
+      path: '/biblioteca/referencias'
+      fullPath: '/biblioteca/referencias'
+      preLoaderRoute: typeof AuthenticatedBibliotecaReferenciasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/biblioteca/textos': {
       id: '/_authenticated/biblioteca/textos'
       path: '/biblioteca/textos'
@@ -521,6 +541,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBibliotecaMarcaRoute: typeof AuthenticatedBibliotecaMarcaRoute
   AuthenticatedBibliotecaMedidasRoute: typeof AuthenticatedBibliotecaMedidasRoute
   AuthenticatedBibliotecaProdutosRoute: typeof AuthenticatedBibliotecaProdutosRoute
+  AuthenticatedBibliotecaReferenciasRoute: typeof AuthenticatedBibliotecaReferenciasRoute
   AuthenticatedBibliotecaTextosRoute: typeof AuthenticatedBibliotecaTextosRoute
   AuthenticatedEstrategiaAtaRoute: typeof AuthenticatedEstrategiaAtaRoute
   AuthenticatedSocialSeedingRoute: typeof AuthenticatedSocialSeedingRoute
@@ -546,6 +567,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBibliotecaMarcaRoute: AuthenticatedBibliotecaMarcaRoute,
   AuthenticatedBibliotecaMedidasRoute: AuthenticatedBibliotecaMedidasRoute,
   AuthenticatedBibliotecaProdutosRoute: AuthenticatedBibliotecaProdutosRoute,
+  AuthenticatedBibliotecaReferenciasRoute:
+    AuthenticatedBibliotecaReferenciasRoute,
   AuthenticatedBibliotecaTextosRoute: AuthenticatedBibliotecaTextosRoute,
   AuthenticatedEstrategiaAtaRoute: AuthenticatedEstrategiaAtaRoute,
   AuthenticatedSocialSeedingRoute: AuthenticatedSocialSeedingRoute,
