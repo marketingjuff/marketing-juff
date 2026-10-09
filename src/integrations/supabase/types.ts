@@ -846,6 +846,80 @@ export type Database = {
         }
         Relationships: []
       }
+      biblioteca_referencia_grupos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          posicao: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          posicao?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          posicao?: number
+        }
+        Relationships: []
+      }
+      biblioteca_referencias: {
+        Row: {
+          altura: number
+          ativo: boolean
+          caminho: string
+          created_at: string
+          formato: string
+          grupo_id: string
+          id: string
+          largura: number
+          nome: string
+          posicao: number
+          tamanho_bytes: number
+        }
+        Insert: {
+          altura?: number
+          ativo?: boolean
+          caminho: string
+          created_at?: string
+          formato?: string
+          grupo_id: string
+          id?: string
+          largura?: number
+          nome?: string
+          posicao?: number
+          tamanho_bytes?: number
+        }
+        Update: {
+          altura?: number
+          ativo?: boolean
+          caminho?: string
+          created_at?: string
+          formato?: string
+          grupo_id?: string
+          id?: string
+          largura?: number
+          nome?: string
+          posicao?: number
+          tamanho_bytes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_referencias_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "biblioteca_referencia_grupos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       biblioteca_tamanhos_olist: {
         Row: {
           nome_olist: string
@@ -2621,6 +2695,10 @@ export type Database = {
       }
       biblioteca_norm: { Args: { t: string }; Returns: string }
       biblioteca_proximo_codigo_combo: { Args: never; Returns: string }
+      biblioteca_referencias_reordenar: {
+        Args: { p_itens: Json }
+        Returns: undefined
+      }
       biblioteca_salvar_cores: {
         Args: { p_cores: Json; p_produto_id: string }
         Returns: undefined
