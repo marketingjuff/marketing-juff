@@ -11,9 +11,15 @@ import { paletaQueryOptions, textosQueryOptions } from "@/lib/biblioteca-marca";
 import { arquivosQueryOptions, gruposArquivoQueryOptions, baixarConteudo, nomeCompleto } from "@/lib/biblioteca-arquivos";
 import { estampaQueryOptions } from "@/lib/biblioteca-estampa";
 import {
+  gruposReferenciaQueryOptions,
+  prepararMoodboard,
+  referenciasQueryOptions,
+} from "@/lib/biblioteca-referencias";
+import {
   baixarZip,
   pdfCoresCamiseta,
   pdfEstampa,
+  pdfMoodboard,
   pdfMedidasProduto,
   pdfNomesTodos,
   pdfPaleta,
@@ -21,7 +27,7 @@ import {
   type ItemZip,
 } from "@/lib/biblioteca-pdf";
 
-type Origem = "produtos" | "medidas" | "marca" | "cores" | "textos" | "arquivos" | "estampas";
+type Origem = "produtos" | "medidas" | "marca" | "cores" | "textos" | "arquivos" | "estampas" | "referencias";
 
 function Linha({ marcado, onChange, children, disabled }: { marcado: boolean; onChange: (v: boolean) => void; children: React.ReactNode; disabled?: boolean }) {
   return (
@@ -39,6 +45,9 @@ export function BotaoZip({ origem }: { origem: Origem }) {
   const { data: produtos = [] } = useQuery({ ...produtosQueryOptions, enabled: aberto });
   const { data: gruposArq = [] } = useQuery({ ...gruposArquivoQueryOptions, enabled: aberto });
   const { data: arquivos = [] } = useQuery({ ...arquivosQueryOptions, enabled: aberto });
+  const { data: gruposRef = [] } = useQuery({ ...gruposReferenciaQueryOptions, enabled: aberto });
+  const { data: referencias = [] } = useQuery({ ...referenciasQueryOptions, enabled: aberto });
+  const [moods, setMoods] = useState<Set<string>>(new Set());
   const [arqs, setArqs] = useState<Set<string>>(new Set());
   const [estampa, setEstampa] = useState(false);
   const [paleta, setPaleta] = useState(false);
@@ -59,10 +68,11 @@ export function BotaoZip({ origem }: { origem: Origem }) {
     setMedidas(origem === "medidas" ? new Set(todos) : new Set());
     setArqs(new Set());
     setEstampa(origem === "estampas");
+    setMoods(origem === "referencias" ? new Set(gruposRef.map((g) => g.id)) : new Set());
     setAberto(true);
   }
 
-  const total = (paleta ? 1 : 0) + (textos ? 1 : 0) + (coresCam ? 1 : 0) + (estampa ? 1 : 0) + nomes.size + medidas.size + arqs.size;
+  const total = (paleta ? 1 : 0) + (textos ? 1 : 0) + (coresCam ? 1 : 0) + (estampa ? 1 : 0) + nomes.size + medidas.size + arqs.size + moods.size;
 
   async function gerar() {
     setGerando(true);
@@ -117,6 +127,16 @@ export function BotaoZip({ origem }: { origem: Origem }) {
           nomeArquivo: `Arquivos/${grupo ? grupo.nome : "Sem grupo"}/${nomeCompleto(a)}`,
           blob,
         });
+      }
+      for (const g of gruposRef) {
+        if (!moods.has(g.id)) continue;
+        const lista = referencias
+          .filter((r) => r.grupo_id === g.id && r.ativo)
+          .sort((a, b) => a.posicao - b.posicao);
+        if (!lista.length) continue;
+        const pecas = await prepararMoodboard(lista);
+        if (!pecas.length) continue;
+        itens.push({ nomeArquivo: `Referencias/Moodboard ${g.nome}.pdf`, blob: pdfMoodboard(g.nome, pecas) });
       }
       const d = new Date();
       const data = `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
@@ -200,9 +220,29 @@ export function BotaoZip({ origem }: { origem: Origem }) {
               <div className="text-sm">Tabela de medidas</div>
               <Sublista sel={medidas} setSel={setMedidas} />
             </section>
-            {gruposArq.length ? (
+            {gruposRef.length ? (
               <section className="space-y-1.5">
-                <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Arquivos da marca</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Referências visuais</h3>
+                {gruposRef.filter((g) => g.ativo).map((g) => {
+                  const quantas = referencias.filter((r) => r.grupo_id === g.id && r.ativo).length;
+                  if (!quantas) return null;
+                  return (
+                    <Linha
+                      key={g.id}
+                      disabled={gerando}
+                      marcado={moods.has(g.id)}
+                      onChange={(v) => {
+                        const n = new Set(moods);
+                        if (v) n.add(g.id); else n.delete(g.id);
+                        setMoods(n);
+                      }}
+                    >
+                      Moodboard {g.nome} <span className="text-xs text-muted-foreground">({quantas})</span>
+                    </Linha>
+                  );
+                })}
+              </section>
+            ) : null}
                 {gruposArq.map((g) => {
                   const lista = arquivos.filter((a) => a.grupo_id === g.id && a.ativo);
                   if (!lista.length) return null;
