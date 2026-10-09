@@ -472,12 +472,60 @@ function BlocoGrupo({
         const arquivos = Array.from(e.dataTransfer.files);
         if (arquivos.length) return onEnviar(arquivos);
         const html = e.dataTransfer.getData("text/html");
-        const img = html ? new DOMParser().parseFromString(html, "text/html").querySelector("img") : null;
-        const doHtml = img?.getAttribute("src") ?? "";
-        const url = doHtml || e.dataTransfer.getData("text/uri-list").split("\n")[0]?.trim() || e.dataTransfer.getData("text/plain").trim();
-        if (!url || !/^(https?:|data:image\/)/.test(url)) return;
+        const lista = e.dataTransfer.getData("text/uri-list").split(/\r?\n/).map((s) => s.trim()).filter((s) => s && !s.startsWith("#"));
+        const texto = e.dataTransfer.getData("text/plain").trim();
+        const doc = html ? new DOMParser().parseFromString(html, "text/html") : null;
+        // Endereço da página de onde veio (o Chrome manda num comentário SourceURL).
+        const pagina = html.match(/<!--\s*SourceURL:\s*(\S+)/i)?.[1] ?? lista.find((u) => /^https?:/.test(u)) ?? null;
+        const absoluto = (s: string | null | undefined) => {
+          if (!s) return null;
+          const v = s.trim();
+          if (/^data:image\//.test(v)) return v;
+          try {
+            const u = new URL(v, pagina ?? undefined);
+            return /^https?:$/.test(u.protocol) ? u.toString() : null;
+          } catch {
+            return null;
+          }
+        };
+        const candidatos: string[] = [];
+        const add = (s: string | null | undefined) => {
+          const u = absoluto(s);
+          if (!u || candidatos.includes(u)) return;
+          // Ignora "pixels" vazios de carregamento preguiçoso.
+          if (u.startsWith("data:image/gif") && u.length < 200) return;
+          candidatos.push(u);
+          try {
+            const g = new URL(u);
+            const original = g.searchParams.get("imgurl") ?? g.searchParams.get("mediaurl") ?? g.searchParams.get("url");
+            if (original && /^https?:/.test(original) && !candidatos.includes(original)) candidatos.unshift(original);
+          } catch {
+            /* nada */
+          }
+        };
+        const img = doc?.querySelector("img");
+        if (img) {
+          const srcset = img.getAttribute("srcset") ?? img.getAttribute("data-srcset");
+          if (srcset) {
+            const maior = srcset
+              .split(",")
+              .map((p) => p.trim().split(/\s+/))
+              .map(([u, w]) => ({ u, n: parseFloat(w ?? "1") || 1 }))
+              .sort((a, b) => b.n - a.n)[0]?.u;
+            add(maior);
+          }
+          add(img.getAttribute("data-src"));
+          add(img.getAttribute("data-original"));
+          add(img.getAttribute("src"));
+        }
+        lista.forEach(add);
+        add(texto);
+        if (!candidatos.length) {
+          if (html || lista.length || texto) toast.error("Não encontrei uma imagem no que foi arrastado. Salve no computador e arraste o arquivo.");
+          return;
+        }
         const t = toast.loading("Baixando imagem do site…");
-        const nomeDe = (tipo: string) => {
+        const nomeDe = (url: string, tipo: string) => {
           const ext = tipo.split("/")[1]?.replace("jpeg", "jpg").replace("svg+xml", "svg") ?? "jpg";
           let base = "imagem";
           try {
@@ -488,25 +536,45 @@ function BlocoGrupo({
           return `${base || "imagem"}.${ext}`;
         };
         // 1) O próprio navegador tenta primeiro (funciona quando o site libera). 2) Senão, o servidor busca fingindo ser o próprio site.
-        const direto = async () => {
+        const direto = async (url: string) => {
           const r = await fetch(url);
           if (!r.ok) throw new Error("falhou");
           const blob = await r.blob();
           if (!blob.type.startsWith("image/")) throw new Error("não é imagem");
-          return new File([blob], nomeDe(blob.type), { type: blob.type });
+          return new File([blob], nomeDe(url, blob.type), { type: blob.type });
         };
-        const peloServidor = async () => {
-          const { tipo, base64 } = await baixarImagemDaWeb({ data: { url } });
-          const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-          return new File([bytes], nomeDe(tipo), { type: tipo });
+        const peloServidor = async (url: string) => {
+          const res = await baixarImagemDaWeb({ data: { url, pagina } });
+          if (!res.ok) throw new Error(res.motivo);
+          const bytes = Uint8Array.from(atob(res.base64), (c) => c.charCodeAt(0));
+          return new File([bytes], nomeDe(url, res.tipo), { type: res.tipo });
         };
-        direto()
-          .catch(() => peloServidor())
+        (async () => {
+          let motivo = "";
+          for (const url of candidatos) {
+            try {
+              return await direto(url);
+            } catch {
+              /* tenta pelo servidor */
+            }
+            if (url.startsWith("data:")) continue;
+            try {
+              return await peloServidor(url);
+            } catch (err) {
+              motivo = err instanceof Error ? err.message : "";
+              console.warn("[referências] não baixou", url, motivo);
+            }
+          }
+          throw new Error(motivo);
+        })()
           .then((arquivo) => {
             toast.dismiss(t);
             onEnviar([arquivo]);
           })
-          .catch(() => toast.error("Esse site não deixou baixar a imagem. Salve no computador e arraste o arquivo.", { id: t }));
+          .catch((err) => {
+            const motivo = err instanceof Error && err.message ? ` (${err.message})` : "";
+            toast.error(`Esse site não deixou baixar a imagem${motivo}. Salve no computador e arraste o arquivo.`, { id: t });
+          });
       }}
       className={cn(
         "rounded-xl border bg-card p-4 transition-colors",
