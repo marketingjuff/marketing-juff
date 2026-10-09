@@ -243,6 +243,9 @@ export function BotaoZip({ origem }: { origem: Origem }) {
                 })}
               </section>
             ) : null}
+            {gruposArq.length ? (
+              <section className="space-y-1.5">
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Arquivos da marca</h3>
                 {gruposArq.map((g) => {
                   const lista = arquivos.filter((a) => a.grupo_id === g.id && a.ativo);
                   if (!lista.length) return null;
