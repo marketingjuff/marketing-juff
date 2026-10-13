@@ -69,6 +69,7 @@ export function ColunaLista({
 }: {
   coluna: Coluna;
   cards: Card[];
+  filtrando: boolean;
   etiquetas: Map<string, Etiqueta>;
   pessoas: Map<string, Pessoa>;
   editable: boolean;
