@@ -241,12 +241,19 @@ function ReferenciasPage() {
     const destino = sobre.startsWith("grupo-") ? sobre.slice(6) : refs.find((r) => r.id === sobre)?.grupo_id;
     if (!destino) return;
 
-    const origemLista = (porGrupo.get(ativo.grupo_id) ?? []).filter((r) => r.id !== ativo.id);
-    const destinoLista = destino === ativo.grupo_id ? origemLista : [...(porGrupo.get(destino) ?? [])];
+    const listaAtual = porGrupo.get(ativo.grupo_id) ?? [];
+    const idxAtivo = listaAtual.findIndex((r) => r.id === ativo.id);
+    const idxSobre = listaAtual.findIndex((r) => r.id === sobre);
+    const origemLista = listaAtual.filter((r) => r.id !== ativo.id);
+    const mesmoGrupo = destino === ativo.grupo_id;
+    const destinoLista = mesmoGrupo ? origemLista : [...(porGrupo.get(destino) ?? [])];
     const alvoIndice = sobre.startsWith("grupo-")
       ? destinoLista.length
       : Math.max(0, destinoLista.findIndex((r) => r.id === sobre));
-    destinoLista.splice(alvoIndice, 0, { ...ativo, grupo_id: destino });
+    // Movimento dentro do mesmo grupo para frente: o item ocupa o índice do alvo
+    // (arrayMove), não o anterior — senão cai uma casa antes de onde foi solto.
+    const deslocar = mesmoGrupo && !sobre.startsWith("grupo-") && idxSobre > idxAtivo ? 1 : 0;
+    destinoLista.splice(alvoIndice + deslocar, 0, { ...ativo, grupo_id: destino });
 
     const mudancas: { id: string; grupo_id: string; posicao: number }[] = [];
     destinoLista.forEach((r, i) => mudancas.push({ id: r.id, grupo_id: destino, posicao: i + 1 }));
