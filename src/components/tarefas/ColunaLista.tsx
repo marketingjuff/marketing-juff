@@ -50,6 +50,7 @@ function CardArrastavel({
 export function ColunaLista({
   coluna,
   cards,
+  filtrando,
   etiquetas,
   pessoas,
   editable,
@@ -68,6 +69,7 @@ export function ColunaLista({
 }: {
   coluna: Coluna;
   cards: Card[];
+  filtrando: boolean;
   etiquetas: Map<string, Etiqueta>;
   pessoas: Map<string, Pessoa>;
   editable: boolean;
@@ -181,9 +183,9 @@ export function ColunaLista({
                 <Pencil className="size-4" /> Renomear
               </DropdownMenuItem>
               {totalCards >= 2 ? (
-                <DropdownMenuItem disabled={dragDisabled} onClick={onReorganizar}>
+                <DropdownMenuItem disabled={filtrando} onClick={onReorganizar}>
                   <ArrowDownAZ className="size-4" />
-                  {dragDisabled ? "Limpe os filtros para reorganizar" : "Reorganizar cards"}
+                  {filtrando ? "Limpe os filtros para reorganizar" : "Reorganizar cards"}
                 </DropdownMenuItem>
               ) : null}
               <DropdownMenuItem onClick={onToggleConclui}>

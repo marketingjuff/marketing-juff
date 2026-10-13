@@ -460,7 +460,8 @@ export function QuadroBoard({
                   editable={editable}
                   estruturar={estruturar}
                   podeArrastarCard={(c) => podeMexerNoCard(c, role, meuId, editable)}
-                  dragDisabled={filtrando}
+                  dragDisabled={false}
+                  filtrando={filtrando}
                   onAbrirCard={setCardAberto}
                   onAddCard={(t, topo) => rodar(() => createCard(quadro.id, col.id, t, topo))}
                   onRenomear={(nome) => rodar(() => updateColuna(col.id, { nome }))}
