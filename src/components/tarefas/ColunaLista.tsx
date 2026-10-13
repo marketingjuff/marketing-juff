@@ -50,6 +50,7 @@ function CardArrastavel({
 export function ColunaLista({
   coluna,
   cards,
+  filtrando,
   etiquetas,
   pessoas,
   editable,
