@@ -87,7 +87,7 @@ export function AppShell({
             />
             <span className="min-w-0 truncate text-sm font-semibold">
               Marketing Juff
-                className="hidden font-normal text-muted-foreground xl:inline"
+              <span className="hidden font-normal text-muted-foreground xl:inline">
                 {" "}
                 — Comunicação e conteúdo
               </span>
