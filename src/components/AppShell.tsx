@@ -57,7 +57,9 @@ export function AppShell({
 
   /** Sub abas que a pessoa pode enxergar dentro da aba mestre ativa. */
   const subTabsVisiveis = (masterAtiva?.subTabs ?? []).filter(
-    (sub) => !sub.roles || (profile ? sub.roles.includes(profile.role) : false),
+    (sub) =>
+      (!sub.roles || (profile ? sub.roles.includes(profile.role) : false)) &&
+      hasPermission(profile, sub.permission),
   );
 
   /**
@@ -76,24 +78,24 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
-        <div className={cn("mx-auto flex h-14 items-center gap-4 px-4", larguraClasse)}>
-          <div className="flex min-w-0 shrink-0 items-center gap-2">
+        <div className={cn("mx-auto grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 px-3 py-2 lg:flex lg:h-14 lg:gap-4 lg:px-4 lg:py-0", larguraClasse)}>
+          <div className="flex min-w-0 items-center gap-2 lg:shrink-0">
             <img
               src={juffLogo.url}
               alt="Logotipo Juff"
               className="size-7 rounded-md object-cover"
             />
-            <span className="truncate text-sm font-semibold tracking-tight">
+            <span className="min-w-0 truncate text-sm font-semibold">
               Marketing Juff
-              <span className="hidden font-normal text-muted-foreground md:inline">
+                className="hidden font-normal text-muted-foreground xl:inline"
                 {" "}
                 — Comunicação e conteúdo
               </span>
             </span>
           </div>
 
-          <nav className="flex flex-1 justify-center overflow-x-auto">
-            <ul className="flex items-center gap-1 rounded-xl bg-secondary/60 p-1">
+          <nav aria-label="Abas principais" className="col-span-2 row-start-2 min-w-0 lg:flex lg:flex-1 lg:justify-center">
+            <ul className="grid grid-cols-2 items-center gap-1 rounded-xl bg-secondary/60 p-1 sm:grid-cols-4 lg:flex">
               {NAVIGATION.map((master) => {
                 const primeiro = master.subTabs.find(
                   (sub) =>
@@ -103,18 +105,18 @@ export function AppShell({
                 if (!primeiro) return null;
                 const IconeMaster = ICONES_MASTER[master.icone];
                 return (
-                  <li key={master.key}>
+                  <li key={master.key} className="min-w-0">
                     {primeiro ? (
                       <Link
                         to={primeiro.to}
                         {...arrastavel(primeiro.to, master.label)}
-                        className="inline-block rounded-lg px-4 py-1.5 text-xs font-semibold tracking-widest text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+                        className="flex min-h-9 items-center justify-center rounded-lg px-2 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-card hover:text-foreground lg:px-4"
                         style={masterAtiva?.key === master.key ? { background: master.cor, color: "#ffffff" } : undefined}
                         activeProps={{ className: masterAtiva?.key === master.key ? "shadow-soft" : "" }}
                         activeOptions={{ exact: false }}
                       >
-                        <span className="inline-flex items-center gap-1.5">
-                          <IconeMaster className="size-3.5" />
+                        <span className="inline-flex min-w-0 items-center gap-1.5">
+                          <IconeMaster className="size-3.5 shrink-0" />
                           {master.label}
                         </span>
                       </Link>
@@ -125,22 +127,22 @@ export function AppShell({
             </ul>
           </nav>
 
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="col-start-2 row-start-1 flex shrink-0 items-center gap-0 lg:gap-1">
             <SinoNotificacoes />
             {canOpenSettings ? (
-              <Button variant="ghost" size="sm" className="gap-2" asChild>
-                <Link to="/configuracoes">
+              <Button variant="ghost" size="sm" className="gap-2 px-2 lg:px-3" asChild>
+                <Link to="/configuracoes" aria-label="Configurações" title="Configurações">
                   <Settings className="size-4" />
-                  <span className="hidden sm:inline">Configurações</span>
+                  <span className="hidden xl:inline">Configurações</span>
                 </Link>
               </Button>
             ) : null}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2">
+                <Button variant="ghost" size="sm" className="gap-2 px-2 lg:px-3" aria-label="Minha conta" title="Minha conta">
                   <User className="size-4" />
-                  <span className="hidden max-w-[8rem] truncate lg:inline">{profile?.nome}</span>
+                  <span className="hidden max-w-[8rem] truncate xl:inline">{profile?.nome}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -160,25 +162,25 @@ export function AppShell({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="ghost" size="sm" className="gap-2" onClick={sair}>
+            <Button variant="ghost" size="sm" className="gap-2 px-2 lg:px-3" onClick={sair} aria-label="Sair" title="Sair">
               <LogOut className="size-4" />
-              <span className="hidden sm:inline">Sair</span>
+              <span className="hidden xl:inline">Sair</span>
             </Button>
           </div>
         </div>
 
         {mostrarSubTabs ? (
-          <div className={cn("mx-auto overflow-x-auto border-t border-border px-4", larguraClasse)}>
-            <ul className="flex items-center gap-1 py-2">
+          <nav aria-label="Abas da seção" className={cn("mx-auto min-w-0 border-t border-border px-3 lg:px-4", larguraClasse)}>
+            <ul className="flex flex-wrap items-center gap-1 py-2">
               {subTabsVisiveis.map((sub) => {
                 const allowed = hasPermission(profile, sub.permission);
                 if (!allowed) return null;
                 return (
-                  <li key={sub.key}>
+                  <li key={sub.key} className="min-w-0">
                     <Link
                       to={sub.to}
                       {...arrastavel(sub.to, sub.label)}
-                      className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                       activeProps={{ className: "bg-primary-soft text-foreground font-medium" }}
                     >
                       {sub.label}
@@ -187,7 +189,7 @@ export function AppShell({
                 );
               })}
             </ul>
-          </div>
+          </nav>
         ) : null}
 
 
