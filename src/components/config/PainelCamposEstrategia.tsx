@@ -10,13 +10,13 @@ import {
 } from "@/components/ui/select";
 import { IconeCampo } from "@/components/estrategia/IconeCampo";
 import {
-  FRENTES, ICONES_CAMPO, atualizarCampo, camposQueryOptions, criarCampo,
-  reordenarCampos, type Frente,
+  FRENTE_UNICA, ICONES_CAMPO, atualizarCampo, camposQueryOptions, criarCampo,
+  reordenarCampos,
 } from "@/lib/estrategia";
 
 export function PainelCamposEstrategia() {
   const qc = useQueryClient();
-  const [frente, setFrente] = useState<Frente>("store");
+  const frente = FRENTE_UNICA;
   const [novo, setNovo] = useState("");
   const { data: campos = [] } = useQuery(camposQueryOptions(frente));
   const chave = ["estrategia", "campos", frente] as const;
@@ -45,27 +45,10 @@ export function PainelCamposEstrategia() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="flex overflow-hidden rounded-lg border border-border">
-          {FRENTES.map((f) => (
-            <button
-              key={f.valor}
-              type="button"
-              onClick={() => setFrente(f.valor)}
-              className={
-                "px-3 py-1.5 text-xs font-medium transition-colors " +
-                (frente === f.valor ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")
-              }
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {ativos > 10 ? (
         <p className="rounded-lg border border-border bg-muted/40 p-2 text-xs text-muted-foreground">
-          Esta frente tem {ativos} campos ativos. A grade dos doze meses fica pesada de ler com muito campo.
+          A ata tem {ativos} campos ativos. A grade dos doze meses fica pesada de ler com muito campo.
           Desmarque os que não precisam aparecer no panorama.
         </p>
       ) : null}
