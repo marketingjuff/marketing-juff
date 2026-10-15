@@ -8,6 +8,13 @@ export const FRENTES: { valor: Frente; label: string }[] = [
   { valor: "custom", label: "Juff Custom" },
 ];
 
+/**
+ * A ata deixou de ser separada por frente. Store e Custom viraram uma coisa só.
+ * Tudo grava e lê com este valor fixo. A coluna frente continua no banco,
+ * e o que já estava gravado como custom fica parado, sem ser lido.
+ */
+export const FRENTE_UNICA: Frente = "store";
+
 export const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
@@ -288,23 +295,3 @@ export const panoramaQueryOptions = (frente: Frente, ano: number) =>
     },
     ...PADRAO,
   });
-
-/** Lembra a última frente usada, por pessoa, no próprio navegador. */
-const CHAVE_FRENTE = "juff.estrategia.frente";
-
-export function frenteSalva(): Frente {
-  try {
-    const v = localStorage.getItem(CHAVE_FRENTE);
-    return v === "custom" ? "custom" : "store";
-  } catch {
-    return "store";
-  }
-}
-
-export function salvarFrente(f: Frente): void {
-  try {
-    localStorage.setItem(CHAVE_FRENTE, f);
-  } catch {
-    // navegador sem storage, segue sem lembrar
-  }
-}

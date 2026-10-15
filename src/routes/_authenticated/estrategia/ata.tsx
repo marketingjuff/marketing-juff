@@ -11,18 +11,18 @@ import { ListaDecisoes } from "@/components/estrategia/ListaDecisoes";
 import { PanoramaAno } from "@/components/estrategia/PanoramaAno";
 import { canEdit, hasPermission, profileQueryOptions } from "@/lib/auth";
 import {
-  FRENTES, MESES, ataQueryOptions, atualizarDecisao, camposQueryOptions, criarDecisao,
-  excluirDecisao, frenteSalva, gravarAnotacoes, gravarValor, panoramaQueryOptions,
-  salvarFrente, type AtaMensal, type DecisaoEstrategia, type Frente,
+  FRENTE_UNICA, MESES, ataQueryOptions, atualizarDecisao, camposQueryOptions, criarDecisao,
+  excluirDecisao, gravarAnotacoes, gravarValor, panoramaQueryOptions,
+  type AtaMensal, type DecisaoEstrategia,
 } from "@/lib/estrategia";
 
 export const Route = createFileRoute("/_authenticated/estrategia/ata")({
   head: () => ({
     meta: [
       { title: "Ata mensal — Marketing Juff" },
-      { name: "description", content: "Decisões do mês da Juff Store e da Juff Custom." },
+      { name: "description", content: "Decisões do mês do marketing da Juff." },
       { property: "og:title", content: "Ata mensal — Marketing Juff" },
-      { property: "og:description", content: "Decisões do mês da Juff Store e da Juff Custom." },
+      { property: "og:description", content: "Decisões do mês do marketing da Juff." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
@@ -41,7 +41,7 @@ function AtaPage() {
   const hoje = new Date();
   const [ano, setAno] = useState(hoje.getFullYear());
   const [mes, setMes] = useState(hoje.getMonth() + 1);
-  const [frente, setFrente] = useState<Frente>(frenteSalva());
+  const frente = FRENTE_UNICA;
   const [panorama, setPanorama] = useState(false);
 
   const { data: campos = [] } = useQuery({ ...camposQueryOptions(frente), enabled: pode });
@@ -61,7 +61,7 @@ function AtaPage() {
   const chaveAta = ["estrategia", "ata", frente, ano, mes] as const;
   const chavePanorama = ["estrategia", "panorama", frente, ano] as const;
   const ativos = campos.filter((c) => c.ativo);
-  const contexto = `${MESES[mes - 1]} de ${ano}, ${FRENTES.find((f) => f.valor === frente)?.label}`;
+  const contexto = `${MESES[mes - 1]} de ${ano}`;
 
   function invalidar() {
     void qc.invalidateQueries({ queryKey: chaveAta });
@@ -105,21 +105,6 @@ function AtaPage() {
             <ChevronRight className="size-4" />
           </Button>
 
-          <div className="ml-auto flex overflow-hidden rounded-lg border border-border">
-            {FRENTES.map((f) => (
-              <button
-                key={f.valor}
-                type="button"
-                onClick={() => { setFrente(f.valor); salvarFrente(f.valor); }}
-                className={
-                  "px-3 py-1.5 text-xs font-medium transition-colors " +
-                  (frente === f.valor ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted")
-                }
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
         </div>
 
         {panorama ? (
