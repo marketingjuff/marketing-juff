@@ -32,7 +32,7 @@ export const PERMISSION_CATALOG: PermissionEntry[] = [
   { key: "tarefas.calendario", grupo: "Tarefas", label: "Calendário", nivelConfiguravel: false, modo: "ver" },
   { key: "tarefas.meu_dia", grupo: "Tarefas", label: "Meu dia", nivelConfiguravel: false, modo: "editar" },
 
-  { key: "estrategia.ata", "estrategia.emails", grupo: "Estratégia", label: "Ata mensal", nivelConfiguravel: true, modo: "tres" },
+  { key: "estrategia.ata", grupo: "Estratégia", label: "Ata mensal", nivelConfiguravel: true, modo: "tres" },
   { key: "estrategia.emails", grupo: "Estratégia", label: "Cronograma de e-mails", nivelConfiguravel: true, modo: "tres" },
 
   { key: "biblioteca.produtos", grupo: "Biblioteca", label: "Produtos", nivelConfiguravel: true, modo: "tres" },
