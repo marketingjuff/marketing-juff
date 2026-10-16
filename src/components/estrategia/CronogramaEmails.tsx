@@ -103,7 +103,7 @@ export function CronogramaEmails({ ano, mes, editavel }: { ano: number; mes: num
   const primeiro = `${ano}-${String(mes).padStart(2, "0")}-01`;
 
   return (
-    <div className="mt-4 rounded-xl border border-border bg-card p-4">
+    <div className="rounded-xl border border-border bg-card p-4">
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <p className="mr-auto text-base font-semibold">
           Cronograma de e-mails <span className="text-sm font-normal text-muted-foreground">({emails.length})</span>
