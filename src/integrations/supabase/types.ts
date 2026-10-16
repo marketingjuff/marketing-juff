@@ -977,6 +977,7 @@ export type Database = {
           anotacoes: string
           created_at: string
           criado_por: string | null
+          emails_doc_url: string
           frente: string
           id: string
           mes: number
@@ -987,6 +988,7 @@ export type Database = {
           anotacoes?: string
           created_at?: string
           criado_por?: string | null
+          emails_doc_url?: string
           frente: string
           id?: string
           mes: number
@@ -997,6 +999,7 @@ export type Database = {
           anotacoes?: string
           created_at?: string
           criado_por?: string | null
+          emails_doc_url?: string
           frente?: string
           id?: string
           mes?: number
@@ -1106,6 +1109,157 @@ export type Database = {
             columns: ["responsavel_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estrategia_email_pedidos: {
+        Row: {
+          ata_id: string
+          dias_evitar: string
+          extras: number
+          itens: Json
+          observacoes: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          ata_id: string
+          dias_evitar?: string
+          extras?: number
+          itens?: Json
+          observacoes?: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          ata_id?: string
+          dias_evitar?: string
+          extras?: number
+          itens?: Json
+          observacoes?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estrategia_email_pedidos_ata_id_fkey"
+            columns: ["ata_id"]
+            isOneToOne: true
+            referencedRelation: "estrategia_atas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estrategia_email_regras: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          posicao: number
+          texto: string
+          tipo_id: string | null
+          titulo: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          posicao?: number
+          texto: string
+          tipo_id?: string | null
+          titulo?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          posicao?: number
+          texto?: string
+          tipo_id?: string | null
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estrategia_email_regras_tipo_id_fkey"
+            columns: ["tipo_id"]
+            isOneToOne: false
+            referencedRelation: "estrategia_email_tipos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estrategia_email_tipos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          posicao: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          posicao?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          posicao?: number
+        }
+        Relationships: []
+      }
+      estrategia_emails: {
+        Row: {
+          ata_id: string
+          chamada: string
+          conteudo: string
+          created_at: string
+          data: string
+          id: string
+          posicao: number
+          tema: string
+          tipo_id: string | null
+        }
+        Insert: {
+          ata_id: string
+          chamada?: string
+          conteudo?: string
+          created_at?: string
+          data: string
+          id?: string
+          posicao?: number
+          tema?: string
+          tipo_id?: string | null
+        }
+        Update: {
+          ata_id?: string
+          chamada?: string
+          conteudo?: string
+          created_at?: string
+          data?: string
+          id?: string
+          posicao?: number
+          tema?: string
+          tipo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estrategia_emails_ata_id_fkey"
+            columns: ["ata_id"]
+            isOneToOne: false
+            referencedRelation: "estrategia_atas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estrategia_emails_tipo_id_fkey"
+            columns: ["tipo_id"]
+            isOneToOne: false
+            referencedRelation: "estrategia_email_tipos"
             referencedColumns: ["id"]
           },
         ]
@@ -2711,6 +2865,39 @@ export type Database = {
       estrategia_ata_id: {
         Args: { _ano: number; _frente: string; _mes: number }
         Returns: string
+      }
+      estrategia_email_pedido_gravar: {
+        Args: {
+          _ano: number
+          _dias_evitar: string
+          _extras: number
+          _itens: Json
+          _mes: number
+          _observacoes: string
+          _total: number
+        }
+        Returns: undefined
+      }
+      estrategia_email_reordenar: {
+        Args: { _ids: string[]; _tabela: string }
+        Returns: undefined
+      }
+      estrategia_emails_aplicar: {
+        Args: {
+          _ano: number
+          _linhas: Json
+          _mes: number
+          _substituir: boolean
+        }
+        Returns: number
+      }
+      estrategia_emails_ata_id: {
+        Args: { _ano: number; _mes: number }
+        Returns: string
+      }
+      estrategia_emails_doc_url: {
+        Args: { _ano: number; _mes: number; _url: string }
+        Returns: undefined
       }
       estrategia_gravar_anotacoes: {
         Args: { _ano: number; _frente: string; _mes: number; _texto: string }

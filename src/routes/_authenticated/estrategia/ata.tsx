@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CampoAta } from "@/components/estrategia/CampoAta";
 import { ListaDecisoes } from "@/components/estrategia/ListaDecisoes";
 import { PanoramaAno } from "@/components/estrategia/PanoramaAno";
+import { CronogramaEmails } from "@/components/estrategia/CronogramaEmails";
 import { canEdit, hasPermission, profileQueryOptions } from "@/lib/auth";
 import {
   FRENTE_UNICA, MESES, ataQueryOptions, atualizarDecisao, camposQueryOptions, criarDecisao,
@@ -36,6 +37,8 @@ function AtaPage() {
   const pode = hasPermission(profile, "estrategia.ata");
   const gestao = profile?.role === "admin" || profile?.role === "gestor";
   const editavel = canEdit(profile, "estrategia.ata") && gestao;
+  const veEmails = hasPermission(profile, "estrategia.emails");
+  const editaEmails = canEdit(profile, "estrategia.emails") && gestao;
   const qc = useQueryClient();
 
   const hoje = new Date();
@@ -200,6 +203,7 @@ function AtaPage() {
             </div>
           </div>
         )}
+        {!panorama && veEmails ? <CronogramaEmails ano={ano} mes={mes} editavel={editaEmails} /> : null}
       </div>
     </AppShell>
   );
