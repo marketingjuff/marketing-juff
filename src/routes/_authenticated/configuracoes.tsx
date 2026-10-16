@@ -616,6 +616,7 @@ function UserRow({
             >
               <KeyRound className="size-4" />
             </Button>
+            {user.role !== "admin" ? (
             <Button
               type="button"
               variant="outline"
@@ -641,6 +642,7 @@ function UserRow({
             >
               <Copy className="size-4" /> Copiar acesso
             </Button>
+            ) : null}
           </div>
         </div>
         <div className="space-y-1.5 sm:col-span-2">
