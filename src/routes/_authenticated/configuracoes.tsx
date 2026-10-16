@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { PainelCustoSeeding, PainelImportarSeeding } from "@/components/config/PainelSeeding";
 import {
   KeyRound,
+  Copy,
   LayoutGrid,
   Library,
   Link2,
@@ -614,6 +615,31 @@ function UserRow({
               aria-label="Redefinir senha"
             >
               <KeyRound className="size-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-1.5"
+              disabled={busy}
+              title="Cria uma senha temporária e copia link, e-mail e senha"
+              onClick={() =>
+                run(async () => {
+                  const letras = "abcdefghjkmnpqrstuvwxyz23456789";
+                  const aleatorio = crypto.getRandomValues(new Uint32Array(10));
+                  const temp =
+                    novaSenha.length >= 8
+                      ? novaSenha
+                      : Array.from(aleatorio, (n) => letras[n % letras.length]).join("");
+                  await onSetPassword(temp);
+                  const texto = `Olá, ${user.nome}! Seu acesso ao Marketing Juff:\n\nLink: ${window.location.origin}/auth\nE-mail: ${user.email}\nSenha temporária: ${temp}\n\nAo entrar, o sistema vai pedir para você criar uma nova senha.`;
+                  await navigator.clipboard.writeText(texto);
+                  setNovaSenha("");
+                  toast.success("Acesso copiado — é só colar e enviar");
+                })
+              }
+            >
+              <Copy className="size-4" /> Copiar acesso
             </Button>
           </div>
         </div>
