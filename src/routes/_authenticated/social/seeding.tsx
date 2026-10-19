@@ -65,6 +65,7 @@ import {
   reais,
   remessasQueryOptions,
   somarMeses,
+  totalPecas,
   type Marca,
   type Peca,
   type Remessa,
@@ -94,7 +95,7 @@ const ICONES: Record<Marca, { Icone: ComponentType<{ className?: string }>; text
   devolvida: { Icone: PackageCheck, texto: "Devolvida", rotulo: "Devolvida" },
 };
 
-const GRID = "grid grid-cols-[minmax(9rem,1.6fr)_minmax(8rem,1.4fr)_minmax(7rem,1fr)_4.5rem_minmax(8rem,1.2fr)_repeat(6,1.9rem)_minmax(8rem,1.6fr)_1.9rem] items-center gap-x-3";
+const GRID = "grid grid-cols-[minmax(9rem,1.6fr)_minmax(8rem,1.4fr)_minmax(7rem,1fr)_4.5rem_3rem_minmax(8rem,1.2fr)_repeat(6,1.9rem)_minmax(8rem,1.6fr)_1.9rem] items-center gap-x-3";
 
 function SeedingPage() {
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
@@ -309,6 +310,7 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
   useEffect(() => { if (focoInicial) setAberto(true); }, [focoInicial]);
 
   const temCabecalho = !!r.observacao?.trim();
+  const total = totalPecas(r.pecas);
 
   return (
     <section id={`remessa-${r.id}`} className="rounded-xl border border-border bg-card shadow-soft">
@@ -330,7 +332,7 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
           <span className="font-semibold">{nomeMes(r.mes)}</span>
           <span className="rounded-md bg-primary-soft px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider">{r.motivo}</span>
           <span className="text-xs text-muted-foreground tabular-nums">
-            {r.pecas.length} {r.pecas.length === 1 ? "peça" : "peças"} · {reais(r.pecas.length * custo)}
+            {total} {total === 1 ? "peça" : "peças"} · {reais(total * custo)}
           </span>
         </button>
         {editavel ? (
@@ -361,9 +363,9 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
       {aberto ? (
         <>
           <div className="overflow-x-auto border-t border-border px-3 pb-2 text-[14px] leading-[1.35]">
-          <div className="min-w-[68rem]">
+          <div className="min-w-[71rem]">
             <div className={cn(GRID, "py-1.5 text-[11px] text-muted-foreground")}>
-              <span>Modelo</span><span>Estampa</span><span>Cor</span><span>Tamanho</span><span>Pessoa</span>
+              <span>Modelo</span><span>Estampa</span><span>Cor</span><span>Tamanho</span><span>Qtd</span><span>Pessoa</span>
               {MARCAS.map((m) => {
                 const { Icone, texto } = ICONES[m];
                 return <span key={m} title={texto} className="flex justify-center"><Icone className="size-3.5" /></span>;
@@ -400,7 +402,7 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
           <AlertDialogHeader>
             <AlertDialogTitle>Apagar remessa?</AlertDialogTitle>
             <AlertDialogDescription>
-              {nomeMes(r.mes)} · {r.motivo}. {r.pecas.length > 0 ? `${r.pecas.length} ${r.pecas.length === 1 ? "peça será apagada" : "peças serão apagadas"} junto.` : "Ela não tem peças."}
+              {nomeMes(r.mes)} · {r.motivo}. {total > 0 ? `${total} ${total === 1 ? "peça será apagada" : "peças serão apagadas"} junto.` : "Ela não tem peças."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -463,6 +465,15 @@ function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho }: {
   const vazia = !peca;
   const tamRef = useRef<HTMLSelectElement>(null);
   useEffect(() => { if (focarTamanho) tamRef.current?.focus(); }, [focarTamanho]);
+  const [qtd, setQtd] = useState(peca?.quantidade ?? 1);
+  useEffect(() => { if (peca) setQtd(peca.quantidade ?? 1); }, [peca?.quantidade]);
+
+  // Linha nova: segura a quantidade digitada e manda junto no primeiro campo salvo.
+  function gravar(patch: Partial<Peca>) {
+    if (!vazia) return onSalvar(patch);
+    onSalvar(qtd > 1 ? { ...patch, quantidade: qtd } : patch);
+    setQtd(1);
+  }
 
   const opProdutos = useMemo(() => produtos.filter((x) => x.ativo).map((x) => ({ id: x.id, nome: nomePai(x) })), [produtos]);
   const opCores = useMemo(() => cores.filter((x) => x.ativo).map((x) => ({ id: x.id, nome: x.nome, hex: x.hex })), [cores]);
