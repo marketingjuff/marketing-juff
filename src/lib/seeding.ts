@@ -191,6 +191,15 @@ export async function criarRemessa(qc: QueryClient, de: string, ate: string, mes
   return data.id;
 }
 
+export async function alterarRemessa(qc: QueryClient, de: string, ate: string, id: string, patch: { observacao?: string | null; motivo?: string }) {
+  const desfaz = mexerRemessas(qc, de, ate, (rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  const { error } = await supabase.from("social_seeding_remessas").update(patch).eq("id", id);
+  if (error) {
+    desfaz();
+    return falhou(error);
+  }
+}
+
 export async function apagarRemessa(qc: QueryClient, de: string, ate: string, id: string) {
   const desfaz = mexerRemessas(qc, de, ate, (rs) => rs.filter((r) => r.id !== id));
   const { error } = await supabase.from("social_seeding_remessas").delete().eq("id", id);
