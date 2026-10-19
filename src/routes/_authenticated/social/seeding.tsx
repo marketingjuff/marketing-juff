@@ -345,14 +345,15 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
       </header>
 
       {aberto ? (
-        <div className="px-3 pt-2">
-          <CampoCabecalho
-            valor={r.observacao ?? ""}
-            editavel={editavel}
-            onGravar={(v) => { if (v !== (r.observacao ?? "")) void alterarRemessa(qc, de, ate, r.id, { observacao: v || null }); }}
-          />
-        </div>
-        <div className="overflow-x-auto border-t border-border px-3 pb-2 text-[14px] leading-[1.35]">
+        <>
+          <div className="px-3 pt-2">
+            <CampoCabecalho
+              valor={r.observacao ?? ""}
+              editavel={editavel}
+              onGravar={(v) => { if (v !== (r.observacao ?? "")) void alterarRemessa(qc, de, ate, r.id, { observacao: v || null }); }}
+            />
+          </div>
+          <div className="overflow-x-auto border-t border-border px-3 pb-2 text-[14px] leading-[1.35]">
           <div className="min-w-[68rem]">
             <div className={cn(GRID, "py-1.5 text-[11px] text-muted-foreground")}>
               <span>Modelo</span><span>Estampa</span><span>Cor</span><span>Tamanho</span><span>Pessoa</span>
