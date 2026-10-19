@@ -26,7 +26,7 @@ async def main():
   await composer.fill('   ')
   inserts=[]
   async def remember(response):
-   if 'rest/v1/tarefa_comentarios' in response.url and response.request.method=='POST':
+   if 'tarefa_comentarios' in response.url and response.request.method=='POST':
     inserts.append(response.request)
   page.on('response',remember)
   assert await page.get_by_role('button',name='Comentar',exact=True).is_disabled()
