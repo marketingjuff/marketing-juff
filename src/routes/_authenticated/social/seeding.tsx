@@ -314,7 +314,7 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
     <section id={`remessa-${r.id}`} className="rounded-xl border border-border bg-card shadow-soft">
       {editavel || temCabecalho ? (
         <div className="px-3 pt-2.5">
-          <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary-soft/70 px-2.5 py-1.5">
+          <div className="flex items-start gap-2 rounded-lg bg-primary-soft px-3 py-1.5">
             <span aria-hidden className="mt-[7px] size-1.5 shrink-0 rounded-full bg-primary" />
             <CampoCabecalho
               valor={r.observacao ?? ""}
