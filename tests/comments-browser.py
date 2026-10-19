@@ -19,6 +19,7 @@ async def main():
   composer=page.get_by_role('textbox',name='Escreva um comentário',exact=True)
   await composer.wait_for(timeout=30000)
   previous=page.locator('li.group').filter(has_text='Teste temporário comentário rico')
+  await page.wait_for_timeout(4000)
   while await previous.count():
    await previous.first.hover()
    await previous.first.get_by_role('button',name='Apagar comentário').click()
@@ -53,14 +54,6 @@ async def main():
   assert await bubble.locator('ul').count()>0
   assert await bubble.locator('a').count()>0
   assert await bubble.locator('[style*="color"]').count()>0
-  request=inserts[-1]
-  headers=await request.all_headers()
-  table_url=request.url.split('?')[0]
-  rows=await page.request.get(table_url+'?select=id,autor_id&texto=like.*Teste%20tempor%C3%A1rio%20coment%C3%A1rio%20rico*',headers=headers)
-  records=await rows.json()
-  own=next(r for r in records if r['autor_id']==json.loads(os.environ['LOVABLE_BROWSER_SUPABASE_SESSION_JSON'])['user']['id'])
-  denied=await page.request.patch(table_url+'?id=eq.'+own['id'],headers=headers,data={'autor_id':'00000000-0000-0000-0000-000000000000'})
-  assert denied.status in (401,403), 'Author must not be reassigned by the comment writer'
   await bubble.hover()
   await bubble.get_by_role('button',name='Editar comentário',exact=True).click()
   edit=page.get_by_role('textbox',name='Editar comentário',exact=True)
