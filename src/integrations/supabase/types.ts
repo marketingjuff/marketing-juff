@@ -1704,6 +1704,7 @@ export type Database = {
           produto_id: string | null
           produto_nome: string | null
           produzida: boolean
+          quantidade: number
           remessa_id: string
           retorna: boolean
           tamanho: string | null
@@ -1726,6 +1727,7 @@ export type Database = {
           produto_id?: string | null
           produto_nome?: string | null
           produzida?: boolean
+          quantidade?: number
           remessa_id: string
           retorna?: boolean
           tamanho?: string | null
@@ -1748,6 +1750,7 @@ export type Database = {
           produto_id?: string | null
           produto_nome?: string | null
           produzida?: boolean
+          quantidade?: number
           remessa_id?: string
           retorna?: boolean
           tamanho?: string | null

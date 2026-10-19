@@ -65,6 +65,7 @@ import {
   reais,
   remessasQueryOptions,
   somarMeses,
+  totalPecas,
   type Marca,
   type Peca,
   type Remessa,
@@ -94,7 +95,7 @@ const ICONES: Record<Marca, { Icone: ComponentType<{ className?: string }>; text
   devolvida: { Icone: PackageCheck, texto: "Devolvida", rotulo: "Devolvida" },
 };
 
-const GRID = "grid grid-cols-[minmax(9rem,1.6fr)_minmax(8rem,1.4fr)_minmax(7rem,1fr)_4.5rem_minmax(8rem,1.2fr)_repeat(6,1.9rem)_minmax(8rem,1.6fr)_1.9rem] items-center gap-x-3";
+const GRID = "grid grid-cols-[minmax(9rem,1.6fr)_minmax(8rem,1.4fr)_minmax(7rem,1fr)_4.5rem_3rem_minmax(8rem,1.2fr)_repeat(6,1.9rem)_minmax(8rem,1.6fr)_1.9rem] items-center gap-x-3";
 
 function SeedingPage() {
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
@@ -309,6 +310,7 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
   useEffect(() => { if (focoInicial) setAberto(true); }, [focoInicial]);
 
   const temCabecalho = !!r.observacao?.trim();
+  const total = totalPecas(r.pecas);
 
   return (
     <section id={`remessa-${r.id}`} className="rounded-xl border border-border bg-card shadow-soft">
@@ -330,7 +332,7 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
           <span className="font-semibold">{nomeMes(r.mes)}</span>
           <span className="rounded-md bg-primary-soft px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider">{r.motivo}</span>
           <span className="text-xs text-muted-foreground tabular-nums">
-            {r.pecas.length} {r.pecas.length === 1 ? "peça" : "peças"} · {reais(r.pecas.length * custo)}
+            {total} {total === 1 ? "peça" : "peças"} · {reais(total * custo)}
           </span>
         </button>
         {editavel ? (
@@ -361,9 +363,9 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
       {aberto ? (
         <>
           <div className="overflow-x-auto border-t border-border px-3 pb-2 text-[14px] leading-[1.35]">
-          <div className="min-w-[68rem]">
+          <div className="min-w-[71rem]">
             <div className={cn(GRID, "py-1.5 text-[11px] text-muted-foreground")}>
-              <span>Modelo</span><span>Estampa</span><span>Cor</span><span>Tamanho</span><span>Pessoa</span>
+              <span>Modelo</span><span>Estampa</span><span>Cor</span><span>Tamanho</span><span>Qtd</span><span>Pessoa</span>
               {MARCAS.map((m) => {
                 const { Icone, texto } = ICONES[m];
                 return <span key={m} title={texto} className="flex justify-center"><Icone className="size-3.5" /></span>;
@@ -400,7 +402,7 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
           <AlertDialogHeader>
             <AlertDialogTitle>Apagar remessa?</AlertDialogTitle>
             <AlertDialogDescription>
-              {nomeMes(r.mes)} · {r.motivo}. {r.pecas.length > 0 ? `${r.pecas.length} ${r.pecas.length === 1 ? "peça será apagada" : "peças serão apagadas"} junto.` : "Ela não tem peças."}
+              {nomeMes(r.mes)} · {r.motivo}. {total > 0 ? `${total} ${total === 1 ? "peça será apagada" : "peças serão apagadas"} junto.` : "Ela não tem peças."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -463,6 +465,15 @@ function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho }: {
   const vazia = !peca;
   const tamRef = useRef<HTMLSelectElement>(null);
   useEffect(() => { if (focarTamanho) tamRef.current?.focus(); }, [focarTamanho]);
+  const [qtd, setQtd] = useState(peca?.quantidade ?? 1);
+  useEffect(() => { if (peca) setQtd(peca.quantidade ?? 1); }, [peca?.quantidade]);
+
+  // Linha nova: segura a quantidade digitada e manda junto no primeiro campo salvo.
+  function gravar(patch: Partial<Peca>) {
+    if (!vazia) return onSalvar(patch);
+    onSalvar(qtd > 1 ? { ...patch, quantidade: qtd } : patch);
+    setQtd(1);
+  }
 
   const opProdutos = useMemo(() => produtos.filter((x) => x.ativo).map((x) => ({ id: x.id, nome: nomePai(x) })), [produtos]);
   const opCores = useMemo(() => cores.filter((x) => x.ativo).map((x) => ({ id: x.id, nome: x.nome, hex: x.hex })), [cores]);
@@ -471,23 +482,27 @@ function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho }: {
   return (
     <div className={cn(GRID, "border-t-[0.5px] border-border py-[3px]", vazia && "bg-primary-soft/30")}>
       <Seletor disabled={!editavel} valor={peca?.produto_nome ?? null} opcoes={opProdutos} placeholder={vazia ? "Modelo…" : "—"}
-        onEscolher={(o) => onSalvar({ produto_id: o.id, produto_nome: o.nome })} />
+        onEscolher={(o) => gravar({ produto_id: o.id, produto_nome: o.nome })} />
       <Seletor disabled={!editavel} valor={peca?.estampa_nome ?? null} vazioTexto="Lisa" opcoes={opEstampas} placeholder={vazia ? "Estampa…" : "Lisa"}
-        permitirLimpar="Lisa" onEscolher={(o) => onSalvar({ estampa_id: o.id || null, estampa_nome: o.id ? o.nome : null })} />
+        permitirLimpar="Lisa" onEscolher={(o) => gravar({ estampa_id: o.id || null, estampa_nome: o.id ? o.nome : null })} />
       <Seletor disabled={!editavel} valor={peca?.cor_nome ?? null} opcoes={opCores} placeholder={vazia ? "Cor…" : "—"}
-        onEscolher={(o) => onSalvar({ cor_id: o.id, cor_nome: o.nome })} />
+        onEscolher={(o) => gravar({ cor_id: o.id, cor_nome: o.nome })} />
       <select
         ref={tamRef}
         disabled={!editavel}
         value={peca?.tamanho ?? ""}
-        onChange={(e) => onSalvar({ tamanho: e.target.value || null })}
+        onChange={(e) => gravar({ tamanho: e.target.value || null })}
         className="h-7 w-full rounded-md border border-transparent bg-transparent px-1 text-[14px] hover:border-border focus:border-ring focus:outline-none disabled:opacity-100"
       >
         <option value="">{vazia ? "Tam." : "—"}</option>
         {[...new Set([...(peca?.tamanho && !tamanhos.includes(peca.tamanho) ? [peca.tamanho] : []), ...tamanhos])].map((t) => <option key={t}>{t}</option>)}
       </select>
+      <CampoQtd disabled={!editavel} valor={vazia ? qtd : (peca?.quantidade ?? 1)} onGravar={(n) => {
+        if (vazia) setQtd(n);
+        else if (n !== (peca?.quantidade ?? 1)) onSalvar({ quantidade: n });
+      }} />
       <CampoTexto disabled={!editavel} valor={peca?.pessoa ?? ""} placeholder={vazia ? "Pessoa…" : ""} sugestoes={pessoas}
-        onGravar={(v) => { if (v !== (peca?.pessoa ?? "")) onSalvar({ pessoa: v || null }); }} />
+        onGravar={(v) => { if (v !== (peca?.pessoa ?? "")) gravar({ pessoa: v || null }); }} />
       {MARCAS.map((m) => {
         const { Icone, texto } = ICONES[m];
         if (m === "devolvida" && !peca?.retorna) {
@@ -502,7 +517,7 @@ function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho }: {
             aria-label={texto}
             aria-pressed={ligado}
             disabled={!editavel || vazia}
-            onClick={() => onSalvar({ [m]: !ligado } as Partial<Peca>)}
+            onClick={() => gravar({ [m]: !ligado } as Partial<Peca>)}
             className={cn(
               "mx-auto flex size-7 items-center justify-center rounded-md transition-colors",
               ligado ? "bg-secondary text-foreground" : "text-muted-foreground/40 hover:text-muted-foreground",
@@ -514,7 +529,7 @@ function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho }: {
         );
       })}
       <CampoTexto disabled={!editavel || vazia} valor={peca?.observacao ?? ""} placeholder=""
-        onGravar={(v) => { if (v !== (peca?.observacao ?? "")) onSalvar({ observacao: v || null }); }} />
+        onGravar={(v) => { if (v !== (peca?.observacao ?? "")) gravar({ observacao: v || null }); }} />
       {peca && editavel ? (
         <button type="button" title="Copiar linha" aria-label="Copiar linha" onClick={onCopiar} className="mx-auto flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground">
           <Copy className="size-3.5" />
@@ -593,5 +608,27 @@ function CampoTexto({ valor, onGravar, placeholder, disabled, sugestoes }: {
         </datalist>
       ) : null}
     </>
+  );
+}
+
+function CampoQtd({ valor, onGravar, disabled }: { valor: number; onGravar: (n: number) => void; disabled?: boolean }) {
+  const [v, setV] = useState(String(valor));
+  useEffect(() => setV(String(valor)), [valor]);
+  return (
+    <input
+      value={v}
+      disabled={disabled}
+      inputMode="numeric"
+      aria-label="Quantidade de peças iguais"
+      title="Quantidade de peças iguais nesta linha"
+      onChange={(e) => setV(e.target.value.replace(/[^\d]/g, "").slice(0, 3))}
+      onBlur={() => {
+        const n = Math.max(1, Number(v) || 1);
+        setV(String(n));
+        onGravar(n);
+      }}
+      onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+      className="h-7 w-full rounded-md border border-transparent bg-transparent px-1 text-center text-[14px] tabular-nums hover:border-border focus:border-ring focus:outline-none disabled:hover:border-transparent"
+    />
   );
 }

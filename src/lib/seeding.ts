@@ -25,6 +25,7 @@ export type Peca = {
   retorna: boolean;
   devolvida: boolean;
   observacao: string | null;
+  quantidade: number;
   posicao: number;
 };
 
@@ -64,6 +65,11 @@ export function reais(v: number): string {
 }
 export function normalizar(t: string | null | undefined): string {
   return (t ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+/** Soma as peças de uma remessa contando a quantidade de cada linha. */
+export function totalPecas(pecas: Peca[]): number {
+  return pecas.reduce((s, p) => s + (p.quantidade || 1), 0);
 }
 
 export function remessasKey(de: string, ate: string) {
@@ -233,7 +239,7 @@ export async function criarPeca(
   const nova: Peca = {
     id, remessa_id: remessaId, produto_id: null, produto_nome: null, cor_id: null, cor_nome: null, tamanho: null,
     estampa_id: null, estampa_nome: null, pessoa: null, pedido: false, produzida: false, enviada: false,
-    captada: false, retorna: false, devolvida: false, observacao: null, ...dados, posicao,
+    captada: false, retorna: false, devolvida: false, observacao: null, quantidade: 1, ...dados, posicao,
   };
   const mapa = new Map(reposicionar.map((r) => [r.id, r.posicao]));
   const desfaz = mexerRemessas(qc, de, ate, (rs) =>
@@ -288,6 +294,7 @@ export function duplicarPeca(qc: QueryClient, de: string, ate: string, peca: Pec
     {
       produto_id: peca.produto_id, produto_nome: peca.produto_nome, cor_id: peca.cor_id, cor_nome: peca.cor_nome,
       tamanho: peca.tamanho, estampa_id: peca.estampa_id, estampa_nome: peca.estampa_nome, pessoa: peca.pessoa,
+      quantidade: peca.quantidade,
     },
     peca,
   );
