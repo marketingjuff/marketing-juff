@@ -482,16 +482,16 @@ function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho }: {
   return (
     <div className={cn(GRID, "border-t-[0.5px] border-border py-[3px]", vazia && "bg-primary-soft/30")}>
       <Seletor disabled={!editavel} valor={peca?.produto_nome ?? null} opcoes={opProdutos} placeholder={vazia ? "Modelo…" : "—"}
-        onEscolher={(o) => onSalvar({ produto_id: o.id, produto_nome: o.nome })} />
+        onEscolher={(o) => gravar({ produto_id: o.id, produto_nome: o.nome })} />
       <Seletor disabled={!editavel} valor={peca?.estampa_nome ?? null} vazioTexto="Lisa" opcoes={opEstampas} placeholder={vazia ? "Estampa…" : "Lisa"}
-        permitirLimpar="Lisa" onEscolher={(o) => onSalvar({ estampa_id: o.id || null, estampa_nome: o.id ? o.nome : null })} />
+        permitirLimpar="Lisa" onEscolher={(o) => gravar({ estampa_id: o.id || null, estampa_nome: o.id ? o.nome : null })} />
       <Seletor disabled={!editavel} valor={peca?.cor_nome ?? null} opcoes={opCores} placeholder={vazia ? "Cor…" : "—"}
-        onEscolher={(o) => onSalvar({ cor_id: o.id, cor_nome: o.nome })} />
+        onEscolher={(o) => gravar({ cor_id: o.id, cor_nome: o.nome })} />
       <select
         ref={tamRef}
         disabled={!editavel}
         value={peca?.tamanho ?? ""}
-        onChange={(e) => onSalvar({ tamanho: e.target.value || null })}
+        onChange={(e) => gravar({ tamanho: e.target.value || null })}
         className="h-7 w-full rounded-md border border-transparent bg-transparent px-1 text-[14px] hover:border-border focus:border-ring focus:outline-none disabled:opacity-100"
       >
         <option value="">{vazia ? "Tam." : "—"}</option>
