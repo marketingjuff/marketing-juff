@@ -308,8 +308,22 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
   const [focoTamanho, setFocoTamanho] = useState<string | null>(null);
   useEffect(() => { if (focoInicial) setAberto(true); }, [focoInicial]);
 
+  const temCabecalho = !!r.observacao?.trim();
+
   return (
     <section id={`remessa-${r.id}`} className="rounded-xl border border-border bg-card shadow-soft">
+      {editavel || temCabecalho ? (
+        <div className="px-3 pt-2.5">
+          <div className="flex items-start gap-2 rounded-lg bg-primary-soft px-3 py-1.5">
+            <span aria-hidden className="mt-[7px] size-1.5 shrink-0 rounded-full bg-primary" />
+            <CampoCabecalho
+              valor={r.observacao ?? ""}
+              editavel={editavel}
+              onGravar={(v) => { if (v !== (r.observacao ?? "")) void alterarRemessa(qc, de, ate, r.id, { observacao: v || null }); }}
+            />
+          </div>
+        </div>
+      ) : null}
       <header className="flex items-center gap-3 px-3 py-2">
         <button type="button" onClick={() => setAberto(!aberto)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
           <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform", !aberto && "-rotate-90")} />
@@ -346,13 +360,6 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
 
       {aberto ? (
         <>
-          <div className="px-3 pt-2">
-            <CampoCabecalho
-              valor={r.observacao ?? ""}
-              editavel={editavel}
-              onGravar={(v) => { if (v !== (r.observacao ?? "")) void alterarRemessa(qc, de, ate, r.id, { observacao: v || null }); }}
-            />
-          </div>
           <div className="overflow-x-auto border-t border-border px-3 pb-2 text-[14px] leading-[1.35]">
           <div className="min-w-[68rem]">
             <div className={cn(GRID, "py-1.5 text-[11px] text-muted-foreground")}>
@@ -433,7 +440,7 @@ function CampoCabecalho({ valor, editavel, onGravar }: { valor: string; editavel
           (e.target as HTMLTextAreaElement).blur();
         }
       }}
-      className="w-full resize-none rounded-md border border-transparent bg-transparent px-1 py-0.5 text-[15px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground hover:border-border focus:border-ring focus:outline-none disabled:cursor-default disabled:hover:border-transparent"
+      className="w-full resize-none bg-transparent py-0.5 text-[16px] font-semibold leading-snug text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:outline-none disabled:cursor-default"
     />
   );
 }
