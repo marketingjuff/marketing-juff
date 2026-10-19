@@ -497,8 +497,12 @@ function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho }: {
         <option value="">{vazia ? "Tam." : "—"}</option>
         {[...new Set([...(peca?.tamanho && !tamanhos.includes(peca.tamanho) ? [peca.tamanho] : []), ...tamanhos])].map((t) => <option key={t}>{t}</option>)}
       </select>
+      <CampoQtd disabled={!editavel} valor={vazia ? qtd : (peca?.quantidade ?? 1)} onGravar={(n) => {
+        if (vazia) setQtd(n);
+        else if (n !== (peca?.quantidade ?? 1)) onSalvar({ quantidade: n });
+      }} />
       <CampoTexto disabled={!editavel} valor={peca?.pessoa ?? ""} placeholder={vazia ? "Pessoa…" : ""} sugestoes={pessoas}
-        onGravar={(v) => { if (v !== (peca?.pessoa ?? "")) onSalvar({ pessoa: v || null }); }} />
+        onGravar={(v) => { if (v !== (peca?.pessoa ?? "")) gravar({ pessoa: v || null }); }} />
       {MARCAS.map((m) => {
         const { Icone, texto } = ICONES[m];
         if (m === "devolvida" && !peca?.retorna) {
@@ -513,7 +517,7 @@ function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho }: {
             aria-label={texto}
             aria-pressed={ligado}
             disabled={!editavel || vazia}
-            onClick={() => onSalvar({ [m]: !ligado } as Partial<Peca>)}
+            onClick={() => gravar({ [m]: !ligado } as Partial<Peca>)}
             className={cn(
               "mx-auto flex size-7 items-center justify-center rounded-md transition-colors",
               ligado ? "bg-secondary text-foreground" : "text-muted-foreground/40 hover:text-muted-foreground",
@@ -525,7 +529,7 @@ function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho }: {
         );
       })}
       <CampoTexto disabled={!editavel || vazia} valor={peca?.observacao ?? ""} placeholder=""
-        onGravar={(v) => { if (v !== (peca?.observacao ?? "")) onSalvar({ observacao: v || null }); }} />
+        onGravar={(v) => { if (v !== (peca?.observacao ?? "")) gravar({ observacao: v || null }); }} />
       {peca && editavel ? (
         <button type="button" title="Copiar linha" aria-label="Copiar linha" onClick={onCopiar} className="mx-auto flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground">
           <Copy className="size-3.5" />
@@ -604,5 +608,27 @@ function CampoTexto({ valor, onGravar, placeholder, disabled, sugestoes }: {
         </datalist>
       ) : null}
     </>
+  );
+}
+
+function CampoQtd({ valor, onGravar, disabled }: { valor: number; onGravar: (n: number) => void; disabled?: boolean }) {
+  const [v, setV] = useState(String(valor));
+  useEffect(() => setV(String(valor)), [valor]);
+  return (
+    <input
+      value={v}
+      disabled={disabled}
+      inputMode="numeric"
+      aria-label="Quantidade de peças iguais"
+      title="Quantidade de peças iguais nesta linha"
+      onChange={(e) => setV(e.target.value.replace(/[^\d]/g, "").slice(0, 3))}
+      onBlur={() => {
+        const n = Math.max(1, Number(v) || 1);
+        setV(String(n));
+        onGravar(n);
+      }}
+      onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+      className="h-7 w-full rounded-md border border-transparent bg-transparent px-1 text-center text-[14px] tabular-nums hover:border-border focus:border-ring focus:outline-none disabled:hover:border-transparent"
+    />
   );
 }
