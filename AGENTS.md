@@ -18,3 +18,5 @@
 - Board and card label creation share NovaEtiquetaForm and the existing label write permission; this keeps validation and board scoping consistent without broadening access.
 - Board background suggestions combine accessible boards with browser-local recent combinations recorded only after successful saves, preserving solid/gradient mode without changing board colors or permissions.
 - AppShell places master navigation on its own grid row below desktop widths and wraps permitted subtabs, so account actions cannot squeeze navigation out of the screen.
+
+- Card comments use a compact TipTap editor and sanitized HTML with plain-text fallback; edition timestamps are database-triggered so all write paths stay consistent.

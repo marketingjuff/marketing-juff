@@ -889,7 +889,7 @@ export async function deleteItemChecklist(id: string): Promise<void> {
 
 // ---------------- comentários ----------------
 
-export type Comentario = { id: string; texto: string; autor_id: string | null; created_at: string };
+export type Comentario = { id: string; texto: string; autor_id: string | null; created_at: string; editado_em: string | null };
 
 export const comentariosQueryOptions = (cardId: string) =>
   queryOptions({
@@ -897,7 +897,7 @@ export const comentariosQueryOptions = (cardId: string) =>
     queryFn: async (): Promise<Comentario[]> => {
       const { data, error } = await supabase
         .from("tarefa_comentarios")
-        .select("id, texto, autor_id, created_at")
+        .select("id, texto, autor_id, created_at, editado_em")
         .eq("card_id", cardId)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -909,6 +909,14 @@ export async function addComentario(cardId: string, texto: string): Promise<void
   const { error } = await supabase
     .from("tarefa_comentarios")
     .insert({ card_id: cardId, texto: texto.trim(), autor_id: await uid() });
+  if (error) throw error;
+}
+
+export async function updateComentario(id: string, texto: string): Promise<void> {
+  const { error } = await supabase
+    .from("tarefa_comentarios")
+    .update({ texto: texto.trim() })
+    .eq("id", id);
   if (error) throw error;
 }
 
