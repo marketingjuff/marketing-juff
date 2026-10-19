@@ -22,6 +22,8 @@ export const Route = createFileRoute("/auth")({
         property: "og:description",
         content: "Acesso restrito ao painel de marketing da Juff.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),

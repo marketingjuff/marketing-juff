@@ -2524,6 +2524,7 @@ export type Database = {
           autor_id: string | null
           card_id: string
           created_at: string
+          editado_em: string | null
           id: string
           texto: string
         }
@@ -2531,6 +2532,7 @@ export type Database = {
           autor_id?: string | null
           card_id: string
           created_at?: string
+          editado_em?: string | null
           id?: string
           texto?: string
         }
@@ -2538,6 +2540,7 @@ export type Database = {
           autor_id?: string | null
           card_id?: string
           created_at?: string
+          editado_em?: string | null
           id?: string
           texto?: string
         }
@@ -2994,6 +2997,7 @@ export type Database = {
         Returns: undefined
       }
       tarefa_ve_tudo: { Args: never; Returns: boolean }
+      texto_limpo: { Args: { entrada: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "gestor" | "operador"

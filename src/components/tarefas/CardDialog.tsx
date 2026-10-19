@@ -7,7 +7,7 @@ import { canEdit, profileQueryOptions } from "@/lib/auth";
 import { NovaEtiquetaForm } from "./NovaEtiquetaForm";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Archive, Users, RefreshCw, Download, User, Tag, Clock, CheckSquare, Paperclip, SlidersHorizontal, ExternalLink, Plus, Trash2, Upload, X } from "lucide-react";
+import { Archive, Users, RefreshCw, Download, User, Tag, Clock, CheckSquare, Paperclip, SlidersHorizontal, ExternalLink, Plus, Trash2, Upload, X, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { EditorDescricao } from "./EditorDescricao";
+import { EditorComentario, comentarioVazio, htmlDeComentario } from "./EditorComentario";
+import DOMPurify from "dompurify";
 import { usePresetsMarca } from "@/hooks/use-presets-marca";
 import {
   ESFORCOS,
@@ -55,6 +57,7 @@ import {
   deleteAnexo,
   deleteCard,
   deleteComentario,
+  updateComentario,
   deleteItemChecklist,
   etiquetasDoQuadro,
   etiquetasQueryOptions,
@@ -161,6 +164,8 @@ export function CardDialog({
   const [adicionandoItens, setAdicionandoItens] = useState(false);
   const adicionandoItensRef = useRef(false);
   const [comentario, setComentario] = useState("");
+  const [editandoComentario, setEditandoComentario] = useState<string | null>(null);
+  const [textoEdicao, setTextoEdicao] = useState("");
   const [confirmar, setConfirmar] = useState(false);
   const [confirmTexto, setConfirmTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -184,6 +189,8 @@ export function CardDialog({
   const [filtroLinha, setFiltroLinha] = useState<"tudo" | "comentarios" | "atividades">("comentarios");
   useEffect(() => {
     setFiltroLinha("comentarios");
+    setEditandoComentario(null);
+    setTextoEdicao("");
   }, [card?.id]);
 
   if (!card) return null;
@@ -290,10 +297,10 @@ export function CardDialog({
   const pessoaDe = (id: string | null) => pessoas.find((p) => p.id === id);
 
   type LinhaAtividade =
-    | { tipo: "comentario"; id: string; autor_id: string | null; quando: string; texto: string }
+    | { tipo: "comentario"; id: string; autor_id: string | null; quando: string; texto: string; editado_em: string | null }
     | { tipo: "atividade"; id: string; autor_id: string | null; quando: string; acao: string; detalhe: string };
   const linhas: LinhaAtividade[] = [
-    ...comentarios.map((co) => ({ tipo: "comentario" as const, id: co.id, autor_id: co.autor_id, quando: co.created_at, texto: co.texto })),
+    ...comentarios.map((co) => ({ tipo: "comentario" as const, id: co.id, autor_id: co.autor_id, quando: co.created_at, texto: co.texto, editado_em: co.editado_em })),
     ...historico.map((h) => ({ tipo: "atividade" as const, id: h.id, autor_id: h.autor_id, quando: h.created_at, acao: h.acao, detalhe: h.detalhe })),
   ]
     .filter((l) => (filtroLinha === "tudo" ? true : filtroLinha === "comentarios" ? l.tipo === "comentario" : l.tipo === "atividade"))
@@ -911,19 +918,18 @@ export function CardDialog({
             </div>
               {editable ? (
                 <div className="space-y-2">
-                  <Textarea
-                    rows={6}
+                  <EditorComentario
                     value={comentario}
                     placeholder="Escreva um comentário"
                     disabled={!!travados["comentario"]}
-                    onChange={(e) => {
-                      setComentario(e.target.value);
+                    onChange={(html) => {
+                      setComentario(html);
                       digitando("comentario");
                     }}
                   />
                   <Button
                     size="sm"
-                    disabled={!comentario.trim()}
+                    disabled={comentarioVazio(comentario)}
                     onClick={() => {
                       const t = comentario;
                       setComentario("");
@@ -956,36 +962,83 @@ export function CardDialog({
                       </span>
                       <div className={cn("flex max-w-[85%] min-w-0 flex-col", meuComentario ? "items-end" : "items-start")}>
                         <span className="text-[12px] text-muted-foreground">{nomePessoa(l.autor_id)}</span>
-                        <div
-                          className={cn(
-                            "whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-[14px] font-medium",
-                            meuComentario ? "rounded-br-sm" : "rounded-bl-sm",
-                          )}
-                          style={(() => {
-                            const bc = balaoCor(pessoaDe(l.autor_id)?.cor_avatar);
-                            return { backgroundColor: bc.fundo, color: bc.texto };
-                          })()}
-                        >
-                          {l.texto}
-                        </div>
-                        <div
-                          className={cn(
-                            "flex items-center gap-2 text-[12px] text-muted-foreground",
-                            meuComentario ? "flex-row-reverse" : "",
-                          )}
-                        >
-                          <span>{dataHora(l.quando)}</span>
-                          {l.autor_id === meuId || isAdmin ? (
-                            <button
-                              type="button"
-                              className="opacity-0 group-hover:opacity-100"
-                              aria-label="Apagar comentário"
-                              onClick={() => rodar(() => deleteComentario(l.id))}
+                        {editandoComentario === l.id ? (
+                          <div className="w-[22rem] max-w-full space-y-2">
+                            <EditorComentario value={textoEdicao} onChange={setTextoEdicao} />
+                            <div className={cn("flex gap-2", meuComentario ? "justify-end" : "")}>
+                              <Button
+                                size="sm"
+                                disabled={comentarioVazio(textoEdicao)}
+                                onClick={() => {
+                                  const t = textoEdicao;
+                                  setEditandoComentario(null);
+                                  rodar(() => updateComentario(l.id, t));
+                                }}
+                              >
+                                Salvar
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => setEditandoComentario(null)}>
+                                Cancelar
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div
+                              className={cn(
+                                "break-words rounded-2xl px-3 py-2 text-[14px] font-medium",
+                                meuComentario ? "rounded-br-sm" : "rounded-bl-sm",
+                              )}
+                              style={(() => {
+                                const bc = balaoCor(pessoaDe(l.autor_id)?.cor_avatar);
+                                return { backgroundColor: bc.fundo, color: bc.texto };
+                              })()}
                             >
-                              <X className="size-3" />
-                            </button>
-                          ) : null}
-                        </div>
+                              <div
+                                className="comentario-rico"
+                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(htmlDeComentario(l.texto)) }}
+                              />
+                            </div>
+                            <div
+                              className={cn(
+                                "flex items-center gap-2 text-[12px] text-muted-foreground",
+                                meuComentario ? "flex-row-reverse" : "",
+                              )}
+                            >
+                              <span>{dataHora(l.quando)}</span>
+                              {l.editado_em ? (
+                                <span title={`Editado em ${dataHora(l.editado_em)}`}>editado</span>
+                              ) : null}
+                              {editable && l.autor_id === meuId ? (
+                                <Button
+                                variant="ghost"
+                                size="icon"
+                                  type="button"
+                                  className="size-5 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                                  aria-label="Editar comentário"
+                                  onClick={() => {
+                                    setTextoEdicao(htmlDeComentario(l.texto));
+                                    setEditandoComentario(l.id);
+                                  }}
+                                >
+                                  <Pencil className="size-3" />
+                                </Button>
+                              ) : null}
+                              {l.autor_id === meuId || isAdmin ? (
+                                <Button
+                                variant="ghost"
+                                size="icon"
+                                  type="button"
+                                  className="size-5 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                                  aria-label="Apagar comentário"
+                                  onClick={() => rodar(() => deleteComentario(l.id))}
+                                >
+                                  <X className="size-3" />
+                                </Button>
+                              ) : null}
+                            </div>
+                          </>
+                        )}
                       </div>
                     </li>
                   );

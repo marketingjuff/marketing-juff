@@ -1,0 +1,79 @@
+import asyncio,json,os
+from pathlib import Path
+from playwright.async_api import async_playwright
+async def main():
+ async with async_playwright() as p:
+  browser=await p.chromium.launch(headless=True)
+  context=await browser.new_context(viewport={"width":1280,"height":1800})
+  page=await context.new_page()
+  await page.goto('http://localhost:8080')
+  await page.evaluate('([k,v]) => localStorage.setItem(k,v)',[os.environ['LOVABLE_BROWSER_SUPABASE_STORAGE_KEY'],os.environ['LOVABLE_BROWSER_SUPABASE_SESSION_JSON']])
+  await page.goto('http://localhost:8080/tarefas/quadros')
+  await page.wait_for_timeout(12000)
+  print('url',page.url)
+  print('errors',await page.evaluate('document.readyState'))
+
+  await page.get_by_text('Marketing Interno',exact=True).last.click()
+  await page.wait_for_timeout(15000)
+  await page.get_by_text('Automação de Prospecção',exact=True).click()
+  composer=page.get_by_role('textbox',name='Escreva um comentário',exact=True)
+  await composer.wait_for(timeout=30000)
+  previous=page.locator('li.group').filter(has_text='Teste temporário comentário rico')
+  await page.wait_for_timeout(4000)
+  while await previous.count():
+   await previous.first.hover()
+   await previous.first.get_by_role('button',name='Apagar comentário').click()
+   await page.wait_for_timeout(2000)
+  await composer.fill('   ')
+  assert await page.get_by_role('button',name='Comentar',exact=True).is_disabled()
+  await composer.fill('Teste temporário comentário rico')
+  await composer.press('Control+a')
+  await page.get_by_role('dialog').get_by_role('button',name='Negrito',exact=True).last.click()
+  await page.get_by_role('dialog').get_by_role('button',name='Marcadores',exact=True).last.click()
+  await page.get_by_role('button',name='Cor do texto:',exact=False).click()
+  picker=page.get_by_role('dialog').last
+  hex_input=page.locator('input').filter(visible=True) if False else page.get_by_label('Hexadecimal')
+  await page.locator('input').last.fill('#dc2626')
+  await page.keyboard.press('Escape')
+  await composer.click()
+  await composer.press('End')
+  await composer.press('Enter')
+  await composer.press('Enter')
+  await composer.press_sequentially('https://example.com',delay=30)
+  await composer.press('Space')
+  await page.wait_for_timeout(500)
+  await page.get_by_role('button',name='Comentar',exact=True).click()
+  bubble=page.locator('li.group').filter(has_text='Teste temporário comentário rico').last
+  await bubble.wait_for(timeout=30000)
+  assert await bubble.locator('strong').count()>0
+  assert await bubble.locator('ul').count()>0
+  assert await bubble.locator('a').count()>0
+  assert await bubble.locator('[style*="color"]').count()>0
+  await bubble.hover()
+  await bubble.get_by_role('button',name='Editar comentário',exact=True).click()
+  edit=page.get_by_role('textbox',name='Editar comentário',exact=True)
+  await edit.fill('Teste temporário comentário editado')
+  await page.get_by_role('button',name='Salvar',exact=True).click()
+  updated=page.locator('li.group').filter(has_text='Teste temporário comentário editado')
+  await updated.get_by_text('editado',exact=True).wait_for(timeout=30000)
+  await page.screenshot(path='/tmp/browser/comments/edited.png')
+  print('saved rich comment and author edit; edited marker visible')
+  permission=await page.evaluate("""async () => {
+    const {supabase}=await import('/src/integrations/supabase/client.ts');
+    const {data:{user}}=await supabase.auth.getUser();
+    if (!user) throw Error('Session missing');
+    const {data,error}=await supabase.from('tarefa_comentarios').select('id,texto').neq('autor_id',user.id).limit(1);
+    if (error || !data?.length) return {checked:false};
+    const other=data[0];
+    const result=await supabase.from('tarefa_comentarios').update({texto:other.texto}).eq('id',other.id).select('id');
+    return {checked:true,denied:!!result.error || result.data?.length===0};
+  }""")
+  assert permission['checked'], 'An accessible comment by another author is required'
+  assert permission['denied'], 'Even an admin must not edit another author comment'
+  print('admin cannot update another author comment')
+  await updated.hover()
+  await updated.get_by_role('button',name='Apagar comentário',exact=True).click()
+  await updated.wait_for(state='detached',timeout=30000)
+  print('temporary comment removed')
+  await browser.close()
+asyncio.run(main())
