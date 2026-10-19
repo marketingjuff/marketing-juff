@@ -25,11 +25,6 @@ async def main():
    await previous.first.get_by_role('button',name='Apagar comentário').click()
    await page.wait_for_timeout(2000)
   await composer.fill('   ')
-  inserts=[]
-  async def remember(response):
-   if response.request.method=='POST' and 'card_id' in (response.request.post_data or '') and 'texto' in (response.request.post_data or ''):
-    inserts.append(response.request)
-  page.on('response',remember)
   assert await page.get_by_role('button',name='Comentar',exact=True).is_disabled()
   await composer.fill('Teste temporário comentário rico')
   await composer.press('Control+a')
@@ -63,6 +58,19 @@ async def main():
   await updated.get_by_text('editado',exact=True).wait_for(timeout=30000)
   await page.screenshot(path='/tmp/browser/comments/edited.png')
   print('saved rich comment and author edit; edited marker visible')
+  permission=await page.evaluate("""async () => {
+    const {supabase}=await import('/src/integrations/supabase/client.ts');
+    const {data:{user}}=await supabase.auth.getUser();
+    if (!user) throw Error('Session missing');
+    const {data,error}=await supabase.from('tarefa_comentarios').select('id,texto').neq('autor_id',user.id).limit(1);
+    if (error || !data?.length) return {checked:false};
+    const other=data[0];
+    const result=await supabase.from('tarefa_comentarios').update({texto:other.texto}).eq('id',other.id).select('id');
+    return {checked:true,denied:!!result.error || result.data?.length===0};
+  }""")
+  assert permission['checked'], 'An accessible comment by another author is required'
+  assert permission['denied'], 'Even an admin must not edit another author comment'
+  print('admin cannot update another author comment')
   await updated.hover()
   await updated.get_by_role('button',name='Apagar comentário',exact=True).click()
   await updated.wait_for(state='detached',timeout=30000)
