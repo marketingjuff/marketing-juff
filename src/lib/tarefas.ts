@@ -96,7 +96,13 @@ export type Card = {
   membros: string[];
 };
 
-export type CardComContexto = Card & { quadro_nome: string; coluna_nome: string; quadro_cor: string | null };
+export type CardComContexto = Card & {
+  quadro_nome: string;
+  coluna_nome: string;
+  quadro_cor: string | null;
+  /** Em Meu trabalho: a pessoa está no card como membro, não como responsável. */
+  como_membro?: boolean;
+};
 
 export type Pessoa = {
   id: string;
@@ -1058,17 +1064,23 @@ export const meusCardsQueryOptions = (userId: string) =>
   queryOptions({
     queryKey: ["tarefas", "meus", userId],
     queryFn: async (): Promise<CardComContexto[]> => {
-      const { data, error } = await supabase
-        .from("tarefa_cards")
-        .select(CTX_SELECT)
-        .eq("responsavel_id", userId)
-        .eq("arquivado", false)
-        .order("data_entrega", { ascending: true, nullsFirst: false });
+      const { data: mem, error: eM } = await supabase
+        .from("tarefa_card_membros")
+        .select("card_id")
+        .eq("user_id", userId);
+      if (eM) throw eM;
+      const idsMembro = (mem ?? []).map((m) => m.card_id as string);
+      let q = supabase.from("tarefa_cards").select(CTX_SELECT).eq("arquivado", false);
+      q = idsMembro.length
+        ? q.or(`responsavel_id.eq.${userId},id.in.(${idsMembro.join(",")})`)
+        : q.eq("responsavel_id", userId);
+      const { data, error } = await q.order("data_entrega", { ascending: true, nullsFirst: false });
       if (error) throw error;
       return (data ?? [])
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((c: any) => !c.tarefa_quadros?.arquivado)
-        .map(mapComContexto);
+        .map(mapComContexto)
+        .map((c) => ({ ...c, como_membro: c.responsavel_id !== userId }));
     },
     enabled: !!userId,
   });

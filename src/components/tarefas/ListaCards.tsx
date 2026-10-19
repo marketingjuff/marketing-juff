@@ -67,6 +67,14 @@ export function ListaCards({
             >
               {c.titulo || "Sem título"}
             </span>
+            {c.como_membro ? (
+              <span
+                className="shrink-0 whitespace-nowrap rounded-full border border-border bg-muted px-1.5 text-[10px] font-semibold uppercase leading-4 tracking-wide text-muted-foreground"
+                title="Você está neste card como membro, não como responsável"
+              >
+                Membro
+              </span>
+            ) : null}
             <span className="shrink-0 whitespace-nowrap text-[11px] leading-5 text-muted-foreground">
               {c.quadro_nome} · {c.coluna_nome}
             </span>
