@@ -404,6 +404,38 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
   );
 }
 
+function CampoCabecalho({ valor, editavel, onGravar }: { valor: string; editavel: boolean; onGravar: (v: string) => void }) {
+  const [v, setV] = useState(valor);
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => setV(valor), [valor]);
+  const crescer = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+  useEffect(crescer, [v]);
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      value={v}
+      disabled={!editavel}
+      placeholder={editavel ? "Escreva aqui sobre o que é esta remessa…" : ""}
+      title={v || undefined}
+      onChange={(e) => setV(e.target.value)}
+      onBlur={() => onGravar(v.trim())}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          (e.target as HTMLTextAreaElement).blur();
+        }
+      }}
+      className="w-full resize-none rounded-md border border-transparent bg-transparent px-1 py-0.5 text-[15px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground hover:border-border focus:border-ring focus:outline-none disabled:cursor-default disabled:hover:border-transparent"
+    />
+  );
+}
+
 function tamanhosDoProduto(p: ProdutoBiblioteca | undefined): string[] {
   if (!p) return [...ORDEM_TAMANHOS];
   const lista = [...p.tamanhos, ...(p.usa_xtra ? p.tamanhos_xtra : [])];
