@@ -26,7 +26,7 @@ async def main():
   await composer.fill('   ')
   inserts=[]
   async def remember(response):
-   if 'tarefa_comentarios' in response.url and response.request.method=='POST':
+   if response.request.method=='POST' and 'card_id' in (response.request.post_data or '') and 'texto' in (response.request.post_data or ''):
     inserts.append(response.request)
   page.on('response',remember)
   assert await page.get_by_role('button',name='Comentar',exact=True).is_disabled()
