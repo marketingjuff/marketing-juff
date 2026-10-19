@@ -384,7 +384,8 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
               />
             ) : null}
           </div>
-        </div>
+          </div>
+        </>
       ) : null}
 
       <AlertDialog open={confirmar} onOpenChange={setConfirmar}>
