@@ -105,6 +105,8 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
         property: "og:description",
         content: "Gerencie contas, papéis e permissões de acesso do Marketing Juff.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),

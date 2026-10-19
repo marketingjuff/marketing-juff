@@ -21,6 +21,8 @@ export const Route = createFileRoute("/_authenticated/trocar-senha")({
         property: "og:description",
         content: "Defina uma nova senha para sua conta do Marketing Juff.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
