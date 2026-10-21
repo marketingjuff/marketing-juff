@@ -172,6 +172,7 @@ export function CardDialog({
   const [enviando, setEnviando] = useState(false);
   const [arrastandoArq, setArrastandoArq] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const coladasRef = useRef(new Map<string, string>());
   const [localCard, setLocalCard] = useState<Card | null>(null);
   useEffect(() => {
     setLocalCard(card ?? null);
