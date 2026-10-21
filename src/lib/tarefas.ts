@@ -958,21 +958,59 @@ function sanitizarNome(nome: string): string {
     .slice(0, 120);
 }
 
-export async function uploadAnexo(cardId: string, file: File): Promise<void> {
+export async function uploadAnexo(cardId: string, file: File): Promise<{ id: string; path: string }> {
   const path = `${cardId}/${crypto.randomUUID()}-${sanitizarNome(file.name)}`;
   const { error: upErr } = await supabase.storage
     .from("tarefas")
     .upload(path, file, file.type ? { contentType: file.type } : {});
   if (upErr) throw upErr;
-  const { error } = await supabase.from("tarefa_anexos").insert({
-    card_id: cardId,
-    nome: file.name,
-    path,
-    tamanho: file.size,
-    tipo: file.type,
-    enviado_por: await uid(),
-  });
-  if (error) throw error;
+  const { data, error } = await supabase
+    .from("tarefa_anexos")
+    .insert({
+      card_id: cardId,
+      nome: file.name,
+      path,
+      tamanho: file.size,
+      tipo: file.type,
+      enviado_por: await uid(),
+    })
+    .select("id")
+    .single();
+  if (error) {
+    await supabase.storage.from("tarefas").remove([path]);
+    throw error;
+  }
+  return { id: data.id as string, path };
+}
+
+/** Ids dos anexos que aparecem como imagem dentro de um HTML de descrição. */
+export function anexosNaDescricao(html: string): Map<string, string> {
+  const mapa = new Map<string, string>();
+  const re = /<img[^>]*>/gi;
+  for (const tag of html.match(re) ?? []) {
+    const id = tag.match(/data-anexo-id="([^"]+)"/)?.[1];
+    const path = tag.match(/data-anexo="([^"]+)"/)?.[1];
+    if (id && path) mapa.set(id, path);
+  }
+  return mapa;
+}
+
+const cacheImagens = new Map<string, Promise<string>>();
+/** Link local da imagem colada, guardado enquanto a aba estiver aberta. */
+export function imagemAnexo(path: string): Promise<string> {
+  let p = cacheImagens.get(path);
+  if (!p) {
+    p = supabase.storage
+      .from("tarefas")
+      .download(path)
+      .then(({ data, error }) => {
+        if (error) throw error;
+        return URL.createObjectURL(data);
+      });
+    p.catch(() => cacheImagens.delete(path));
+    cacheImagens.set(path, p);
+  }
+  return p;
 }
 
 /** Baixa de verdade, em vez de abrir no navegador. */

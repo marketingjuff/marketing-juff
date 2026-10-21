@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { ImagemAnexo } from "./ImagemAnexo";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { TextStyle, Color, FontFamily } from "@tiptap/extension-text-style";
@@ -17,7 +18,7 @@ const CORES = ["#1f2937", "#6b7280", "#dc2626", "#ea580c", "#ca8a04", "#16a34a",
 
 function paraHtml(v: string) {
   if (!v) return "";
-  if (/^\s*<(p|h\d|ul|ol|blockquote|div)/i.test(v)) return DOMPurify.sanitize(v);
+  if (/^\s*<(p|h\d|ul|ol|blockquote|div|img)/i.test(v)) return DOMPurify.sanitize(v, { ADD_ATTR: ["data-anexo", "data-anexo-id"] });
   const esc = v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return esc.split("\n").map((l) => `<p>${l}</p>`).join("");
 }
@@ -78,13 +79,49 @@ function Barra({ editor }: { editor: Editor }) {
   );
 }
 
+type Colar = (f: File) => Promise<{ id: string; path: string } | null>;
+
 export function EditorDescricao({
-  value, disabled, onChange, onBlur,
-}: { value: string; disabled?: boolean; onChange: (html: string) => void; onBlur: (html: string) => void }) {
+  value, disabled, onChange, onBlur, onColarImagem,
+}: { value: string; disabled?: boolean; onChange: (html: string) => void; onBlur: (html: string) => void; onColarImagem?: Colar }) {
+  const colarRef = useRef<Colar | undefined>(onColarImagem);
+  colarRef.current = onColarImagem;
+  const edRef = useRef<Editor | null>(null);
+
+  function enviar(files: File[], pos?: number) {
+    const ed = edRef.current;
+    const colar = colarRef.current;
+    if (!ed || !colar) return false;
+    const imgs = files.filter((f) => f.type.startsWith("image/"));
+    if (!imgs.length) return false;
+    for (const f of imgs) {
+      const temp = crypto.randomUUID();
+      const node = ed.schema.nodes["image"]!.create({ temp });
+      const tr = ed.state.tr;
+      if (pos != null) tr.insert(pos, node); else tr.replaceSelectionWith(node);
+      ed.view.dispatch(tr);
+      void colar(f).then((r) => {
+        const e = edRef.current;
+        if (!e) return;
+        let achou: number | null = null;
+        e.state.doc.descendants((n, p) => {
+          if (n.type.name === "image" && n.attrs["temp"] === temp) achou = p;
+        });
+        if (achou == null) return;
+        const t = e.state.tr;
+        if (r) t.setNodeMarkup(achou, undefined, { anexo: r.path, anexoId: r.id, temp: null });
+        else t.delete(achou, achou + 1);
+        e.view.dispatch(t);
+      });
+    }
+    return true;
+  }
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit,
+      ImagemAnexo,
       TextStyle,
       Color,
       FontFamily,
@@ -97,11 +134,26 @@ export function EditorDescricao({
     ],
     content: paraHtml(value),
     editable: !disabled,
-    editorProps: { attributes: { class: "descricao-rica min-h-[22rem] px-3 py-2 outline-none" } },
+    editorProps: {
+      attributes: { class: "descricao-rica min-h-[22rem] px-3 py-2 outline-none" },
+      handlePaste: (_v, ev) => {
+        const files = Array.from(ev.clipboardData?.files ?? []);
+        if (enviar(files)) { ev.preventDefault(); return true; }
+        return false;
+      },
+      handleDrop: (view, ev) => {
+        const files = Array.from((ev as DragEvent).dataTransfer?.files ?? []);
+        if (!files.some((f) => f.type.startsWith("image/"))) return false;
+        const pos = view.posAtCoords({ left: ev.clientX, top: ev.clientY })?.pos;
+        ev.preventDefault();
+        return enviar(files, pos);
+      },
+    },
     onUpdate: ({ editor }) => onChange(editor.isEmpty ? "" : editor.getHTML()),
     onBlur: ({ editor }) => onBlur(editor.isEmpty ? "" : editor.getHTML()),
   });
 
+  edRef.current = editor;
   useEffect(() => { editor?.setEditable(!disabled); }, [editor, disabled]);
   useEffect(() => {
     if (!editor || editor.isFocused) return;

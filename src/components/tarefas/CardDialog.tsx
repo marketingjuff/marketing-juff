@@ -72,6 +72,7 @@ import {
   toggleItemChecklist,
   updateCard,
   uploadAnexo,
+  anexosNaDescricao,
   urlAnexo,
   formatarDataHora,
   avancarCard,
@@ -171,6 +172,7 @@ export function CardDialog({
   const [enviando, setEnviando] = useState(false);
   const [arrastandoArq, setArrastandoArq] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const coladasRef = useRef(new Map<string, string>());
   const [localCard, setLocalCard] = useState<Card | null>(null);
   useEffect(() => {
     setLocalCard(card ?? null);
@@ -756,7 +758,30 @@ export function CardDialog({
                   setDescricao(html);
                   digitando("descricao");
                 }}
-                onBlur={(html) => html !== c.descricao && salvar({ descricao: html })}
+                onColarImagem={async (f) => {
+                  try {
+                    const r = await uploadAnexo(c.id, f);
+                    void qc.invalidateQueries({ queryKey: ["tarefas", "anexos", c.id] });
+                    void qc.invalidateQueries({ queryKey: ["tarefas", "quadro", c.quadro_id] });
+                    return r;
+                  } catch {
+                    toast.error("Não consegui anexar a imagem.");
+                    return null;
+                  }
+                }}
+                onBlur={(html) => {
+                  if (html === c.descricao) return;
+                  const antes = anexosNaDescricao(c.descricao ?? "");
+                  const agora = anexosNaDescricao(html);
+                  salvar({ descricao: html });
+                  const sairam = [...antes].filter(([id]) => !agora.has(id));
+                  if (sairam.length) {
+                    void Promise.all(sairam.map(([id, path]) => deleteAnexo(id, path).catch(() => {}))).then(() => {
+                      void qc.invalidateQueries({ queryKey: ["tarefas", "anexos", c.id] });
+                      void qc.invalidateQueries({ queryKey: ["tarefas", "quadro", c.quadro_id] });
+                    });
+                  }
+                }}
               />
               <AvisoEscrevendo quem={travados["descricao"]} />
             </div>
