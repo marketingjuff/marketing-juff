@@ -197,6 +197,7 @@ export function CardDialog({
 
   if (!card) return null;
   const c = localCard && localCard.id === card.id ? localCard : card;
+  const membros = c.membros.filter((id) => id !== c.responsavel_id);
   const mexer = podeMexerNoCard(c, role, meuId, editable);
   const etiquetasVisiveis = etiquetasDoQuadro(etiquetas, c.quadro_id);
   const cardsPrivados = quadros.find((q) => q.id === c.quadro_id)?.cards_privados ?? false;
@@ -354,9 +355,9 @@ export function CardDialog({
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-1.5" disabled={!mexer}>
                       <Users className="size-4" /> Membros
-                      {c.membros.length > 0 ? (
+                      {membros.length > 0 ? (
                         <span className="rounded bg-muted px-1 text-[11px] leading-tight">
-                          {c.membros.length}
+                          {membros.length}
                         </span>
                       ) : null}
                     </Button>
@@ -367,15 +368,15 @@ export function CardDialog({
                       Quem está aqui enxerga e edita o card, igual a quem é responsável. O card não
                       entra no Meu trabalho de quem é só membro.
                     </p>
-                    {pessoas.map((p) => (
+                    {pessoas.filter((p) => p.id !== c.responsavel_id).map((p) => (
                       <label key={p.id} className="flex items-center gap-2 text-sm">
                         <Checkbox
-                          checked={c.membros.includes(p.id)}
+                          checked={membros.includes(p.id)}
                           disabled={!mexer}
                           onCheckedChange={(v) => {
                             const novas = v
-                              ? [...c.membros, p.id]
-                              : c.membros.filter((x) => x !== p.id);
+                              ? [...membros, p.id]
+                              : membros.filter((x) => x !== p.id);
                             void rodar(async () => {
                               await setMembrosDoCard(c.id, novas);
                               void registrarHistorico(c.id, v ? "Entrou como membro" : "Saiu de membro", nomePessoa(p.id));
@@ -710,7 +711,7 @@ export function CardDialog({
                   </span>
                 ) : null}
                 {cardsPrivados
-                  ? c.membros.map((id) => (
+                  ? membros.map((id) => (
                       <span
                         key={id}
                         className="flex size-5 items-center justify-center rounded-full text-[8px] font-semibold opacity-70"

@@ -379,6 +379,13 @@
       "when": 1792439510540,
       "tag": "0053_social_seeding_quantidade",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1792615635126,
+      "tag": "0054_responsavel_sem_membro_duplicado",
+      "breakpoints": true
     }
   ]
 }

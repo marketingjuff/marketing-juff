@@ -20,3 +20,4 @@
 - AppShell places master navigation on its own grid row below desktop widths and wraps permitted subtabs, so account actions cannot squeeze navigation out of the screen.
 
 - Card comments use a compact TipTap editor and sanitized HTML with plain-text fallback; edition timestamps are database-triggered so all write paths stay consistent.
+- Task member triggers exclude the current responsible person and serialize member writes against the card row, keeping manual assignments and column-driven changes consistent.
