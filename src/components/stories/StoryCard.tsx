@@ -4,7 +4,7 @@ import {
   GripVertical,
   Check,
   CheckCheck,
-  MessageSquare,
+  ThumbsDown,
   Trash2,
   Plus,
   ImageUp,
@@ -60,14 +60,14 @@ const SEM_CTA = "__sem_cta__";
 
 const FRAME_STATUS_LABEL: Record<FrameStatus, string> = {
   pendente: "Pendente",
-  ajustar: "Ajustar",
+  ajustar: "Reprovado",
   refeito: "Refeito",
   aprovado: "Aprovado",
 };
 
 const FRAME_STATUS_BADGE: Record<FrameStatus, string> = {
   pendente: "bg-muted text-muted-foreground border-border",
-  ajustar: "bg-warning/25 text-foreground border-warning",
+  ajustar: "bg-destructive/20 text-foreground border-destructive",
   refeito: "bg-success/15 text-foreground border-success/50",
   aprovado: "bg-success text-background border-success",
 };
@@ -83,7 +83,7 @@ const BORDA_PUBLICADO = "border-[#323db8]";
 
 const OPCOES_STATUS_BLOCO: { value: StatusBloco; label: string }[] = [
   { value: "pendente", label: "Pendente" },
-  { value: "ajustar", label: "Ajustar" },
+  { value: "ajustar", label: "Reprovado" },
   { value: "aprovado", label: "Aprovado" },
   { value: "publicado", label: "Publicado" },
 ];
@@ -480,7 +480,8 @@ function ArteBloco({
 
       <SlotCompartilhado slot="adjust_comment" frameId={frame.id}>
         {frame.adjust_comment ? (
-          <div className="rounded-lg bg-warning/20 p-2 text-xs">
+          <div className="rounded-lg border border-destructive/40 bg-destructive/15 p-2 text-xs">
+            <p className="mb-1 text-[11px] font-semibold uppercase text-destructive">Reprovado</p>
             <p className="whitespace-pre-wrap">{frame.adjust_comment}</p>
             {frame.adjust_comment_at ? (
               <p className="mt-1 text-[11px] text-muted-foreground">
@@ -497,13 +498,14 @@ function ArteBloco({
             <Textarea
               value={comentario}
               onChange={(e) => setComentario(e.target.value)}
-              placeholder="O que precisa ser ajustado?"
+              placeholder="Por que esta arte foi reprovada?"
               rows={3}
               className="text-sm"
             />
             <div className="flex gap-2">
               <Button
                 size="sm"
+                variant="destructive"
                 className="flex-1"
                 disabled={comentario.trim().length === 0}
                 onClick={() => {
@@ -512,7 +514,7 @@ function ArteBloco({
                   setAjusteAberto(false);
                 }}
               >
-                Confirmar ajuste
+                Confirmar reprovação
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setAjusteAberto(false)}>
                 Cancelar
@@ -541,13 +543,17 @@ function ArteBloco({
                 </Button>
                 <Button
                   size="sm"
-                  variant="outline"
-                  className="flex-1 px-0"
-                  title="Pedir ajuste"
-                  aria-label="Pedir ajuste na arte"
+                  variant={frame.status === "ajustar" ? "destructive" : "outline"}
+                  className={cn(
+                    "flex-1 px-0",
+                    frame.status !== "ajustar" &&
+                      "border-destructive/60 text-destructive hover:bg-destructive hover:text-destructive-foreground",
+                  )}
+                  title="Reprovar arte"
+                  aria-label="Reprovar arte"
                   onClick={() => setAjusteAberto(true)}
                 >
-                  <MessageSquare className="size-4" />
+                  <ThumbsDown className="size-4" />
                 </Button>
                 <Button
                   size="sm"
@@ -827,7 +833,7 @@ export function StoryCard({
                     "h-7 w-auto gap-1 rounded-full px-2 text-[11px] font-medium",
                     publicado && "border-[#323db8] bg-[#323db8] text-[#f6f6fb]",
                     !publicado && tudoAprovado && "border-success bg-success text-background",
-                    !publicado && !tudoAprovado && story.status === "ajustar" && "border-warning",
+                    !publicado && !tudoAprovado && story.status === "ajustar" && "border-destructive",
                   )}
                   aria-label="Status do bloco"
                   title={
@@ -849,7 +855,16 @@ export function StoryCard({
                         (!canApprove && !tudoAprovado)
                       }
                     >
-                      {o.label}
+                      {o.value === "ajustar" ? (
+                        <span className="flex flex-col items-start leading-tight">
+                          <span>{o.label}</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            Use o polegar para baixo na arte
+                          </span>
+                        </span>
+                      ) : (
+                        o.label
+                      )}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -878,8 +893,8 @@ export function StoryCard({
             </span>
           ) : null}
           {emAjuste > 0 ? (
-            <span className="rounded-full border border-warning bg-warning/25 px-2 py-0.5 font-medium text-foreground">
-              {emAjuste} em ajuste
+            <span className="rounded-full border border-destructive bg-destructive/20 px-2 py-0.5 font-medium text-foreground">
+              {emAjuste} {emAjuste === 1 ? "reprovada" : "reprovadas"}
             </span>
           ) : null}
           {canApprove ? (
