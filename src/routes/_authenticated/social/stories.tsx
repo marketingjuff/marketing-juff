@@ -669,7 +669,7 @@ function StoriesPage() {
           description:
             `${total} ${total === 1 ? "arte" : "artes"} serão aprovadas, sem exceção.` +
             (ajustes > 0
-              ? ` ${ajustes} ${ajustes === 1 ? "arte tem" : "artes têm"} pedido de ajuste em aberto e o pedido será descartado.`
+              ? ` ${ajustes} ${ajustes === 1 ? "arte está reprovada e a reprovação será descartada." : "artes estão reprovadas e as reprovações serão descartadas."}`
               : ""),
           action: () => mutate.mutate(() => approveStory(story)),
         });
