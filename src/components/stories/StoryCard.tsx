@@ -855,16 +855,7 @@ export function StoryCard({
                         (!canApprove && !tudoAprovado)
                       }
                     >
-                      {o.value === "ajustar" ? (
-                        <span className="flex flex-col items-start leading-tight">
-                          <span>{o.label}</span>
-                          <span className="text-[10px] text-muted-foreground">
-                            Use o polegar para baixo na arte
-                          </span>
-                        </span>
-                      ) : (
-                        o.label
-                      )}
+                      {o.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
