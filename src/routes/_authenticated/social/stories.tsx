@@ -148,7 +148,7 @@ const FILTROS: { key: Filtro; label: string }[] = [
   { key: "todos", label: "Todos" },
   { key: "pendente", label: "Pendentes" },
   { key: "aprovado", label: "Aprovados" },
-  { key: "ajustar", label: "Ajustar" },
+  { key: "ajustar", label: "Reprovados" },
   { key: "publicado", label: "Publicados" },
 ];
 
@@ -669,7 +669,7 @@ function StoriesPage() {
           description:
             `${total} ${total === 1 ? "arte" : "artes"} serão aprovadas, sem exceção.` +
             (ajustes > 0
-              ? ` ${ajustes} ${ajustes === 1 ? "arte tem" : "artes têm"} pedido de ajuste em aberto e o pedido será descartado.`
+              ? ` ${ajustes} ${ajustes === 1 ? "arte está reprovada e a reprovação será descartada." : "artes estão reprovadas e as reprovações serão descartadas."}`
               : ""),
           action: () => mutate.mutate(() => approveStory(story)),
         });
@@ -679,7 +679,7 @@ function StoriesPage() {
           setConfirm({
             title: "Voltar o bloco para pendente?",
             description:
-              "Todas as artes deste bloco perdem a aprovação, os pedidos de ajuste são apagados e a marcação de publicado é retirada. As imagens e os textos continuam intactos.",
+              "Todas as artes deste bloco perdem a aprovação, as reprovações são apagadas e a marcação de publicado é retirada. As imagens e os textos continuam intactos.",
             action: () => mutate.mutate(() => setStatusBloco(alvoStory, "pendente")),
           });
           return;
@@ -865,7 +865,7 @@ function StoriesPage() {
                 if (naoAprovadas > 0) {
                   setConfirm({
                     title: "Exportar mesmo assim?",
-                    description: `${naoAprovadas} ${naoAprovadas === 1 ? "arte não está aprovada" : "artes não estão aprovadas"} (pendente, em ajuste ou refeita). Deseja exportar todas assim mesmo?`,
+                    description: `${naoAprovadas} ${naoAprovadas === 1 ? "arte não está aprovada" : "artes não estão aprovadas"} (pendente, reprovada ou refeita). Deseja exportar todas assim mesmo?`,
                     action: () => void exportarZip(),
                   });
                   return;
@@ -905,7 +905,7 @@ function StoriesPage() {
                 onClick={() =>
                   setConfirm({
                     title: "Aprovar todos os pendentes?",
-                    description: `Aprova as artes em pendente e em refeito da fila principal de ${nomeAtual}. Artes em ajuste não são tocadas.`,
+                    description: `Aprova as artes em pendente e em refeito da fila principal de ${nomeAtual}. Artes reprovadas não são tocadas.`,
                     action: () => mutate.mutate(() => approveAllPending(fila)),
                   })
                 }
