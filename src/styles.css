@@ -186,27 +186,27 @@ html {
   scrollbar-gutter: stable;
 }
 
-/* Dropdowns com rolagem: barra sempre visível (inclusive no Mac). */
-[cmdk-list],
-[data-radix-select-viewport],
-[data-radix-popper-content-wrapper] [role="listbox"],
-[data-radix-popper-content-wrapper] [role="menu"] {
-  scrollbar-width: auto;
-  scrollbar-color: var(--color-muted-foreground) transparent;
-}
-[cmdk-list]::-webkit-scrollbar,
-[data-radix-select-viewport]::-webkit-scrollbar,
-[data-radix-popper-content-wrapper] [role="listbox"]::-webkit-scrollbar,
-[data-radix-popper-content-wrapper] [role="menu"]::-webkit-scrollbar {
+/* Barras de rolagem sempre visíveis em todo o sistema (inclusive no Mac). */
+*::-webkit-scrollbar {
   -webkit-appearance: none;
-  width: 8px;
+  width: 10px;
+  height: 10px;
 }
-[cmdk-list]::-webkit-scrollbar-thumb,
-[data-radix-select-viewport]::-webkit-scrollbar-thumb,
-[data-radix-popper-content-wrapper] [role="listbox"]::-webkit-scrollbar-thumb,
-[data-radix-popper-content-wrapper] [role="menu"]::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
   background: var(--color-muted-foreground);
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: padding-box;
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+@supports (-moz-appearance: none) {
+  * {
+    scrollbar-width: auto;
+    scrollbar-color: var(--color-muted-foreground) transparent;
+  }
 }
