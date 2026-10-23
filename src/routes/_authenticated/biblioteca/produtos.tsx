@@ -83,7 +83,7 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
   function gravarCores(novas: ProdutoCor[]) {
     const antes = qc.getQueryData<ProdutoBiblioteca[]>(produtosQueryOptions.queryKey);
     qc.setQueryData<ProdutoBiblioteca[]>(produtosQueryOptions.queryKey, (l) => l?.map((x) => (x.id === p.id ? { ...x, cores: novas } : x)));
-    salvarCores(p.id, novas).catch((e: Error) => {
+    salvarCores(p.id, novas).then(() => qc.invalidateQueries({ queryKey: produtosQueryOptions.queryKey })).catch((e: Error) => {
       qc.setQueryData(produtosQueryOptions.queryKey, antes);
       toast.error(`Não foi possível gravar: ${e.message}`);
     });

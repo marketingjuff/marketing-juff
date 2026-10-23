@@ -1,0 +1,1 @@
+ALTER PUBLICATION supabase_realtime ADD TABLE public.biblioteca_produtos, public.biblioteca_produto_cores, public.biblioteca_cores, public.biblioteca_tamanhos_olist;

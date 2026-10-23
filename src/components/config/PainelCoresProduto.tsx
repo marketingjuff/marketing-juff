@@ -21,7 +21,7 @@ export function PainelCoresProduto() {
   function patch(id: string, p: Partial<CorBiblioteca>) {
     const antes = qc.getQueryData<CorBiblioteca[]>(CHAVE);
     qc.setQueryData<CorBiblioteca[]>(CHAVE, (l) => l?.map((c) => (c.id === id ? { ...c, ...p } : c)));
-    salvarCor(id, p).catch((e: Error) => {
+    salvarCor(id, p).then(() => qc.invalidateQueries({ queryKey: CHAVE })).catch((e: Error) => {
       qc.setQueryData(CHAVE, antes);
       toast.error(`Não foi possível gravar: ${e.message}`);
     });
