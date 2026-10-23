@@ -1,6 +1,6 @@
 # Comentários formatados
 ## Atualização do catálogo
-- [ ] Sincronizar modelos, cores e tamanhos nas telas consumidoras e testar a criação de um modelo.
+- [x] Sincronizar modelos, cores e tamanhos nas telas consumidoras e testar a criação de um modelo.
 
 - [x] Habilitar marca de edição e edição somente pelo autor, mantendo notificações legíveis.
 - [x] Integrar editor compacto, edição e leitura dos comentários antigos.
