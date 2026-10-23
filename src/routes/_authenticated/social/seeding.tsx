@@ -556,14 +556,14 @@ function ChipCor({ nome, hex }: { nome: string; hex: string }) {
 
 function Seletor({ valor, valorHex, opcoes, onEscolher, placeholder, disabled, vazioTexto, permitirLimpar, vazioOpcoes }: {
   valor: string | null;
-  valorHex?: string;
+  valorHex?: string | undefined;
   opcoes: { id: string; nome: string; hex?: string }[];
   onEscolher: (o: { id: string; nome: string }) => void;
   placeholder: string;
   disabled?: boolean;
   vazioTexto?: string;
   permitirLimpar?: string;
-  vazioOpcoes?: string;
+  vazioOpcoes?: string | undefined;
 }) {
   const [aberto, setAberto] = useState(false);
   const texto = valor ?? null;
