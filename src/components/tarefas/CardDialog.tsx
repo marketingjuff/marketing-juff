@@ -170,6 +170,7 @@ export function CardDialog({
   const [confirmar, setConfirmar] = useState(false);
   const [confirmTexto, setConfirmTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const enviandoDescricaoRef = useRef(false);
   const [arrastandoArq, setArrastandoArq] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const coladasRef = useRef(new Map<string, string>());
@@ -310,7 +311,13 @@ export function CardDialog({
     .sort((a, b) => b.quando.localeCompare(a.quando));
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => {
+      if (!v && enviandoDescricaoRef.current) {
+        toast.info("Aguarde as imagens terminarem de enviar e salvar antes de fechar o card.");
+        return;
+      }
+      onOpenChange(v);
+    }}>
       <DialogContent className="max-h-[92vh] max-w-[90rem] overflow-y-auto p-0">
         <DialogTitle className="sr-only">{c.titulo || "Card"}</DialogTitle>
         <div className="grid gap-0 md:grid-cols-2">
@@ -753,8 +760,14 @@ export function CardDialog({
             <div className="space-y-1.5">
               <Label>Descrição</Label>
               <EditorDescricao
+                key={c.id}
                 value={descricao}
                 disabled={!mexer || !!travados["descricao"]}
+                onEnvioChange={(v) => { enviandoDescricaoRef.current = v; }}
+                onDescartarImagem={async ({ id, path }) => {
+                  await deleteAnexo(id, path);
+                  void qc.invalidateQueries({ queryKey: ["tarefas", "anexos", c.id] });
+                }}
                 onChange={(html) => {
                   setDescricao(html);
                   digitando("descricao");
@@ -770,11 +783,11 @@ export function CardDialog({
                     return null;
                   }
                 }}
-                onBlur={(html) => {
+                onBlur={async (html) => {
                   if (html === c.descricao) return;
                   const antes = anexosNaDescricao(c.descricao ?? "");
                   const agora = anexosNaDescricao(html);
-                  salvar({ descricao: html });
+                  await salvar({ descricao: html });
                   const sairam = [...antes].filter(([id]) => !agora.has(id));
                   if (sairam.length) {
                     void Promise.all(sairam.map(([id, path]) => deleteAnexo(id, path).catch(() => {}))).then(() => {

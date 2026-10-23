@@ -82,36 +82,59 @@ function Barra({ editor }: { editor: Editor }) {
 type Colar = (f: File) => Promise<{ id: string; path: string } | null>;
 
 export function EditorDescricao({
-  value, disabled, onChange, onBlur, onColarImagem,
-}: { value: string; disabled?: boolean; onChange: (html: string) => void; onBlur: (html: string) => void; onColarImagem?: Colar }) {
+  value, disabled, onChange, onBlur, onColarImagem, onEnvioChange, onDescartarImagem,
+}: { value: string; disabled?: boolean; onChange: (html: string) => void; onBlur: (html: string) => void | Promise<void>; onColarImagem?: Colar; onEnvioChange?: (enviando: boolean) => void; onDescartarImagem?: (anexo: { id: string; path: string }) => Promise<void> }) {
   const colarRef = useRef<Colar | undefined>(onColarImagem);
   colarRef.current = onColarImagem;
   const edRef = useRef<Editor | null>(null);
+  const pendentesRef = useRef(0);
+  const callbacksRef = useRef({ onChange, onBlur, onEnvioChange, onDescartarImagem });
+  callbacksRef.current = { onChange, onBlur, onEnvioChange, onDescartarImagem };
 
   function enviar(files: File[], pos?: number) {
     const ed = edRef.current;
     const colar = colarRef.current;
     if (!ed || !colar) return false;
     const imgs = files.filter((f) => f.type.startsWith("image/"));
-    if (!imgs.length) return false;
+    const tipoImagem = ed.schema.nodes["image"];
+    if (!imgs.length || !tipoImagem) return false;
+    pendentesRef.current += imgs.length;
+    callbacksRef.current.onEnvioChange?.(true);
     for (const f of imgs) {
       const temp = crypto.randomUUID();
-      const node = ed.schema.nodes["image"]!.create({ temp });
+      const node = tipoImagem.create({ temp });
       const tr = ed.state.tr;
       if (pos != null) tr.insert(pos, node); else tr.replaceSelectionWith(node);
       ed.view.dispatch(tr);
-      void colar(f).then((r) => {
+      void colar(f).then(async (r) => {
         const e = edRef.current;
-        if (!e) return;
+        if (!e || e.isDestroyed) return;
         let achou: number | null = null;
         e.state.doc.descendants((n, p) => {
           if (n.type.name === "image" && n.attrs["temp"] === temp) achou = p;
         });
-        if (achou == null) return;
+        if (achou == null) {
+          if (r) await callbacksRef.current.onDescartarImagem?.(r);
+          return;
+        }
         const t = e.state.tr;
         if (r) t.setNodeMarkup(achou, undefined, { anexo: r.path, anexoId: r.id, temp: null });
         else t.delete(achou, achou + 1);
         e.view.dispatch(t);
+      }).finally(async () => {
+        pendentesRef.current -= 1;
+        if (pendentesRef.current > 0) return;
+        const e = edRef.current;
+        try {
+          if (e && !e.isDestroyed) {
+            const html = e.isEmpty ? "" : e.getHTML();
+            callbacksRef.current.onChange(html);
+            // O envio termina sem um novo blur: gravar explicitamente o documento final.
+            await callbacksRef.current.onBlur(html);
+          }
+        } finally {
+          callbacksRef.current.onEnvioChange?.(false);
+        }
       });
     }
     return true;
@@ -149,14 +172,17 @@ export function EditorDescricao({
         return enviar(files, pos);
       },
     },
-    onUpdate: ({ editor }) => onChange(editor.isEmpty ? "" : editor.getHTML()),
-    onBlur: ({ editor }) => onBlur(editor.isEmpty ? "" : editor.getHTML()),
+    onUpdate: ({ editor }) => callbacksRef.current.onChange(editor.isEmpty ? "" : editor.getHTML()),
+    onBlur: ({ editor }) => {
+      // Placeholders são locais e nunca devem ser enviados como imagens vazias.
+      if (pendentesRef.current === 0) void callbacksRef.current.onBlur(editor.isEmpty ? "" : editor.getHTML());
+    },
   });
 
   edRef.current = editor;
   useEffect(() => { editor?.setEditable(!disabled); }, [editor, disabled]);
   useEffect(() => {
-    if (!editor || editor.isFocused) return;
+    if (!editor || editor.isFocused || pendentesRef.current > 0) return;
     const atual = editor.isEmpty ? "" : editor.getHTML();
     if (atual !== value) editor.commands.setContent(paraHtml(value), { emitUpdate: false });
   }, [editor, value]);
