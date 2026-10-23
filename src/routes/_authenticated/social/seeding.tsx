@@ -561,7 +561,7 @@ function Seletor({ valor, opcoes, onEscolher, placeholder, disabled, vazioTexto,
       <PopoverContent align="start" className="w-64 p-0">
         <Command>
           <CommandInput placeholder="Buscar…" />
-          <CommandList>
+          <CommandList className="max-h-60 overflow-y-auto">
             <CommandEmpty>Nada encontrado.</CommandEmpty>
             {permitirLimpar ? (
               <CommandItem value={`__${permitirLimpar}`} onSelect={() => { onEscolher({ id: "", nome: "" }); setAberto(false); }}>
