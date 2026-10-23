@@ -476,7 +476,14 @@ function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho }: {
   }
 
   const opProdutos = useMemo(() => produtos.filter((x) => x.ativo).map((x) => ({ id: x.id, nome: nomePai(x) })), [produtos]);
-  const opCores = useMemo(() => cores.filter((x) => x.ativo).map((x) => ({ id: x.id, nome: x.nome, hex: x.hex })), [cores]);
+  // Só as cores ativadas para o modelo escolhido (sem modelo: todas as cores ativas).
+  const opCores = useMemo(() => {
+    const doModelo = produto ? new Set(produto.cores.map((c) => c.cor_id)) : null;
+    return cores
+      .filter((x) => x.ativo && (!doModelo || doModelo.has(x.id)))
+      .map((x) => ({ id: x.id, nome: x.nome, hex: x.hex }));
+  }, [cores, produto]);
+  const hexAtual = cores.find((x) => x.id === peca?.cor_id)?.hex;
   const opEstampas = useMemo(() => estampas.map((x) => ({ id: x.id, nome: x.nome })), [estampas]);
 
   return (
@@ -485,7 +492,8 @@ function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho }: {
         onEscolher={(o) => gravar({ produto_id: o.id, produto_nome: o.nome })} />
       <Seletor disabled={!editavel} valor={peca?.estampa_nome ?? null} vazioTexto="Lisa" opcoes={opEstampas} placeholder={vazia ? "Estampa…" : "Lisa"}
         permitirLimpar="Lisa" onEscolher={(o) => gravar({ estampa_id: o.id || null, estampa_nome: o.id ? o.nome : null })} />
-      <Seletor disabled={!editavel} valor={peca?.cor_nome ?? null} opcoes={opCores} placeholder={vazia ? "Cor…" : "—"}
+      <Seletor disabled={!editavel} valor={peca?.cor_nome ?? null} valorHex={hexAtual} opcoes={opCores} placeholder={vazia ? "Cor…" : "—"}
+        vazioOpcoes={produto ? "Nenhuma cor ativada para este modelo." : undefined}
         onEscolher={(o) => gravar({ cor_id: o.id, cor_nome: o.nome })} />
       <select
         ref={tamRef}
@@ -539,14 +547,23 @@ function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho }: {
   );
 }
 
-function Seletor({ valor, opcoes, onEscolher, placeholder, disabled, vazioTexto, permitirLimpar }: {
+function ChipCor({ nome, hex }: { nome: string; hex: string }) {
+  return (
+    <span className="inline-block max-w-full truncate rounded-md border border-border/40 px-2 py-0.5 text-[13px] font-semibold"
+      style={{ background: hex, color: corTextoContraste(hex) }}>{nome}</span>
+  );
+}
+
+function Seletor({ valor, valorHex, opcoes, onEscolher, placeholder, disabled, vazioTexto, permitirLimpar, vazioOpcoes }: {
   valor: string | null;
+  valorHex?: string;
   opcoes: { id: string; nome: string; hex?: string }[];
   onEscolher: (o: { id: string; nome: string }) => void;
   placeholder: string;
   disabled?: boolean;
   vazioTexto?: string;
   permitirLimpar?: string;
+  vazioOpcoes?: string;
 }) {
   const [aberto, setAberto] = useState(false);
   const texto = valor ?? null;
@@ -555,14 +572,14 @@ function Seletor({ valor, opcoes, onEscolher, placeholder, disabled, vazioTexto,
       <PopoverTrigger asChild>
         <button type="button" disabled={disabled} title={texto ?? undefined}
           className="h-7 w-full truncate rounded-md border border-transparent px-1 text-left hover:border-border focus:border-ring focus:outline-none disabled:cursor-default disabled:hover:border-transparent">
-          {texto ? texto : <span className="text-muted-foreground">{vazioTexto && placeholder === vazioTexto ? vazioTexto : placeholder}</span>}
+          {texto ? (valorHex ? <ChipCor nome={texto} hex={valorHex} /> : texto) : <span className="text-muted-foreground">{vazioTexto && placeholder === vazioTexto ? vazioTexto : placeholder}</span>}
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-64 p-0">
         <Command>
           <CommandInput placeholder="Buscar…" />
           <CommandList className="max-h-60 overflow-y-auto">
-            <CommandEmpty>Nada encontrado.</CommandEmpty>
+            <CommandEmpty>{opcoes.length === 0 && vazioOpcoes ? vazioOpcoes : "Nada encontrado."}</CommandEmpty>
             {permitirLimpar ? (
               <CommandItem value={`__${permitirLimpar}`} onSelect={() => { onEscolher({ id: "", nome: "" }); setAberto(false); }}>
                 <span className="text-muted-foreground">{permitirLimpar}</span>
@@ -570,8 +587,7 @@ function Seletor({ valor, opcoes, onEscolher, placeholder, disabled, vazioTexto,
             ) : null}
             {opcoes.map((o) => (
               <CommandItem key={o.id} value={`${o.nome} ${o.id}`} onSelect={() => { onEscolher(o); setAberto(false); }}>
-                {o.hex ? <span className="size-3 rounded-full border border-border" style={{ background: o.hex }} /> : null}
-                {o.nome}
+                {o.hex ? <ChipCor nome={o.nome} hex={o.hex} /> : o.nome}
               </CommandItem>
             ))}
           </CommandList>
