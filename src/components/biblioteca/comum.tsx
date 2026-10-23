@@ -25,7 +25,7 @@ export function patchProdutoOtimista(
 ) {
   const antes = qc.getQueryData<ProdutoBiblioteca[]>(CHAVE);
   qc.setQueryData<ProdutoBiblioteca[]>(CHAVE, (l) => l?.map((p) => (p.id === id ? { ...p, ...patch } : p)));
-  salvarProduto(id, patch).catch((e: Error) => {
+  salvarProduto(id, patch).then(() => qc.invalidateQueries({ queryKey: CHAVE })).catch((e: Error) => {
     qc.setQueryData(CHAVE, antes);
     toast.error(`Não foi possível gravar: ${e.message}`);
   });
