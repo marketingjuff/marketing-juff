@@ -22,3 +22,4 @@
 
 - Card comments use a compact TipTap editor and sanitized HTML with plain-text fallback; edition timestamps are database-triggered so all write paths stay consistent.
 - Task member triggers exclude the current responsible person and serialize member writes against the card row, keeping manual assignments and column-driven changes consistent.
+- Description image uploads keep transient nodes local, defer blur saves until the batch finishes, explicitly persist the completed document and prevent closing the card until persistence finishes so attachments cannot lose their inline placement.
