@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { corTextoContraste } from "@/lib/tarefas";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import {
