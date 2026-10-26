@@ -329,8 +329,10 @@ export function pdfEstampa(cores: CorEstampa[]): Blob {
     doc.text(limparTexto(ROTULO_FAMILIA[familia as Familia]), MARGEM, y);
     y += 6;
 
+    const espacoAbaixo = porLinha > 12 ? 5.2 : 1;
+
     for (const linha of emLinhas(lista, porLinha)) {
-      y = quebra(doc, y, altura + 2);
+      y = quebra(doc, y, altura + espacoAbaixo + 1);
       linha.forEach((cor, i) => {
         const x = MARGEM + i * (largura + 1);
         doc.setFillColor(cor.hex);
@@ -340,13 +342,20 @@ export function pdfEstampa(cores: CorEstampa[]): Blob {
         doc.setTextColor(r, g, b);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(porLinha > 12 ? 4.5 : 8);
-        doc.text(limparTexto(cor.codigo), x + 1, y + altura / 2 - 0.3);
+        doc.text(limparTexto(cor.codigo), x + 1, y + (porLinha > 12 ? 1.9 : altura / 2 - 0.3));
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(porLinha > 12 ? 3.2 : 6);
-        doc.text(textoCmyk(cor), x + 1, y + altura / 2 + 3);
+        doc.setFontSize(porLinha > 12 ? 3 : 6);
+        doc.text(textoCmyk(cor), x + 1, y + (porLinha > 12 ? 3.4 : altura / 2 + 3));
+        // Sem CMYK na linha do hex: cromáticas são muito estreitas, o hex vai abaixo da fichinha.
+        if (porLinha > 12) {
+          doc.setTextColor(0);
+          doc.text(cor.hex.toUpperCase(), x + 1, y + altura + 2.3);
+        } else {
+          doc.text(cor.hex.toUpperCase(), x + 1, y + altura / 2 + 6.6);
+        }
         doc.setTextColor(0);
       });
-      y += altura + 1;
+      y += altura + espacoAbaixo;
     }
     y += 7;
   }
