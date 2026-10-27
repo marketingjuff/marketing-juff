@@ -407,6 +407,13 @@
       "when": 1793116057859,
       "tag": "0057_filtro_etiquetas_quadro",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1793116683006,
+      "tag": "0058_filtro_responsaveis_quadro",
+      "breakpoints": true
     }
   ]
 }
