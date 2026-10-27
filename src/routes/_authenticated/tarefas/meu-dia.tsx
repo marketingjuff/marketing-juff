@@ -12,6 +12,7 @@ import { DialogItem } from "@/components/meudia/DialogItem";
 import { DialogExcluirRecorrente } from "@/components/meudia/DialogExcluirRecorrente";
 import { canEdit, profileQueryOptions } from "@/lib/auth";
 import { cardQueryOptions } from "@/lib/tarefas";
+import { frequenciaDoRecorrente } from "@/lib/meudia-recorrencia";
 import {
   NOMES_MES, atualizarItem, contagemDoMes, criarExcecao, criarItem, diarioQueryOptions,
   encerrarRecorrente, excecoesQueryOptions, excluirItem, feriadosQueryOptions, gravarDiario,
@@ -151,7 +152,7 @@ function MeuDiaPage() {
 
   const contagem = contagemDoMes(itens, ano, mes);
   const pendentes = recorrentes
-    .filter((r) => r.ativo && r.dia_semana === "livre" && (contagem[r.id] ?? 0) < r.vezes_mes)
+    .filter((r) => r.ativo && frequenciaDoRecorrente(r) === "livre" && (contagem[r.id] ?? 0) < r.vezes_mes)
     .map((r) => `${r.descricao} ${contagem[r.id] ?? 0} de ${r.vezes_mes}`);
 
   const diasDoDiario = dias.filter((d) => d <= hojeIso).slice(-20);
