@@ -21,7 +21,8 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable";
-import { EyeOff, Lock, Palette, Plus, Search, Tag, Users } from "lucide-react";
+import { EyeOff, Lock, Palette, Plus, Search, Tag, Users, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -43,6 +44,7 @@ import { ReorganizarCardsDialog } from "./ReorganizarCardsDialog";
 import { ColunaResponsavelDialog } from "./ColunaResponsavelDialog";
 import {
   arquivarColuna,
+  coresDaEtiqueta,
   createCard,
   createColuna,
   estaAtrasado,
@@ -113,9 +115,38 @@ export function QuadroBoard({
   const [busca, setBusca] = useState("");
   const [fResp, setFResp] = useState(TODOS);
   const [fEtiq, setFEtiq] = useState(TODOS);
+  const chaveFiltro = `mj.filtroEtiq.${quadro.id}`;
+  const [fEtiqs, setFEtiqs] = useState<string[]>(() => {
+    try {
+      const bruto = localStorage.getItem(chaveFiltro);
+      const lido: unknown = bruto ? JSON.parse(bruto) : [];
+      return Array.isArray(lido) ? lido.filter((x): x is string => typeof x === "string") : [];
+    } catch {
+      return [];
+    }
+  });
+  const pilulas = quadro.filtro_etiquetas;
+  useEffect(() => {
+    try {
+      localStorage.setItem(chaveFiltro, JSON.stringify(fEtiqs));
+    } catch {
+      // armazenamento indisponível, o filtro simplesmente não é lembrado
+    }
+  }, [chaveFiltro, fEtiqs]);
+  const etiquetasSelecionadas = useMemo(
+    () => (pilulas ? fEtiqs.filter((id) => etiquetasDoQuadro.some((e) => e.id === id)) : []),
+    [pilulas, fEtiqs, etiquetasDoQuadro],
+  );
+  const alternarEtiqueta = (id: string) =>
+    setFEtiqs((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   const [soAtrasados, setSoAtrasados] = useState(false);
   const [soMeus, setSoMeus] = useState(false);
-  const filtrando = !!busca.trim() || fResp !== TODOS || fEtiq !== TODOS || soAtrasados || soMeus;
+  const filtrando =
+    !!busca.trim() ||
+    fResp !== TODOS ||
+    (pilulas ? etiquetasSelecionadas.length > 0 : fEtiq !== TODOS) ||
+    soAtrasados ||
+    soMeus;
   const [cardAberto, setCardAberto] = useState<string | null>(cardInicial ?? null);
   const navegarCard = useNavigate();
   useEffect(() => {
@@ -181,7 +212,12 @@ export function QuadroBoard({
       .filter((c) => {
         if (busca.trim() && !c.titulo.toLowerCase().includes(busca.trim().toLowerCase())) return false;
         if (fResp !== TODOS && c.responsavel_id !== fResp) return false;
-        if (fEtiq !== TODOS && !c.etiquetas.includes(fEtiq)) return false;
+        if (pilulas) {
+          if (etiquetasSelecionadas.length > 0 && !etiquetasSelecionadas.some((id) => c.etiquetas.includes(id)))
+            return false;
+        } else if (fEtiq !== TODOS && !c.etiquetas.includes(fEtiq)) {
+          return false;
+        }
         if (soAtrasados && !estaAtrasado(c)) return false;
         if (soMeus && c.responsavel_id !== meuId && !c.membros.includes(meuId)) return false;
         return true;
@@ -191,6 +227,16 @@ export function QuadroBoard({
         if (prioridadeEtiqueta) return prioridadeEtiqueta;
         return Number(estaAtrasado(b)) - Number(estaAtrasado(a));
       });
+
+  const contarEtiqueta = (etiquetaId: string) =>
+    cards.filter((c) => {
+      if (!c.etiquetas.includes(etiquetaId)) return false;
+      if (busca.trim() && !c.titulo.toLowerCase().includes(busca.trim().toLowerCase())) return false;
+      if (fResp !== TODOS && c.responsavel_id !== fResp) return false;
+      if (soAtrasados && !estaAtrasado(c)) return false;
+      if (soMeus && c.responsavel_id !== meuId && !c.membros.includes(meuId)) return false;
+      return true;
+    }).length;
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
