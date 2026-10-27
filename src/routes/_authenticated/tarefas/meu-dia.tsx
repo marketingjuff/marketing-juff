@@ -11,8 +11,9 @@ import { CardDialog } from "@/components/tarefas/CardDialog";
 import { DialogItem } from "@/components/meudia/DialogItem";
 import { DialogExcluirRecorrente } from "@/components/meudia/DialogExcluirRecorrente";
 import { canEdit, profileQueryOptions } from "@/lib/auth";
+import { cardQueryOptions } from "@/lib/tarefas";
 import {
-  NOMES_MES, atualizarItem, cardQueryOptions, contagemDoMes, criarExcecao, criarItem, diarioQueryOptions,
+  NOMES_MES, atualizarItem, contagemDoMes, criarExcecao, criarItem, diarioQueryOptions,
   encerrarRecorrente, excecoesQueryOptions, excluirItem, feriadosQueryOptions, gravarDiario,
   iso, itensQueryOptions, livresApartirDe, montarItens, recorrentesQueryOptions, semanasDoMes,
   type ItemDia, type RelatoDia,
