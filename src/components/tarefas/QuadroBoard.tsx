@@ -466,13 +466,15 @@ export function QuadroBoard({
               {pessoasLista.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={fEtiq} onValueChange={setFEtiq}>
-            <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value={TODOS}>Etiquetas do quadro</SelectItem>
-              {etiquetasDoQuadro.map((e) => <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          {!pilulas ? (
+            <Select value={fEtiq} onValueChange={setFEtiq}>
+              <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={TODOS}>Etiquetas do quadro</SelectItem>
+                {etiquetasDoQuadro.map((e) => <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          ) : null}
           <label className="flex items-center gap-1.5 text-sm">
             <Switch checked={soAtrasados} onCheckedChange={setSoAtrasados} /> Só atrasados
           </label>
@@ -480,6 +482,42 @@ export function QuadroBoard({
             <Switch checked={soMeus} onCheckedChange={setSoMeus} /> Só os meus
           </label>
         </div>
+
+        {pilulas && etiquetasDoQuadro.length > 0 ? (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border pt-2">
+            {etiquetasDoQuadro.map((e) => {
+              const cs = coresDaEtiqueta(e, pessoas);
+              const on = etiquetasSelecionadas.includes(e.id);
+              const total = contarEtiqueta(e.id);
+              return (
+                <button
+                  key={e.id}
+                  type="button"
+                  onClick={() => alternarEtiqueta(e.id)}
+                  aria-pressed={on}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-full px-3 py-1 text-xs transition-opacity",
+                    on ? "opacity-100" : "opacity-60 hover:opacity-100",
+                  )}
+                  style={{ backgroundColor: cs.cor, color: cs.cor_texto }}
+                >
+                  <span className="font-medium">{e.nome}</span>
+                  <span className="tabular-nums opacity-80">{total}</span>
+                  {on ? <X className="size-3" /> : null}
+                </button>
+              );
+            })}
+            {etiquetasSelecionadas.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setFEtiqs([])}
+                className="px-2 text-xs text-muted-foreground underline-offset-2 hover:underline"
+              >
+                Limpar
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <div
@@ -509,7 +547,8 @@ export function QuadroBoard({
                   dragDisabled={false}
                   filtrando={filtrando}
                   onAbrirCard={setCardAberto}
-                  onAddCard={(t, topo) => rodar(() => createCard(quadro.id, col.id, t, topo))}
+                  onAddCard={(t, topo, etiqs) => rodar(() => createCard(quadro.id, col.id, t, topo, etiqs))}
+                  etiquetasParaCriar={pilulas ? etiquetasDoQuadro : []}
                   onRenomear={(nome) => rodar(() => updateColuna(col.id, { nome }))}
                   onToggleConclui={() => rodar(() => updateColuna(col.id, { conclui: !col.conclui }))}
                   onArquivar={() => rodar(() => arquivarColuna(col.id, true))}
