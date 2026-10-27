@@ -12,6 +12,7 @@ export function GradeMes({
   feriados,
   hojeIso,
   onAbrirBloco,
+  onAbrirCard,
   onAlternarFeito,
   onExcluir,
 }: {
@@ -21,6 +22,7 @@ export function GradeMes({
   feriados: Record<string, string>;
   hojeIso: string;
   onAbrirBloco: (dataIso: string, bloco: number) => void;
+  onAbrirCard: (cardId: string) => void;
   onAlternarFeito: (item: ItemDia) => void;
   onExcluir: (item: ItemDia) => void;
 }) {
@@ -100,9 +102,23 @@ export function GradeMes({
                             >
                               <Check className={cn("size-3", item.feito && "text-success")} />
                             </button>
-                            <span className={cn("min-w-0 flex-1 break-words text-[11px] leading-tight", item.feito && "line-through")}>
-                              {item.texto}
-                            </span>
+                            {item.card_id ? (
+                              <button
+                                type="button"
+                                onClick={() => onAbrirCard(item.card_id as string)}
+                                className={cn(
+                                  "min-w-0 flex-1 break-words text-left text-[11px] leading-tight underline-offset-2 hover:underline",
+                                  item.feito && "line-through",
+                                )}
+                                aria-label={`Abrir card ${item.texto}`}
+                              >
+                                {item.texto}
+                              </button>
+                            ) : (
+                              <span className={cn("min-w-0 flex-1 break-words text-[11px] leading-tight", item.feito && "line-through")}>
+                                {item.texto}
+                              </span>
+                            )}
                             {item.recorrente_id ? (
                               <RefreshCw className="mt-0.5 size-3 shrink-0 text-muted-foreground" />
                             ) : null}
