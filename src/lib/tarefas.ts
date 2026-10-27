@@ -19,6 +19,7 @@ export type Quadro = {
   etiqueta_do_criador: boolean;
   cards_privados: boolean;
   filtro_etiquetas: boolean;
+  filtro_responsaveis: boolean;
   membros: string[];
   cards_total?: number;
 };
@@ -296,6 +297,7 @@ async function fetchQuadros(arquivado: boolean): Promise<Quadro[]> {
     etiqueta_do_criador: q.etiqueta_do_criador ?? false,
     cards_privados: q.cards_privados ?? false,
     filtro_etiquetas: q.filtro_etiquetas ?? false,
+    filtro_responsaveis: q.filtro_responsaveis ?? false,
     membros: (q.tarefa_quadro_membros ?? []).map((m: { user_id: string }) => m.user_id),
     cards_total: (q.tarefa_cards ?? []).filter((c: { arquivado: boolean }) => !c.arquivado).length,
   }));
@@ -361,6 +363,7 @@ export const quadroQueryOptions = (quadroId: string) =>
           etiqueta_do_criador: q.etiqueta_do_criador ?? false,
           cards_privados: q.cards_privados ?? false,
           filtro_etiquetas: q.filtro_etiquetas ?? false,
+          filtro_responsaveis: q.filtro_responsaveis ?? false,
           membros: (q.tarefa_quadro_membros ?? []).map((m: { user_id: string }) => m.user_id),
         },
         colunas: (cols ?? []) as Coluna[],
@@ -371,7 +374,7 @@ export const quadroQueryOptions = (quadroId: string) =>
 
 export async function createQuadro(
   nome: string,
-  extra?: { descricao?: string; fundo_tipo?: FundoTipo; fundo_cor1?: string; fundo_cor2?: string; acesso?: "aberto" | "restrito"; exige_responsavel?: boolean; etiqueta_do_criador?: boolean; cards_privados?: boolean; filtro_etiquetas?: boolean },
+  extra?: { descricao?: string; fundo_tipo?: FundoTipo; fundo_cor1?: string; fundo_cor2?: string; acesso?: "aberto" | "restrito"; exige_responsavel?: boolean; etiqueta_do_criador?: boolean; cards_privados?: boolean; filtro_etiquetas?: boolean; filtro_responsaveis?: boolean },
 ): Promise<string> {
   const { count } = await supabase
     .from("tarefa_quadros")
@@ -390,7 +393,7 @@ export async function createQuadro(
   return data.id;
 }
 
-type QuadroEditavel = "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2" | "acesso" | "exige_responsavel" | "etiqueta_do_criador" | "cards_privados" | "filtro_etiquetas";
+type QuadroEditavel = "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2" | "acesso" | "exige_responsavel" | "etiqueta_do_criador" | "cards_privados" | "filtro_etiquetas" | "filtro_responsaveis";
 
 export async function updateQuadro(
   id: string,
@@ -408,6 +411,7 @@ export async function updateQuadro(
   if (values.etiqueta_do_criador !== undefined) limpo.etiqueta_do_criador = values.etiqueta_do_criador;
   if (values.cards_privados !== undefined) limpo.cards_privados = values.cards_privados;
   if (values.filtro_etiquetas !== undefined) limpo.filtro_etiquetas = values.filtro_etiquetas;
+  if (values.filtro_responsaveis !== undefined) limpo.filtro_responsaveis = values.filtro_responsaveis;
   const { error } = await supabase.from("tarefa_quadros").update(limpo).eq("id", id);
   if (error) throw error;
 }

@@ -1,0 +1,2 @@
+alter table public.tarefa_quadros add column if not exists filtro_responsaveis boolean not null default false;
+comment on column public.tarefa_quadros.filtro_responsaveis is 'Quando verdadeiro, o quadro mostra as pessoas em bolinhas clicaveis no lugar do seletor suspenso de responsavel. Desligado por padrao.';

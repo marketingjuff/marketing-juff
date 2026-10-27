@@ -65,6 +65,7 @@ import {
   podeEstruturar,
   podeMexerNoCard,
   type QuadroCompleto,
+  siglaPessoa,
 } from "@/lib/tarefas";
 
 const TODOS = "__todos__";
@@ -139,11 +140,39 @@ export function QuadroBoard({
   );
   const alternarEtiqueta = (id: string) =>
     setFEtiqs((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const chaveFiltroResp = `mj.filtroResp.${quadro.id}`;
+  const [fResps, setFResps] = useState<string[]>(() => {
+    try {
+      const bruto = localStorage.getItem(chaveFiltroResp);
+      const lido: unknown = bruto ? JSON.parse(bruto) : [];
+      return Array.isArray(lido) ? lido.filter((x): x is string => typeof x === "string") : [];
+    } catch {
+      return [];
+    }
+  });
+  const bolinhas = quadro.filtro_responsaveis;
+  useEffect(() => {
+    try {
+      localStorage.setItem(chaveFiltroResp, JSON.stringify(fResps));
+    } catch {
+      // armazenamento indisponível, o filtro simplesmente não é lembrado
+    }
+  }, [chaveFiltroResp, fResps]);
+  const pessoasDoQuadro = useMemo(() => {
+    const comCard = new Set(cards.filter((c) => c.responsavel_id).map((c) => c.responsavel_id as string));
+    return pessoasLista.filter((p) => comCard.has(p.id));
+  }, [cards, pessoasLista]);
+  const respsSelecionados = useMemo(
+    () => (bolinhas ? fResps.filter((id) => pessoasDoQuadro.some((p) => p.id === id)) : []),
+    [bolinhas, fResps, pessoasDoQuadro],
+  );
+  const alternarResponsavel = (id: string) =>
+    setFResps((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   const [soAtrasados, setSoAtrasados] = useState(false);
   const [soMeus, setSoMeus] = useState(false);
   const filtrando =
     !!busca.trim() ||
-    fResp !== TODOS ||
+    (bolinhas ? respsSelecionados.length > 0 : fResp !== TODOS) ||
     (pilulas ? etiquetasSelecionadas.length > 0 : fEtiq !== TODOS) ||
     soAtrasados ||
     soMeus;
@@ -211,7 +240,12 @@ export function QuadroBoard({
       .sort((a, b) => a.posicao - b.posicao)
       .filter((c) => {
         if (busca.trim() && !c.titulo.toLowerCase().includes(busca.trim().toLowerCase())) return false;
-        if (fResp !== TODOS && c.responsavel_id !== fResp) return false;
+        if (bolinhas) {
+          if (respsSelecionados.length > 0 && !respsSelecionados.includes(c.responsavel_id ?? ""))
+            return false;
+        } else if (fResp !== TODOS && c.responsavel_id !== fResp) {
+          return false;
+        }
         if (pilulas) {
           if (etiquetasSelecionadas.length > 0 && !etiquetasSelecionadas.some((id) => c.etiquetas.includes(id)))
             return false;
@@ -228,15 +262,35 @@ export function QuadroBoard({
         return Number(estaAtrasado(b)) - Number(estaAtrasado(a));
       });
 
-  const contarEtiqueta = (etiquetaId: string) =>
-    cards.filter((c) => {
-      if (!c.etiquetas.includes(etiquetaId)) return false;
-      if (busca.trim() && !c.titulo.toLowerCase().includes(busca.trim().toLowerCase())) return false;
-      if (fResp !== TODOS && c.responsavel_id !== fResp) return false;
-      if (soAtrasados && !estaAtrasado(c)) return false;
-      if (soMeus && c.responsavel_id !== meuId && !c.membros.includes(meuId)) return false;
+  const passaFiltroComum = (c: Card) => {
+    if (busca.trim() && !c.titulo.toLowerCase().includes(busca.trim().toLowerCase())) return false;
+    if (soAtrasados && !estaAtrasado(c)) return false;
+    if (soMeus && c.responsavel_id !== meuId && !c.membros.includes(meuId)) return false;
+    return true;
+  };
+
+  const passaFiltroPessoa = (c: Card) => {
+    if (bolinhas) {
+      if (respsSelecionados.length > 0 && !respsSelecionados.includes(c.responsavel_id ?? "")) return false;
       return true;
-    }).length;
+    }
+    return fResp === TODOS || c.responsavel_id === fResp;
+  };
+
+  const passaFiltroEtiqueta = (c: Card) => {
+    if (pilulas) {
+      if (etiquetasSelecionadas.length > 0 && !etiquetasSelecionadas.some((id) => c.etiquetas.includes(id)))
+        return false;
+      return true;
+    }
+    return fEtiq === TODOS || c.etiquetas.includes(fEtiq);
+  };
+
+  const contarEtiqueta = (etiquetaId: string) =>
+    cards.filter((c) => c.etiquetas.includes(etiquetaId) && passaFiltroComum(c) && passaFiltroPessoa(c)).length;
+
+  const contarPessoa = (pessoaId: string) =>
+    cards.filter((c) => c.responsavel_id === pessoaId && passaFiltroComum(c) && passaFiltroEtiqueta(c)).length;
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -459,13 +513,15 @@ export function QuadroBoard({
               onChange={(e) => setBusca(e.target.value)}
             />
           </div>
-          <Select value={fResp} onValueChange={setFResp}>
-            <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value={TODOS}>Todos responsáveis</SelectItem>
-              {pessoasLista.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          {!bolinhas ? (
+            <Select value={fResp} onValueChange={setFResp}>
+              <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={TODOS}>Todos responsáveis</SelectItem>
+                {pessoasLista.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          ) : null}
           {!pilulas ? (
             <Select value={fEtiq} onValueChange={setFEtiq}>
               <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
@@ -483,37 +539,85 @@ export function QuadroBoard({
           </label>
         </div>
 
-        {pilulas && etiquetasDoQuadro.length > 0 ? (
-          <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border pt-2">
-            {etiquetasDoQuadro.map((e) => {
-              const cs = coresDaEtiqueta(e, pessoas);
-              const on = etiquetasSelecionadas.includes(e.id);
-              const total = contarEtiqueta(e.id);
-              return (
-                <button
-                  key={e.id}
-                  type="button"
-                  onClick={() => alternarEtiqueta(e.id)}
-                  aria-pressed={on}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-full px-3 py-1 text-xs transition-opacity",
-                    on ? "opacity-100" : "opacity-60 hover:opacity-100",
-                  )}
-                  style={{ backgroundColor: cs.cor, color: cs.cor_texto }}
-                >
-                  <span className="font-medium">{e.nome}</span>
-                  <span className="tabular-nums opacity-80">{total}</span>
-                  {on ? <X className="size-3" /> : null}
-                </button>
-              );
-            })}
-            {etiquetasSelecionadas.length > 0 ? (
+        {(pilulas && etiquetasDoQuadro.length > 0) || (bolinhas && pessoasDoQuadro.length > 0) ? (
+          <div className="mt-2 space-y-1.5 border-t border-border pt-2">
+            {pilulas && etiquetasDoQuadro.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {etiquetasDoQuadro.map((e) => {
+                  const cs = coresDaEtiqueta(e, pessoas);
+                  const on = etiquetasSelecionadas.includes(e.id);
+                  const total = contarEtiqueta(e.id);
+                  return (
+                    <button
+                      key={e.id}
+                      type="button"
+                      onClick={() => alternarEtiqueta(e.id)}
+                      aria-pressed={on}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-full px-3 py-1 text-xs transition-opacity",
+                        on ? "opacity-100" : "opacity-60 hover:opacity-100",
+                      )}
+                      style={{ backgroundColor: cs.cor, color: cs.cor_texto }}
+                    >
+                      <span className="font-medium">{e.nome}</span>
+                      <span className="tabular-nums opacity-80">{total}</span>
+                      {on ? <X className="size-3" /> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            {bolinhas && pessoasDoQuadro.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {pessoasDoQuadro.map((p) => {
+                  const on = respsSelecionados.includes(p.id);
+                  const total = contarPessoa(p.id);
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => alternarResponsavel(p.id)}
+                      aria-pressed={on}
+                      title={p.nome}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-full py-0.5 pl-0.5 pr-2.5 text-xs transition-opacity",
+                        on
+                          ? "bg-secondary opacity-100 ring-1 ring-foreground/30"
+                          : "opacity-60 hover:opacity-100",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold leading-none tracking-tight",
+                          !p.cor_avatar && "bg-primary text-primary-foreground",
+                        )}
+                        style={
+                          p.cor_avatar
+                            ? { backgroundColor: p.cor_avatar, color: p.cor_texto_avatar ?? "#ffffff" }
+                            : undefined
+                        }
+                      >
+                        {siglaPessoa(p)}
+                      </span>
+                      <span className="tabular-nums text-muted-foreground">{total}</span>
+                      {on ? <X className="size-3 text-muted-foreground" /> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            {etiquetasSelecionadas.length > 0 || respsSelecionados.length > 0 ? (
               <button
                 type="button"
-                onClick={() => setFEtiqs([])}
-                className="px-2 text-xs text-muted-foreground underline-offset-2 hover:underline"
+                onClick={() => {
+                  setFEtiqs([]);
+                  setFResps([]);
+                }}
+                className="text-xs text-muted-foreground underline-offset-2 hover:underline"
               >
-                Limpar
+                Limpar filtros
               </button>
             ) : null}
           </div>

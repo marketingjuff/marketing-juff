@@ -2783,6 +2783,7 @@ export type Database = {
           etiqueta_do_criador: boolean
           exige_responsavel: boolean
           filtro_etiquetas: boolean
+          filtro_responsaveis: boolean
           fundo_cor1: string
           fundo_cor2: string
           fundo_tipo: string
@@ -2800,6 +2801,7 @@ export type Database = {
           etiqueta_do_criador?: boolean
           exige_responsavel?: boolean
           filtro_etiquetas?: boolean
+          filtro_responsaveis?: boolean
           fundo_cor1?: string
           fundo_cor2?: string
           fundo_tipo?: string
@@ -2817,6 +2819,7 @@ export type Database = {
           etiqueta_do_criador?: boolean
           exige_responsavel?: boolean
           filtro_etiquetas?: boolean
+          filtro_responsaveis?: boolean
           fundo_cor1?: string
           fundo_cor2?: string
           fundo_tipo?: string
