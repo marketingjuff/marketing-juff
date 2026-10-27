@@ -7,9 +7,11 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { GradeMes } from "@/components/meudia/GradeMes";
 import { Diario } from "@/components/meudia/Diario";
+import { CardDialog } from "@/components/tarefas/CardDialog";
 import { DialogItem } from "@/components/meudia/DialogItem";
 import { DialogExcluirRecorrente } from "@/components/meudia/DialogExcluirRecorrente";
-import { profileQueryOptions } from "@/lib/auth";
+import { canEdit, profileQueryOptions } from "@/lib/auth";
+import { cardQueryOptions } from "@/lib/tarefas";
 import {
   NOMES_MES, atualizarItem, contagemDoMes, criarExcecao, criarItem, diarioQueryOptions,
   encerrarRecorrente, excecoesQueryOptions, excluirItem, feriadosQueryOptions, gravarDiario,
@@ -42,6 +44,11 @@ function MeuDiaPage() {
   const [mes, setMes] = useState(hoje.getMonth() + 1);
   const [alvo, setAlvo] = useState<{ data: string; bloco: number } | null>(null);
   const [aTirar, setATirar] = useState<ItemDia | null>(null);
+  const [cardAbertoId, setCardAbertoId] = useState<string | null>(null);
+  const { data: cardAberto } = useQuery({
+    ...cardQueryOptions(cardAbertoId ?? ""),
+    enabled: !!cardAbertoId,
+  });
 
   const mes2 = mes === 12 ? 1 : mes + 1;
   const ano2 = mes === 12 ? ano + 1 : ano;
@@ -154,6 +161,7 @@ function MeuDiaPage() {
     feriados,
     hojeIso,
     onAbrirBloco: (data: string, bloco: number) => setAlvo({ data, bloco }),
+    onAbrirCard: (cardId: string) => setCardAbertoId(cardId),
     onAlternarFeito: alternarFeito,
     onExcluir: pedirParaTirar,
   };
@@ -270,6 +278,15 @@ function MeuDiaPage() {
         descricao={aTirar?.texto ?? ""}
         onSoEsteDia={() => aTirar && tirarSoEsteDia(aTirar)}
         onEsteEProximos={() => aTirar && tirarEsteEProximos(aTirar)}
+      />
+
+      <CardDialog
+        card={cardAberto ?? null}
+        open={!!cardAbertoId && !!cardAberto}
+        onOpenChange={(v) => !v && setCardAbertoId(null)}
+        editable={canEdit(profile, "tarefas.quadros")}
+        isAdmin={profile?.role === "admin"}
+        meuId={profile?.id ?? ""}
       />
     </AppShell>
   );
