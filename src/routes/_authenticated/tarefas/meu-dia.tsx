@@ -7,11 +7,12 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { GradeMes } from "@/components/meudia/GradeMes";
 import { Diario } from "@/components/meudia/Diario";
+import { CardDialog } from "@/components/tarefas/CardDialog";
 import { DialogItem } from "@/components/meudia/DialogItem";
 import { DialogExcluirRecorrente } from "@/components/meudia/DialogExcluirRecorrente";
-import { profileQueryOptions } from "@/lib/auth";
+import { canEdit, profileQueryOptions } from "@/lib/auth";
 import {
-  NOMES_MES, atualizarItem, contagemDoMes, criarExcecao, criarItem, diarioQueryOptions,
+  NOMES_MES, atualizarItem, cardQueryOptions, contagemDoMes, criarExcecao, criarItem, diarioQueryOptions,
   encerrarRecorrente, excecoesQueryOptions, excluirItem, feriadosQueryOptions, gravarDiario,
   iso, itensQueryOptions, livresApartirDe, montarItens, recorrentesQueryOptions, semanasDoMes,
   type ItemDia, type RelatoDia,
