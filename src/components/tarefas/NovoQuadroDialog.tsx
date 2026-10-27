@@ -55,6 +55,7 @@ export function NovoQuadroDialog({
   const [exigeResponsavel, setExigeResponsavel] = useState(false);
   const [etiquetaDoCriador, setEtiquetaDoCriador] = useState(false);
   const [cardsPrivados, setCardsPrivados] = useState(false);
+  const [filtroEtiquetas, setFiltroEtiquetas] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
@@ -71,6 +72,7 @@ export function NovoQuadroDialog({
     setExigeResponsavel(quadro?.exige_responsavel ?? false);
     setEtiquetaDoCriador(quadro?.etiqueta_do_criador ?? false);
     setCardsPrivados(quadro?.cards_privados ?? false);
+    setFiltroEtiquetas(quadro?.filtro_etiquetas ?? false);
   }, [open, quadro]);
 
   async function salvar() {
@@ -78,11 +80,11 @@ export function NovoQuadroDialog({
     try {
       let id = quadro?.id;
       if (!somenteParticipantes) {
-        if (id) await updateQuadro(id, { nome: nome.trim() || "Novo quadro", descricao, acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, cards_privados: cardsPrivados, ...fundo });
-        else id = await createQuadro(nome, { descricao, acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, cards_privados: cardsPrivados, ...fundo });
+        if (id) await updateQuadro(id, { nome: nome.trim() || "Novo quadro", descricao, acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, cards_privados: cardsPrivados, filtro_etiquetas: filtroEtiquetas, ...fundo });
+        else id = await createQuadro(nome, { descricao, acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, cards_privados: cardsPrivados, filtro_etiquetas: filtroEtiquetas, ...fundo });
       }
       if (id) await setMembrosQuadro(id, membros);
-      if (id && somenteParticipantes) await updateQuadro(id, { acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, cards_privados: cardsPrivados });
+      if (id && somenteParticipantes) await updateQuadro(id, { acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, cards_privados: cardsPrivados, filtro_etiquetas: filtroEtiquetas });
       if (id && !somenteParticipantes) registrarFundoRecente(fundo);
       await qc.invalidateQueries({ queryKey: ["tarefas"] });
       await qc.invalidateQueries({ queryKey: CHAVE_BARRA });
@@ -218,6 +220,21 @@ export function NovoQuadroDialog({
                 Operador enxerga só os cards em que é responsável ou membro. Admin e gestor enxergam
                 tudo. Card sem responsável e sem membro não aparece para operador nenhum. Com a
                 marcação ligada, o card ganha o campo Membros.
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-2 rounded-lg border border-border p-2.5">
+            <Checkbox
+              checked={filtroEtiquetas}
+              onCheckedChange={(v) => setFiltroEtiquetas(!!v)}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="block text-sm font-medium">Filtro de etiquetas em pílulas</span>
+              <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                As etiquetas do quadro aparecem em cima, clicáveis, com a contagem de cards, e dá
+                para marcar mais de uma. O formulário de criar card também passa a oferecer as
+                etiquetas. Desligado, o quadro volta ao seletor em lista.
               </span>
             </span>
           </label>
