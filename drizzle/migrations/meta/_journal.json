@@ -400,6 +400,13 @@
       "when": 1793111839908,
       "tag": "0056_meudia_frequencias_recorrentes",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1793116057859,
+      "tag": "0057_filtro_etiquetas_quadro",
+      "breakpoints": true
     }
   ]
 }
