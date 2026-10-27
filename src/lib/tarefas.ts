@@ -1176,6 +1176,23 @@ function mapComContexto(c: any): CardComContexto {
 
 const CTX_SELECT = `${CARD_SELECT}, tarefa_quadros!tarefa_cards_quadro_id_fkey(nome, arquivado, fundo_cor1, fundo_cor2), tarefa_colunas!tarefa_cards_coluna_id_fkey(nome)`;
 
+/** Um card pelo id, para abrir de outras telas (Meu dia, calendário). */
+export const cardQueryOptions = (cardId: string) =>
+  queryOptions({
+    queryKey: ["tarefas", "card", cardId],
+    queryFn: async (): Promise<CardComContexto | null> => {
+      const { data, error } = await supabase
+        .from("tarefa_cards")
+        .select(CTX_SELECT)
+        .eq("id", cardId)
+        .maybeSingle();
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return data ? mapComContexto(data as any) : null;
+    },
+    enabled: !!cardId,
+  });
+
 export const meusCardsQueryOptions = (userId: string) =>
   queryOptions({
     queryKey: ["tarefas", "meus", userId],
