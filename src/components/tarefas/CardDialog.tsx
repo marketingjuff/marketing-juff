@@ -327,7 +327,7 @@ export function CardDialog({
         <div className="grid gap-0 md:grid-cols-2">
           {/* Coluna principal */}
           <div className="min-w-0 space-y-3 p-5">
-            <div className="-mb-1 pr-6">
+            <div className="mb-2 pr-6">
               <Input
                 value={titulo}
                 disabled={!mexer || !!travados["titulo"]}
@@ -353,7 +353,7 @@ export function CardDialog({
                 <SelectTrigger className="h-[25px] w-auto gap-1 border-border/70 py-0 pl-1 pr-[7px] text-[12px]" title={c.responsavel_id ? nomePessoa(c.responsavel_id) : "Ninguém"}>
                   {c.responsavel_id ? (
                     <span
-                      className="flex size-[18px] shrink-0 items-center justify-center rounded-full text-[9px] font-semibold"
+                      className="flex! size-[22px] shrink-0 items-center justify-center rounded-full text-[9px] font-semibold tracking-tight"
                       style={{
                         backgroundColor: pessoaDe(c.responsavel_id)?.cor_avatar ?? "#378add",
                         color: pessoaDe(c.responsavel_id)?.cor_texto_avatar ?? "#ffffff",
