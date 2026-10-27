@@ -2,15 +2,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Plus } from "lucide-react";
 import { NovaEtiquetaForm } from "./NovaEtiquetaForm";
 import { cn } from "@/lib/utils";
-import { coresDaEtiqueta, siglaPessoa, type Etiqueta } from "@/lib/tarefas";
+import { coresDaEtiqueta, siglaPessoa, type Etiqueta, type Pessoa } from "@/lib/tarefas";
 
-type PessoaDoTrilho = {
-  id: string;
-  nome: string | null;
-  sigla: string | null;
-  cor_avatar: string | null;
-  cor_texto_avatar: string | null;
-};
+type PessoaDoTrilho = Pessoa;
 
 export function TrilhoEtiquetas({
   quadroId,
