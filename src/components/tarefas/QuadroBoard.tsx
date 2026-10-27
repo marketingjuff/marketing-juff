@@ -622,8 +622,6 @@ export function QuadroBoard({
             ) : null}
           </div>
         ) : null}
-          </div>
-        ) : null}
       </div>
 
       <div
