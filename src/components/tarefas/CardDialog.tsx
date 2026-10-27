@@ -7,7 +7,7 @@ import { canEdit, profileQueryOptions } from "@/lib/auth";
 import { NovaEtiquetaForm } from "./NovaEtiquetaForm";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Archive, Users, RefreshCw, Download, User, Tag, Clock, CheckSquare, Paperclip, SlidersHorizontal, ExternalLink, Plus, Trash2, Upload, X, Pencil } from "lucide-react";
+import { Archive, Users, RefreshCw, Download, User, Tag, Clock, CheckSquare, Paperclip, SlidersHorizontal, ExternalLink, Plus, Trash2, Upload, X, Pencil, CheckCircle2, RotateCcw, Copy } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -47,6 +47,9 @@ import {
   addItemChecklist,
   anexosQueryOptions,
   arquivarCard,
+  concluirCard,
+  reabrirCard,
+  duplicarCard,
   baixarAnexo,
   podeMexerNoCard,
   checklistQueryOptions,
@@ -199,7 +202,8 @@ export function CardDialog({
   if (!card) return null;
   const c = localCard && localCard.id === card.id ? localCard : card;
   const membros = c.membros.filter((id) => id !== c.responsavel_id);
-  const mexer = podeMexerNoCard(c, role, meuId, editable);
+  const podeMexer = podeMexerNoCard(c, role, meuId, editable);
+  const mexer = podeMexer && !c.concluido;
   const etiquetasVisiveis = etiquetasDoQuadro(etiquetas, c.quadro_id);
   const cardsPrivados = quadros.find((q) => q.id === c.quadro_id)?.cards_privados ?? false;
   const nomePessoa = (id: string | null) => pessoas.find((p) => p.id === id)?.nome ?? "Ninguém";
@@ -336,6 +340,37 @@ export function CardDialog({
               />
               <AvisoEscrevendo quem={travados["titulo"]} />
             </div>
+
+            {podeMexer ? (
+              <div className={cn("flex flex-wrap items-center gap-2 rounded-lg px-3 py-2", c.concluido ? "bg-success/15" : "bg-muted/50")}>
+                {c.concluido ? (
+                  <>
+                    <span className="mr-auto flex items-center gap-1.5 text-sm font-semibold">
+                      <CheckCircle2 className="size-4" /> Concluído — somente leitura
+                    </span>
+                    <Button size="sm" variant="outline" className="gap-1.5" onClick={async () => {
+                      await rodar(() => reabrirCard(c));
+                      toast.success("Card reaberto");
+                    }}>
+                      <RotateCcw className="size-4" /> Reabrir
+                    </Button>
+                    <Button size="sm" variant="outline" className="gap-1.5" onClick={async () => {
+                      await rodar(() => duplicarCard(c));
+                      toast.success("Cópia criada na primeira coluna");
+                    }}>
+                      <Copy className="size-4" /> Duplicar
+                    </Button>
+                  </>
+                ) : (
+                  <Button size="sm" className="gap-1.5" onClick={async () => {
+                    await rodar(() => concluirCard(c.id));
+                    toast.success("Card concluído");
+                  }}>
+                    <CheckCircle2 className="size-4" /> Marcar como concluído
+                  </Button>
+                )}
+              </div>
+            ) : null}
 
             <div className="flex flex-wrap gap-1.5">
               <Select

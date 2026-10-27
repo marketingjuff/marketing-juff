@@ -655,6 +655,76 @@ export async function reorderCards(colunaId: string, idsNaOrdem: string[]): Prom
   if (error) throw error;
 }
 
+/** Primeira coluna ativa do quadro que não conclui card. */
+async function primeiraColunaAberta(quadroId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("tarefa_colunas")
+    .select("id, conclui, arquivado, posicao")
+    .eq("quadro_id", quadroId)
+    .order("posicao", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).find((c) => !c.conclui && !c.arquivado)?.id ?? null;
+}
+
+/** Marca como concluído: o card fica somente leitura até ser reaberto. */
+export async function concluirCard(id: string): Promise<void> {
+  const { error } = await supabase.from("tarefa_cards").update({ concluido: true }).eq("id", id);
+  if (error) throw error;
+  await registrarHistorico(id, "Concluiu", "");
+}
+
+/** Reabre: se estiver numa coluna de conclusão, volta para a primeira coluna aberta. */
+export async function reabrirCard(card: Pick<Card, "id" | "quadro_id" | "coluna_id">): Promise<void> {
+  const { data: col } = await supabase.from("tarefa_colunas").select("conclui").eq("id", card.coluna_id).maybeSingle();
+  const values: { concluido: boolean; coluna_id?: string; posicao?: number } = { concluido: false };
+  if (col?.conclui) {
+    const destino = await primeiraColunaAberta(card.quadro_id);
+    if (!destino) throw new Error("Este quadro não tem coluna aberta para receber o card.");
+    values.coluna_id = destino;
+    values.posicao = -1;
+  }
+  const { error } = await supabase.from("tarefa_cards").update(values).eq("id", card.id);
+  if (error) throw error;
+  await registrarHistorico(card.id, "Reabriu", "");
+}
+
+/** Cria uma cópia aberta do card (etiquetas e checklist desmarcado) na primeira coluna aberta. */
+export async function duplicarCard(card: Card): Promise<void> {
+  const destino = (await primeiraColunaAberta(card.quadro_id)) ?? card.coluna_id;
+  const { data: novo, error } = await supabase
+    .from("tarefa_cards")
+    .insert({
+      quadro_id: card.quadro_id,
+      coluna_id: destino,
+      titulo: `${card.titulo} (cópia)`,
+      descricao: card.descricao,
+      responsavel_id: card.responsavel_id,
+      prioridade: card.prioridade,
+      esforco: card.esforco,
+      depende_de: card.depende_de,
+      link_externo: card.link_externo,
+      cor: card.cor,
+      cor_fundo: card.cor_fundo,
+      posicao: -1,
+      criado_por: await uid(),
+      lembrete_min: 0,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  if (card.etiquetas.length) await setEtiquetasDoCard(novo.id, card.etiquetas);
+  const { data: itens } = await supabase
+    .from("tarefa_checklist")
+    .select("texto, posicao")
+    .eq("card_id", card.id);
+  if (itens?.length) {
+    const { error: e2 } = await supabase
+      .from("tarefa_checklist")
+      .insert(itens.map((i) => ({ card_id: novo.id, texto: i.texto, posicao: i.posicao })));
+    if (e2) throw e2;
+  }
+}
+
 export async function arquivarCard(id: string, arquivado: boolean): Promise<void> {
   const { error } = await supabase.from("tarefa_cards").update({ arquivado }).eq("id", id);
   if (error) throw error;
