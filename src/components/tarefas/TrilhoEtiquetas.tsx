@@ -2,7 +2,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Plus } from "lucide-react";
 import { NovaEtiquetaForm } from "./NovaEtiquetaForm";
 import { cn } from "@/lib/utils";
-import { coresDaEtiqueta, siglaPessoa, type Etiqueta, type Pessoa } from "@/lib/tarefas";
+import { coresDaEtiqueta, type Etiqueta, type Pessoa } from "@/lib/tarefas";
 
 type PessoaDoTrilho = Pessoa;
 
@@ -39,8 +39,6 @@ export function TrilhoEtiquetas({
     a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" });
   const ligadas = etiquetasDoQuadro.filter((e) => etiquetasDoCard.includes(e.id)).sort(porNome);
   const desligadas = etiquetasDoQuadro.filter((e) => !etiquetasDoCard.includes(e.id)).sort(porNome);
-  const pessoaDe = (id: string | null) => pessoas.find((p) => p.id === id);
-  const membrosVisiveis = mostrarMembros ? membros.filter((id) => id !== responsavelId) : [];
 
   const pilula = (e: Etiqueta, on: boolean) => {
     const cs = coresDaEtiqueta(e, pessoas);
@@ -73,36 +71,7 @@ export function TrilhoEtiquetas({
   };
 
   return (
-    <div className="flex items-start gap-2 px-2 pt-2">
-      {responsavelId || membrosVisiveis.length > 0 ? (
-        <div className="flex shrink-0 items-center gap-1 pt-px">
-          {responsavelId ? (
-            <span
-              className="flex size-5 items-center justify-center rounded-full text-[9px] font-semibold"
-              style={{
-                backgroundColor: pessoaDe(responsavelId)?.cor_avatar ?? "#378add",
-                color: pessoaDe(responsavelId)?.cor_texto_avatar ?? "#ffffff",
-              }}
-              title={pessoaDe(responsavelId)?.nome ?? "Responsável"}
-            >
-              {siglaPessoa(pessoaDe(responsavelId) ?? { nome: "", sigla: null })}
-            </span>
-          ) : null}
-          {membrosVisiveis.map((id) => (
-            <span
-              key={id}
-              className="flex size-4 items-center justify-center rounded-full text-[8px] font-semibold opacity-70"
-              style={{
-                backgroundColor: pessoaDe(id)?.cor_avatar ?? "#888780",
-                color: pessoaDe(id)?.cor_texto_avatar ?? "#ffffff",
-              }}
-              title={`${pessoaDe(id)?.nome ?? "Pessoa"}, membro`}
-            >
-              {siglaPessoa(pessoaDe(id) ?? { nome: "", sigla: null })}
-            </span>
-          ))}
-        </div>
-      ) : null}
+    <div className="flex items-start gap-2 px-[6px] pt-[6px]">
 
       <div className="flex min-w-0 flex-wrap items-center gap-1">
         {ligadas.map((e) => pilula(e, true))}

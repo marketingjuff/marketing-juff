@@ -326,8 +326,8 @@ export function CardDialog({
         <DialogTitle className="sr-only">{c.titulo || "Card"}</DialogTitle>
         <div className="grid gap-0 md:grid-cols-2">
           {/* Coluna principal */}
-          <div className="min-w-0 space-y-4 p-5">
-            <div className="pr-6">
+          <div className="min-w-0 space-y-3 p-5">
+            <div className="-mb-1 pr-6">
               <Input
                 value={titulo}
                 disabled={!mexer || !!travados["titulo"]}
@@ -340,7 +340,8 @@ export function CardDialog({
               />
               <AvisoEscrevendo quem={travados["titulo"]} />
             </div>
-            <div className="flex flex-wrap items-center gap-1 rounded-lg bg-muted/50 px-[7px] py-[5px]">
+            <div className="space-y-0">
+            <div className="flex flex-wrap items-center gap-1 rounded-lg bg-muted/50 px-[6px] py-1">
               <Select
                 disabled={!mexer}
                 value={c.responsavel_id ?? NENHUM}
@@ -349,9 +350,23 @@ export function CardDialog({
                   salvar({ responsavel_id: novo }, ["Trocou responsável", `${nomePessoa(c.responsavel_id)} → ${nomePessoa(novo)}`]);
                 }}
               >
-                <SelectTrigger className="h-[25px] w-auto gap-1 border-border/70 px-[7px] text-[12px]" title={c.responsavel_id ? nomePessoa(c.responsavel_id) : "Ninguém"}>
-                  <User className="size-3.5" />
-                  Responsável
+                <SelectTrigger className="h-[25px] w-auto gap-1 border-border/70 py-0 pl-1 pr-[7px] text-[12px]" title={c.responsavel_id ? nomePessoa(c.responsavel_id) : "Ninguém"}>
+                  {c.responsavel_id ? (
+                    <span
+                      className="flex size-[18px] shrink-0 items-center justify-center rounded-full text-[9px] font-semibold"
+                      style={{
+                        backgroundColor: pessoaDe(c.responsavel_id)?.cor_avatar ?? "#378add",
+                        color: pessoaDe(c.responsavel_id)?.cor_texto_avatar ?? "#ffffff",
+                      }}
+                    >
+                      {siglaPessoa(pessoaDe(c.responsavel_id) ?? { nome: "", sigla: null })}
+                    </span>
+                  ) : (
+                    <User className="size-3.5 shrink-0" />
+                  )}
+                  <span className="max-w-[9rem] truncate">
+                    {c.responsavel_id ? nomePessoa(c.responsavel_id) : "Responsável"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NENHUM}>Ninguém</SelectItem>
@@ -402,7 +417,8 @@ export function CardDialog({
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="h-[25px] gap-1 px-[7px] text-[12px]" disabled={!mexer}>
-                    <Clock className="size-3.5" /> Datas
+                    <Clock className="size-3.5" />
+                    {c.data_entrega ? formatarDataHora(c.data_entrega, c.hora_entrega) : "Datas"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="max-h-[70vh] w-72 space-y-3 overflow-y-auto">
@@ -652,48 +668,55 @@ export function CardDialog({
                   ) : null}
                 </PopoverContent>
               </Popover>
+              {c.prioridade ? (
+                <span className="rounded bg-background px-1.5 py-[2px] text-[11px] uppercase leading-tight text-muted-foreground">
+                  {PRIORIDADES.find((p) => p.valor === c.prioridade)?.label ?? c.prioridade}
+                </span>
+              ) : null}
 
               {podeMexer ? (
                 <>
                   <span className="flex-1" />
                   {c.concluido ? (
-                    <span className="flex items-center gap-1 px-1 text-[12px] font-medium text-success">
-                      <CheckCircle2 className="size-3.5" /> Concluído
+                    <span className="flex items-center gap-1 px-1 text-[11px] font-medium text-success">
+                      <CheckCircle2 className="size-3" /> Concluído
                     </span>
                   ) : null}
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-[25px] gap-1 px-[7px] text-[12px]"
+                    title="Duplicar card"
+                    aria-label="Duplicar card"
+                    className="size-[25px] shrink-0 p-0"
                     onClick={async () => {
                       await rodar(() => duplicarCard(c));
                       toast.success("Cópia criada na primeira coluna");
                     }}
                   >
-                    <Copy className="size-3.5" /> Duplicar
+                    <Copy className="size-3.5" />
                   </Button>
                   {c.concluido ? (
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-[25px] gap-1 px-[9px] text-[12px]"
+                      className="h-[25px] shrink-0 gap-1 px-2 text-[11px]"
                       onClick={async () => {
                         await rodar(() => reabrirCard(c));
                         toast.success("Card reaberto");
                       }}
                     >
-                      <RotateCcw className="size-3.5" /> Reabrir
+                      <RotateCcw className="size-3" /> Reabrir
                     </Button>
                   ) : (
                     <Button
                       size="sm"
-                      className="h-[25px] gap-1 px-[9px] text-[12px]"
+                      className="h-[25px] shrink-0 gap-1 px-2 text-[11px]"
                       onClick={async () => {
                         await rodar(() => concluirCard(c.id));
                         toast.success("Card concluído");
                       }}
                     >
-                      <CheckCircle2 className="size-3.5" /> Concluir
+                      <CheckCircle2 className="size-3" /> Concluir
                     </Button>
                   )}
                 </>
@@ -724,21 +747,7 @@ export function CardDialog({
                 invalidar();
               }}
             />
-
-            {c.data_entrega || c.prioridade ? (
-              <div className="flex flex-wrap items-center gap-1.5 px-2">
-                {c.data_entrega ? (
-                  <span className="rounded border border-border px-1.5 py-0.5 text-[13px] text-muted-foreground">
-                    entrega {formatarDataHora(c.data_entrega, c.hora_entrega)}
-                  </span>
-                ) : null}
-                {c.prioridade ? (
-                  <span className="rounded border border-border px-1.5 py-0.5 text-[13px] text-muted-foreground">
-                    {PRIORIDADES.find((p) => p.valor === c.prioridade)?.label ?? c.prioridade}
-                  </span>
-                ) : null}
-              </div>
-            ) : null}
+            </div>
 
             <div className="space-y-1.5">
               <Label>Descrição</Label>
