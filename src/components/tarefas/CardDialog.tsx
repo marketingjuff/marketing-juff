@@ -362,12 +362,20 @@ export function CardDialog({
                     </Button>
                   </>
                 ) : (
-                  <Button size="sm" className="gap-1.5" onClick={async () => {
-                    await rodar(() => concluirCard(c.id));
-                    toast.success("Card concluído");
-                  }}>
-                    <CheckCircle2 className="size-4" /> Marcar como concluído
-                  </Button>
+                  <>
+                    <Button size="sm" className="mr-auto gap-1.5" onClick={async () => {
+                      await rodar(() => concluirCard(c.id));
+                      toast.success("Card concluído");
+                    }}>
+                      <CheckCircle2 className="size-4" /> Marcar como concluído
+                    </Button>
+                    <Button size="sm" variant="outline" className="gap-1.5" onClick={async () => {
+                      await rodar(() => duplicarCard(c));
+                      toast.success("Cópia criada na primeira coluna");
+                    }}>
+                      <Copy className="size-4" /> Duplicar
+                    </Button>
+                  </>
                 )}
               </div>
             ) : null}
