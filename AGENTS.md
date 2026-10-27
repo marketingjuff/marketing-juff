@@ -24,3 +24,4 @@
 - Task member triggers exclude the current responsible person and serialize member writes against the card row, keeping manual assignments and column-driven changes consistent.
 - Description image uploads keep transient nodes local, defer blur saves until the batch finishes, explicitly persist the completed document and prevent closing the card until persistence finishes so attachments cannot lose their inline placement.
 - Meu dia evaluates expanded recurrence rules through a pure date-fns module and edits them in its popup; nullable frequency preserves legacy weekday rules without rewriting existing schedules.
+- Per-board pill label filter: the `filtro_etiquetas` flag on `tarefa_quadros` switches the board between the dropdown label selector and a multi-select pill bar, and also enables label pills in the create-card form; the selected pills persist only in browser localStorage per board, never in the database.
