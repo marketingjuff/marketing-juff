@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, Settings2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { meusCardsQueryOptions } from "@/lib/tarefas";
-import { criarRecorrente, recorrentesQueryOptions } from "@/lib/meudia";
+import { criarRecorrente, atualizarRecorrente, recorrentesQueryOptions, type ConfigRecorrente } from "@/lib/meudia";
+import { frequenciaDoRecorrente } from "@/lib/meudia-recorrencia";
+import { CamposRecorrencia } from "@/components/meudia/CamposRecorrencia";
 
 type Origem = "livre" | "card" | "recorrente";
 
@@ -44,6 +46,8 @@ export function DialogItem({
   const [criandoRec, setCriandoRec] = useState(false);
   const [novoRec, setNovoRec] = useState("");
   const [salvandoRec, setSalvandoRec] = useState(false);
+  const [editandoRec, setEditandoRec] = useState(false);
+  const [configRec, setConfigRec] = useState<ConfigRecorrente>({});
 
   const { data: cards = [] } = useQuery({ ...meusCardsQueryOptions(userId), enabled: open });
   const { data: recorrentes = [], refetch: atualizarRecorrentes } = useQuery({ ...recorrentesQueryOptions, enabled: open });
@@ -57,6 +61,8 @@ export function DialogItem({
     setRecId("");
     setCriandoRec(false);
     setNovoRec("");
+    setEditandoRec(false);
+    setConfigRec({ frequencia: "livre", inicio_em: dataIso, dia_semana: "seg", blocos: 1, vezes_mes: 1, intervalo_dias: 1, dia_mes: Number(dataIso.slice(8, 10)), dia_util: 1 });
   }, [open, dataIso, bloco]);
 
   async function adicionarRecorrente(): Promise<void> {
@@ -64,14 +70,17 @@ export function DialogItem({
     if (!descricao || salvandoRec) return;
     setSalvandoRec(true);
     try {
-      const idsExistentes = new Set(recorrentes.map((r) => r.id));
-      await criarRecorrente(descricao, recorrentes.length + 1);
-      const atualizados = await atualizarRecorrentes();
-      const criado = atualizados.data?.find((r) => !idsExistentes.has(r.id) && r.descricao === descricao);
-      if (criado) setRecId(criado.id);
+      if (editandoRec) {
+        await atualizarRecorrente(recId, { descricao, ...configRec });
+      } else {
+        const id = await criarRecorrente(descricao, recorrentes.length + 1, configRec);
+        setRecId(id);
+      }
+      await atualizarRecorrentes();
       setNovoRec("");
       setCriandoRec(false);
-      toast.success("Recorrente criado");
+      toast.success(editandoRec ? "Recorrente atualizado" : "Recorrente criado");
+      setEditandoRec(false);
     } catch {
       toast.error("Não deu para criar o recorrente");
     } finally {
@@ -99,7 +108,7 @@ export function DialogItem({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!salvandoRec) onOpenChange(v); }}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[85dvh] max-w-md overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Encaixar no bloco {bloco}</DialogTitle>
         </DialogHeader>
@@ -146,11 +155,13 @@ export function DialogItem({
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <Label className="text-xs">Recorrente</Label>
-                <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" disabled={salvandoRec} onClick={() => setCriandoRec(true)}>
+                <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" disabled={salvandoRec} onClick={() => {
+                  setEditandoRec(false); setNovoRec(""); setConfigRec({ frequencia: "livre", inicio_em: dataIso, dia_semana: "seg", blocos: 1, vezes_mes: 1, intervalo_dias: 1, dia_mes: Number(dataIso.slice(8, 10)), dia_util: 1 }); setCriandoRec(true);
+                }}>
                   <Plus className="size-3.5" /> Novo recorrente
                 </Button>
               </div>
-              <Select value={recId} onValueChange={setRecId}>
+              <Select value={recId} onValueChange={setRecId} disabled={criandoRec}>
                 <SelectTrigger><SelectValue placeholder="Escolha" /></SelectTrigger>
                 <SelectContent>
                   {recorrentes.filter((r) => r.ativo).map((r) => (
@@ -160,14 +171,20 @@ export function DialogItem({
                   ))}
                 </SelectContent>
               </Select>
+              {recId && !criandoRec ? <Button variant="ghost" size="sm" className="gap-1" onClick={() => {
+                const r = recorrentes.find((r) => r.id === recId);
+                if (!r) return;
+                setNovoRec(r.descricao); setConfigRec({ frequencia: frequenciaDoRecorrente(r), inicio_em: r.inicio_em ?? dataIso, dia_semana: r.dia_semana, blocos: r.blocos, vezes_mes: r.vezes_mes, hora: r.hora, intervalo_dias: r.intervalo_dias ?? 1, dia_mes: r.dia_mes ?? 1, dia_util: r.dia_util ?? 1 }); setEditandoRec(true); setCriandoRec(true);
+              }}><Settings2 className="size-4" /> Configurar recorrência</Button> : null}
               {criandoRec ? (
                 <form className="space-y-2 border-t border-border pt-3" onSubmit={(e) => { e.preventDefault(); void adicionarRecorrente(); }}>
                   <Label htmlFor="novo-recorrente" className="text-xs">Nome do recorrente novo</Label>
                   <Input id="novo-recorrente" value={novoRec} onChange={(e) => setNovoRec(e.target.value)} disabled={salvandoRec} autoFocus />
+                  <CamposRecorrencia valor={configRec} onChange={setConfigRec} disabled={salvandoRec} />
                   <div className="flex justify-end gap-2">
                     <Button type="button" variant="ghost" size="sm" disabled={salvandoRec} onClick={() => { setCriandoRec(false); setNovoRec(""); }}>Voltar</Button>
                     <Button type="submit" variant="outline" size="sm" className="gap-1" disabled={salvandoRec || !novoRec.trim()}>
-                      <Plus className="size-4" /> {salvandoRec ? "Criando…" : "Adicionar"}
+                      <Plus className="size-4" /> {salvandoRec ? "Salvando…" : editandoRec ? "Salvar recorrência" : "Adicionar"}
                     </Button>
                   </div>
                 </form>

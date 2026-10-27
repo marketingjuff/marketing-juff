@@ -1456,10 +1456,15 @@ export type Database = {
           blocos: number
           created_at: string
           descricao: string
+          dia_mes: number
           dia_semana: string
+          dia_util: number
           encerrado_em: string | null
+          frequencia: string | null
           hora: string | null
           id: string
+          inicio_em: string | null
+          intervalo_dias: number
           posicao: number
           user_id: string
           vezes_mes: number
@@ -1469,10 +1474,15 @@ export type Database = {
           blocos?: number
           created_at?: string
           descricao?: string
+          dia_mes?: number
           dia_semana?: string
+          dia_util?: number
           encerrado_em?: string | null
+          frequencia?: string | null
           hora?: string | null
           id?: string
+          inicio_em?: string | null
+          intervalo_dias?: number
           posicao?: number
           user_id: string
           vezes_mes?: number
@@ -1482,10 +1492,15 @@ export type Database = {
           blocos?: number
           created_at?: string
           descricao?: string
+          dia_mes?: number
           dia_semana?: string
+          dia_util?: number
           encerrado_em?: string | null
+          frequencia?: string | null
           hora?: string | null
           id?: string
+          inicio_em?: string | null
+          intervalo_dias?: number
           posicao?: number
           user_id?: string
           vezes_mes?: number
