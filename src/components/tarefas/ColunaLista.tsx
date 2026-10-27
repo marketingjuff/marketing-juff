@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { CardMini } from "./CardMini";
-import { REGRAS_RESPONSAVEL, type Card, type Coluna, type Etiqueta, type Pessoa } from "@/lib/tarefas";
+import { REGRAS_RESPONSAVEL, coresDaEtiqueta, type Card, type Coluna, type Etiqueta, type Pessoa } from "@/lib/tarefas";
 
 function CardArrastavel({
   card,
@@ -66,6 +66,7 @@ export function ColunaLista({
   onReorganizar,
   onResponsavelAoEntrar,
   exigeResponsavel = false,
+  etiquetasParaCriar = [],
 }: {
   coluna: Coluna;
   cards: Card[];
@@ -77,7 +78,7 @@ export function ColunaLista({
   podeArrastarCard: (c: Card) => boolean;
   dragDisabled: boolean;
   onAbrirCard: (id: string) => void;
-  onAddCard: (titulo: string, noTopo: boolean) => void;
+  onAddCard: (titulo: string, noTopo: boolean, etiquetaIds: string[]) => void;
   onRenomear: (nome: string) => void;
   onToggleConclui: () => void;
   onArquivar: () => void;
@@ -85,6 +86,7 @@ export function ColunaLista({
   onReorganizar: () => void;
   onResponsavelAoEntrar: () => void;
   exigeResponsavel?: boolean;
+  etiquetasParaCriar?: Etiqueta[];
 }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: coluna.id,
@@ -96,6 +98,7 @@ export function ColunaLista({
   const [adicionando, setAdicionando] = useState(false);
   const [novo, setNovo] = useState("");
   const [noTopo, setNoTopo] = useState(false);
+  const [etiqsNovo, setEtiqsNovo] = useState<string[]>([]);
 
   function confirmarNome() {
     setEditando(false);
@@ -225,8 +228,9 @@ export function ColunaLista({
             className="mt-2 space-y-2"
             onSubmit={(e) => {
               e.preventDefault();
-              if (novo.trim()) onAddCard(novo.trim(), noTopo);
+              if (novo.trim()) onAddCard(novo.trim(), noTopo, etiqsNovo);
               setNovo("");
+              setEtiqsNovo([]);
             }}
           >
             <Input
@@ -236,9 +240,44 @@ export function ColunaLista({
               onChange={(e) => setNovo(e.target.value)}
               onKeyDown={(e) => e.key === "Escape" && setAdicionando(false)}
             />
+            {etiquetasParaCriar && etiquetasParaCriar.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {etiquetasParaCriar.map((et) => {
+                  const cs = coresDaEtiqueta(et, pessoas);
+                  const on = etiqsNovo.includes(et.id);
+                  return (
+                    <button
+                      key={et.id}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() =>
+                        setEtiqsNovo((prev) =>
+                          prev.includes(et.id) ? prev.filter((x) => x !== et.id) : [...prev, et.id],
+                        )
+                      }
+                      className={cn(
+                        "rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-opacity",
+                        on ? "opacity-100" : "opacity-50 hover:opacity-100",
+                      )}
+                      style={{ backgroundColor: cs.cor, color: cs.cor_texto }}
+                    >
+                      {et.nome}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
             <div className="flex gap-2">
               <Button type="submit" size="sm">Adicionar</Button>
-              <Button type="button" size="sm" variant="ghost" onClick={() => setAdicionando(false)}>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setAdicionando(false);
+                  setEtiqsNovo([]);
+                }}
+              >
                 Cancelar
               </Button>
             </div>

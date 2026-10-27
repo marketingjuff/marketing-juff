@@ -18,6 +18,7 @@ export type Quadro = {
   exige_responsavel: boolean;
   etiqueta_do_criador: boolean;
   cards_privados: boolean;
+  filtro_etiquetas: boolean;
   membros: string[];
   cards_total?: number;
 };
@@ -294,6 +295,7 @@ async function fetchQuadros(arquivado: boolean): Promise<Quadro[]> {
     exige_responsavel: q.exige_responsavel ?? false,
     etiqueta_do_criador: q.etiqueta_do_criador ?? false,
     cards_privados: q.cards_privados ?? false,
+    filtro_etiquetas: q.filtro_etiquetas ?? false,
     membros: (q.tarefa_quadro_membros ?? []).map((m: { user_id: string }) => m.user_id),
     cards_total: (q.tarefa_cards ?? []).filter((c: { arquivado: boolean }) => !c.arquivado).length,
   }));
@@ -358,6 +360,7 @@ export const quadroQueryOptions = (quadroId: string) =>
           exige_responsavel: q.exige_responsavel ?? false,
           etiqueta_do_criador: q.etiqueta_do_criador ?? false,
           cards_privados: q.cards_privados ?? false,
+          filtro_etiquetas: q.filtro_etiquetas ?? false,
           membros: (q.tarefa_quadro_membros ?? []).map((m: { user_id: string }) => m.user_id),
         },
         colunas: (cols ?? []) as Coluna[],
@@ -368,7 +371,7 @@ export const quadroQueryOptions = (quadroId: string) =>
 
 export async function createQuadro(
   nome: string,
-  extra?: { descricao?: string; fundo_tipo?: FundoTipo; fundo_cor1?: string; fundo_cor2?: string; acesso?: "aberto" | "restrito"; exige_responsavel?: boolean; etiqueta_do_criador?: boolean; cards_privados?: boolean },
+  extra?: { descricao?: string; fundo_tipo?: FundoTipo; fundo_cor1?: string; fundo_cor2?: string; acesso?: "aberto" | "restrito"; exige_responsavel?: boolean; etiqueta_do_criador?: boolean; cards_privados?: boolean; filtro_etiquetas?: boolean },
 ): Promise<string> {
   const { count } = await supabase
     .from("tarefa_quadros")
@@ -387,7 +390,7 @@ export async function createQuadro(
   return data.id;
 }
 
-type QuadroEditavel = "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2" | "acesso" | "exige_responsavel" | "etiqueta_do_criador" | "cards_privados";
+type QuadroEditavel = "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2" | "acesso" | "exige_responsavel" | "etiqueta_do_criador" | "cards_privados" | "filtro_etiquetas";
 
 export async function updateQuadro(
   id: string,
@@ -404,6 +407,7 @@ export async function updateQuadro(
   if (values.exige_responsavel !== undefined) limpo.exige_responsavel = values.exige_responsavel;
   if (values.etiqueta_do_criador !== undefined) limpo.etiqueta_do_criador = values.etiqueta_do_criador;
   if (values.cards_privados !== undefined) limpo.cards_privados = values.cards_privados;
+  if (values.filtro_etiquetas !== undefined) limpo.filtro_etiquetas = values.filtro_etiquetas;
   const { error } = await supabase.from("tarefa_quadros").update(limpo).eq("id", id);
   if (error) throw error;
 }
@@ -547,7 +551,14 @@ export async function arquivarColuna(id: string, arquivado: boolean): Promise<vo
 
 // ---------------- cards ----------------
 
-export async function createCard(quadroId: string, colunaId: string, titulo: string, noTopo = false): Promise<void> {
+export async function createCard(
+  quadroId: string,
+  colunaId: string,
+  titulo: string,
+  noTopo = false,
+  etiquetaIds: string[] = [],
+): Promise<void> {
+  let posicao: number;
   if (noTopo) {
     const { data: primeira } = await supabase
       .from("tarefa_cards")
@@ -555,32 +566,43 @@ export async function createCard(quadroId: string, colunaId: string, titulo: str
       .eq("coluna_id", colunaId)
       .order("posicao", { ascending: true })
       .limit(1);
-    const { error } = await supabase.from("tarefa_cards").insert({
+    posicao = (primeira?.[0]?.posicao ?? 0) - 1;
+  } else {
+    const { data } = await supabase
+      .from("tarefa_cards")
+      .select("posicao")
+      .eq("coluna_id", colunaId)
+      .order("posicao", { ascending: false })
+      .limit(1);
+    posicao = (data?.[0]?.posicao ?? -1) + 1;
+  }
+
+  const { data: novo, error } = await supabase
+    .from("tarefa_cards")
+    .insert({
       quadro_id: quadroId,
       coluna_id: colunaId,
       titulo: titulo.trim(),
-      posicao: (primeira?.[0]?.posicao ?? 0) - 1,
+      posicao,
       criado_por: await uid(),
       lembrete_min: 0,
-    });
-    if (error) throw error;
-    return;
-  }
-  const { data } = await supabase
-    .from("tarefa_cards")
-    .select("posicao")
-    .eq("coluna_id", colunaId)
-    .order("posicao", { ascending: false })
-    .limit(1);
-  const { error } = await supabase.from("tarefa_cards").insert({
-    quadro_id: quadroId,
-    coluna_id: colunaId,
-    titulo: titulo.trim(),
-    posicao: (data?.[0]?.posicao ?? -1) + 1,
-    criado_por: await uid(),
-    lembrete_min: 0,
-  });
+    })
+    .select("id")
+    .single();
   if (error) throw error;
+  if (!novo?.id || etiquetaIds.length === 0) return;
+
+  const { data: jaTem } = await supabase
+    .from("tarefa_card_etiquetas")
+    .select("etiqueta_id")
+    .eq("card_id", novo.id);
+  const existentes = new Set((jaTem ?? []).map((r: { etiqueta_id: string }) => r.etiqueta_id));
+  const inserir = [...new Set(etiquetaIds)].filter((id) => !existentes.has(id));
+  if (inserir.length === 0) return;
+  const { error: e2 } = await supabase
+    .from("tarefa_card_etiquetas")
+    .insert(inserir.map((etiqueta_id) => ({ card_id: novo.id, etiqueta_id })));
+  if (e2) throw e2;
 }
 
 export type CardUpdate = Partial<
