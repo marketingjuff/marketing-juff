@@ -85,7 +85,7 @@ function MeuDiaPage() {
   }
 
   /** Item automático só vira registro no banco quando a pessoa mexe nele. */
-  const pendentes = useRef(new Map<string, Promise<string>>());
+  const criacoes = useRef(new Map<string, Promise<string>>());
 
   function alternarFeito(item: ItemDia) {
     if (item.virtual) {
@@ -100,7 +100,7 @@ function MeuDiaPage() {
         recorrente_id: item.recorrente_id,
         feito: true,
       });
-      pendentes.current.set(tmpId, criando);
+      criacoes.current.set(tmpId, criando);
       criando
         .then((idReal) =>
           qc.setQueryData<ItemDia[]>(chaveItens, (l) =>
@@ -113,7 +113,7 @@ function MeuDiaPage() {
     }
     // Se o item acabou de nascer, espera o banco devolver o id de verdade.
     const resolverId = async () =>
-      item.id.startsWith("tmp-") ? await (pendentes.current.get(item.id) ?? Promise.reject()) : item.id;
+      item.id.startsWith("tmp-") ? await (criacoes.current.get(item.id) ?? Promise.reject()) : item.id;
     otimistaGravados(
       (l) => l.map((x) => (x.id === item.id ? { ...x, feito: !x.feito } : x)),
       async () => atualizarItem(await resolverId(), { feito: !item.feito }),
