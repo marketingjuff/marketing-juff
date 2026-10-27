@@ -1,7 +1,7 @@
 # Comentários formatados
 ## Recorrência no Meu dia
-- [ ] Configurar frequências no popup e preservar recorrentes existentes.
-- [ ] Testar datas calculadas e salvar/reabrir a configuração na tela.
+- [x] Configurar frequências no popup e preservar recorrentes existentes.
+- [x] Testar datas calculadas e salvar/reabrir a configuração na tela.
 ## Atualização do catálogo
 - [x] Sincronizar modelos, cores e tamanhos nas telas consumidoras e testar a criação de um modelo.
 
