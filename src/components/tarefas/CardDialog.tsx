@@ -4,10 +4,10 @@ import { ColorPicker } from "@/components/ui/color-picker";
 import { useCardAoVivo } from "@/hooks/use-card-ao-vivo";
 import { useCampoEmEdicao } from "@/hooks/use-campo-em-edicao";
 import { canEdit, profileQueryOptions } from "@/lib/auth";
-import { NovaEtiquetaForm } from "./NovaEtiquetaForm";
+import { TrilhoEtiquetas } from "./TrilhoEtiquetas";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Archive, Users, RefreshCw, Download, User, Tag, Clock, CheckSquare, Paperclip, SlidersHorizontal, ExternalLink, Plus, Trash2, Upload, X, Pencil, CheckCircle2, RotateCcw, Copy } from "lucide-react";
+import { Archive, Users, RefreshCw, Download, User, Clock, CheckSquare, Paperclip, SlidersHorizontal, ExternalLink, Plus, Trash2, Upload, X, Pencil, CheckCircle2, RotateCcw, Copy } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -340,47 +340,7 @@ export function CardDialog({
               />
               <AvisoEscrevendo quem={travados["titulo"]} />
             </div>
-
-            {podeMexer ? (
-              <div className={cn("flex flex-wrap items-center gap-2 rounded-lg px-3 py-2", c.concluido ? "bg-success/15" : "bg-muted/50")}>
-                {c.concluido ? (
-                  <>
-                    <span className="mr-auto flex items-center gap-1.5 text-sm font-semibold">
-                      <CheckCircle2 className="size-4" /> Concluído — somente leitura
-                    </span>
-                    <Button size="sm" variant="outline" className="gap-1.5" onClick={async () => {
-                      await rodar(() => reabrirCard(c));
-                      toast.success("Card reaberto");
-                    }}>
-                      <RotateCcw className="size-4" /> Reabrir
-                    </Button>
-                    <Button size="sm" variant="outline" className="gap-1.5" onClick={async () => {
-                      await rodar(() => duplicarCard(c));
-                      toast.success("Cópia criada na primeira coluna");
-                    }}>
-                      <Copy className="size-4" /> Duplicar
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button size="sm" className="mr-auto gap-1.5" onClick={async () => {
-                      await rodar(() => concluirCard(c.id));
-                      toast.success("Card concluído");
-                    }}>
-                      <CheckCircle2 className="size-4" /> Marcar como concluído
-                    </Button>
-                    <Button size="sm" variant="outline" className="gap-1.5" onClick={async () => {
-                      await rodar(() => duplicarCard(c));
-                      toast.success("Cópia criada na primeira coluna");
-                    }}>
-                      <Copy className="size-4" /> Duplicar
-                    </Button>
-                  </>
-                )}
-              </div>
-            ) : null}
-
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap items-center gap-1 rounded-lg bg-muted/50 px-[7px] py-[5px]">
               <Select
                 disabled={!mexer}
                 value={c.responsavel_id ?? NENHUM}
@@ -389,8 +349,8 @@ export function CardDialog({
                   salvar({ responsavel_id: novo }, ["Trocou responsável", `${nomePessoa(c.responsavel_id)} → ${nomePessoa(novo)}`]);
                 }}
               >
-                <SelectTrigger className="h-8 w-auto gap-1.5" title={c.responsavel_id ? nomePessoa(c.responsavel_id) : "Ninguém"}>
-                  <User className="size-4" />
+                <SelectTrigger className="h-[25px] w-auto gap-1 border-border/70 px-[7px] text-[12px]" title={c.responsavel_id ? nomePessoa(c.responsavel_id) : "Ninguém"}>
+                  <User className="size-3.5" />
                   Responsável
                 </SelectTrigger>
                 <SelectContent>
@@ -403,10 +363,10 @@ export function CardDialog({
               {cardsPrivados ? (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-1.5" disabled={!mexer}>
-                      <Users className="size-4" /> Membros
+                    <Button variant="outline" size="sm" className="h-[25px] gap-1 px-[7px] text-[12px]" disabled={!mexer}>
+                      <Users className="size-3.5" /> Membros
                       {membros.length > 0 ? (
-                        <span className="rounded bg-muted px-1 text-[11px] leading-tight">
+                        <span className="rounded bg-background px-1 text-[10px] leading-tight">
                           {membros.length}
                         </span>
                       ) : null}
@@ -441,60 +401,8 @@ export function CardDialog({
               ) : null}
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1.5" disabled={!mexer}>
-                    <Tag className="size-4" /> Etiquetas
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-72 space-y-2">
-                  <Campo label="Etiquetas">
-                    <div className="flex flex-wrap gap-1">
-                      {etiquetasVisiveis.map((e) => {
-                        const on = c.etiquetas.includes(e.id);
-                        return (
-                          <button
-                            key={e.id}
-                            type="button"
-                            disabled={!mexer}
-                            onClick={() => {
-                              const novas = on ? c.etiquetas.filter((x) => x !== e.id) : [...c.etiquetas, e.id];
-                              rodar(
-                                () => setEtiquetasDoCard(c.id, novas),
-                                (card) => ({ ...card, etiquetas: novas }),
-                              );
-                            }}
-                            className={cn(
-                              "font-nunito rounded px-1.5 py-0.5 text-[14px] transition-opacity",
-                              !on && "opacity-40",
-                            )}
-                            style={(() => { const cs = coresDaEtiqueta(e, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}
-                          >
-                            {e.nome}
-                          </button>
-                        );
-                      })}
-                      {etiquetasVisiveis.length === 0 ? (
-                        <span className="text-[13px] text-muted-foreground">
-                          Nenhuma etiqueta para este quadro.
-                        </span>
-                      ) : null}
-                    </div>
-                  </Campo>
-                  {mexer && canEdit(perfil ?? null, "tarefas.quadros") ? (
-                    <div className="border-t border-border pt-3">
-                      <NovaEtiquetaForm key={c.id} quadroId={c.quadro_id} etiquetas={etiquetas} onCriada={async (id) => {
-                        const novas = [...new Set([...c.etiquetas, id])];
-                        await setEtiquetasDoCard(c.id, novas);
-                        aplicarLocal((card) => ({ ...card, etiquetas: novas }));
-                        invalidar();
-                      }} />
-                    </div>
-                  ) : null}
-                </PopoverContent>
-              </Popover>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1.5" disabled={!mexer}>
-                    <Clock className="size-4" /> Datas
+                  <Button variant="outline" size="sm" className="h-[25px] gap-1 px-[7px] text-[12px]" disabled={!mexer}>
+                    <Clock className="size-3.5" /> Datas
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="max-h-[70vh] w-72 space-y-3 overflow-y-auto">
@@ -586,25 +494,25 @@ export function CardDialog({
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5"
+                className="h-[25px] gap-1 px-[7px] text-[12px]"
                 disabled={!mexer}
                 onClick={() => document.getElementById("bloco-checklist")?.scrollIntoView({ behavior: "smooth", block: "center" })}
               >
-                <CheckSquare className="size-4" /> Checklist
+                <CheckSquare className="size-3.5" /> Checklist
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5"
+                className="h-[25px] gap-1 px-[7px] text-[12px]"
                 disabled={!mexer}
                 onClick={() => document.getElementById("bloco-anexos")?.scrollIntoView({ behavior: "smooth", block: "center" })}
               >
-                <Paperclip className="size-4" /> Anexo
+                <Paperclip className="size-3.5" /> Anexo
               </Button>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1.5" disabled={!mexer}>
-                    <SlidersHorizontal className="size-4" /> Mais
+                  <Button variant="outline" size="sm" className="h-[25px] gap-1 px-[7px] text-[12px]" disabled={!mexer}>
+                    <SlidersHorizontal className="size-3.5" /> Mais
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="max-h-[70vh] w-72 space-y-3 overflow-y-auto">
@@ -744,49 +652,81 @@ export function CardDialog({
                   ) : null}
                 </PopoverContent>
               </Popover>
-            </div>
 
-            {c.responsavel_id || c.etiquetas.length > 0 || c.data_entrega || c.prioridade || c.membros.length > 0 ? (
-              <div className="flex flex-wrap items-center gap-1.5">
-                {c.responsavel_id ? (
-                  <span
-                    className="flex size-6 items-center justify-center rounded-full text-[9px] font-semibold"
-                    style={{
-                      backgroundColor: pessoaDe(c.responsavel_id)?.cor_avatar ?? "#378add",
-                      color: pessoaDe(c.responsavel_id)?.cor_texto_avatar ?? "#ffffff",
-                    }}
-                    title={nomePessoa(c.responsavel_id)}
-                  >
-                    {siglaPessoa(pessoaDe(c.responsavel_id) ?? { nome: "", sigla: null })}
-                  </span>
-                ) : null}
-                {cardsPrivados
-                  ? membros.map((id) => (
-                      <span
-                        key={id}
-                        className="flex size-5 items-center justify-center rounded-full text-[8px] font-semibold opacity-70"
-                        style={{
-                          backgroundColor: pessoaDe(id)?.cor_avatar ?? "#888780",
-                          color: pessoaDe(id)?.cor_texto_avatar ?? "#ffffff",
-                        }}
-                        title={`${nomePessoa(id)}, membro`}
-                      >
-                        {siglaPessoa(pessoaDe(id) ?? { nome: "", sigla: null })}
-                      </span>
-                    ))
-                  : null}
-                {c.etiquetas
-                  .map((id) => etiquetas.find((e) => e.id === id))
-                  .filter((e): e is NonNullable<typeof e> => !!e)
-                  .map((e) => (
-                    <span
-                      key={e.id}
-                      className="font-nunito rounded-[3px] px-1 py-px text-[13px] font-medium uppercase"
-                      style={(() => { const cs = coresDaEtiqueta(e, pessoas); return { backgroundColor: cs.cor, color: cs.cor_texto }; })()}
-                    >
-                      {e.nome}
+              {podeMexer ? (
+                <>
+                  <span className="flex-1" />
+                  {c.concluido ? (
+                    <span className="flex items-center gap-1 px-1 text-[12px] font-medium text-success">
+                      <CheckCircle2 className="size-3.5" /> Concluído
                     </span>
-                  ))}
+                  ) : null}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-[25px] gap-1 px-[7px] text-[12px]"
+                    onClick={async () => {
+                      await rodar(() => duplicarCard(c));
+                      toast.success("Cópia criada na primeira coluna");
+                    }}
+                  >
+                    <Copy className="size-3.5" /> Duplicar
+                  </Button>
+                  {c.concluido ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-[25px] gap-1 px-[9px] text-[12px]"
+                      onClick={async () => {
+                        await rodar(() => reabrirCard(c));
+                        toast.success("Card reaberto");
+                      }}
+                    >
+                      <RotateCcw className="size-3.5" /> Reabrir
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="h-[25px] gap-1 px-[9px] text-[12px]"
+                      onClick={async () => {
+                        await rodar(() => concluirCard(c.id));
+                        toast.success("Card concluído");
+                      }}
+                    >
+                      <CheckCircle2 className="size-3.5" /> Concluir
+                    </Button>
+                  )}
+                </>
+              ) : null}
+            </div>
+            <TrilhoEtiquetas
+              quadroId={c.quadro_id}
+              cardId={c.id}
+              etiquetasDoQuadro={etiquetasVisiveis}
+              etiquetasDoCard={c.etiquetas}
+              todasEtiquetas={etiquetas}
+              pessoas={pessoas}
+              responsavelId={c.responsavel_id}
+              membros={membros}
+              mostrarMembros={cardsPrivados}
+              mexer={mexer}
+              podeCriar={canEdit(perfil ?? null, "tarefas.quadros")}
+              onToggle={(novas) => {
+                rodar(
+                  () => setEtiquetasDoCard(c.id, novas),
+                  (card) => ({ ...card, etiquetas: novas }),
+                );
+              }}
+              onCriada={async (id) => {
+                const novas = [...new Set([...c.etiquetas, id])];
+                await setEtiquetasDoCard(c.id, novas);
+                aplicarLocal((card) => ({ ...card, etiquetas: novas }));
+                invalidar();
+              }}
+            />
+
+            {c.data_entrega || c.prioridade ? (
+              <div className="flex flex-wrap items-center gap-1.5 px-2">
                 {c.data_entrega ? (
                   <span className="rounded border border-border px-1.5 py-0.5 text-[13px] text-muted-foreground">
                     entrega {formatarDataHora(c.data_entrega, c.hora_entrega)}
