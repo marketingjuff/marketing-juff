@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -85,27 +85,38 @@ function MeuDiaPage() {
   }
 
   /** Item automático só vira registro no banco quando a pessoa mexe nele. */
+  const criacoes = useRef(new Map<string, Promise<string>>());
+
   function alternarFeito(item: ItemDia) {
     if (item.virtual) {
-      const real: ItemDia = { ...item, feito: true, virtual: false, id: `tmp-${Date.now()}` };
-      otimistaGravados(
-        (l) => [...l, real],
-        () =>
-          criarItem({
-            data: item.data,
-            bloco_inicio: item.bloco_inicio,
-            blocos: item.blocos,
-            texto: item.texto,
-            card_id: null,
-            recorrente_id: item.recorrente_id,
-            feito: true,
-          }),
-      );
+      const tmpId = `tmp-${Date.now()}`;
+      const real: ItemDia = { ...item, feito: true, virtual: false, id: tmpId };
+      const criando = criarItem({
+        data: item.data,
+        bloco_inicio: item.bloco_inicio,
+        blocos: item.blocos,
+        texto: item.texto,
+        card_id: null,
+        recorrente_id: item.recorrente_id,
+        feito: true,
+      });
+      criacoes.current.set(tmpId, criando);
+      criando
+        .then((idReal) =>
+          qc.setQueryData<ItemDia[]>(chaveItens, (l) =>
+            (l ?? []).map((x) => (x.id === tmpId ? { ...x, id: idReal } : x)),
+          ),
+        )
+        .catch(() => {});
+      otimistaGravados((l) => [...l, real], () => criando);
       return;
     }
+    // Se o item acabou de nascer, espera o banco devolver o id de verdade.
+    const resolverId = async () =>
+      item.id.startsWith("tmp-") ? await (criacoes.current.get(item.id) ?? Promise.reject()) : item.id;
     otimistaGravados(
       (l) => l.map((x) => (x.id === item.id ? { ...x, feito: !x.feito } : x)),
-      () => atualizarItem(item.id, { feito: !item.feito }),
+      async () => atualizarItem(await resolverId(), { feito: !item.feito }),
     );
   }
 
