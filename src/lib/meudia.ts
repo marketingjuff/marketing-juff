@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ocorreNaData, frequenciaDoRecorrente, type Frequencia } from "@/lib/meudia-recorrencia";
 
 export const BLOCOS_POR_DIA = 4;
 
@@ -28,6 +29,11 @@ export type Recorrente = {
   ativo: boolean;
   posicao: number;
   encerrado_em: string | null;
+  frequencia?: Frequencia | null;
+  intervalo_dias?: number;
+  inicio_em?: string | null;
+  dia_mes?: number;
+  dia_util?: number;
 };
 
 export type ItemDia = {
@@ -172,7 +178,7 @@ export const recorrentesQueryOptions = queryOptions({
   queryFn: async (): Promise<Recorrente[]> => {
     const { data, error } = await supabase
       .from("meudia_recorrentes")
-      .select("id, descricao, vezes_mes, blocos, dia_semana, hora, ativo, posicao, encerrado_em")
+      .select("id, descricao, vezes_mes, blocos, dia_semana, hora, ativo, posicao, encerrado_em, frequencia, intervalo_dias, inicio_em, dia_mes, dia_util")
       .order("posicao", { ascending: true });
     if (error) throw error;
     return (data ?? []) as Recorrente[];
@@ -180,18 +186,22 @@ export const recorrentesQueryOptions = queryOptions({
   ...PADRAO,
 });
 
-export async function criarRecorrente(descricao: string, posicao: number): Promise<void> {
+export type ConfigRecorrente = Partial<Pick<Recorrente, "vezes_mes" | "blocos" | "dia_semana" | "hora" | "frequencia" | "intervalo_dias" | "inicio_em" | "dia_mes" | "dia_util">>;
+
+export async function criarRecorrente(descricao: string, posicao: number, config: ConfigRecorrente = {}): Promise<string> {
   const { data: auth } = await supabase.auth.getUser();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("meudia_recorrentes")
-    .insert({ user_id: auth.user?.id ?? "", descricao, posicao });
+    .insert({ user_id: auth.user?.id ?? "", descricao, posicao, ...config })
+    .select("id").single();
   if (error) throw error;
+  return data.id;
 }
 
 export async function atualizarRecorrente(
   id: string,
   patch: Partial<
-    Pick<Recorrente, "descricao" | "vezes_mes" | "blocos" | "dia_semana" | "hora" | "ativo" | "encerrado_em">
+    Pick<Recorrente, "descricao" | "vezes_mes" | "blocos" | "dia_semana" | "hora" | "ativo" | "encerrado_em" | "frequencia" | "intervalo_dias" | "inicio_em" | "dia_mes" | "dia_util">
   >,
 ): Promise<void> {
   const { error } = await supabase.from("meudia_recorrentes").update(patch).eq("id", id);
@@ -343,7 +353,7 @@ export function montarItens(params: {
   const { dias, gravados, recorrentes, excecoes, feriados } = params;
   const saida: ItemDia[] = [...gravados];
 
-  const comDia = recorrentes.filter((r) => r.ativo && r.dia_semana !== "livre");
+  const comDia = recorrentes.filter((r) => r.ativo && frequenciaDoRecorrente(r) !== "livre");
   if (comDia.length === 0) return saida;
 
   // dias em que cada recorrente já tem item gravado
@@ -363,15 +373,7 @@ export function montarItens(params: {
       if (excecoes.has(`${r.id}|${dataIso}`)) continue;
       if (jaGravado.has(`${r.id}|${dataIso}`)) continue;
 
-      let serve = false;
-      if (r.dia_semana === "ultimo_dia_util") {
-        const ano = Number(dataIso.slice(0, 4));
-        const mes = Number(dataIso.slice(5, 7));
-        serve = dataIso === ultimoDiaUtil(ano, mes, feriados);
-      } else {
-        serve = INDICE_DIA[r.dia_semana] === indice;
-      }
-      if (!serve) continue;
+      if (!ocorreNaData(r, dataIso, feriados)) continue;
 
       const inicio = primeiroQueCabe(saida, dataIso, blocoDaHora(r.hora), r.blocos);
       if (inicio === 0) continue;
