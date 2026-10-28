@@ -180,12 +180,20 @@ export function QuadroBoard({
     soAtrasados ||
     soMeus;
   const [cardAberto, setCardAberto] = useState<string | null>(cardInicial ?? null);
+  const [abrirDepois, setAbrirDepois] = useState<string | null>(null);
   const [verArquivados, setVerArquivados] = useState(false);
   const { data: totalArquivados = 0 } = useQuery(arquivadosCountQueryOptions(quadro.id));
   const navegarCard = useNavigate();
   useEffect(() => {
     if (cardInicial) setCardAberto(cardInicial);
   }, [cardInicial]);
+  useEffect(() => {
+    if (!abrirDepois) return;
+    if (cards.some((c) => c.id === abrirDepois)) {
+      setCardAberto(abrirDepois);
+      setAbrirDepois(null);
+    }
+  }, [abrirDepois, cards]);
   const fecharCard = () => {
     setCardAberto(null);
     if (cardInicial) {
@@ -665,7 +673,12 @@ export function QuadroBoard({
                   dragDisabled={false}
                   filtrando={filtrando}
                   onAbrirCard={setCardAberto}
-                  onAddCard={(t, topo, etiqs) => rodar(() => createCard(quadro.id, col.id, t, topo, etiqs))}
+                  onAddCard={(t, topo, etiqs) =>
+                    rodar(async () => {
+                      const id = await createCard(quadro.id, col.id, t, topo, etiqs);
+                      if (id) setAbrirDepois(id);
+                    })
+                  }
                   etiquetasParaCriar={pilulas ? etiquetasDoQuadro : []}
                   onRenomear={(nome) => rodar(() => updateColuna(col.id, { nome }))}
                   onToggleConclui={() => rodar(() => updateColuna(col.id, { conclui: !col.conclui }))}
