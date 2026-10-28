@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
-import { ARQUIVADOS_POR_PAGINA } from "../src/lib/tarefas";
+import { ARQUIVADOS_POR_PAGINA, podeArquivarCard } from "../src/lib/tarefas";
 
 const db = new PGlite();
 
@@ -63,5 +63,27 @@ describe("arquivamento automático", () => {
   });
   test("consulta carrega lotes de 50 cards", () => {
     expect(ARQUIVADOS_POR_PAGINA).toBe(50);
+  });
+});
+
+describe("arquivamento manual", () => {
+  test("concluído em somente leitura ainda pode ser arquivado por quem edita o quadro", () => {
+    expect(podeArquivarCard({ concluido: true }, { podeMexer: true, mexer: false })).toBe(true);
+  });
+  test("card aberto segue podendo ser arquivado por quem edita", () => {
+    expect(podeArquivarCard({ concluido: false }, { podeMexer: true, mexer: true })).toBe(true);
+  });
+  test("quem não edita o quadro não arquiva, concluído ou não", () => {
+    expect(podeArquivarCard({ concluido: true }, { podeMexer: false, mexer: false })).toBe(false);
+    expect(podeArquivarCard({ concluido: false }, { podeMexer: false, mexer: false })).toBe(false);
+  });
+  test("arquivar um concluído não o reabre e registra a data", async () => {
+    const id = await fixture("concluido = true, concluido_em = now() - interval '5 days'");
+    await db.query("update public.tarefa_cards set arquivado = true where id = $1", [id]);
+    const { rows } = await db.query<{ arquivado: boolean; concluido: boolean; tem_data: boolean }>(
+      "select arquivado, concluido, arquivado_em is not null as tem_data from public.tarefa_cards where id = $1",
+      [id],
+    );
+    expect(rows[0]).toEqual({ arquivado: true, concluido: true, tem_data: true });
   });
 });
