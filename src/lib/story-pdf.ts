@@ -150,7 +150,7 @@ ${
     quantidade > 0
       ? `Depois das linhas do plano, escreva uma linha SOBRA para CADA arte que você decidiu não usar. Toda arte deste PDF precisa aparecer uma vez, ou como ARTE ou como SOBRA. Nenhuma pode ficar de fora das duas listas. Não invente artes que não estão no PDF.`
       : `Toda arte deste PDF precisa aparecer no plano como uma linha ARTE, exatamente uma vez. Não escreva nenhuma linha SOBRA, porque nenhuma arte pode ficar de fora. Não invente artes que não estão no PDF.`
-  }${blocoObjetivos(objetivos, todos)}${blocoCtas(ctas, links)}${blocoDirecionamento(direcionamento)}`;
+  }${blocoDatas(dataInicial)}${blocoObjetivos(objetivos, todos)}${blocoCtas(ctas, links)}${blocoDirecionamento(direcionamento)}`;
 }
 
 
@@ -186,6 +186,7 @@ export async function exportPlanPdf(
   direcionamento = "",
   ctas: Cta[] = [],
   links: LinkCta[] = [],
+  dataInicial = "",
 ): Promise<void> {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
