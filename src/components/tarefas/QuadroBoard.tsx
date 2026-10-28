@@ -66,6 +66,7 @@ import {
   podeMexerNoCard,
   type QuadroCompleto,
   siglaPessoa,
+  temTodasAsEtiquetas,
 } from "@/lib/tarefas";
 
 const TODOS = "__todos__";
@@ -247,8 +248,7 @@ export function QuadroBoard({
           return false;
         }
         if (pilulas) {
-          if (etiquetasSelecionadas.length > 0 && !etiquetasSelecionadas.some((id) => c.etiquetas.includes(id)))
-            return false;
+          if (!temTodasAsEtiquetas(c.etiquetas, etiquetasSelecionadas)) return false;
         } else if (fEtiq !== TODOS && !c.etiquetas.includes(fEtiq)) {
           return false;
         }
@@ -279,15 +279,21 @@ export function QuadroBoard({
 
   const passaFiltroEtiqueta = (c: Card) => {
     if (pilulas) {
-      if (etiquetasSelecionadas.length > 0 && !etiquetasSelecionadas.some((id) => c.etiquetas.includes(id)))
-        return false;
+      if (!temTodasAsEtiquetas(c.etiquetas, etiquetasSelecionadas)) return false;
       return true;
     }
     return fEtiq === TODOS || c.etiquetas.includes(fEtiq);
   };
 
+  // o número de cada pílula é o que ela entrega: cards com todas as etiquetas já escolhidas + esta
   const contarEtiqueta = (etiquetaId: string) =>
-    cards.filter((c) => c.etiquetas.includes(etiquetaId) && passaFiltroComum(c) && passaFiltroPessoa(c)).length;
+    cards.filter(
+      (c) =>
+        c.etiquetas.includes(etiquetaId) &&
+        passaFiltroComum(c) &&
+        passaFiltroPessoa(c) &&
+        temTodasAsEtiquetas(c.etiquetas, etiquetasSelecionadas),
+    ).length;
 
   const contarPessoa = (pessoaId: string) =>
     cards.filter((c) => c.responsavel_id === pessoaId && passaFiltroComum(c) && passaFiltroEtiqueta(c)).length;
