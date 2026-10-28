@@ -134,15 +134,15 @@ Alterne produto, benefício, vida real, marca, interação e venda. Evite sequê
 
 Devolva a resposta em um documento Word seguindo EXATAMENTE o formato abaixo. Não use tabelas. Não use marcadores. Não escreva nenhum texto fora do formato. Cada linha começa com BLOCO, ARTE ou SOBRA, e os campos são separados por barra vertical.
 
-BLOCO | numero | SOLO ou CAMPANHA | nome do bloco | objetivo
+BLOCO | numero | SOLO ou CAMPANHA | data e nome do bloco | objetivo
 ARTE | nome exato do arquivo | texto principal | observação | cta | link${quantidade > 0 ? `\nSOBRA | nome exato do arquivo | motivo curto` : ""}
 
 Exemplo.
 
-BLOCO | 1 | CAMPANHA | AQUELA QUE VOCÊ REPETE | Prova social
+BLOCO | 1 | CAMPANHA | ${prefixoData(dataInicial, 0)}AQUELA QUE VOCÊ REPETE | Prova social
 ARTE | prancheta 2 | AQUELA QUE VOCÊ REPETE. | Abre a campanha, arte limpa. | |
 ARTE | prancheta 3 | THERMOAIR. VOCÊ VAI ENTENDER QUANDO VESTIR. | Fecha a campanha levando para a loja. | Veja a coleção. | https://loja.juff.com.br
-BLOCO | 2 | SOLO | DESACELERAR | Marca
+BLOCO | 2 | SOLO | ${prefixoData(dataInicial, 1)}DESACELERAR | Marca
 ARTE | prancheta 4 | HOJE O MOVIMENTO É DESACELERAR. | Story de marca, sem CTA. | |
 ARTE | prancheta 7 | SEU TIME COM A SUA CARA. | Personalização, atendimento por conversa. | Fale com nossa equipe | https://wa.me/551139612696${quantidade > 0 ? `\nSOBRA | prancheta 5 | Repete a mesma ideia da prancheta 4.\nSOBRA | prancheta 6 | Texto pouco legível sobre a foto.` : ""}
 
