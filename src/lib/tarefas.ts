@@ -1140,6 +1140,17 @@ export function podeMexerNoCard(
   return editavel;
 }
 
+/**
+ * Arquivar é gestão, não edição: um card concluído (que fica somente leitura)
+ * continua podendo ser arquivado manualmente por quem edita o quadro.
+ */
+export function podeArquivarCard(
+  card: { concluido: boolean },
+  { podeMexer, mexer }: { podeMexer: boolean; mexer: boolean },
+): boolean {
+  return podeMexer && (mexer || card.concluido);
+}
+
 export async function urlAnexo(path: string): Promise<string> {
   // Baixa com a sessão atual (checada a cada vez) e gera um link local,
   // que só existe nesta aba e não dá acesso ao arquivo depois de removido o acesso.

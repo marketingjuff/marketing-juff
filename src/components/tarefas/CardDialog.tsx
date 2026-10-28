@@ -51,6 +51,7 @@ import {
   reabrirCard,
   duplicarCard,
   baixarAnexo,
+  podeArquivarCard,
   podeMexerNoCard,
   checklistQueryOptions,
   comentariosQueryOptions,
@@ -204,6 +205,19 @@ export function CardDialog({
   const membros = c.membros.filter((id) => id !== c.responsavel_id);
   const podeMexer = podeMexerNoCard(c, role, meuId, editable);
   const mexer = podeMexer && !c.concluido;
+  const podeArquivar = podeArquivarCard(c, { podeMexer, mexer });
+
+  const arquivar = async (archivar: boolean) => {
+    await rodar(() => arquivarCard(c.id, archivar));
+    void qc.invalidateQueries({ queryKey: ["tarefas", "arquivados-total", c.quadro_id] });
+    void qc.invalidateQueries({ queryKey: ["tarefas", "arquivados"] });
+    void qc.invalidateQueries({ queryKey: ["tarefas", "quadros"] });
+    void qc.invalidateQueries({ queryKey: ["tarefas", "meus"] });
+    void qc.invalidateQueries({ queryKey: ["tarefas", "mes"] });
+    toast.success(archivar ? "Card arquivado" : "Card restaurado");
+    if (archivar) onOpenChange(false);
+  };
+
   const etiquetasVisiveis = etiquetasDoQuadro(etiquetas, c.quadro_id);
   const cardsPrivados = quadros.find((q) => q.id === c.quadro_id)?.cards_privados ?? false;
   const nomePessoa = (id: string | null) => pessoas.find((p) => p.id === id)?.nome ?? "Ninguém";
@@ -637,19 +651,13 @@ export function CardDialog({
                     Parado nesta coluna há {diasParado(c.coluna_desde)}{" "}
                     {diasParado(c.coluna_desde) === 1 ? "dia" : "dias"}.
                   </p>
-                  {mexer ? (
+                  {podeArquivar ? (
                     <div className="flex gap-2 pt-2">
                       <Button
                         variant="outline"
                         size="sm"
                         className="flex-1 gap-1"
-                        onClick={async () => {
-                          await rodar(() => arquivarCard(c.id, !c.arquivado));
-                          void qc.invalidateQueries({ queryKey: ["tarefas", "arquivados-total", c.quadro_id] });
-                          void qc.invalidateQueries({ queryKey: ["tarefas", "arquivados"] });
-                          toast.success(c.arquivado ? "Card restaurado" : "Card arquivado");
-                          if (!c.arquivado) onOpenChange(false);
-                        }}
+                        onClick={() => arquivar(!c.arquivado)}
                       >
                         <Archive className="size-4" /> {c.arquivado ? "Desarquivar" : "Arquivar"}
                       </Button>
@@ -721,6 +729,16 @@ export function CardDialog({
                       <CheckCircle2 className="size-3" /> Concluir
                     </Button>
                   )}
+                  {c.concluido && podeArquivar && !c.arquivado ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-[25px] shrink-0 gap-1 px-2 text-[11px]"
+                      onClick={() => arquivar(true)}
+                    >
+                      <Archive className="size-3" /> Arquivar
+                    </Button>
+                  ) : null}
                 </>
               ) : null}
             </div>
