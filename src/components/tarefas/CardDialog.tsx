@@ -534,8 +534,8 @@ export function CardDialog({
                 variant="outline"
                 size="sm"
                 className="h-[25px] gap-1 px-[7px] text-[12px]"
-                disabled={!mexer}
-                onClick={() => document.getElementById("bloco-anexos")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                disabled={!mexer || enviando}
+                onClick={() => fileRef.current?.click()}
               >
                 <Paperclip className="size-3.5" /> Anexo
               </Button>
