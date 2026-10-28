@@ -397,10 +397,16 @@ function StoriesPage() {
     }
   }
 
-  async function exportar(qtd: number, escolhidos: Objective[], todos: boolean, texto: string) {
+  async function exportar(
+    qtd: number,
+    escolhidos: Objective[],
+    todos: boolean,
+    texto: string,
+    data: string,
+  ) {
     setExportando(true);
     try {
-      await exportPlanPdf(fila, nomeAtual, qtd, escolhidos, todos, texto, ctas, links);
+      await exportPlanPdf(fila, nomeAtual, qtd, escolhidos, todos, texto, ctas, links, data);
     } catch (error) {
       toast.error((error as Error).message);
     } finally {

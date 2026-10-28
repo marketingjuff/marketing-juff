@@ -116,6 +116,7 @@ function capa(
   direcionamento = "",
   ctas: Cta[] = [],
   links: LinkCta[] = [],
+  dataInicial = "",
 ): string {
   return `INSTRUÇÕES PARA MONTAR O PLANO DE STORIES
 
