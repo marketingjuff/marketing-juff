@@ -1300,6 +1300,14 @@ export function estaAtrasado(
   return false;
 }
 
+/**
+ * Filtro de etiquetas em pílulas: o card precisa ter TODAS as etiquetas escolhidas.
+ * Assim, filtrar por "Juff Custom" e "RD Station" mostra só quem carrega as duas.
+ */
+export function temTodasAsEtiquetas(etiquetasDoCard: string[], selecionadas: string[]): boolean {
+  return selecionadas.every((id) => etiquetasDoCard.includes(id));
+}
+
 export function venceHoje(card: Pick<Card, "data_entrega" | "concluido">): boolean {
   return !!card.data_entrega && !card.concluido && card.data_entrega === hojeIso();
 }
