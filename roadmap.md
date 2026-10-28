@@ -17,3 +17,6 @@
 - [x] Testar formatação, gravação, edição e restrição de autoria, incluindo bloqueio de admin em comentário alheio.
 ## Arquivar concluídos manualmente
 - [x] Botão Arquivar na barra do card concluído, sem reabrir o card; testar arquivar e devolver na tela.
+
+## Card novo abre na hora
+- [x] Ao criar um card no quadro, abrir a ficha dele imediatamente; testar criação e abertura na tela.
