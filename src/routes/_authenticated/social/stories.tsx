@@ -257,6 +257,8 @@ function StoriesPage() {
   const [confirmaNome, setConfirmaNome] = useState("");
   const [exportAberto, setExportAberto] = useState(false);
   const [quantidade, setQuantidade] = useState("");
+  /** Data da primeira postagem do plano, no formato aaaa-mm-dd vindo do input de data. */
+  const [dataInicial, setDataInicial] = useState("");
   const [direcionamento, setDirecionamento] = useState("");
   /** Objetivos marcados na exportação. null = todos marcados. */
   const [objetivosPdf, setObjetivosPdf] = useState<string[] | null>(null);

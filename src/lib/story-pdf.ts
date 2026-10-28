@@ -74,6 +74,40 @@ ${texto}
 `;
 }
 
+/** Converte 2026-11-05 em 05/11, somando dias. Usa UTC para não escorregar de fuso. */
+function diaMes(dataInicial: string, somaDias: number): string {
+  const partes = (dataInicial ?? "").split("-").map((p) => Number.parseInt(p, 10));
+  if (partes.length !== 3 || partes.some((n) => !Number.isFinite(n))) return "";
+  const base = Date.UTC(partes[0]!, partes[1]! - 1, partes[2]!);
+  const data = new Date(base + somaDias * 86400000);
+  const dia = String(data.getUTCDate()).padStart(2, "0");
+  const mes = String(data.getUTCMonth() + 1).padStart(2, "0");
+  return `${dia}/${mes}`;
+}
+
+/** Prefixo pronto do nome do bloco. Vazio quando não há data informada. */
+function prefixoData(dataInicial: string, somaDias: number): string {
+  const dia = diaMes(dataInicial, somaDias);
+  return dia ? `${dia} - ` : "";
+}
+
+function blocoDatas(dataInicial: string): string {
+  const primeiro = diaMes(dataInicial, 0);
+  if (!primeiro) return "";
+  return `
+
+DATA NO NOME DO BLOCO
+
+O primeiro bloco do plano é publicado em ${primeiro}. Cada bloco seguinte é publicado no dia seguinte ao anterior, um bloco por dia, contando sábado e domingo, sem pular nenhuma data e sem juntar dois blocos no mesmo dia.
+
+O nome do bloco precisa começar sempre pela data daquela publicação, escrita com dois dígitos de dia, barra, dois dígitos de mês, seguida de espaço, hífen, espaço e o título do bloco em maiúsculas.
+
+Exemplo do formato, ${diaMes(dataInicial, 0)} - NOME DO PRIMEIRO BLOCO e, no bloco seguinte, ${diaMes(dataInicial, 1)} - NOME DO SEGUNDO BLOCO.
+
+Nunca escreva o ano. Nunca escreva o dia da semana. Nunca repita a mesma data em dois blocos diferentes. A data entra apenas na linha BLOCO, nunca nas linhas ARTE e nunca nas linhas SOBRA.
+`;
+}
+
 function capa(
   totalArtes: number,
   quantidade: number,
