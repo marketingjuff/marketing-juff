@@ -414,6 +414,13 @@
       "when": 1793116683006,
       "tag": "0058_filtro_responsaveis_quadro",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1793194661477,
+      "tag": "0059_tarefas_arquivamento",
+      "breakpoints": true
     }
   ]
 }
