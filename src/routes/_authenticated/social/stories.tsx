@@ -1194,7 +1194,8 @@ function StoriesPage() {
             </Button>
             <Button
               disabled={
-                objetivosAtivos.length > 0 && objetivosPdf !== null && objetivosPdf.length === 0
+                !dataInicial ||
+                (objetivosAtivos.length > 0 && objetivosPdf !== null && objetivosPdf.length === 0)
               }
               onClick={() => {
                 const bruto = Number.parseInt(quantidade.trim(), 10);
@@ -1206,7 +1207,7 @@ function StoriesPage() {
                     ? objetivosAtivos
                     : objetivosAtivos.filter((o) => objetivosPdf.includes(o.id));
                 setExportAberto(false);
-                void exportar(qtd, escolhidos, todos, direcionamento.trim());
+                void exportar(qtd, escolhidos, todos, direcionamento.trim(), dataInicial);
               }}
             >
               Gerar PDF
