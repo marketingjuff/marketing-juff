@@ -563,7 +563,7 @@ export async function createCard(
   titulo: string,
   noTopo = false,
   etiquetaIds: string[] = [],
-): Promise<void> {
+): Promise<string | null> {
   let posicao: number;
   if (noTopo) {
     const { data: primeira } = await supabase
@@ -596,7 +596,8 @@ export async function createCard(
     .select("id")
     .single();
   if (error) throw error;
-  if (!novo?.id || etiquetaIds.length === 0) return;
+  if (!novo?.id) return null;
+  if (etiquetaIds.length === 0) return novo.id;
 
   const { data: jaTem } = await supabase
     .from("tarefa_card_etiquetas")
@@ -604,11 +605,12 @@ export async function createCard(
     .eq("card_id", novo.id);
   const existentes = new Set((jaTem ?? []).map((r: { etiqueta_id: string }) => r.etiqueta_id));
   const inserir = [...new Set(etiquetaIds)].filter((id) => !existentes.has(id));
-  if (inserir.length === 0) return;
+  if (inserir.length === 0) return novo.id;
   const { error: e2 } = await supabase
     .from("tarefa_card_etiquetas")
     .insert(inserir.map((etiqueta_id) => ({ card_id: novo.id, etiqueta_id })));
   if (e2) throw e2;
+  return novo.id;
 }
 
 export type CardUpdate = Partial<
