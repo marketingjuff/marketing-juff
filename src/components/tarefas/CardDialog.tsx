@@ -645,6 +645,8 @@ export function CardDialog({
                         className="flex-1 gap-1"
                         onClick={async () => {
                           await rodar(() => arquivarCard(c.id, !c.arquivado));
+                          void qc.invalidateQueries({ queryKey: ["tarefas", "arquivados-total", c.quadro_id] });
+                          void qc.invalidateQueries({ queryKey: ["tarefas", "arquivados"] });
                           toast.success(c.arquivado ? "Card restaurado" : "Card arquivado");
                           if (!c.arquivado) onOpenChange(false);
                         }}

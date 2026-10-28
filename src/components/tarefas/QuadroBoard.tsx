@@ -21,7 +21,7 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable";
-import { EyeOff, Lock, Palette, Plus, Search, Tag, Users, X } from "lucide-react";
+import { Archive, EyeOff, Lock, Palette, Plus, Search, Tag, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,12 +37,14 @@ import {
 import { ColunaLista } from "./ColunaLista";
 import { CardMini } from "./CardMini";
 import { CardDialog } from "./CardDialog";
+import { ArquivadosDialog } from "./ArquivadosDialog";
 import { FundoPicker } from "./FundoPicker";
 import { registrarFundoRecente } from "@/hooks/use-fundos-recentes";
 import { NovoQuadroDialog } from "./NovoQuadroDialog";
 import { ReorganizarCardsDialog } from "./ReorganizarCardsDialog";
 import { ColunaResponsavelDialog } from "./ColunaResponsavelDialog";
 import {
+  arquivadosCountQueryOptions,
   arquivarColuna,
   coresDaEtiqueta,
   createCard,
@@ -178,6 +180,8 @@ export function QuadroBoard({
     soAtrasados ||
     soMeus;
   const [cardAberto, setCardAberto] = useState<string | null>(cardInicial ?? null);
+  const [verArquivados, setVerArquivados] = useState(false);
+  const { data: totalArquivados = 0 } = useQuery(arquivadosCountQueryOptions(quadro.id));
   const navegarCard = useNavigate();
   useEffect(() => {
     if (cardInicial) setCardAberto(cardInicial);
@@ -510,6 +514,10 @@ export function QuadroBoard({
               </Button>
             </>
           ) : null}
+          <Button size="sm" variant="outline" className="gap-1" onClick={() => setVerArquivados(true)}>
+            <Archive className="size-4" /> Arquivados
+            {totalArquivados > 0 ? <span className="tabular-nums text-muted-foreground">{totalArquivados}</span> : null}
+          </Button>
           <div className="relative">
             <Search className="absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -717,6 +725,18 @@ export function QuadroBoard({
         card={cardDialog}
         open={!!cardDialog}
         onOpenChange={(v) => !v && fecharCard()}
+        editable={editable}
+        isAdmin={isAdmin}
+        meuId={meuId}
+        role={role}
+      />
+      <ArquivadosDialog
+        quadroId={quadro.id}
+        quadroNome={quadro.nome}
+        etiquetas={etiquetasDoQuadro}
+        pessoas={pessoasLista}
+        open={verArquivados}
+        onOpenChange={setVerArquivados}
         editable={editable}
         isAdmin={isAdmin}
         meuId={meuId}
