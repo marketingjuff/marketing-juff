@@ -74,6 +74,40 @@ ${texto}
 `;
 }
 
+/** Converte 2026-11-05 em 05/11, somando dias. Usa UTC para não escorregar de fuso. */
+function diaMes(dataInicial: string, somaDias: number): string {
+  const partes = (dataInicial ?? "").split("-").map((p) => Number.parseInt(p, 10));
+  if (partes.length !== 3 || partes.some((n) => !Number.isFinite(n))) return "";
+  const base = Date.UTC(partes[0]!, partes[1]! - 1, partes[2]!);
+  const data = new Date(base + somaDias * 86400000);
+  const dia = String(data.getUTCDate()).padStart(2, "0");
+  const mes = String(data.getUTCMonth() + 1).padStart(2, "0");
+  return `${dia}/${mes}`;
+}
+
+/** Prefixo pronto do nome do bloco. Vazio quando não há data informada. */
+function prefixoData(dataInicial: string, somaDias: number): string {
+  const dia = diaMes(dataInicial, somaDias);
+  return dia ? `${dia} - ` : "";
+}
+
+function blocoDatas(dataInicial: string): string {
+  const primeiro = diaMes(dataInicial, 0);
+  if (!primeiro) return "";
+  return `
+
+DATA NO NOME DO BLOCO
+
+O primeiro bloco do plano é publicado em ${primeiro}. Cada bloco seguinte é publicado no dia seguinte ao anterior, um bloco por dia, contando sábado e domingo, sem pular nenhuma data e sem juntar dois blocos no mesmo dia.
+
+O nome do bloco precisa começar sempre pela data daquela publicação, escrita com dois dígitos de dia, barra, dois dígitos de mês, seguida de espaço, hífen, espaço e o título do bloco em maiúsculas.
+
+Exemplo do formato, ${diaMes(dataInicial, 0)} - NOME DO PRIMEIRO BLOCO e, no bloco seguinte, ${diaMes(dataInicial, 1)} - NOME DO SEGUNDO BLOCO.
+
+Nunca escreva o ano. Nunca escreva o dia da semana. Nunca repita a mesma data em dois blocos diferentes. A data entra apenas na linha BLOCO, nunca nas linhas ARTE e nunca nas linhas SOBRA.
+`;
+}
+
 function capa(
   totalArtes: number,
   quantidade: number,
@@ -82,6 +116,7 @@ function capa(
   direcionamento = "",
   ctas: Cta[] = [],
   links: LinkCta[] = [],
+  dataInicial = "",
 ): string {
   return `INSTRUÇÕES PARA MONTAR O PLANO DE STORIES
 
@@ -99,15 +134,15 @@ Alterne produto, benefício, vida real, marca, interação e venda. Evite sequê
 
 Devolva a resposta em um documento Word seguindo EXATAMENTE o formato abaixo. Não use tabelas. Não use marcadores. Não escreva nenhum texto fora do formato. Cada linha começa com BLOCO, ARTE ou SOBRA, e os campos são separados por barra vertical.
 
-BLOCO | numero | SOLO ou CAMPANHA | nome do bloco | objetivo
+BLOCO | numero | SOLO ou CAMPANHA | data e nome do bloco | objetivo
 ARTE | nome exato do arquivo | texto principal | observação | cta | link${quantidade > 0 ? `\nSOBRA | nome exato do arquivo | motivo curto` : ""}
 
 Exemplo.
 
-BLOCO | 1 | CAMPANHA | AQUELA QUE VOCÊ REPETE | Prova social
+BLOCO | 1 | CAMPANHA | ${prefixoData(dataInicial, 0)}AQUELA QUE VOCÊ REPETE | Prova social
 ARTE | prancheta 2 | AQUELA QUE VOCÊ REPETE. | Abre a campanha, arte limpa. | |
 ARTE | prancheta 3 | THERMOAIR. VOCÊ VAI ENTENDER QUANDO VESTIR. | Fecha a campanha levando para a loja. | Veja a coleção. | https://loja.juff.com.br
-BLOCO | 2 | SOLO | DESACELERAR | Marca
+BLOCO | 2 | SOLO | ${prefixoData(dataInicial, 1)}DESACELERAR | Marca
 ARTE | prancheta 4 | HOJE O MOVIMENTO É DESACELERAR. | Story de marca, sem CTA. | |
 ARTE | prancheta 7 | SEU TIME COM A SUA CARA. | Personalização, atendimento por conversa. | Fale com nossa equipe | https://wa.me/551139612696${quantidade > 0 ? `\nSOBRA | prancheta 5 | Repete a mesma ideia da prancheta 4.\nSOBRA | prancheta 6 | Texto pouco legível sobre a foto.` : ""}
 
@@ -115,7 +150,7 @@ ${
     quantidade > 0
       ? `Depois das linhas do plano, escreva uma linha SOBRA para CADA arte que você decidiu não usar. Toda arte deste PDF precisa aparecer uma vez, ou como ARTE ou como SOBRA. Nenhuma pode ficar de fora das duas listas. Não invente artes que não estão no PDF.`
       : `Toda arte deste PDF precisa aparecer no plano como uma linha ARTE, exatamente uma vez. Não escreva nenhuma linha SOBRA, porque nenhuma arte pode ficar de fora. Não invente artes que não estão no PDF.`
-  }${blocoObjetivos(objetivos, todos)}${blocoCtas(ctas, links)}${blocoDirecionamento(direcionamento)}`;
+  }${blocoDatas(dataInicial)}${blocoObjetivos(objetivos, todos)}${blocoCtas(ctas, links)}${blocoDirecionamento(direcionamento)}`;
 }
 
 
@@ -151,6 +186,7 @@ export async function exportPlanPdf(
   direcionamento = "",
   ctas: Cta[] = [],
   links: LinkCta[] = [],
+  dataInicial = "",
 ): Promise<void> {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -165,7 +201,16 @@ export async function exportPlanPdf(
 
   // As instruções podem passar de uma página; quebra automática por linha.
   const linhas: string[] = doc.splitTextToSize(
-    capa(frames.length, quantidade, objetivos, todosObjetivos, direcionamento, ctas, links),
+    capa(
+      frames.length,
+      quantidade,
+      objetivos,
+      todosObjetivos,
+      direcionamento,
+      ctas,
+      links,
+      dataInicial,
+    ),
     pageW - margem * 2,
   );
   const alturaLinha = 5;

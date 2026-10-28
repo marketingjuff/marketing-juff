@@ -257,6 +257,8 @@ function StoriesPage() {
   const [confirmaNome, setConfirmaNome] = useState("");
   const [exportAberto, setExportAberto] = useState(false);
   const [quantidade, setQuantidade] = useState("");
+  /** Data da primeira postagem do plano, no formato aaaa-mm-dd vindo do input de data. */
+  const [dataInicial, setDataInicial] = useState("");
   const [direcionamento, setDirecionamento] = useState("");
   /** Objetivos marcados na exportação. null = todos marcados. */
   const [objetivosPdf, setObjetivosPdf] = useState<string[] | null>(null);
@@ -395,10 +397,16 @@ function StoriesPage() {
     }
   }
 
-  async function exportar(qtd: number, escolhidos: Objective[], todos: boolean, texto: string) {
+  async function exportar(
+    qtd: number,
+    escolhidos: Objective[],
+    todos: boolean,
+    texto: string,
+    data: string,
+  ) {
     setExportando(true);
     try {
-      await exportPlanPdf(fila, nomeAtual, qtd, escolhidos, todos, texto, ctas, links);
+      await exportPlanPdf(fila, nomeAtual, qtd, escolhidos, todos, texto, ctas, links, data);
     } catch (error) {
       toast.error((error as Error).message);
     } finally {
@@ -1099,6 +1107,26 @@ function StoriesPage() {
           </div>
 
           <div className="space-y-1.5">
+            <Label htmlFor="data-inicial">Data da primeira postagem</Label>
+            <Input
+              id="data-inicial"
+              type="date"
+              value={dataInicial}
+              onChange={(e) => setDataInicial(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              O primeiro bloco do plano sai nessa data e cada bloco seguinte cai no dia seguinte,
+              contando sábado e domingo. A data entra no começo do nome de cada bloco, no formato
+              dia barra mês.
+            </p>
+            {!dataInicial ? (
+              <p className="text-xs text-destructive">
+                Escolha a data para liberar a exportação.
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-1.5">
             <Label htmlFor="direcionamento">Direcionamento (opcional)</Label>
             <p className="text-xs text-muted-foreground">
               Escreva aqui o que essa leva precisa ter, do jeito que você fala. Exemplo, preciso de
@@ -1166,7 +1194,8 @@ function StoriesPage() {
             </Button>
             <Button
               disabled={
-                objetivosAtivos.length > 0 && objetivosPdf !== null && objetivosPdf.length === 0
+                !dataInicial ||
+                (objetivosAtivos.length > 0 && objetivosPdf !== null && objetivosPdf.length === 0)
               }
               onClick={() => {
                 const bruto = Number.parseInt(quantidade.trim(), 10);
@@ -1178,7 +1207,7 @@ function StoriesPage() {
                     ? objetivosAtivos
                     : objetivosAtivos.filter((o) => objetivosPdf.includes(o.id));
                 setExportAberto(false);
-                void exportar(qtd, escolhidos, todos, direcionamento.trim());
+                void exportar(qtd, escolhidos, todos, direcionamento.trim(), dataInicial);
               }}
             >
               Gerar PDF
