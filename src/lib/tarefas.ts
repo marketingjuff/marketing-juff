@@ -88,6 +88,7 @@ export type Card = {
   concluido: boolean;
   coluna_desde: string;
   arquivado: boolean;
+  arquivado_em: string | null;
   etiquetas: string[];
   checklist_total: number;
   checklist_feitos: number;
@@ -246,6 +247,7 @@ function mapCard(c: any): Card {
     concluido: c.concluido,
     coluna_desde: c.coluna_desde,
     arquivado: c.arquivado,
+    arquivado_em: c.arquivado_em ?? null,
     etiquetas: (c.tarefa_card_etiquetas ?? []).map((e: { etiqueta_id: string }) => e.etiqueta_id),
     checklist_total: checklist.length,
     checklist_feitos: checklist.filter((i) => i.feito).length,
@@ -1186,6 +1188,93 @@ export async function registrarHistorico(
   await supabase
     .from("tarefa_historico")
     .insert({ card_id: cardId, acao, detalhe, autor_id: await uid() });
+}
+
+// ---------------- arquivados ----------------
+
+export type CardArquivado = Card & { coluna_nome: string };
+
+export type PeriodoArquivo = "tudo" | "90d" | "12m";
+
+export const ARQUIVADOS_POR_PAGINA = 50;
+
+export const PERIODOS_ARQUIVO: { valor: PeriodoArquivo; label: string }[] = [
+  { valor: "tudo", label: "Todo o período" },
+  { valor: "90d", label: "Últimos 90 dias" },
+  { valor: "12m", label: "Últimos 12 meses" },
+];
+
+export const arquivadosCountQueryOptions = (quadroId: string) =>
+  queryOptions({
+    queryKey: ["tarefas", "arquivados-total", quadroId],
+    queryFn: async (): Promise<number> => {
+      const { count, error } = await supabase
+        .from("tarefa_cards")
+        .select("id", { count: "exact", head: true })
+        .eq("quadro_id", quadroId)
+        .eq("arquivado", true);
+      if (error) throw error;
+      return count ?? 0;
+    },
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+
+export type FiltroArquivados = {
+  quadroId: string;
+  busca: string;
+  responsavel: string | null;
+  etiqueta: string | null;
+  periodo: PeriodoArquivo;
+};
+
+/** Uma página de arquivados do quadro, filtrada e ordenada no banco. */
+export async function listarArquivados(
+  f: FiltroArquivados,
+  pagina: number,
+): Promise<CardArquivado[]> {
+  const sel = f.etiqueta
+    ? `${CARD_SELECT}, tarefa_colunas!tarefa_cards_coluna_id_fkey(nome), filtroEtiq:tarefa_card_etiquetas!inner(etiqueta_id)`
+    : `${CARD_SELECT}, tarefa_colunas!tarefa_cards_coluna_id_fkey(nome)`;
+
+  let q = supabase
+    .from("tarefa_cards")
+    .select(sel)
+    .eq("quadro_id", f.quadroId)
+    .eq("arquivado", true);
+
+  const termo = f.busca.trim();
+  if (termo) q = q.ilike("titulo", `%${termo}%`);
+  if (f.responsavel) q = q.eq("responsavel_id", f.responsavel);
+  if (f.etiqueta) q = q.eq("filtroEtiq.etiqueta_id", f.etiqueta);
+  if (f.periodo !== "tudo") {
+    const dias = f.periodo === "90d" ? 90 : 365;
+    const desde = new Date();
+    desde.setDate(desde.getDate() - dias);
+    q = q.gte("arquivado_em", desde.toISOString());
+  }
+
+  const de = pagina * ARQUIVADOS_POR_PAGINA;
+  const { data, error } = await q
+    .order("arquivado_em", { ascending: false, nullsFirst: false })
+    .order("updated_at", { ascending: false })
+    .order("id", { ascending: false })
+    .range(de, de + ARQUIVADOS_POR_PAGINA - 1);
+  if (error) throw error;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data ?? []).map((c: any) => ({
+    ...mapCard(c),
+    coluna_nome: c.tarefa_colunas?.nome ?? "",
+  }));
+}
+
+/** Rótulo de mês usado para agrupar a listagem de arquivados. */
+export function mesDoArquivo(iso: string | null): string {
+  if (!iso) return "Sem data";
+  const d = new Date(iso);
+  const s = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 // ---------------- visões transversais ----------------

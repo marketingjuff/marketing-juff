@@ -2333,6 +2333,7 @@ export type Database = {
         Row: {
           adiado_ate: string | null
           arquivado: boolean
+          arquivado_em: string | null
           coluna_desde: string
           coluna_id: string
           concluido: boolean
@@ -2362,6 +2363,7 @@ export type Database = {
         Insert: {
           adiado_ate?: string | null
           arquivado?: boolean
+          arquivado_em?: string | null
           coluna_desde?: string
           coluna_id: string
           concluido?: boolean
@@ -2391,6 +2393,7 @@ export type Database = {
         Update: {
           adiado_ate?: string | null
           arquivado?: boolean
+          arquivado_em?: string | null
           coluna_desde?: string
           coluna_id?: string
           concluido?: boolean
@@ -2998,6 +3001,7 @@ export type Database = {
         Args: { p_ate: string; p_de: string }
         Returns: Json
       }
+      tarefa_arquivar_concluidos: { Args: never; Returns: number }
       tarefa_avancar_recorrentes: { Args: never; Returns: number }
       tarefa_card_avancar: { Args: { _id: string }; Returns: string }
       tarefa_card_privado_visivel: {

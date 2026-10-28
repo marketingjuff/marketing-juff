@@ -14,6 +14,8 @@ export function useQuadroAoVivo(quadroId: string | null) {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
         void qc.invalidateQueries({ queryKey: ["tarefas", "quadro", quadroId] });
+        void qc.invalidateQueries({ queryKey: ["tarefas", "arquivados-total", quadroId] });
+        void qc.invalidateQueries({ queryKey: ["tarefas", "arquivados"] });
         void qc.invalidateQueries({ queryKey: ["tarefas", "checklist"] });
         void qc.invalidateQueries({ queryKey: ["tarefas", "meus"] });
         void qc.invalidateQueries({ queryKey: ["tarefas", "mes"] });

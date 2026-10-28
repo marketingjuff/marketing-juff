@@ -1,4 +1,8 @@
 # Comentários formatados
+## Arquivamento de tarefas
+- [x] Adicionar data e arquivamento diário de concluídos após 30 dias sem alteração.
+- [x] Incluir consulta por quadro, filtros, paginação e restauração.
+- [x] Testar regras, consulta e restauração na tela.
 ## Recorrência no Meu dia
 - [x] Configurar frequências no popup e preservar recorrentes existentes.
 - [x] Testar datas calculadas e salvar/reabrir a configuração na tela.
