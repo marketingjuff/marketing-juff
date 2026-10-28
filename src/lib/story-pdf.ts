@@ -201,7 +201,16 @@ export async function exportPlanPdf(
 
   // As instruções podem passar de uma página; quebra automática por linha.
   const linhas: string[] = doc.splitTextToSize(
-    capa(frames.length, quantidade, objetivos, todosObjetivos, direcionamento, ctas, links),
+    capa(
+      frames.length,
+      quantidade,
+      objetivos,
+      todosObjetivos,
+      direcionamento,
+      ctas,
+      links,
+      dataInicial,
+    ),
     pageW - margem * 2,
   );
   const alturaLinha = 5;

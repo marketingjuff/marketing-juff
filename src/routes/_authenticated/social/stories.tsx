@@ -1107,6 +1107,26 @@ function StoriesPage() {
           </div>
 
           <div className="space-y-1.5">
+            <Label htmlFor="data-inicial">Data da primeira postagem</Label>
+            <Input
+              id="data-inicial"
+              type="date"
+              value={dataInicial}
+              onChange={(e) => setDataInicial(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              O primeiro bloco do plano sai nessa data e cada bloco seguinte cai no dia seguinte,
+              contando sábado e domingo. A data entra no começo do nome de cada bloco, no formato
+              dia barra mês.
+            </p>
+            {!dataInicial ? (
+              <p className="text-xs text-destructive">
+                Escolha a data para liberar a exportação.
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-1.5">
             <Label htmlFor="direcionamento">Direcionamento (opcional)</Label>
             <p className="text-xs text-muted-foreground">
               Escreva aqui o que essa leva precisa ter, do jeito que você fala. Exemplo, preciso de
