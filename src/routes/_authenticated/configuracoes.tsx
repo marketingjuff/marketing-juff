@@ -973,6 +973,28 @@ function PainelLinks() {
               ) : null}
             </div>
             <div className="flex shrink-0 gap-1">
+              <div className="flex flex-col">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-4 px-1"
+                  title="Subir"
+                  disabled={indice === 0}
+                  onClick={() => mover(indice, -1)}
+                >
+                  <ChevronUp className="size-3.5" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-4 px-1"
+                  title="Descer"
+                  disabled={indice === links.length - 1}
+                  onClick={() => mover(indice, 1)}
+                >
+                  <ChevronDown className="size-3.5" />
+                </Button>
+              </div>
               <Button
                 size="sm"
                 variant="outline"
