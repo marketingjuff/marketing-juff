@@ -698,7 +698,12 @@ function StoriesPage() {
       onAdjustFrame: (frameId: string, comment: string) =>
         mutate.mutate(() => requestFrameAdjust(frameId, comment)),
       onReplaceImage: (frame: Frame, file: File) =>
-        mutate.mutate(() => replaceFrameImage(frame, file)),
+        mutate.mutate(() => replaceFrameImage(frame, file), {
+          onSuccess: () =>
+            toast.success(
+              "Imagem trocada. Os textos desta arte continuam os mesmos.",
+            ),
+        }),
       onDelete: () =>
         setConfirm({
           title: `Apagar story #${story.position}?`,

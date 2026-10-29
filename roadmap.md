@@ -20,3 +20,6 @@
 
 ## Card novo abre na hora
 - [x] Ao criar um card no quadro, abrir a ficha dele imediatamente; testar criação e abertura na tela.
+
+## Trocar imagem dentro da arte
+- [x] Botão de trocar a imagem sobre o canto de cada arte, mantendo os textos; testar abertura do seletor de arquivos na tela.

@@ -364,6 +364,18 @@ function ArteBloco({
           onSaveComp={onSaveComp}
           onSaveTexto={(id, texto) => onSaveFrame(id, { texto_principal: texto })}
         />
+        {editable ? (
+          <button
+            type="button"
+            {...stopDrag}
+            title="Trocar a imagem desta arte (os textos continuam os mesmos)"
+            aria-label="Trocar a imagem desta arte"
+            className="absolute right-1.5 top-1.5 z-10 inline-flex size-7 items-center justify-center rounded-md border border-border/60 bg-background/85 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-background hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            onClick={() => trocaRef.current?.click()}
+          >
+            <ImageUp className="size-3.5" />
+          </button>
+        ) : null}
       </div>
 
       <p className="truncate text-[11px] text-muted-foreground" title={frame.nome_arquivo}>
