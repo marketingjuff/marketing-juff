@@ -18,6 +18,7 @@ export type LinkCta = {
   url: string;
   descricao: string;
   arquivado: boolean;
+  ordem: number;
 };
 
 export const ctasQueryOptions = queryOptions({
@@ -48,7 +49,8 @@ export async function fetchCtas(): Promise<Cta[]> {
 export async function fetchLinks(): Promise<LinkCta[]> {
   const { data, error } = await supabase
     .from("story_links")
-    .select("id, nome, url, descricao, arquivado")
+    .select("id, nome, url, descricao, arquivado, ordem")
+    .order("ordem", { ascending: true })
     .order("nome", { ascending: true });
   if (error) throw error;
   return (data ?? []).map((l) => ({
@@ -57,6 +59,7 @@ export async function fetchLinks(): Promise<LinkCta[]> {
     url: l.url ?? "",
     descricao: l.descricao ?? "",
     arquivado: l.arquivado ?? false,
+    ordem: l.ordem ?? 0,
   }));
 }
 
@@ -80,10 +83,39 @@ export async function deleteCta(id: string): Promise<void> {
 }
 
 export async function createLink(nome: string, url: string, descricao: string): Promise<void> {
-  const { error } = await supabase
+  const { data: ultimo } = await supabase
     .from("story_links")
-    .insert({ nome: nome.trim(), url: normalizaUrl(url), descricao: descricao.trim() });
+    .select("ordem")
+    .order("ordem", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const { error } = await supabase.from("story_links").insert({
+    nome: nome.trim(),
+    url: normalizaUrl(url),
+    descricao: descricao.trim(),
+    ordem: (ultimo?.ordem ?? 0) + 1,
+  });
   if (error) throw error;
+}
+
+/** Troca a ordem de dois links vizinhos. */
+export async function trocarOrdemLinks(a: LinkCta, b: LinkCta): Promise<void> {
+  const ordemA = a.ordem;
+  const ordemB = b.ordem;
+  // Evita colisão quando os dois têm a mesma ordem (dados antigos).
+  const base = ordemA === ordemB ? Math.min(a.ordem, b.ordem) : null;
+  const novaA = base === null ? ordemB : base + 1;
+  const novaB = base === null ? ordemA : base;
+  const { error: erroA } = await supabase
+    .from("story_links")
+    .update({ ordem: novaA })
+    .eq("id", a.id);
+  if (erroA) throw erroA;
+  const { error: erroB } = await supabase
+    .from("story_links")
+    .update({ ordem: novaB })
+    .eq("id", b.id);
+  if (erroB) throw erroB;
 }
 
 export async function updateLink(

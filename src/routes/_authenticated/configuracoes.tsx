@@ -7,6 +7,8 @@ import { PainelCustoSeeding, PainelImportarSeeding } from "@/components/config/P
 import {
   KeyRound,
   Copy,
+  ChevronDown,
+  ChevronUp,
   LayoutGrid,
   Library,
   Link2,
@@ -79,6 +81,7 @@ import {
   deleteCta,
   deleteLink,
   linksQueryOptions,
+  trocarOrdemLinks,
   updateCta,
   updateLink,
   type Cta,
@@ -895,6 +898,18 @@ function PainelLinks() {
     }
   }
 
+  async function mover(indice: number, direcao: -1 | 1) {
+    const alvo = links[indice + direcao];
+    const atual = links[indice];
+    if (!alvo || !atual) return;
+    try {
+      await trocarOrdemLinks(atual, alvo);
+      invalidate();
+    } catch (error) {
+      toast.error((error as Error).message);
+    }
+  }
+
   return (
     <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
       <h2 className="flex items-center gap-2 text-base font-semibold">
@@ -938,7 +953,7 @@ function PainelLinks() {
       </div>
 
       <div className="mt-4 space-y-2">
-        {links.map((l) => (
+        {links.map((l, indice) => (
           <div
             key={l.id}
             className="flex items-start justify-between gap-2 rounded-lg border border-border p-2"
@@ -958,6 +973,28 @@ function PainelLinks() {
               ) : null}
             </div>
             <div className="flex shrink-0 gap-1">
+              <div className="flex flex-col">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-4 px-1"
+                  title="Subir"
+                  disabled={indice === 0}
+                  onClick={() => mover(indice, -1)}
+                >
+                  <ChevronUp className="size-3.5" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-4 px-1"
+                  title="Descer"
+                  disabled={indice === links.length - 1}
+                  onClick={() => mover(indice, 1)}
+                >
+                  <ChevronDown className="size-3.5" />
+                </Button>
+              </div>
               <Button
                 size="sm"
                 variant="outline"

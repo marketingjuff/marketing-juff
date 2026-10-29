@@ -2042,6 +2042,7 @@ export type Database = {
           descricao: string
           id: string
           nome: string
+          ordem: number
           updated_at: string
           url: string
         }
@@ -2051,6 +2052,7 @@ export type Database = {
           descricao?: string
           id?: string
           nome: string
+          ordem?: number
           updated_at?: string
           url: string
         }
@@ -2060,6 +2062,7 @@ export type Database = {
           descricao?: string
           id?: string
           nome?: string
+          ordem?: number
           updated_at?: string
           url?: string
         }
