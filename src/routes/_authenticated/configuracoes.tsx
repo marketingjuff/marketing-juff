@@ -953,7 +953,7 @@ function PainelLinks() {
       </div>
 
       <div className="mt-4 space-y-2">
-        {links.map((l) => (
+        {links.map((l, indice) => (
           <div
             key={l.id}
             className="flex items-start justify-between gap-2 rounded-lg border border-border p-2"
