@@ -7,6 +7,8 @@ import { PainelCustoSeeding, PainelImportarSeeding } from "@/components/config/P
 import {
   KeyRound,
   Copy,
+  ChevronDown,
+  ChevronUp,
   LayoutGrid,
   Library,
   Link2,
@@ -79,6 +81,7 @@ import {
   deleteCta,
   deleteLink,
   linksQueryOptions,
+  trocarOrdemLinks,
   updateCta,
   updateLink,
   type Cta,
@@ -892,6 +895,18 @@ function PainelLinks() {
       toast.error((error as Error).message);
     } finally {
       setSalvando(false);
+    }
+  }
+
+  async function mover(indice: number, direcao: -1 | 1) {
+    const alvo = links[indice + direcao];
+    const atual = links[indice];
+    if (!alvo || !atual) return;
+    try {
+      await trocarOrdemLinks(atual, alvo);
+      invalidate();
+    } catch (error) {
+      toast.error((error as Error).message);
     }
   }
 
