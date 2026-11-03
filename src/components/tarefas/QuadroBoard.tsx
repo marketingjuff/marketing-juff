@@ -162,7 +162,7 @@ export function QuadroBoard({
     }
   }, [chaveFiltroResp, fResps]);
   const pessoasDoQuadro = useMemo(() => {
-    const comCard = new Set(cards.filter((c) => c.responsavel_id).map((c) => c.responsavel_id as string));
+    const comCard = new Set(cards.flatMap((c) => [...(c.responsavel_id ? [c.responsavel_id] : []), ...c.membros]));
     return pessoasLista.filter((p) => comCard.has(p.id));
   }, [cards, pessoasLista]);
   const respsSelecionados = useMemo(
@@ -254,9 +254,9 @@ export function QuadroBoard({
       .filter((c) => {
         if (busca.trim() && !c.titulo.toLowerCase().includes(busca.trim().toLowerCase())) return false;
         if (bolinhas) {
-          if (respsSelecionados.length > 0 && !respsSelecionados.includes(c.responsavel_id ?? ""))
+          if (respsSelecionados.length > 0 && !respsSelecionados.some((id) => envolve(c, id)))
             return false;
-        } else if (fResp !== TODOS && c.responsavel_id !== fResp) {
+        } else if (fResp !== TODOS && !envolve(c, fResp)) {
           return false;
         }
         if (pilulas) {
@@ -274,6 +274,11 @@ export function QuadroBoard({
         return Number(estaAtrasado(b)) - Number(estaAtrasado(a));
       });
 
+  // filtro de pessoa considera responsável e membros do card
+  function envolve(c: Card, pessoaId: string) {
+    return c.responsavel_id === pessoaId || c.membros.includes(pessoaId);
+  }
+
   const passaFiltroComum = (c: Card) => {
     if (busca.trim() && !c.titulo.toLowerCase().includes(busca.trim().toLowerCase())) return false;
     if (soAtrasados && !estaAtrasado(c)) return false;
@@ -283,10 +288,10 @@ export function QuadroBoard({
 
   const passaFiltroPessoa = (c: Card) => {
     if (bolinhas) {
-      if (respsSelecionados.length > 0 && !respsSelecionados.includes(c.responsavel_id ?? "")) return false;
+      if (respsSelecionados.length > 0 && !respsSelecionados.some((id) => envolve(c, id))) return false;
       return true;
     }
-    return fResp === TODOS || c.responsavel_id === fResp;
+    return fResp === TODOS || envolve(c, fResp);
   };
 
   const passaFiltroEtiqueta = (c: Card) => {
@@ -308,7 +313,7 @@ export function QuadroBoard({
     ).length;
 
   const contarPessoa = (pessoaId: string) =>
-    cards.filter((c) => c.responsavel_id === pessoaId && passaFiltroComum(c) && passaFiltroEtiqueta(c)).length;
+    cards.filter((c) => envolve(c, pessoaId) && passaFiltroComum(c) && passaFiltroEtiqueta(c)).length;
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
