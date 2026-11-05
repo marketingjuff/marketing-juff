@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Copy,
+  Download,
   Filter,
   GripVertical,
   MoreHorizontal,
@@ -46,6 +47,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { canEdit, hasPermission, profileQueryOptions } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { baixarXlsx } from "@/lib/xlsx-simples";
 import { coresQueryOptions, nomePai, ordenarTamanhos, ORDEM_TAMANHOS, produtosQueryOptions, type ProdutoBiblioteca } from "@/lib/biblioteca";
 import {
   MARCAS,
@@ -125,6 +127,28 @@ function SeedingPage() {
   const pessoas = painel?.pessoas ?? [];
   const periodo = de === ate ? nomeMes(de) : `${nomeMes(de)} – ${nomeMes(ate)}`;
 
+  async function exportar() {
+    const simNao = (v: boolean) => (v ? "Sim" : "Não");
+    const linhas: (string | number | null)[][] = [
+      [
+        "Mês", "Motivo", "Cabeçalho", "Modelo", "Estampa", "Cor", "Tamanho",
+        "Qtd", "Pessoa", "Pedido", "Produzida", "Enviada", "Captada",
+        "Precisa voltar", "Devolvida", "Observação",
+      ],
+    ];
+    for (const r of remessas) {
+      for (const p of [...(r.pecas ?? [])].sort((a, b) => a.posicao - b.posicao)) {
+        linhas.push([
+          nomeMes(r.mes), r.motivo, r.observacao, p.produto_nome, p.estampa_nome,
+          p.cor_nome, p.tamanho, p.quantidade, p.pessoa, p.pedido ? "Sim" : "Não",
+          simNao(p.produzida), simNao(p.enviada), simNao(p.captada),
+          simNao(p.retorna), simNao(p.devolvida), p.observacao,
+        ]);
+      }
+    }
+    await baixarXlsx(`seeding-${de}-a-${ate}.xlsx`, [{ nome: "Seeding", linhas }]);
+  }
+
   return (
     <AppShell largura="ampla">
       {!editavel ? (
@@ -168,6 +192,17 @@ function SeedingPage() {
         <div className="ml-auto flex items-center gap-3">
           <span className="text-xs text-muted-foreground">Custo do mês: {reais(custoDoMes(custos, atual))}</span>
           <FiltroPeriodo de={de} ate={ate} onAplicar={(a, b) => { setDe(a); setAte(b); }} onPadrao={() => { setDe(atual); setAte(somarMeses(atual, 1)); }} />
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => void exportar()}
+            disabled={!remessas.length}
+            title="Baixar a lista do período em Excel"
+          >
+            <Download className="size-3.5" />
+            Exportar
+          </Button>
         </div>
       </div>
 
