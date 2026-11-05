@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Copy,
   Filter,
+  GripVertical,
   MoreHorizontal,
   PackageCheck,
   Plus,
@@ -51,6 +52,7 @@ import {
   MOTIVOS,
   alterarPeca,
   alterarRemessa,
+  apagarPeca,
   apagarRemessa,
   criarPeca,
   criarRemessa,
@@ -65,6 +67,7 @@ import {
   pessoasQueryOptions,
   reais,
   remessasQueryOptions,
+  reordenarPecas,
   somarMeses,
   totalPecas,
   type Marca,
@@ -96,7 +99,7 @@ const ICONES: Record<Marca, { Icone: ComponentType<{ className?: string }>; text
   devolvida: { Icone: PackageCheck, texto: "Devolvida", rotulo: "Devolvida" },
 };
 
-const GRID = "grid grid-cols-[minmax(9rem,1.6fr)_minmax(8rem,1.4fr)_minmax(7rem,1fr)_4.5rem_3rem_minmax(8rem,1.2fr)_repeat(6,1.9rem)_minmax(8rem,1.6fr)_1.9rem] items-center gap-x-3";
+const GRID = "grid grid-cols-[1.25rem_minmax(9rem,1.6fr)_minmax(8rem,1.4fr)_minmax(7rem,1fr)_4.5rem_3rem_minmax(8rem,1.2fr)_repeat(6,1.9rem)_minmax(8rem,1.6fr)_1.9rem_1.9rem] items-center gap-x-3";
 
 function SeedingPage() {
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
