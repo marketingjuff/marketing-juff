@@ -300,6 +300,31 @@ export function duplicarPeca(qc: QueryClient, de: string, ate: string, peca: Pec
   );
 }
 
+/** Reordena as linhas de uma remessa pela lista de ids na ordem desejada. */
+export async function reordenarPecas(qc: QueryClient, de: string, ate: string, remessaId: string, ids: string[]) {
+  const antes = qc.getQueryData<Remessa[]>(remessasKey(de, ate))?.find((r) => r.id === remessaId)?.pecas ?? [];
+  const pos = new Map(ids.map((id, i) => [id, (i + 1) * 10]));
+  const mudadas = antes.filter((p) => pos.get(p.id) !== undefined && pos.get(p.id) !== p.posicao);
+  if (mudadas.length === 0) return;
+  const desfaz = mexerRemessas(qc, de, ate, (rs) =>
+    rs.map((r) =>
+      r.id !== remessaId ? r : {
+        ...r,
+        pecas: r.pecas
+          .map((p) => (pos.has(p.id) ? { ...p, posicao: pos.get(p.id)! } : p))
+          .sort((a, b) => a.posicao - b.posicao),
+      },
+    ),
+  );
+  for (const p of mudadas) {
+    const { error } = await supabase.from("social_seeding_pecas").update({ posicao: pos.get(p.id)! }).eq("id", p.id);
+    if (error) {
+      desfaz();
+      return falhou(error);
+    }
+  }
+}
+
 export async function marcarColuna(qc: QueryClient, de: string, ate: string, remessaId: string, campo: Marca, valor: boolean) {
   const desfaz = mexerRemessas(qc, de, ate, (rs) =>
     rs.map((r) =>

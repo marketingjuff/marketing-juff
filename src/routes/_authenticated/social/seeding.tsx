@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Copy,
   Filter,
+  GripVertical,
   MoreHorizontal,
   PackageCheck,
   Plus,
@@ -51,6 +52,7 @@ import {
   MOTIVOS,
   alterarPeca,
   alterarRemessa,
+  apagarPeca,
   apagarRemessa,
   criarPeca,
   criarRemessa,
@@ -65,6 +67,7 @@ import {
   pessoasQueryOptions,
   reais,
   remessasQueryOptions,
+  reordenarPecas,
   somarMeses,
   totalPecas,
   type Marca,
@@ -96,7 +99,7 @@ const ICONES: Record<Marca, { Icone: ComponentType<{ className?: string }>; text
   devolvida: { Icone: PackageCheck, texto: "Devolvida", rotulo: "Devolvida" },
 };
 
-const GRID = "grid grid-cols-[minmax(9rem,1.6fr)_minmax(8rem,1.4fr)_minmax(7rem,1fr)_4.5rem_3rem_minmax(8rem,1.2fr)_repeat(6,1.9rem)_minmax(8rem,1.6fr)_1.9rem] items-center gap-x-3";
+const GRID = "grid grid-cols-[1.25rem_minmax(9rem,1.6fr)_minmax(8rem,1.4fr)_minmax(7rem,1fr)_4.5rem_3rem_minmax(8rem,1.2fr)_repeat(6,1.9rem)_minmax(8rem,1.6fr)_1.9rem_1.9rem] items-center gap-x-3";
 
 function SeedingPage() {
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
@@ -308,7 +311,22 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
   const [aberto, setAberto] = useState(r.mes >= atual || focoInicial);
   const [confirmar, setConfirmar] = useState(false);
   const [focoTamanho, setFocoTamanho] = useState<string | null>(null);
+  const [arrastando, setArrastando] = useState<string | null>(null);
+  const [sobre, setSobre] = useState<string | null>(null);
   useEffect(() => { if (focoInicial) setAberto(true); }, [focoInicial]);
+
+  function soltarEm(alvoId: string) {
+    const origem = arrastando;
+    setArrastando(null);
+    setSobre(null);
+    if (!origem || origem === alvoId) return;
+    const ids = r.pecas.map((p) => p.id);
+    const deIdx = ids.indexOf(origem);
+    const paraIdx = ids.indexOf(alvoId);
+    if (deIdx < 0 || paraIdx < 0) return;
+    ids.splice(paraIdx, 0, ids.splice(deIdx, 1)[0]!);
+    void reordenarPecas(qc, de, ate, r.id, ids);
+  }
 
   const temCabecalho = !!r.observacao?.trim();
   const total = totalPecas(r.pecas);
@@ -364,14 +382,14 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
       {aberto ? (
         <>
           <div className="overflow-x-auto border-t border-border px-3 pb-2 text-[14px] leading-[1.35]">
-          <div className="min-w-[71rem]">
+          <div className="min-w-[74rem]">
             <div className={cn(GRID, "py-1.5 text-[11px] text-muted-foreground")}>
-              <span>Modelo</span><span>Estampa</span><span>Cor</span><span>Tamanho</span><span>Qtd</span><span>Pessoa</span>
+              <span /><span>Modelo</span><span>Estampa</span><span>Cor</span><span>Tamanho</span><span>Qtd</span><span>Pessoa</span>
               {MARCAS.map((m) => {
                 const { Icone, texto } = ICONES[m];
                 return <span key={m} title={texto} className="flex justify-center"><Icone className="size-3.5" /></span>;
               })}
-              <span>Observação</span><span />
+              <span>Observação</span><span /><span />
             </div>
             {r.pecas.map((p) => (
               <LinhaPeca
@@ -384,6 +402,15 @@ function BlocoRemessa({ remessa: r, de, ate, atual, custo, editavel, focoInicial
                   const id = await duplicarPeca(qc, de, ate, p);
                   if (id) setFocoTamanho(id);
                 }}
+                onApagar={editavel ? () => void apagarPeca(qc, de, ate, p) : undefined}
+                drag={editavel ? {
+                  onInicio: () => setArrastando(p.id),
+                  onFim: () => { setArrastando(null); setSobre(null); },
+                  onEntrar: () => setSobre(p.id),
+                  onSoltar: () => soltarEm(p.id),
+                  ativo: arrastando === p.id,
+                  alvo: sobre === p.id && arrastando !== p.id,
+                } : undefined}
               />
             ))}
             {editavel ? (
@@ -454,8 +481,14 @@ function tamanhosDoProduto(p: ProdutoBiblioteca | undefined): string[] {
   return lista.length ? ordenarTamanhos(Array.from(new Set(lista))) : [...ORDEM_TAMANHOS];
 }
 
-function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho }: {
-  peca?: Peca; editavel: boolean; onSalvar: (patch: Partial<Peca>) => void; onCopiar?: () => void; focarTamanho?: boolean;
+function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho, onApagar, drag }: {
+  peca?: Peca;
+  editavel: boolean;
+  onSalvar: (patch: Partial<Peca>) => void;
+  onCopiar?: (() => void) | undefined;
+  focarTamanho?: boolean | undefined;
+  onApagar?: (() => void) | undefined;
+  drag?: { onInicio: () => void; onFim: () => void; onEntrar: () => void; onSoltar: () => void; ativo: boolean; alvo: boolean } | undefined;
 }) {
   const { data: produtos = [] } = useQuery(produtosQueryOptions);
   const { data: cores = [] } = useQuery(coresQueryOptions);
@@ -488,7 +521,30 @@ function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho }: {
   const opEstampas = useMemo(() => estampas.map((x) => ({ id: x.id, nome: x.nome })), [estampas]);
 
   return (
-    <div className={cn(GRID, "border-t-[0.5px] border-border py-[3px]", vazia && "bg-primary-soft/30")}>
+    <div
+      className={cn(
+        GRID,
+        "border-t-[0.5px] border-border py-[3px]",
+        vazia && "bg-primary-soft/30",
+        drag?.ativo && "opacity-40",
+        drag?.alvo && "rounded-md bg-primary-soft/60",
+      )}
+      onDragOver={drag ? (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; drag.onEntrar(); } : undefined}
+      onDrop={drag ? (e) => { e.preventDefault(); drag.onSoltar(); } : undefined}
+    >
+      {peca && drag ? (
+        <button
+          type="button"
+          draggable
+          title="Arrastar para reordenar"
+          aria-label="Arrastar para reordenar"
+          onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", peca.id); drag.onInicio(); }}
+          onDragEnd={drag.onFim}
+          className="mx-auto flex size-6 cursor-grab items-center justify-center rounded-md text-muted-foreground/50 hover:bg-secondary hover:text-foreground active:cursor-grabbing"
+        >
+          <GripVertical className="size-3.5" />
+        </button>
+      ) : <span />}
       <Seletor disabled={!editavel} valor={peca?.produto_nome ?? null} opcoes={opProdutos} placeholder={vazia ? "Modelo…" : "—"}
         onEscolher={(o) => gravar({ produto_id: o.id, produto_nome: o.nome })} />
       <Seletor disabled={!editavel} valor={peca?.estampa_nome ?? null} vazioTexto="Lisa" opcoes={opEstampas} placeholder={vazia ? "Estampa…" : "Lisa"}
@@ -542,6 +598,11 @@ function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho }: {
       {peca && editavel ? (
         <button type="button" title="Copiar linha" aria-label="Copiar linha" onClick={onCopiar} className="mx-auto flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground">
           <Copy className="size-3.5" />
+        </button>
+      ) : <span />}
+      {peca && onApagar ? (
+        <button type="button" title="Apagar linha" aria-label="Apagar linha" onClick={onApagar} className="mx-auto flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+          <Trash2 className="size-3.5" />
         </button>
       ) : <span />}
     </div>
