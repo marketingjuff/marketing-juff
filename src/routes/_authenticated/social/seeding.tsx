@@ -485,10 +485,10 @@ function LinhaPeca({ peca, editavel, onSalvar, onCopiar, focarTamanho, onApagar,
   peca?: Peca;
   editavel: boolean;
   onSalvar: (patch: Partial<Peca>) => void;
-  onCopiar?: () => void;
-  focarTamanho?: boolean;
-  onApagar?: () => void;
-  drag?: { onInicio: () => void; onFim: () => void; onEntrar: () => void; onSoltar: () => void; ativo: boolean; alvo: boolean };
+  onCopiar?: (() => void) | undefined;
+  focarTamanho?: boolean | undefined;
+  onApagar?: (() => void) | undefined;
+  drag?: { onInicio: () => void; onFim: () => void; onEntrar: () => void; onSoltar: () => void; ativo: boolean; alvo: boolean } | undefined;
 }) {
   const { data: produtos = [] } = useQuery(produtosQueryOptions);
   const { data: cores = [] } = useQuery(coresQueryOptions);
