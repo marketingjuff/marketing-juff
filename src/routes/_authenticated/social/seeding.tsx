@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Copy,
+  Download,
   Filter,
   GripVertical,
   MoreHorizontal,
@@ -46,6 +47,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { canEdit, hasPermission, profileQueryOptions } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { baixarXlsx } from "@/lib/xlsx-simples";
 import { coresQueryOptions, nomePai, ordenarTamanhos, ORDEM_TAMANHOS, produtosQueryOptions, type ProdutoBiblioteca } from "@/lib/biblioteca";
 import {
   MARCAS,
