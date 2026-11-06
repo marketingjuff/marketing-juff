@@ -11,9 +11,36 @@ import {
 import { profileQueryOptions } from "@/lib/auth";
 import {
   DIAS_SEMANA, atualizarRecorrente, criarFeriado, criarRecorrente, excluirFeriado,
-  excluirRecorrente, feriadosQueryOptions, importarFeriados, recorrentesQueryOptions,
-  type DiaSemana,
+  excluirRecorrente, feriadosQueryOptions, importarFeriados, iso, recorrentesQueryOptions,
+  type DiaSemana, type Recorrente,
 } from "@/lib/meudia";
+import {
+  FREQUENCIAS, frequenciaDoRecorrente, patchDeFrequencia, type Frequencia,
+} from "@/lib/meudia-recorrencia";
+
+type PatchRec = Parameters<typeof atualizarRecorrente>[1];
+
+function CampoNumero({
+  rotulo, valor, min, max, aoSalvar,
+}: { rotulo: string; valor: number; min: number; max: number; aoSalvar: (n: number) => void }) {
+  return (
+    <div className="flex items-center gap-1">
+      <span className="text-[11px] text-muted-foreground">{rotulo}</span>
+      <Input
+        type="number"
+        min={min}
+        max={max}
+        defaultValue={valor}
+        className="h-8 w-16 text-sm"
+        onBlur={(e) => {
+          const n = Math.min(max, Math.max(min, Number(e.target.value) || min));
+          if (n === valor) return;
+          aoSalvar(n);
+        }}
+      />
+    </div>
+  );
+}
 
 export function PainelMeuDia() {
   const qc = useQueryClient();
@@ -32,6 +59,22 @@ export function PainelMeuDia() {
   const chaveRec = ["meudia", "recorrentes"] as const;
   const chaveFer = ["meudia", "feriados"] as const;
 
+  const hojeIso = iso(new Date());
+
+  function salvarRec(id: string, patch: PatchRec) {
+    const antes = qc.getQueryData<Recorrente[]>(chaveRec);
+    if (antes) {
+      qc.setQueryData<Recorrente[]>(
+        chaveRec,
+        antes.map((r) => (r.id === id ? { ...r, ...patch } : r)),
+      );
+    }
+    void atualizarRecorrente(id, patch).catch(() => {
+      if (antes) qc.setQueryData<Recorrente[]>(chaveRec, antes);
+      toast.error("Não deu para salvar");
+    });
+  }
+
   const listaFeriados = Object.entries(feriados).sort(([a], [b]) => a.localeCompare(b));
 
   return (
@@ -43,9 +86,10 @@ export function PainelMeuDia() {
             O que se repete todo mês. Só você enxerga esta lista.
           </p>
           <p className="text-xs text-muted-foreground">
-            Com dia da semana escolhido, o item entra sozinho na grade em todo dia correspondente,
-            no bloco que a hora indicar. Marcado como livre, você encaixa na mão e o campo de vezes
-            por mês serve para o sistema avisar quanto ainda falta.
+            A frequência manda. Semanal, diária, quinzenal, a cada X dias, mensal, dia útil e último
+            dia útil entram sozinhos na grade, no bloco que a hora indicar, contando a partir da data
+            escolhida. Marcado como livre, você encaixa na mão e o campo de vezes por mês serve para
+            o sistema avisar quanto ainda falta.
           </p>
         </div>
 
