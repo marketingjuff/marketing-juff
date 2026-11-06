@@ -63,6 +63,28 @@ export type Variacao = {
   hex: string;
 };
 
+/** Os três níveis de nomenclatura do mesmo produto. */
+export const NIVEIS = ["n1", "n2", "n3"] as const;
+export type NivelProduto = (typeof NIVEIS)[number];
+
+export const ROTULO_NIVEL: Record<NivelProduto, string> = {
+  n1: "Olist",
+  n2: "MODELO",
+  n3: "Juff Store",
+};
+
+/** Um produto real que existe na plataforma, gerado a partir do cadastro. */
+export type VarianteProduto = {
+  chave: string;
+  nivel: NivelProduto;
+  rotulo: string;
+  nome: string;
+  tamanhos: string[];
+  cores: ProdutoCor[];
+  /** Linha de exemplo, sem variação embaixo. */
+  exemplo?: boolean;
+};
+
 // ---------------- Montagem do nome oficial ----------------
 
 /**
@@ -79,28 +101,33 @@ function pedacos(p: ProdutoBiblioteca, estilo: EstiloNome) {
   };
 }
 
-export function prefixoVariacao(
-  p: ProdutoBiblioteca,
-  tamanho?: string,
-  estilo: EstiloNome = "fantasia",
-): string {
+/** Nome do produto sem prefixo de nível, sem XTRA, sem Outlet, sem estampa. */
+export function nucleoNome(p: ProdutoBiblioteca, estilo: EstiloNome = "fantasia"): string {
   const { base, tecido, sufixo } = pedacos(p, estilo);
   let s = base;
   if (p.usa_tecido && tecido) s += ` ${tecido}`;
-  const levaXtra =
-    p.usa_xtra && !p.usa_sufixo && !!tamanho && p.tamanhos_xtra.includes(tamanho);
-  if (levaXtra) s += " XTRA";
-  if (p.usa_sufixo && sufixo) s += ` - ${sufixo}`;
+  if (p.usa_sufixo && sufixo) s += ` ${sufixo}`;
   return s;
 }
 
 /** Nome do produto pai. Nunca leva XTRA, cor nem tamanho. */
 export function nomePai(p: ProdutoBiblioteca, estilo: EstiloNome = "fantasia"): string {
-  const { base, tecido, sufixo } = pedacos(p, estilo);
-  let s = base;
-  if (p.usa_tecido && tecido) s += ` ${tecido}`;
-  if (p.usa_sufixo && sufixo) s += ` - ${sufixo}`;
-  return s;
+  return nucleoNome(p, estilo);
+}
+
+/**
+ * Prefixo da variação no nível 1. Mantido por compatibilidade.
+ * O XTRA entra colado no fim, quando o produto separa XTRA na Olist
+ * e o tamanho está na lista de tamanhos grandes.
+ */
+export function prefixoVariacao(
+  p: ProdutoBiblioteca,
+  tamanho?: string,
+  estilo: EstiloNome = "fantasia",
+): string {
+  const s = nucleoNome(p, estilo);
+  const levaXtra = p.usa_xtra && !!tamanho && p.tamanhos_xtra.includes(tamanho);
+  return levaXtra ? `${s} XTRA` : s;
 }
 
 /** Nome exibido na lista de produtos, sem tecido. */
