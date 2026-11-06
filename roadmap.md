@@ -6,6 +6,8 @@
 ## Recorrência no Meu dia
 - [x] Configurar frequências no popup e preservar recorrentes existentes.
 - [x] Testar datas calculadas e salvar/reabrir a configuração na tela.
+- [x] Painel de Configurações lê e grava a frequência real (não só dia da semana), com gravação otimista; alinhamento do campo antigo aplicado no banco.
+- [x] Popup não grava mais dia inválido ao escolher Semanal num recorrente livre (cai em segunda).
 ## Atualização do catálogo
 - [x] Sincronizar modelos, cores e tamanhos nas telas consumidoras e testar a criação de um modelo.
 
