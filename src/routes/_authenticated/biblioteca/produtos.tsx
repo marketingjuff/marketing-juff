@@ -288,6 +288,91 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
   );
 }
 
+/** Bloco recolhível com os nomes oficiais do produto nos três níveis. */
+function NomesOficiais({ p, cores }: { p: ProdutoBiblioteca; cores: CorBiblioteca[] }) {
+  const [aberto, setAberto] = useState(false);
+  const [verVariacoes, setVerVariacoes] = useState(false);
+  const [grafia, setGrafia] = useState<EstiloNome>("fantasia");
+  const [nivel, setNivel] = useState<NivelProduto>("n1");
+  const { data: tamanhosOlist = [] } = useQuery(tamanhosOlistQueryOptions);
+
+  const variantes = useMemo(
+    () => variantesDoProduto(p, nivel, grafia),
+    [p, nivel, grafia],
+  );
+  const variacoes = useMemo(
+    () => variantes.flatMap((v) => variacoesDaVariante(v, cores, grafia, tamanhosOlist)),
+    [variantes, cores, grafia, tamanhosOlist],
+  );
+
+  const botaoGrafia = (valor: EstiloNome, rotulo: string) => (
+    <button key={valor} type="button" onClick={() => setGrafia(valor)}
+      className={cn("rounded-md border px-1.5 py-0.5 text-xs", grafia === valor ? "border-primary bg-primary-soft" : "border-border text-muted-foreground")}>
+      {rotulo}
+    </button>
+  );
+  const botaoNivel = (valor: NivelProduto) => (
+    <button key={valor} type="button" onClick={() => setNivel(valor)}
+      className={cn("rounded-md border px-1.5 py-0.5 text-xs", nivel === valor ? "border-primary bg-primary-soft" : "border-border text-muted-foreground")}>
+      {ROTULO_NIVEL[valor]}
+    </button>
+  );
+
+  return (
+    <div className="mt-4 rounded-lg bg-secondary/60 p-3">
+      <button type="button" onClick={() => setAberto((v) => !v)}
+        className="flex w-full items-center gap-1.5 text-left text-xs font-semibold">
+        {aberto ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+        Nomes oficiais
+      </button>
+      {aberto ? (
+        <div className="mt-3 space-y-3">
+          <div className="flex flex-wrap items-center gap-1">
+            {botaoGrafia("fantasia", "Nome fantasia")}
+            {botaoGrafia("olist", "Nome original da Olist")}
+            <span className="mx-1.5 h-4 w-px bg-border" />
+            {botaoNivel("n1")}
+            {botaoNivel("n2")}
+            {botaoNivel("n3")}
+          </div>
+          <div className="space-y-1 font-mono text-xs">
+            {variantes.map((v) => (
+              <div key={v.chave} className="flex items-center gap-2">
+                <span className="w-32 shrink-0 font-sans text-muted-foreground">{v.rotulo}</span>
+                <span className={cn("min-w-0 flex-1 break-all", v.exemplo && "text-muted-foreground")}>{v.nome}</span>
+                {!v.exemplo ? (
+                  <button type="button" onClick={() => void copiar(v.nome, "Nome copiado.")}
+                    className="shrink-0 text-muted-foreground hover:text-foreground" aria-label={`Copiar ${v.nome}`}>
+                    <Copy className="size-3.5" />
+                  </button>
+                ) : null}
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span>{variacoes.length} {variacoes.length === 1 ? "variação" : "variações"} neste nível.</span>
+            <button type="button" onClick={() => setVerVariacoes((v) => !v)} className="text-primary hover:underline">
+              {verVariacoes ? "Esconder variações" : "Ver variações"}
+            </button>
+            {variacoes.length ? (
+              <button type="button" onClick={() => void copiar(variacoes.map((v) => v.nome).join("\n"), "Variações copiadas.")} className="text-primary hover:underline">
+                Copiar tudo
+              </button>
+            ) : null}
+          </div>
+          {verVariacoes ? (
+            <div className="max-h-72 space-y-1 overflow-auto rounded-md border border-border bg-card p-2 font-mono text-xs">
+              {variacoes.map((v) => (
+                <div key={v.nome} className="break-all">{v.nome}</div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function Linha({ rotulo, children }: { rotulo: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1">
