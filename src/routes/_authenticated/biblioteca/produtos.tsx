@@ -7,7 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import { BotaoZip } from "@/components/biblioteca/BotaoZip";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Bloco, CampoAutoSave, ListaProdutos, SemAcesso, patchProdutoOtimista } from "@/components/biblioteca/comum";
+import { Bloco, CampoAutoSave, ListaProdutos, SemAcesso, copiar, patchProdutoOtimista } from "@/components/biblioteca/comum";
 import { canEdit, hasPermission, profileQueryOptions } from "@/lib/auth";
 import { textoSobreCor } from "@/config/produtos";
 import { cn } from "@/lib/utils";
@@ -215,12 +215,19 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
             const on = cat !== undefined;
             return (
               <div key={c.id} className={cn("overflow-hidden rounded-lg border-2", on ? "border-foreground" : "border-transparent opacity-35")}>
-                <button type="button" disabled={!editavel}
-                  onClick={() => seLivre(() => gravarCores(on ? p.cores.filter((x) => x.cor_id !== c.id) : [...p.cores, { cor_id: c.id, categoria: "Normal" }]))}
-                  className={cn("flex h-12 w-full items-center justify-center px-1 text-xs font-medium", !livre && "cursor-default")}
+                <Button type="button" variant="ghost"
+                  title={!livre ? `Copiar HEX ${c.hex.toLowerCase()}` : c.nome}
+                  onClick={() => {
+                    if (!livre) {
+                      void copiar(c.hex.toLowerCase(), `HEX ${c.hex.toLowerCase()} copiado.`);
+                      return;
+                    }
+                    gravarCores(on ? p.cores.filter((x) => x.cor_id !== c.id) : [...p.cores, { cor_id: c.id, categoria: "Normal" }]);
+                  }}
+                  className="flex h-12 w-full items-center justify-center rounded-none px-1 text-xs font-medium"
                   style={{ backgroundColor: c.hex, color: textoSobreCor(c.hex) }}>
                   {c.nome}
-                </button>
+                </Button>
                 {on ? (
                   <div className="flex bg-card text-[11px]">
                     {CATEGORIAS.map((k) => (
