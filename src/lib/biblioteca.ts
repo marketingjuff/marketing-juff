@@ -38,6 +38,10 @@ export type ProdutoBiblioteca = {
   usa_sufixo: boolean;
   usa_xtra: boolean;
   tamanhos_xtra: string[];
+  xtra_modelo: boolean;
+  xtra_loja: boolean;
+  outlet_modelo: boolean;
+  outlet_loja: boolean;
   tamanhos: string[];
   pontos: string[];
   posicao: number;
@@ -381,7 +385,7 @@ export const produtosQueryOptions = queryOptions({
     const { data, error } = await supabase
       .from("biblioteca_produtos")
       .select(
-        "id, nome_base, tecido, usa_tecido, sufixo, usa_sufixo, nome_base_olist, tecido_olist, sufixo_olist, usa_xtra, tamanhos_xtra, tamanhos, pontos, posicao, ativo, biblioteca_produto_cores(cor_id, categoria)",
+        "id, nome_base, tecido, usa_tecido, sufixo, usa_sufixo, nome_base_olist, tecido_olist, sufixo_olist, usa_xtra, tamanhos_xtra, xtra_modelo, xtra_loja, outlet_modelo, outlet_loja, tamanhos, pontos, posicao, ativo, biblioteca_produto_cores(cor_id, categoria)",
       )
       .order("posicao", { ascending: true });
     if (error) throw error;
@@ -397,6 +401,10 @@ export const produtosQueryOptions = queryOptions({
       sufixo_olist: l.sufixo_olist ?? "",
       usa_xtra: l.usa_xtra,
       tamanhos_xtra: l.tamanhos_xtra ?? [],
+      xtra_modelo: l.xtra_modelo ?? false,
+      xtra_loja: l.xtra_loja ?? false,
+      outlet_modelo: l.outlet_modelo ?? false,
+      outlet_loja: l.outlet_loja ?? false,
       tamanhos: l.tamanhos ?? [],
       pontos: l.pontos ?? [],
       posicao: l.posicao,
@@ -470,6 +478,10 @@ export async function salvarProduto(
       | "sufixo_olist"
       | "usa_xtra"
       | "tamanhos_xtra"
+      | "xtra_modelo"
+      | "xtra_loja"
+      | "outlet_modelo"
+      | "outlet_loja"
       | "tamanhos"
       | "pontos"
       | "ativo"
