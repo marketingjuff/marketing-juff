@@ -172,7 +172,7 @@ function partirCores(p: ProdutoBiblioteca) {
  * O XTRA divide só a parte normal. O produto de Outlet sempre leva todos
  * os tamanhos, porque na prática o tamanho grande cabe junto no Outlet.
  * Chave de separação desligada significa juntar tudo num produto só.
- * O nível 1 não tem Outlet, porque é o produto seco do atacado.
+ * O nível 1 não tem Outlet, porque é o produto original do atacado.
  */
 export function variantesDoProduto(
   p: ProdutoBiblioteca,
@@ -187,7 +187,7 @@ export function variantesDoProduto(
   if (nivel === "n1") {
     const separa = p.usa_xtra && grandes.length > 0;
     out.push({
-      chave: "n1-normal", nivel, rotulo: "Olist, produto seco",
+      chave: "n1-normal", nivel, rotulo: "Olist, produto original",
       nome: nucleo, tamanhos: separa ? base : todos, cores: todas,
     });
     if (separa) {
