@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { ocorreNaData } from "../src/lib/meudia-recorrencia";
+import { ocorreNaData, patchDeFrequencia } from "../src/lib/meudia-recorrencia";
 
 const base = { dia_semana: "seg", inicio_em: "2026-10-01" };
 describe("frequências do Meu dia", () => {
