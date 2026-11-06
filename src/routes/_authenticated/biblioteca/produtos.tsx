@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Lock, Unlock } from "lucide-react";
+import { ChevronDown, ChevronRight, Copy, Lock, Unlock } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { BotaoZip } from "@/components/biblioteca/BotaoZip";
 import { Button } from "@/components/ui/button";
@@ -14,15 +14,19 @@ import { cn } from "@/lib/utils";
 import {
   CATEGORIAS,
   ORDEM_TAMANHOS,
+  ROTULO_NIVEL,
   coresQueryOptions,
   gerarVariacoes,
-  nomeOficial,
-  nomePai,
   ordenarTamanhos,
   produtosQueryOptions,
   salvarCores,
+  tamanhosOlistQueryOptions,
+  variacoesDaVariante,
+  variantesDoProduto,
   type Categoria,
   type CorBiblioteca,
+  type EstiloNome,
+  type NivelProduto,
   type ProdutoBiblioteca,
   type ProdutoCor,
 } from "@/lib/biblioteca";
@@ -78,10 +82,6 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
   const patch = (x: Parameters<typeof patchProdutoOtimista>[2]) => patchProdutoOtimista(qc, p.id, x);
   const variacoes = useMemo(() => gerarVariacoes(p, cores), [p, cores]);
   const porId = new Map(cores.map((c) => [c.id, c]));
-
-  const primeiraCor = [...p.cores].map((c) => porId.get(c.cor_id)).filter((c): c is CorBiblioteca => c !== undefined).sort((a, b) => a.posicao - b.posicao)[0];
-  const tams = ordenarTamanhos(p.tamanhos);
-  const maior = tams[tams.length - 1];
 
   /** Avisa que a ficha está trancada. Um aviso por vez, nunca empilhado. */
   function avisarTrancado() {
