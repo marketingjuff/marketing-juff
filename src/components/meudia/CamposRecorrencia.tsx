@@ -1,8 +1,8 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DIAS_SEMANA, type ConfigRecorrente, type DiaSemana } from "@/lib/meudia";
-import { FREQUENCIAS, type Frequencia } from "@/lib/meudia-recorrencia";
+import { DIAS_SEMANA, iso, type ConfigRecorrente, type DiaSemana } from "@/lib/meudia";
+import { FREQUENCIAS, patchDeFrequencia, type Frequencia } from "@/lib/meudia-recorrencia";
 
 export function CamposRecorrencia({ valor, onChange, disabled }: { valor: ConfigRecorrente; onChange: (v: ConfigRecorrente) => void; disabled: boolean }) {
   const mudar = (v: ConfigRecorrente) => onChange({ ...valor, ...v });
@@ -10,7 +10,7 @@ export function CamposRecorrencia({ valor, onChange, disabled }: { valor: Config
   return <div className="grid grid-cols-2 gap-3">
     <div className="col-span-2 space-y-1">
       <Label htmlFor="rec-frequencia">Frequência</Label>
-      <Select value={frequencia} disabled={disabled} onValueChange={(v) => mudar({ frequencia: v as Frequencia })}>
+      <Select value={frequencia} disabled={disabled} onValueChange={(v) => mudar(patchDeFrequencia(valor, v as Frequencia, valor.inicio_em ?? iso(new Date())))}>
         <SelectTrigger id="rec-frequencia"><SelectValue /></SelectTrigger>
         <SelectContent>{FREQUENCIAS.map((f) => <SelectItem key={f.valor} value={f.valor}>{f.label}</SelectItem>)}</SelectContent>
       </Select>
