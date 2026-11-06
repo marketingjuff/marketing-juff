@@ -155,32 +155,48 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
               </div>
             ) : <span className="text-sm">{p.usa_sufixo && p.sufixo ? p.sufixo : "Sem sufixo"}</span>}
           </Linha>
-          <Linha rotulo="XTRA nos tamanhos grandes">
+          <Linha rotulo="XTRA na Olist">
             <div className="flex flex-wrap items-center gap-2">
               {livre ? (
-                <Switch checked={p.usa_xtra && !p.usa_sufixo} disabled={p.usa_sufixo} onCheckedChange={(v) => patch({ usa_xtra: v })} aria-label="XTRA" />
-              ) : <span className="text-sm">{p.usa_xtra && !p.usa_sufixo ? "Sim" : "Não"}</span>}
-              {p.usa_sufixo ? (
-                <span className="text-xs text-muted-foreground">Produto com sufixo não usa XTRA na Olist.</span>
-              ) : (
-                ORDEM_TAMANHOS.map((t) => {
-                  const on = p.tamanhos_xtra.includes(t);
-                  return (
-                    <button key={t} type="button" disabled={!editavel || (destravado && !p.usa_xtra)}
-                      onClick={() => seLivre(() => patch({ tamanhos_xtra: ordenarTamanhos(on ? p.tamanhos_xtra.filter((x) => x !== t) : [...p.tamanhos_xtra, t]) }))}
-                      className={cn("rounded-md border px-1.5 py-0.5 text-xs", on ? "border-primary bg-primary-soft" : "border-border text-muted-foreground", (!livre || !p.usa_xtra) && "cursor-default opacity-60")}>
-                      {t}
-                    </button>
-                  );
-                })
-              )}
+                <Switch checked={p.usa_xtra} onCheckedChange={(v) => patch({ usa_xtra: v })} aria-label="XTRA" />
+              ) : <span className="text-sm">{p.usa_xtra ? "Sim" : "Não"}</span>}
+              {ORDEM_TAMANHOS.map((t) => {
+                const on = p.tamanhos_xtra.includes(t);
+                return (
+                  <button key={t} type="button" disabled={!editavel || (destravado && !p.usa_xtra)}
+                    onClick={() => seLivre(() => patch({ tamanhos_xtra: ordenarTamanhos(on ? p.tamanhos_xtra.filter((x) => x !== t) : [...p.tamanhos_xtra, t]) }))}
+                    className={cn("rounded-md border px-1.5 py-0.5 text-xs", on ? "border-primary bg-primary-soft" : "border-border text-muted-foreground", (!livre || !p.usa_xtra) && "cursor-default opacity-60")}>
+                    {t}
+                  </button>
+                );
+              })}
             </div>
           </Linha>
+          <Linha rotulo="XTRA no MODELO">
+            {livre ? (
+              <Switch checked={p.xtra_modelo} onCheckedChange={(v) => patch({ xtra_modelo: v })} aria-label="XTRA no MODELO" />
+            ) : <span className="text-sm">{p.xtra_modelo ? "Sim" : "Não"}</span>}
+          </Linha>
+          <Linha rotulo="XTRA na Juff Store">
+            {livre ? (
+              <Switch checked={p.xtra_loja} onCheckedChange={(v) => patch({ xtra_loja: v })} aria-label="XTRA na Juff Store" />
+            ) : <span className="text-sm">{p.xtra_loja ? "Sim" : "Não"}</span>}
+          </Linha>
+          <Linha rotulo="Outlet no MODELO">
+            {livre ? (
+              <Switch checked={p.outlet_modelo} onCheckedChange={(v) => patch({ outlet_modelo: v })} aria-label="Outlet no MODELO" />
+            ) : <span className="text-sm">{p.outlet_modelo ? "Sim" : "Não"}</span>}
+          </Linha>
+          <Linha rotulo="Outlet na Juff Store">
+            {livre ? (
+              <Switch checked={p.outlet_loja} onCheckedChange={(v) => patch({ outlet_loja: v })} aria-label="Outlet na Juff Store" />
+            ) : <span className="text-sm">{p.outlet_loja ? "Sim" : "Não"}</span>}
+          </Linha>
         </div>
-        <div className="mt-4 space-y-1 rounded-lg bg-secondary/60 p-3 font-mono text-xs">
-          <div><span className="inline-block w-28 text-muted-foreground">Produto pai</span>{nomePai(p)}</div>
-          <div><span className="inline-block w-28 text-muted-foreground">Exemplo</span>{primeiraCor && maior ? nomeOficial(p, primeiraCor.nome_olist, maior) : "Marque uma cor e um tamanho"}</div>
-        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Chave desligada junta tudo num produto só. O nível 1 não tem Outlet.
+        </p>
+        <NomesOficiais p={p} cores={cores} />
       </Bloco>
 
       <Bloco titulo="Tamanhos">
