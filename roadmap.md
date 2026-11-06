@@ -23,3 +23,9 @@
 
 ## Trocar imagem dentro da arte
 - [x] Botão de trocar a imagem sobre o canto de cada arte, mantendo os textos; testar abertura do seletor de arquivos na tela.
+
+## Taxonomia de produto em três níveis
+- [x] Quatro chaves de separação (XTRA/Outlet no MODELO e na Juff Store) no cadastro do produto.
+- [x] Sufixo colado no nome (sem traço) e XTRA liberado em produto com sufixo.
+- [x] Bloco Nomes oficiais recolhível na ficha, com grafia, nível, cópia e lista de variações.
+- [x] Seletor de nível na exportação; XLS e PDF saem com os nomes do nível escolhido.
