@@ -793,6 +793,8 @@ export type Database = {
           id: string
           nome_base: string
           nome_base_olist: string
+          outlet_loja: boolean
+          outlet_modelo: boolean
           pontos: string[]
           posicao: number
           sufixo: string
@@ -805,6 +807,8 @@ export type Database = {
           usa_sufixo: boolean
           usa_tecido: boolean
           usa_xtra: boolean
+          xtra_loja: boolean
+          xtra_modelo: boolean
         }
         Insert: {
           ativo?: boolean
@@ -812,6 +816,8 @@ export type Database = {
           id?: string
           nome_base: string
           nome_base_olist?: string
+          outlet_loja?: boolean
+          outlet_modelo?: boolean
           pontos?: string[]
           posicao?: number
           sufixo?: string
@@ -824,6 +830,8 @@ export type Database = {
           usa_sufixo?: boolean
           usa_tecido?: boolean
           usa_xtra?: boolean
+          xtra_loja?: boolean
+          xtra_modelo?: boolean
         }
         Update: {
           ativo?: boolean
@@ -831,6 +839,8 @@ export type Database = {
           id?: string
           nome_base?: string
           nome_base_olist?: string
+          outlet_loja?: boolean
+          outlet_modelo?: boolean
           pontos?: string[]
           posicao?: number
           sufixo?: string
@@ -843,6 +853,8 @@ export type Database = {
           usa_sufixo?: boolean
           usa_tecido?: boolean
           usa_xtra?: boolean
+          xtra_loja?: boolean
+          xtra_modelo?: boolean
         }
         Relationships: []
       }
