@@ -1,12 +1,16 @@
 import { jsPDF } from "jspdf";
 import JSZip from "jszip";
 import {
+  ROTULO_NIVEL,
   gerarVariacoes,
   nomePai,
   nomeCurto,
   ordenarTamanhos,
+  variacoesDaVariante,
+  variantesDoProduto,
   type CorBiblioteca,
   type EstiloNome,
+  type NivelProduto,
   type TamanhoOlist,
   type Medida,
   type ProdutoBiblioteca,
@@ -207,10 +211,11 @@ export function pdfNomesTodos(
   produtos: ProdutoBiblioteca[],
   cores: CorBiblioteca[],
   estilo: EstiloNome = "fantasia",
+  nivel: NivelProduto = "n1",
   tamanhosOlist: TamanhoOlist[] = [],
 ): Blob {
   const rotulo = estilo === "olist" ? "Nomes originais da Olist" : "Nomes fantasia";
-  const doc = novoDoc("Nomes de produto", rotulo);
+  const doc = novoDoc("Nomes de produto", `${rotulo}, nível ${ROTULO_NIVEL[nivel]}`);
   let primeiro = true;
 
   for (const p of produtos) {
@@ -225,17 +230,24 @@ export function pdfNomesTodos(
     doc.text(limparTexto(nomePai(p, estilo)), MARGEM, y);
     y += 8;
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    for (const v of gerarVariacoes(p, cores, estilo, tamanhosOlist)) {
+    for (const vr of variantesDoProduto(p, nivel, estilo)) {
       y = quebra(doc, y, 6);
-      doc.text(limparTexto(v.nome), MARGEM, y);
-      if (v.categoria === "Outlet") {
-        doc.setTextColor(150);
-        doc.text("Outlet", LARGURA - MARGEM, y, { align: "right" });
-        doc.setTextColor(0);
-      }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text(limparTexto(vr.nome), MARGEM, y);
       y += 5;
+
+      doc.setFont("helvetica", "normal");
+      for (const v of variacoesDaVariante(vr, cores, estilo, tamanhosOlist)) {
+        y = quebra(doc, y, 6);
+        doc.text(limparTexto(v.nome), MARGEM, y);
+        if (v.categoria === "Outlet") {
+          doc.setTextColor(150);
+          doc.text("Outlet", LARGURA - MARGEM, y, { align: "right" });
+          doc.setTextColor(0);
+        }
+        y += 5;
+      }
     }
   }
 
