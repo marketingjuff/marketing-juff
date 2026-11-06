@@ -45,3 +45,48 @@ export function ocorreNaData(r: RegraRecorrente, data: string, feriados: Record<
   }
   return frequencia === "ultimo_dia_util" ? data === uteis.at(-1) : data === uteis[(r.dia_util ?? 1) - 1];
 }
+
+export type DiaSemanaRec = "livre" | "seg" | "ter" | "qua" | "qui" | "sex" | "ultimo_dia_util";
+
+export type PatchFrequencia = {
+  frequencia: Frequencia;
+  dia_semana: DiaSemanaRec;
+  inicio_em?: string;
+  intervalo_dias?: number;
+  dia_mes?: number;
+  dia_util?: number;
+};
+
+const DIAS_UTEIS_SEMANA = ["seg", "ter", "qua", "qui", "sex"];
+
+/**
+ * Devolve o conjunto coerente de campos ao trocar a frequência de um recorrente.
+ * Garante dia da semana válido, data de início quando ela passa a ser obrigatória
+ * e números dentro do limite aceito pelo banco.
+ */
+export function patchDeFrequencia(
+  atual: {
+    dia_semana?: string | null;
+    inicio_em?: string | null;
+    intervalo_dias?: number | null;
+    dia_mes?: number | null;
+    dia_util?: number | null;
+  },
+  nova: Frequencia,
+  hojeIso: string,
+): PatchFrequencia {
+  const inicio = atual.inicio_em || hojeIso;
+  const dia = DIAS_UTEIS_SEMANA.includes(atual.dia_semana ?? "")
+    ? (atual.dia_semana as DiaSemanaRec)
+    : "seg";
+  const limite = (n: number | null | undefined, min: number, max: number) =>
+    Math.min(max, Math.max(min, n ?? min));
+
+  if (nova === "livre") return { frequencia: "livre", dia_semana: "livre" };
+  if (nova === "semanal") return { frequencia: "semanal", dia_semana: dia, inicio_em: inicio };
+  if (nova === "ultimo_dia_util") return { frequencia: "ultimo_dia_util", dia_semana: "ultimo_dia_util", inicio_em: inicio };
+  if (nova === "intervalo") return { frequencia: "intervalo", dia_semana: "livre", inicio_em: inicio, intervalo_dias: limite(atual.intervalo_dias, 1, 365) };
+  if (nova === "mensal") return { frequencia: "mensal", dia_semana: "livre", inicio_em: inicio, dia_mes: limite(atual.dia_mes, 1, 31) };
+  if (nova === "dia_util") return { frequencia: "dia_util", dia_semana: "livre", inicio_em: inicio, dia_util: limite(atual.dia_util, 1, 23) };
+  return { frequencia: nova, dia_semana: "livre", inicio_em: inicio };
+}
