@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Lock, Unlock } from "lucide-react";
+import { ChevronDown, ChevronRight, Copy, Lock, Unlock } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { BotaoZip } from "@/components/biblioteca/BotaoZip";
 import { Button } from "@/components/ui/button";
@@ -14,15 +14,19 @@ import { cn } from "@/lib/utils";
 import {
   CATEGORIAS,
   ORDEM_TAMANHOS,
+  ROTULO_NIVEL,
   coresQueryOptions,
   gerarVariacoes,
-  nomeOficial,
-  nomePai,
   ordenarTamanhos,
   produtosQueryOptions,
   salvarCores,
+  tamanhosOlistQueryOptions,
+  variacoesDaVariante,
+  variantesDoProduto,
   type Categoria,
   type CorBiblioteca,
+  type EstiloNome,
+  type NivelProduto,
   type ProdutoBiblioteca,
   type ProdutoCor,
 } from "@/lib/biblioteca";
@@ -78,10 +82,6 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
   const patch = (x: Parameters<typeof patchProdutoOtimista>[2]) => patchProdutoOtimista(qc, p.id, x);
   const variacoes = useMemo(() => gerarVariacoes(p, cores), [p, cores]);
   const porId = new Map(cores.map((c) => [c.id, c]));
-
-  const primeiraCor = [...p.cores].map((c) => porId.get(c.cor_id)).filter((c): c is CorBiblioteca => c !== undefined).sort((a, b) => a.posicao - b.posicao)[0];
-  const tams = ordenarTamanhos(p.tamanhos);
-  const maior = tams[tams.length - 1];
 
   /** Avisa que a ficha está trancada. Um aviso por vez, nunca empilhado. */
   function avisarTrancado() {
@@ -155,32 +155,48 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
               </div>
             ) : <span className="text-sm">{p.usa_sufixo && p.sufixo ? p.sufixo : "Sem sufixo"}</span>}
           </Linha>
-          <Linha rotulo="XTRA nos tamanhos grandes">
+          <Linha rotulo="XTRA na Olist">
             <div className="flex flex-wrap items-center gap-2">
               {livre ? (
-                <Switch checked={p.usa_xtra && !p.usa_sufixo} disabled={p.usa_sufixo} onCheckedChange={(v) => patch({ usa_xtra: v })} aria-label="XTRA" />
-              ) : <span className="text-sm">{p.usa_xtra && !p.usa_sufixo ? "Sim" : "Não"}</span>}
-              {p.usa_sufixo ? (
-                <span className="text-xs text-muted-foreground">Produto com sufixo não usa XTRA na Olist.</span>
-              ) : (
-                ORDEM_TAMANHOS.map((t) => {
-                  const on = p.tamanhos_xtra.includes(t);
-                  return (
-                    <button key={t} type="button" disabled={!editavel || (destravado && !p.usa_xtra)}
-                      onClick={() => seLivre(() => patch({ tamanhos_xtra: ordenarTamanhos(on ? p.tamanhos_xtra.filter((x) => x !== t) : [...p.tamanhos_xtra, t]) }))}
-                      className={cn("rounded-md border px-1.5 py-0.5 text-xs", on ? "border-primary bg-primary-soft" : "border-border text-muted-foreground", (!livre || !p.usa_xtra) && "cursor-default opacity-60")}>
-                      {t}
-                    </button>
-                  );
-                })
-              )}
+                <Switch checked={p.usa_xtra} onCheckedChange={(v) => patch({ usa_xtra: v })} aria-label="XTRA" />
+              ) : <span className="text-sm">{p.usa_xtra ? "Sim" : "Não"}</span>}
+              {ORDEM_TAMANHOS.map((t) => {
+                const on = p.tamanhos_xtra.includes(t);
+                return (
+                  <button key={t} type="button" disabled={!editavel || (destravado && !p.usa_xtra)}
+                    onClick={() => seLivre(() => patch({ tamanhos_xtra: ordenarTamanhos(on ? p.tamanhos_xtra.filter((x) => x !== t) : [...p.tamanhos_xtra, t]) }))}
+                    className={cn("rounded-md border px-1.5 py-0.5 text-xs", on ? "border-primary bg-primary-soft" : "border-border text-muted-foreground", (!livre || !p.usa_xtra) && "cursor-default opacity-60")}>
+                    {t}
+                  </button>
+                );
+              })}
             </div>
           </Linha>
+          <Linha rotulo="XTRA no MODELO">
+            {livre ? (
+              <Switch checked={p.xtra_modelo} onCheckedChange={(v) => patch({ xtra_modelo: v })} aria-label="XTRA no MODELO" />
+            ) : <span className="text-sm">{p.xtra_modelo ? "Sim" : "Não"}</span>}
+          </Linha>
+          <Linha rotulo="XTRA na Juff Store">
+            {livre ? (
+              <Switch checked={p.xtra_loja} onCheckedChange={(v) => patch({ xtra_loja: v })} aria-label="XTRA na Juff Store" />
+            ) : <span className="text-sm">{p.xtra_loja ? "Sim" : "Não"}</span>}
+          </Linha>
+          <Linha rotulo="Outlet no MODELO">
+            {livre ? (
+              <Switch checked={p.outlet_modelo} onCheckedChange={(v) => patch({ outlet_modelo: v })} aria-label="Outlet no MODELO" />
+            ) : <span className="text-sm">{p.outlet_modelo ? "Sim" : "Não"}</span>}
+          </Linha>
+          <Linha rotulo="Outlet na Juff Store">
+            {livre ? (
+              <Switch checked={p.outlet_loja} onCheckedChange={(v) => patch({ outlet_loja: v })} aria-label="Outlet na Juff Store" />
+            ) : <span className="text-sm">{p.outlet_loja ? "Sim" : "Não"}</span>}
+          </Linha>
         </div>
-        <div className="mt-4 space-y-1 rounded-lg bg-secondary/60 p-3 font-mono text-xs">
-          <div><span className="inline-block w-28 text-muted-foreground">Produto pai</span>{nomePai(p)}</div>
-          <div><span className="inline-block w-28 text-muted-foreground">Exemplo</span>{primeiraCor && maior ? nomeOficial(p, primeiraCor.nome_olist, maior) : "Marque uma cor e um tamanho"}</div>
-        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Chave desligada junta tudo num produto só. O nível 1 não tem Outlet.
+        </p>
+        <NomesOficiais p={p} cores={cores} />
       </Bloco>
 
       <Bloco titulo="Tamanhos">
@@ -268,6 +284,91 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
           </table>
         </div>
       </Bloco>
+    </div>
+  );
+}
+
+/** Bloco recolhível com os nomes oficiais do produto nos três níveis. */
+function NomesOficiais({ p, cores }: { p: ProdutoBiblioteca; cores: CorBiblioteca[] }) {
+  const [aberto, setAberto] = useState(false);
+  const [verVariacoes, setVerVariacoes] = useState(false);
+  const [grafia, setGrafia] = useState<EstiloNome>("fantasia");
+  const [nivel, setNivel] = useState<NivelProduto>("n1");
+  const { data: tamanhosOlist = [] } = useQuery(tamanhosOlistQueryOptions);
+
+  const variantes = useMemo(
+    () => variantesDoProduto(p, nivel, grafia),
+    [p, nivel, grafia],
+  );
+  const variacoes = useMemo(
+    () => variantes.flatMap((v) => variacoesDaVariante(v, cores, grafia, tamanhosOlist)),
+    [variantes, cores, grafia, tamanhosOlist],
+  );
+
+  const botaoGrafia = (valor: EstiloNome, rotulo: string) => (
+    <button key={valor} type="button" onClick={() => setGrafia(valor)}
+      className={cn("rounded-md border px-1.5 py-0.5 text-xs", grafia === valor ? "border-primary bg-primary-soft" : "border-border text-muted-foreground")}>
+      {rotulo}
+    </button>
+  );
+  const botaoNivel = (valor: NivelProduto) => (
+    <button key={valor} type="button" onClick={() => setNivel(valor)}
+      className={cn("rounded-md border px-1.5 py-0.5 text-xs", nivel === valor ? "border-primary bg-primary-soft" : "border-border text-muted-foreground")}>
+      {ROTULO_NIVEL[valor]}
+    </button>
+  );
+
+  return (
+    <div className="mt-4 rounded-lg bg-secondary/60 p-3">
+      <button type="button" onClick={() => setAberto((v) => !v)}
+        className="flex w-full items-center gap-1.5 text-left text-xs font-semibold">
+        {aberto ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+        Nomes oficiais
+      </button>
+      {aberto ? (
+        <div className="mt-3 space-y-3">
+          <div className="flex flex-wrap items-center gap-1">
+            {botaoGrafia("fantasia", "Nome fantasia")}
+            {botaoGrafia("olist", "Nome original da Olist")}
+            <span className="mx-1.5 h-4 w-px bg-border" />
+            {botaoNivel("n1")}
+            {botaoNivel("n2")}
+            {botaoNivel("n3")}
+          </div>
+          <div className="space-y-1 font-mono text-xs">
+            {variantes.map((v) => (
+              <div key={v.chave} className="flex items-center gap-2">
+                <span className="w-32 shrink-0 font-sans text-muted-foreground">{v.rotulo}</span>
+                <span className={cn("min-w-0 flex-1 break-all", v.exemplo && "text-muted-foreground")}>{v.nome}</span>
+                {!v.exemplo ? (
+                  <button type="button" onClick={() => void copiar(v.nome, "Nome copiado.")}
+                    className="shrink-0 text-muted-foreground hover:text-foreground" aria-label={`Copiar ${v.nome}`}>
+                    <Copy className="size-3.5" />
+                  </button>
+                ) : null}
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span>{variacoes.length} {variacoes.length === 1 ? "variação" : "variações"} neste nível.</span>
+            <button type="button" onClick={() => setVerVariacoes((v) => !v)} className="text-primary hover:underline">
+              {verVariacoes ? "Esconder variações" : "Ver variações"}
+            </button>
+            {variacoes.length ? (
+              <button type="button" onClick={() => void copiar(variacoes.map((v) => v.nome).join("\n"), "Variações copiadas.")} className="text-primary hover:underline">
+                Copiar tudo
+              </button>
+            ) : null}
+          </div>
+          {verVariacoes ? (
+            <div className="max-h-72 space-y-1 overflow-auto rounded-md border border-border bg-card p-2 font-mono text-xs">
+              {variacoes.map((v) => (
+                <div key={v.nome} className="break-all">{v.nome}</div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

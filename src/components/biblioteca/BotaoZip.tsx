@@ -5,7 +5,7 @@ import { FolderArchive, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { coresQueryOptions, medidasQueryOptions, nomeCurto, produtosQueryOptions, tamanhosOlistQueryOptions, type EstiloNome } from "@/lib/biblioteca";
+import { coresQueryOptions, medidasQueryOptions, nomeCurto, produtosQueryOptions, tamanhosOlistQueryOptions, type EstiloNome, type NivelProduto } from "@/lib/biblioteca";
 import { exportarXlsx } from "@/lib/biblioteca-export";
 import { paletaQueryOptions, textosQueryOptions } from "@/lib/biblioteca-marca";
 import { arquivosQueryOptions, gruposArquivoQueryOptions, baixarConteudo, nomeCompleto } from "@/lib/biblioteca-arquivos";
@@ -57,6 +57,7 @@ export function BotaoZip({ origem }: { origem: Origem }) {
   const [medidas, setMedidas] = useState<Set<string>>(new Set());
   const [formato, setFormato] = useState<"pdf" | "xlsx">("pdf");
   const [estilo, setEstilo] = useState<EstiloNome>("fantasia");
+  const [nivel, setNivel] = useState<NivelProduto>("n1");
 
   async function abrir() {
     const lista = await qc.ensureQueryData(produtosQueryOptions).catch(() => []);
@@ -87,7 +88,7 @@ export function BotaoZip({ origem }: { origem: Origem }) {
           qc.ensureQueryData(coresQueryOptions),
           qc.ensureQueryData(tamanhosOlistQueryOptions),
         ]);
-        await exportarXlsx(marcados, coresX, estilo, tamX);
+        await exportarXlsx(marcados, coresX, estilo, nivel, tamX);
         setAberto(false);
         toast.success("Planilha gerada.");
         return;
@@ -111,7 +112,7 @@ export function BotaoZip({ origem }: { origem: Origem }) {
         const rotulo = estilo === "olist" ? "Olist" : "fantasia";
         itens.push({
           nomeArquivo: `Produtos/Nomes de produto ${rotulo}.pdf`,
-          blob: pdfNomesTodos(marcados, cores, estilo, tamanhosOlist),
+          blob: pdfNomesTodos(marcados, cores, estilo, nivel, tamanhosOlist),
         });
       }
       for (const p of produtos) {
@@ -194,6 +195,10 @@ export function BotaoZip({ origem }: { origem: Origem }) {
               <div className="flex flex-wrap gap-1">
                 <Button type="button" size="sm" variant={estilo === "fantasia" ? "default" : "outline"} disabled={gerando} onClick={() => setEstilo("fantasia")}>Nome fantasia</Button>
                 <Button type="button" size="sm" variant={estilo === "olist" ? "default" : "outline"} disabled={gerando} onClick={() => setEstilo("olist")}>Nome original da Olist</Button>
+                <span className="mx-1 hidden h-4 w-px self-center bg-border sm:block" />
+                <Button type="button" size="sm" variant={nivel === "n1" ? "default" : "outline"} disabled={gerando} onClick={() => setNivel("n1")}>Olist</Button>
+                <Button type="button" size="sm" variant={nivel === "n2" ? "default" : "outline"} disabled={gerando} onClick={() => setNivel("n2")}>MODELO</Button>
+                <Button type="button" size="sm" variant={nivel === "n3" ? "default" : "outline"} disabled={gerando} onClick={() => setNivel("n3")}>Juff Store</Button>
               </div>
             </div>
           </div>

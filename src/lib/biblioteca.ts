@@ -38,6 +38,10 @@ export type ProdutoBiblioteca = {
   usa_sufixo: boolean;
   usa_xtra: boolean;
   tamanhos_xtra: string[];
+  xtra_modelo: boolean;
+  xtra_loja: boolean;
+  outlet_modelo: boolean;
+  outlet_loja: boolean;
   tamanhos: string[];
   pontos: string[];
   posicao: number;
@@ -63,6 +67,28 @@ export type Variacao = {
   hex: string;
 };
 
+/** Os três níveis de nomenclatura do mesmo produto. */
+export const NIVEIS = ["n1", "n2", "n3"] as const;
+export type NivelProduto = (typeof NIVEIS)[number];
+
+export const ROTULO_NIVEL: Record<NivelProduto, string> = {
+  n1: "Olist",
+  n2: "MODELO",
+  n3: "Juff Store",
+};
+
+/** Um produto real que existe na plataforma, gerado a partir do cadastro. */
+export type VarianteProduto = {
+  chave: string;
+  nivel: NivelProduto;
+  rotulo: string;
+  nome: string;
+  tamanhos: string[];
+  cores: ProdutoCor[];
+  /** Linha de exemplo, sem variação embaixo. */
+  exemplo?: boolean;
+};
+
 // ---------------- Montagem do nome oficial ----------------
 
 /**
@@ -79,28 +105,33 @@ function pedacos(p: ProdutoBiblioteca, estilo: EstiloNome) {
   };
 }
 
-export function prefixoVariacao(
-  p: ProdutoBiblioteca,
-  tamanho?: string,
-  estilo: EstiloNome = "fantasia",
-): string {
+/** Nome do produto sem prefixo de nível, sem XTRA, sem Outlet, sem estampa. */
+export function nucleoNome(p: ProdutoBiblioteca, estilo: EstiloNome = "fantasia"): string {
   const { base, tecido, sufixo } = pedacos(p, estilo);
   let s = base;
   if (p.usa_tecido && tecido) s += ` ${tecido}`;
-  const levaXtra =
-    p.usa_xtra && !p.usa_sufixo && !!tamanho && p.tamanhos_xtra.includes(tamanho);
-  if (levaXtra) s += " XTRA";
-  if (p.usa_sufixo && sufixo) s += ` - ${sufixo}`;
+  if (p.usa_sufixo && sufixo) s += ` ${sufixo}`;
   return s;
 }
 
 /** Nome do produto pai. Nunca leva XTRA, cor nem tamanho. */
 export function nomePai(p: ProdutoBiblioteca, estilo: EstiloNome = "fantasia"): string {
-  const { base, tecido, sufixo } = pedacos(p, estilo);
-  let s = base;
-  if (p.usa_tecido && tecido) s += ` ${tecido}`;
-  if (p.usa_sufixo && sufixo) s += ` - ${sufixo}`;
-  return s;
+  return nucleoNome(p, estilo);
+}
+
+/**
+ * Prefixo da variação no nível 1. Mantido por compatibilidade.
+ * O XTRA entra colado no fim, quando o produto separa XTRA na Olist
+ * e o tamanho está na lista de tamanhos grandes.
+ */
+export function prefixoVariacao(
+  p: ProdutoBiblioteca,
+  tamanho?: string,
+  estilo: EstiloNome = "fantasia",
+): string {
+  const s = nucleoNome(p, estilo);
+  const levaXtra = p.usa_xtra && !!tamanho && p.tamanhos_xtra.includes(tamanho);
+  return levaXtra ? `${s} XTRA` : s;
 }
 
 /** Nome exibido na lista de produtos, sem tecido. */
@@ -116,6 +147,112 @@ export function nomeOficial(
   estilo: EstiloNome = "fantasia",
 ): string {
   return `${prefixoVariacao(p, tamanho, estilo)} - ${corOlist} - ${tamanho}`;
+}
+
+/** Tamanhos que caem no XTRA e tamanhos que sobram, sempre na ordem oficial. */
+function partirTamanhos(p: ProdutoBiblioteca) {
+  const todos = ordenarTamanhos(p.tamanhos);
+  const grandes = todos.filter((t) => p.tamanhos_xtra.includes(t));
+  const base = todos.filter((t) => !p.tamanhos_xtra.includes(t));
+  return { todos, grandes, base };
+}
+
+function partirCores(p: ProdutoBiblioteca) {
+  return {
+    todas: p.cores,
+    normais: p.cores.filter((c) => c.categoria === "Normal"),
+    outlet: p.cores.filter((c) => c.categoria === "Outlet"),
+  };
+}
+
+/**
+ * Os produtos que existem de verdade nas plataformas, por nível.
+ *
+ * Regras fechadas com o time.
+ * O XTRA divide só a parte normal. O produto de Outlet sempre leva todos
+ * os tamanhos, porque na prática o tamanho grande cabe junto no Outlet.
+ * Chave de separação desligada significa juntar tudo num produto só.
+ * O nível 1 não tem Outlet, porque é o produto seco do atacado.
+ */
+export function variantesDoProduto(
+  p: ProdutoBiblioteca,
+  nivel: NivelProduto,
+  estilo: EstiloNome = "fantasia",
+): VarianteProduto[] {
+  const nucleo = nucleoNome(p, estilo);
+  const { todos, grandes, base } = partirTamanhos(p);
+  const { todas, normais, outlet } = partirCores(p);
+  const out: VarianteProduto[] = [];
+
+  if (nivel === "n1") {
+    const separa = p.usa_xtra && grandes.length > 0;
+    out.push({
+      chave: "n1-normal", nivel, rotulo: "Olist, produto seco",
+      nome: nucleo, tamanhos: separa ? base : todos, cores: todas,
+    });
+    if (separa) {
+      out.push({
+        chave: "n1-xtra", nivel, rotulo: "Olist, XTRA",
+        nome: `${nucleo} XTRA`, tamanhos: grandes, cores: todas,
+      });
+    }
+    return out;
+  }
+
+  if (nivel === "n2") {
+    const separaOutlet = p.outlet_modelo && outlet.length > 0;
+    const coresBase = separaOutlet ? normais : todas;
+    const separaXtra = p.xtra_modelo && grandes.length > 0;
+    out.push({
+      chave: "n2-normal", nivel, rotulo: "MODELO",
+      nome: `MODELO - Juff Store - ${nucleo} Kit`,
+      tamanhos: separaXtra ? base : todos, cores: coresBase,
+    });
+    if (separaXtra) {
+      out.push({
+        chave: "n2-xtra", nivel, rotulo: "MODELO, XTRA",
+        nome: `MODELO - Juff Store - ${nucleo} Kit XTRA`,
+        tamanhos: grandes, cores: coresBase,
+      });
+    }
+    if (separaOutlet) {
+      out.push({
+        chave: "n2-outlet", nivel, rotulo: "MODELO, Outlet",
+        nome: `MODELO - Juff Store - ${nucleo} Kit Outlet`,
+        tamanhos: todos, cores: outlet,
+      });
+    }
+    return out;
+  }
+
+  const separaOutlet = p.outlet_loja && outlet.length > 0;
+  const coresBase = separaOutlet ? normais : todas;
+  const separaXtra = p.xtra_loja && grandes.length > 0;
+  out.push({
+    chave: "n3-liso", nivel, rotulo: "Juff Store, liso",
+    nome: `Juff Store - ${nucleo} Kit Lisas`,
+    tamanhos: separaXtra ? base : todos, cores: coresBase,
+  });
+  if (separaXtra) {
+    out.push({
+      chave: "n3-xtra", nivel, rotulo: "Juff Store, liso XTRA",
+      nome: `Juff Store - ${nucleo} Kit Lisas - XTRA`,
+      tamanhos: grandes, cores: coresBase,
+    });
+  }
+  if (separaOutlet) {
+    out.push({
+      chave: "n3-outlet", nivel, rotulo: "Juff Store, Outlet",
+      nome: `Juff Store - ${nucleo} Kit Outlet`,
+      tamanhos: todos, cores: outlet,
+    });
+  }
+  out.push({
+    chave: "n3-estampa", nivel, rotulo: "Juff Store, estampado",
+    nome: `Juff Store - ${nucleo} - Nome da estampa`,
+    tamanhos: [], cores: [], exemplo: true,
+  });
+  return out;
 }
 
 export function ordenarTamanhos(lista: string[]): string[] {
@@ -156,6 +293,51 @@ export function gerarVariacoes(
     }
   }
   return out;
+}
+
+/** Variações de uma variante, na ordem cor e depois tamanho. */
+export function variacoesDaVariante(
+  v: VarianteProduto,
+  cores: CorBiblioteca[],
+  estilo: EstiloNome = "fantasia",
+  tamanhosOlist: TamanhoOlist[] = [],
+): Variacao[] {
+  if (v.exemplo) return [];
+  const porId = new Map(cores.map((c) => [c.id, c]));
+  const marcadas = v.cores
+    .map((pc) => ({ cor: porId.get(pc.cor_id), categoria: pc.categoria }))
+    .filter((x): x is { cor: CorBiblioteca; categoria: Categoria } => !!x.cor)
+    .sort((a, b) => a.cor.posicao - b.cor.posicao);
+
+  const out: Variacao[] = [];
+  for (const m of marcadas) {
+    for (const t of ordenarTamanhos(v.tamanhos)) {
+      const corTexto = estilo === "olist" ? m.cor.nome_olist || m.cor.nome : m.cor.nome;
+      const tamTexto = estilo === "olist" ? tamanhoOlist(t, tamanhosOlist) : t;
+      out.push({
+        nome: `${v.nome} - ${corTexto} - ${tamTexto}`,
+        cor: m.cor.nome,
+        cor_olist: m.cor.nome_olist,
+        tamanho: t,
+        categoria: m.categoria,
+        hex: m.cor.hex,
+      });
+    }
+  }
+  return out;
+}
+
+/** Todas as variações de um produto num nível, juntando as variantes. */
+export function variacoesDoNivel(
+  p: ProdutoBiblioteca,
+  cores: CorBiblioteca[],
+  nivel: NivelProduto,
+  estilo: EstiloNome = "fantasia",
+  tamanhosOlist: TamanhoOlist[] = [],
+): Variacao[] {
+  return variantesDoProduto(p, nivel, estilo).flatMap((v) =>
+    variacoesDaVariante(v, cores, estilo, tamanhosOlist),
+  );
 }
 
 // ---------------- Tolerância sugerida ----------------
@@ -203,7 +385,7 @@ export const produtosQueryOptions = queryOptions({
     const { data, error } = await supabase
       .from("biblioteca_produtos")
       .select(
-        "id, nome_base, tecido, usa_tecido, sufixo, usa_sufixo, nome_base_olist, tecido_olist, sufixo_olist, usa_xtra, tamanhos_xtra, tamanhos, pontos, posicao, ativo, biblioteca_produto_cores(cor_id, categoria)",
+        "id, nome_base, tecido, usa_tecido, sufixo, usa_sufixo, nome_base_olist, tecido_olist, sufixo_olist, usa_xtra, tamanhos_xtra, xtra_modelo, xtra_loja, outlet_modelo, outlet_loja, tamanhos, pontos, posicao, ativo, biblioteca_produto_cores(cor_id, categoria)",
       )
       .order("posicao", { ascending: true });
     if (error) throw error;
@@ -219,6 +401,10 @@ export const produtosQueryOptions = queryOptions({
       sufixo_olist: l.sufixo_olist ?? "",
       usa_xtra: l.usa_xtra,
       tamanhos_xtra: l.tamanhos_xtra ?? [],
+      xtra_modelo: l.xtra_modelo ?? false,
+      xtra_loja: l.xtra_loja ?? false,
+      outlet_modelo: l.outlet_modelo ?? false,
+      outlet_loja: l.outlet_loja ?? false,
       tamanhos: l.tamanhos ?? [],
       pontos: l.pontos ?? [],
       posicao: l.posicao,
@@ -292,6 +478,10 @@ export async function salvarProduto(
       | "sufixo_olist"
       | "usa_xtra"
       | "tamanhos_xtra"
+      | "xtra_modelo"
+      | "xtra_loja"
+      | "outlet_modelo"
+      | "outlet_loja"
       | "tamanhos"
       | "pontos"
       | "ativo"
