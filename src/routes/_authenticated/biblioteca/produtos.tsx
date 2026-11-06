@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { Lock, Unlock } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { BotaoZip } from "@/components/biblioteca/BotaoZip";
 import { Button } from "@/components/ui/button";
@@ -72,13 +73,30 @@ function ProdutosPage() {
 
 function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBiblioteca; produtos: ProdutoBiblioteca[]; cores: CorBiblioteca[]; editavel: boolean }) {
   const qc = useQueryClient();
+  const [destravado, setDestravado] = useState(false);
+  const livre = editavel && destravado;
   const patch = (x: Parameters<typeof patchProdutoOtimista>[2]) => patchProdutoOtimista(qc, p.id, x);
   const variacoes = useMemo(() => gerarVariacoes(p, cores), [p, cores]);
   const porId = new Map(cores.map((c) => [c.id, c]));
 
-  const primeiraCor = [...p.cores].map((c) => porId.get(c.cor_id)).filter(Boolean).sort((a, b) => a!.posicao - b!.posicao)[0];
+  const primeiraCor = [...p.cores].map((c) => porId.get(c.cor_id)).filter((c): c is CorBiblioteca => c !== undefined).sort((a, b) => a.posicao - b.posicao)[0];
   const tams = ordenarTamanhos(p.tamanhos);
   const maior = tams[tams.length - 1];
+
+  /** Avisa que a ficha está trancada. Um aviso por vez, nunca empilhado. */
+  function avisarTrancado() {
+    toast.warning("Ficha trancada. Destrave no topo para alterar.", { id: "ficha-produto-trancada" });
+  }
+
+  /** Executa só quando a ficha está destravada. Trancada, avisa e não grava nada. */
+  function seLivre(acao: () => void) {
+    if (!editavel) return;
+    if (!destravado) {
+      avisarTrancado();
+      return;
+    }
+    acao();
+  }
 
   function gravarCores(novas: ProdutoCor[]) {
     const antes = qc.getQueryData<ProdutoBiblioteca[]>(produtosQueryOptions.queryKey);
@@ -94,13 +112,35 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
 
   return (
     <div className="space-y-4">
+      {editavel ? (
+        <div className={cn(
+          "flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2 text-xs",
+          destravado ? "border-primary bg-primary-soft text-foreground" : "border-border bg-muted/40 text-muted-foreground",
+        )}>
+          {destravado ? <Unlock className="size-4 shrink-0" /> : <Lock className="size-4 shrink-0" />}
+          <span className="font-medium">
+            {destravado
+              ? "Ficha destravada. Tudo que você mudar grava na hora."
+              : "Ficha trancada. Destrave para alterar nome, tamanhos ou cores."}
+          </span>
+          <Button
+            variant={destravado ? "default" : "outline"}
+            size="sm"
+            className="ml-auto h-7"
+            onClick={() => setDestravado((v) => !v)}
+          >
+            {destravado ? "Trancar" : "Destravar"}
+          </Button>
+        </div>
+      ) : null}
+
       <Bloco titulo="Nome">
         <div className="grid gap-3 sm:grid-cols-2">
           <Linha rotulo="Nome base">
-            {editavel ? <CampoAutoSave valor={p.nome_base} onSalvar={(v) => v.trim() && patch({ nome_base: v.trim() })} className="h-8" /> : <span className="text-sm">{p.nome_base}</span>}
+            {livre ? <CampoAutoSave valor={p.nome_base} onSalvar={(v) => v.trim() && patch({ nome_base: v.trim() })} className="h-8" /> : <span className="text-sm">{p.nome_base}</span>}
           </Linha>
           <Linha rotulo="Tecido">
-            {editavel ? (
+            {livre ? (
               <div className="flex items-center gap-2">
                 <CampoAutoSave valor={p.tecido} onSalvar={(v) => patch({ tecido: v.trim() })} className="h-8" />
                 <Switch checked={p.usa_tecido} onCheckedChange={(v) => patch({ usa_tecido: v })} aria-label="Usar tecido" />
@@ -108,7 +148,7 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
             ) : <span className="text-sm">{p.usa_tecido ? p.tecido : "Sem tecido"}</span>}
           </Linha>
           <Linha rotulo="Sufixo">
-            {editavel ? (
+            {livre ? (
               <div className="flex items-center gap-2">
                 <CampoAutoSave valor={p.sufixo} onSalvar={(v) => patch({ sufixo: v.trim() })} className="h-8" />
                 <Switch checked={p.usa_sufixo} onCheckedChange={(v) => patch({ usa_sufixo: v })} aria-label="Usar sufixo" />
@@ -117,7 +157,7 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
           </Linha>
           <Linha rotulo="XTRA nos tamanhos grandes">
             <div className="flex flex-wrap items-center gap-2">
-              {editavel ? (
+              {livre ? (
                 <Switch checked={p.usa_xtra && !p.usa_sufixo} disabled={p.usa_sufixo} onCheckedChange={(v) => patch({ usa_xtra: v })} aria-label="XTRA" />
               ) : <span className="text-sm">{p.usa_xtra && !p.usa_sufixo ? "Sim" : "Não"}</span>}
               {p.usa_sufixo ? (
@@ -126,9 +166,9 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
                 ORDEM_TAMANHOS.map((t) => {
                   const on = p.tamanhos_xtra.includes(t);
                   return (
-                    <button key={t} type="button" disabled={!editavel || !p.usa_xtra}
-                      onClick={() => patch({ tamanhos_xtra: ordenarTamanhos(on ? p.tamanhos_xtra.filter((x) => x !== t) : [...p.tamanhos_xtra, t]) })}
-                      className={cn("rounded-md border px-1.5 py-0.5 text-xs", on ? "border-primary bg-primary-soft" : "border-border text-muted-foreground", (!editavel || !p.usa_xtra) && "cursor-default opacity-60")}>
+                    <button key={t} type="button" disabled={!editavel || (destravado && !p.usa_xtra)}
+                      onClick={() => seLivre(() => patch({ tamanhos_xtra: ordenarTamanhos(on ? p.tamanhos_xtra.filter((x) => x !== t) : [...p.tamanhos_xtra, t]) }))}
+                      className={cn("rounded-md border px-1.5 py-0.5 text-xs", on ? "border-primary bg-primary-soft" : "border-border text-muted-foreground", (!livre || !p.usa_xtra) && "cursor-default opacity-60")}>
                       {t}
                     </button>
                   );
@@ -149,8 +189,8 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
             const on = p.tamanhos.includes(t);
             return (
               <button key={t} type="button" disabled={!editavel}
-                onClick={() => patch({ tamanhos: ordenarTamanhos(on ? p.tamanhos.filter((x) => x !== t) : [...p.tamanhos, t]) })}
-                className={cn("min-w-12 rounded-lg border px-3 py-1.5 text-sm font-medium", on ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground", !editavel && "cursor-default")}>
+                onClick={() => seLivre(() => patch({ tamanhos: ordenarTamanhos(on ? p.tamanhos.filter((x) => x !== t) : [...p.tamanhos, t]) }))}
+                className={cn("min-w-12 rounded-lg border px-3 py-1.5 text-sm font-medium", on ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground", !livre && "cursor-default")}>
                 {t}
               </button>
             );
@@ -163,8 +203,8 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
           {p.cores.length} marcadas
           {editavel ? (
             <>
-              <Button variant="outline" size="sm" className="h-7" onClick={() => gravarCores(cores.filter((c) => c.ativo || marcada.has(c.id)).map((c) => ({ cor_id: c.id, categoria: marcada.get(c.id) ?? "Normal" })))}>Marcar todas</Button>
-              <Button variant="outline" size="sm" className="h-7" onClick={() => gravarCores([])}>Limpar</Button>
+              <Button variant="outline" size="sm" className="h-7" onClick={() => seLivre(() => gravarCores(cores.filter((c) => c.ativo || marcada.has(c.id)).map((c) => ({ cor_id: c.id, categoria: marcada.get(c.id) ?? "Normal" }))))}>Marcar todas</Button>
+              <Button variant="outline" size="sm" className="h-7" onClick={() => seLivre(() => gravarCores([]))}>Limpar</Button>
             </>
           ) : null}
         </div>
@@ -176,8 +216,8 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
             return (
               <div key={c.id} className={cn("overflow-hidden rounded-lg border-2", on ? "border-foreground" : "border-transparent opacity-35")}>
                 <button type="button" disabled={!editavel}
-                  onClick={() => gravarCores(on ? p.cores.filter((x) => x.cor_id !== c.id) : [...p.cores, { cor_id: c.id, categoria: "Normal" }])}
-                  className={cn("flex h-12 w-full items-center justify-center px-1 text-xs font-medium", !editavel && "cursor-default")}
+                  onClick={() => seLivre(() => gravarCores(on ? p.cores.filter((x) => x.cor_id !== c.id) : [...p.cores, { cor_id: c.id, categoria: "Normal" }]))}
+                  className={cn("flex h-12 w-full items-center justify-center px-1 text-xs font-medium", !livre && "cursor-default")}
                   style={{ backgroundColor: c.hex, color: textoSobreCor(c.hex) }}>
                   {c.nome}
                 </button>
@@ -185,8 +225,8 @@ function Ficha({ produto: p, produtos, cores, editavel }: { produto: ProdutoBibl
                   <div className="flex bg-card text-[11px]">
                     {CATEGORIAS.map((k) => (
                       <button key={k} type="button" disabled={!editavel}
-                        onClick={() => gravarCores(p.cores.map((x) => (x.cor_id === c.id ? { ...x, categoria: k as Categoria } : x)))}
-                        className={cn("flex-1 py-0.5", cat === k ? "bg-primary-soft font-semibold" : "text-muted-foreground", !editavel && "cursor-default")}>
+                        onClick={() => seLivre(() => gravarCores(p.cores.map((x) => (x.cor_id === c.id ? { ...x, categoria: k as Categoria } : x))))}
+                        className={cn("flex-1 py-0.5", cat === k ? "bg-primary-soft font-semibold" : "text-muted-foreground", !livre && "cursor-default")}>
                         {k}
                       </button>
                     ))}
