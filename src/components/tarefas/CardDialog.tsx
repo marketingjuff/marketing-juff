@@ -7,7 +7,7 @@ import { canEdit, profileQueryOptions } from "@/lib/auth";
 import { TrilhoEtiquetas } from "./TrilhoEtiquetas";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Archive, Users, RefreshCw, Download, User, Clock, CheckSquare, Paperclip, SlidersHorizontal, ExternalLink, Plus, Trash2, Upload, X, Pencil, CheckCircle2, RotateCcw, Copy } from "lucide-react";
+import { Archive, Users, RefreshCw, Download, User, Clock, CheckSquare, Paperclip, SlidersHorizontal, ExternalLink, Plus, Trash2, Upload, X, Pencil, CheckCircle2, RotateCcw, Copy, CheckCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
