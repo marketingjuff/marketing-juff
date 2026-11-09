@@ -55,6 +55,7 @@ import {
   podeMexerNoCard,
   checklistQueryOptions,
   comentariosQueryOptions,
+  marcarComentariosLidos,
   coresSalvasQueryOptions,
   criarCorSalva,
   excluirCorSalva,
@@ -154,6 +155,8 @@ export function CardDialog({
       toast.error("Não foi possível remover a cor");
     }
   };
+  const avisoLidos = !!quadros.find((q) => q.id === card?.quadro_id)?.comentarios_lidos;
+  const naoLidos = comentarios.filter((co) => !co.lido_em && co.autor_id !== card?.responsavel_id).length;
   const [quadroSel, setQuadroSel] = useState<string>("");
   useEffect(() => {
     if (card) setQuadroSel(card.quadro_id);
@@ -946,6 +949,30 @@ export function CardDialog({
           <aside className="space-y-3 border-l border-border bg-muted/30 p-5 text-[17px]">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Label>Comentários e atividade</Label>
+              {avisoLidos && naoLidos > 0 ? (
+                c.responsavel_id === meuId || isAdmin ? (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="h-7 gap-1 text-[13px]"
+                    onClick={async () => {
+                      try {
+                        await marcarComentariosLidos(c.id);
+                        void qc.invalidateQueries({ queryKey: ["tarefas", "comentarios", c.id] });
+                        void qc.invalidateQueries({ queryKey: ["tarefas", "quadro", c.quadro_id] });
+                        void qc.invalidateQueries({ queryKey: ["tarefas", "meus-cards"] });
+                        toast.success("Comentários dados como lidos");
+                      } catch {
+                        toast.error("Não foi possível marcar como lido");
+                      }
+                    }}
+                  >
+                    <CheckCheck className="size-3.5" /> Dar como lido ({naoLidos})
+                  </Button>
+                ) : (
+                  <span className="text-[13px] font-medium text-destructive">{naoLidos} não lido(s) pelo responsável</span>
+                )
+              ) : null}
               <div className="inline-flex overflow-hidden rounded-md border border-border text-[13px]">
                 {([
                   ["tudo", "Tudo"],
