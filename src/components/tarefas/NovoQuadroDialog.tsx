@@ -57,6 +57,7 @@ export function NovoQuadroDialog({
   const [cardsPrivados, setCardsPrivados] = useState(false);
   const [filtroEtiquetas, setFiltroEtiquetas] = useState(false);
   const [filtroResponsaveis, setFiltroResponsaveis] = useState(false);
+  const [comentariosLidos, setComentariosLidos] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
@@ -75,6 +76,7 @@ export function NovoQuadroDialog({
     setCardsPrivados(quadro?.cards_privados ?? false);
     setFiltroEtiquetas(quadro?.filtro_etiquetas ?? false);
     setFiltroResponsaveis(quadro?.filtro_responsaveis ?? false);
+    setComentariosLidos(quadro?.comentarios_lidos ?? false);
   }, [open, quadro]);
 
   async function salvar() {
@@ -82,11 +84,11 @@ export function NovoQuadroDialog({
     try {
       let id = quadro?.id;
       if (!somenteParticipantes) {
-        if (id) await updateQuadro(id, { nome: nome.trim() || "Novo quadro", descricao, acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, cards_privados: cardsPrivados, filtro_etiquetas: filtroEtiquetas, filtro_responsaveis: filtroResponsaveis, ...fundo });
-        else id = await createQuadro(nome, { descricao, acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, cards_privados: cardsPrivados, filtro_etiquetas: filtroEtiquetas, filtro_responsaveis: filtroResponsaveis, ...fundo });
+        if (id) await updateQuadro(id, { nome: nome.trim() || "Novo quadro", descricao, acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, cards_privados: cardsPrivados, filtro_etiquetas: filtroEtiquetas, filtro_responsaveis: filtroResponsaveis, comentarios_lidos: comentariosLidos, ...fundo });
+        else id = await createQuadro(nome, { descricao, acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, cards_privados: cardsPrivados, filtro_etiquetas: filtroEtiquetas, filtro_responsaveis: filtroResponsaveis, comentarios_lidos: comentariosLidos, ...fundo });
       }
       if (id) await setMembrosQuadro(id, membros);
-      if (id && somenteParticipantes) await updateQuadro(id, { acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, cards_privados: cardsPrivados, filtro_etiquetas: filtroEtiquetas, filtro_responsaveis: filtroResponsaveis });
+      if (id && somenteParticipantes) await updateQuadro(id, { acesso, exige_responsavel: exigeResponsavel, etiqueta_do_criador: etiquetaDoCriador, cards_privados: cardsPrivados, filtro_etiquetas: filtroEtiquetas, filtro_responsaveis: filtroResponsaveis, comentarios_lidos: comentariosLidos });
       if (id && !somenteParticipantes) registrarFundoRecente(fundo);
       await qc.invalidateQueries({ queryKey: ["tarefas"] });
       await qc.invalidateQueries({ queryKey: CHAVE_BARRA });
@@ -251,6 +253,20 @@ export function NovoQuadroDialog({
               <span className="mt-0.5 block text-[11px] text-muted-foreground">
                 As pessoas que têm card neste quadro aparecem em bolinhas clicáveis, com a contagem,
                 e dá para marcar mais de uma. Desligado, o quadro volta ao seletor em lista.
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-2 rounded-lg border border-border p-2.5">
+            <Checkbox
+              checked={comentariosLidos}
+              onCheckedChange={(v) => setComentariosLidos(!!v)}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="block text-sm font-medium">Aviso de comentário não lido</span>
+              <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                Quando alguém comenta, o card ganha uma exclamação até o responsável abrir o card e
+                clicar em "Dar como lido".
               </span>
             </span>
           </label>

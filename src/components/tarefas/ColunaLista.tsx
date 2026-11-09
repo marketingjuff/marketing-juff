@@ -21,6 +21,7 @@ function CardArrastavel({
   disabled,
   onAbrir,
   exigeResponsavel,
+  avisoComentarios,
 }: {
   card: Card;
   etiquetas: Map<string, Etiqueta>;
@@ -28,6 +29,7 @@ function CardArrastavel({
   disabled: boolean;
   onAbrir: () => void;
   exigeResponsavel: boolean;
+  avisoComentarios: boolean;
 }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: card.id,
@@ -42,7 +44,7 @@ function CardArrastavel({
       {...attributes}
       {...listeners}
     >
-      <CardMini card={card} etiquetas={etiquetas} pessoas={pessoas} onClick={onAbrir} exigeResponsavel={exigeResponsavel} />
+      <CardMini card={card} etiquetas={etiquetas} pessoas={pessoas} onClick={onAbrir} exigeResponsavel={exigeResponsavel} avisoComentarios={avisoComentarios} />
     </div>
   );
 }
@@ -66,6 +68,7 @@ export function ColunaLista({
   onReorganizar,
   onResponsavelAoEntrar,
   exigeResponsavel = false,
+  avisoComentarios = false,
   etiquetasParaCriar = [],
 }: {
   coluna: Coluna;
@@ -86,6 +89,7 @@ export function ColunaLista({
   onReorganizar: () => void;
   onResponsavelAoEntrar: () => void;
   exigeResponsavel?: boolean;
+  avisoComentarios?: boolean;
   etiquetasParaCriar?: Etiqueta[];
 }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
@@ -216,6 +220,7 @@ export function ColunaLista({
               pessoas={pessoas}
               disabled={!podeArrastarCard(c) || dragDisabled}
               exigeResponsavel={exigeResponsavel}
+              avisoComentarios={avisoComentarios}
               onAbrir={() => onAbrirCard(c.id)}
             />
           ))}
