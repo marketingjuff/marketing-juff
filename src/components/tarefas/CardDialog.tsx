@@ -960,7 +960,7 @@ export function CardDialog({
                         await marcarComentariosLidos(c.id);
                         void qc.invalidateQueries({ queryKey: ["tarefas", "comentarios", c.id] });
                         void qc.invalidateQueries({ queryKey: ["tarefas", "quadro", c.quadro_id] });
-                        void qc.invalidateQueries({ queryKey: ["tarefas", "meus-cards"] });
+                        void qc.invalidateQueries({ queryKey: ["tarefas", "meus"] });
                         toast.success("Comentários dados como lidos");
                       } catch {
                         toast.error("Não foi possível marcar como lido");
