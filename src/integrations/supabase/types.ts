@@ -2562,6 +2562,8 @@ export type Database = {
           created_at: string
           editado_em: string | null
           id: string
+          lido_em: string | null
+          lido_por: string | null
           texto: string
         }
         Insert: {
@@ -2570,6 +2572,8 @@ export type Database = {
           created_at?: string
           editado_em?: string | null
           id?: string
+          lido_em?: string | null
+          lido_por?: string | null
           texto?: string
         }
         Update: {
@@ -2578,6 +2582,8 @@ export type Database = {
           created_at?: string
           editado_em?: string | null
           id?: string
+          lido_em?: string | null
+          lido_por?: string | null
           texto?: string
         }
         Relationships: [
@@ -2795,6 +2801,7 @@ export type Database = {
           acesso: string
           arquivado: boolean
           cards_privados: boolean
+          comentarios_lidos: boolean
           created_at: string
           criado_por: string | null
           descricao: string
@@ -2813,6 +2820,7 @@ export type Database = {
           acesso?: string
           arquivado?: boolean
           cards_privados?: boolean
+          comentarios_lidos?: boolean
           created_at?: string
           criado_por?: string | null
           descricao?: string
@@ -2831,6 +2839,7 @@ export type Database = {
           acesso?: string
           arquivado?: boolean
           cards_privados?: boolean
+          comentarios_lidos?: boolean
           created_at?: string
           criado_por?: string | null
           descricao?: string
@@ -3026,6 +3035,10 @@ export type Database = {
           p_responsavel_id: string
         }
         Returns: boolean
+      }
+      tarefa_comentarios_marcar_lidos: {
+        Args: { _card_id: string }
+        Returns: number
       }
       tarefa_reordenar_cards: {
         Args: { _coluna_id: string; _ids: string[] }

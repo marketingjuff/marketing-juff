@@ -692,6 +692,7 @@ export function QuadroBoard({
                   onReorganizar={() => setReorganizando(col.id)}
                   onResponsavelAoEntrar={() => setColunaRegra(col.id)}
                   exigeResponsavel={quadro.exige_responsavel}
+                  avisoComentarios={quadro.comentarios_lidos}
                 />
               ))}
             </SortableContext>

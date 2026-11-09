@@ -20,6 +20,7 @@ export type Quadro = {
   cards_privados: boolean;
   filtro_etiquetas: boolean;
   filtro_responsaveis: boolean;
+  comentarios_lidos: boolean;
   membros: string[];
   cards_total?: number;
 };
@@ -93,6 +94,8 @@ export type Card = {
   checklist_total: number;
   checklist_feitos: number;
   comentarios_total: number;
+  /** Comentários de outras pessoas que o responsável ainda não deu como lidos. */
+  comentarios_nao_lidos: number;
   anexos_total: number;
   cor: string | null;
   cor_fundo: string | null;
@@ -219,7 +222,7 @@ async function uid(): Promise<string | null> {
 }
 
 const CARD_SELECT =
-  "*, tarefa_card_etiquetas(etiqueta_id), tarefa_checklist(feito), tarefa_comentarios(id), tarefa_anexos(id), tarefa_card_membros(user_id)";
+  "*, tarefa_card_etiquetas(etiqueta_id), tarefa_checklist(feito), tarefa_comentarios(id, autor_id, lido_em), tarefa_anexos(id), tarefa_card_membros(user_id)";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapCard(c: any): Card {
@@ -252,6 +255,9 @@ function mapCard(c: any): Card {
     checklist_total: checklist.length,
     checklist_feitos: checklist.filter((i) => i.feito).length,
     comentarios_total: (c.tarefa_comentarios ?? []).length,
+    comentarios_nao_lidos: (c.tarefa_comentarios ?? []).filter(
+      (co: { autor_id: string | null; lido_em: string | null }) => !co.lido_em && co.autor_id !== c.responsavel_id,
+    ).length,
     anexos_total: (c.tarefa_anexos ?? []).length,
     cor: c.cor ?? null,
     cor_fundo: c.cor_fundo ?? null,
@@ -300,6 +306,7 @@ async function fetchQuadros(arquivado: boolean): Promise<Quadro[]> {
     cards_privados: q.cards_privados ?? false,
     filtro_etiquetas: q.filtro_etiquetas ?? false,
     filtro_responsaveis: q.filtro_responsaveis ?? false,
+    comentarios_lidos: q.comentarios_lidos ?? false,
     membros: (q.tarefa_quadro_membros ?? []).map((m: { user_id: string }) => m.user_id),
     cards_total: (q.tarefa_cards ?? []).filter((c: { arquivado: boolean }) => !c.arquivado).length,
   }));
@@ -366,6 +373,7 @@ export const quadroQueryOptions = (quadroId: string) =>
           cards_privados: q.cards_privados ?? false,
           filtro_etiquetas: q.filtro_etiquetas ?? false,
           filtro_responsaveis: q.filtro_responsaveis ?? false,
+          comentarios_lidos: q.comentarios_lidos ?? false,
           membros: (q.tarefa_quadro_membros ?? []).map((m: { user_id: string }) => m.user_id),
         },
         colunas: (cols ?? []) as Coluna[],
@@ -376,7 +384,7 @@ export const quadroQueryOptions = (quadroId: string) =>
 
 export async function createQuadro(
   nome: string,
-  extra?: { descricao?: string; fundo_tipo?: FundoTipo; fundo_cor1?: string; fundo_cor2?: string; acesso?: "aberto" | "restrito"; exige_responsavel?: boolean; etiqueta_do_criador?: boolean; cards_privados?: boolean; filtro_etiquetas?: boolean; filtro_responsaveis?: boolean },
+  extra?: { descricao?: string; fundo_tipo?: FundoTipo; fundo_cor1?: string; fundo_cor2?: string; acesso?: "aberto" | "restrito"; exige_responsavel?: boolean; etiqueta_do_criador?: boolean; cards_privados?: boolean; filtro_etiquetas?: boolean; filtro_responsaveis?: boolean; comentarios_lidos?: boolean },
 ): Promise<string> {
   const { count } = await supabase
     .from("tarefa_quadros")
@@ -395,7 +403,7 @@ export async function createQuadro(
   return data.id;
 }
 
-type QuadroEditavel = "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2" | "acesso" | "exige_responsavel" | "etiqueta_do_criador" | "cards_privados" | "filtro_etiquetas" | "filtro_responsaveis";
+type QuadroEditavel = "nome" | "descricao" | "fundo_tipo" | "fundo_cor1" | "fundo_cor2" | "acesso" | "exige_responsavel" | "etiqueta_do_criador" | "cards_privados" | "filtro_etiquetas" | "filtro_responsaveis" | "comentarios_lidos";
 
 export async function updateQuadro(
   id: string,
@@ -414,6 +422,7 @@ export async function updateQuadro(
   if (values.cards_privados !== undefined) limpo.cards_privados = values.cards_privados;
   if (values.filtro_etiquetas !== undefined) limpo.filtro_etiquetas = values.filtro_etiquetas;
   if (values.filtro_responsaveis !== undefined) limpo.filtro_responsaveis = values.filtro_responsaveis;
+  if (values.comentarios_lidos !== undefined) limpo.comentarios_lidos = values.comentarios_lidos;
   const { error } = await supabase.from("tarefa_quadros").update(limpo).eq("id", id);
   if (error) throw error;
 }
@@ -989,7 +998,7 @@ export async function deleteItemChecklist(id: string): Promise<void> {
 
 // ---------------- comentários ----------------
 
-export type Comentario = { id: string; texto: string; autor_id: string | null; created_at: string; editado_em: string | null };
+export type Comentario = { id: string; texto: string; autor_id: string | null; created_at: string; editado_em: string | null; lido_em: string | null };
 
 export const comentariosQueryOptions = (cardId: string) =>
   queryOptions({
@@ -997,7 +1006,7 @@ export const comentariosQueryOptions = (cardId: string) =>
     queryFn: async (): Promise<Comentario[]> => {
       const { data, error } = await supabase
         .from("tarefa_comentarios")
-        .select("id, texto, autor_id, created_at, editado_em")
+        .select("id, texto, autor_id, created_at, editado_em, lido_em")
         .eq("card_id", cardId)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -1017,6 +1026,11 @@ export async function updateComentario(id: string, texto: string): Promise<void>
     .from("tarefa_comentarios")
     .update({ texto: texto.trim() })
     .eq("id", id);
+  if (error) throw error;
+}
+
+export async function marcarComentariosLidos(cardId: string): Promise<void> {
+  const { error } = await supabase.rpc("tarefa_comentarios_marcar_lidos", { _card_id: cardId });
   if (error) throw error;
 }
 

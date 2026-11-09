@@ -1,4 +1,4 @@
-import { CheckCircle2, RefreshCw, CheckSquare, MessageSquare, Paperclip, Pause, Flag } from "lucide-react";
+import { CheckCircle2, RefreshCw, CheckSquare, MessageSquare, AlertCircle, Paperclip, Pause, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   PRIORIDADES,
@@ -68,6 +68,7 @@ export function CardMini({
   onClick,
   arrastando = false,
   exigeResponsavel = false,
+  avisoComentarios = false,
 }: {
   card: Card;
   etiquetas: Map<string, Etiqueta>;
@@ -75,6 +76,7 @@ export function CardMini({
   onClick?: () => void;
   arrastando?: boolean;
   exigeResponsavel?: boolean;
+  avisoComentarios?: boolean;
 }) {
   const atrasado = estaAtrasado(card);
   const breve = venceHoje(card) || venceAmanha(card);
@@ -135,6 +137,15 @@ export function CardMini({
               title={resp.nome}
             >
               {siglaPessoa(resp)}
+            </span>
+          ) : null}
+          {avisoComentarios && card.comentarios_nao_lidos > 0 ? (
+            <span
+              className="flex items-center gap-0.5 rounded-full bg-destructive px-1.5 py-px text-[10px] font-bold leading-tight text-destructive-foreground"
+              title={`${card.comentarios_nao_lidos} comentário(s) não lido(s) pelo responsável`}
+            >
+              <AlertCircle className="size-3" />
+              {card.comentarios_nao_lidos}
             </span>
           ) : null}
           {exigeResponsavel && !card.responsavel_id ? (
