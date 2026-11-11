@@ -50,7 +50,7 @@ function ProdutosPage() {
   const { data: profile } = useSuspenseQuery(profileQueryOptions);
   const pode = hasPermission(profile, "biblioteca.produtos");
   const podeEditar = canEdit(profile, "biblioteca.produtos");
-  const editavel = profile?.role === "admin" && podeEditar;
+  const editavel = podeEditar;
   const { data: produtos = [] } = useQuery({ ...produtosQueryOptions, enabled: pode });
   const { data: cores = [] } = useQuery({ ...coresQueryOptions, enabled: pode });
   const [sel, setSel] = useState<string | null>(null);
