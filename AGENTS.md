@@ -26,3 +26,4 @@
 - Meu dia evaluates expanded recurrence rules through a pure date-fns module and edits them in its popup; nullable frequency preserves legacy weekday rules without rewriting existing schedules.
 - Per-board pill label filter: the `filtro_etiquetas` flag on `tarefa_quadros` switches the board between the dropdown label selector and a multi-select pill bar, and also enables label pills in the create-card form; the selected pills persist only in browser localStorage per board, never in the database.
 - Archived task cards use board-scoped database filters and infinite pagination; archive timestamps are trigger-owned and automatic archival runs in SQL-only daily scheduling, preserving existing RLS and column placement.
+- The Claude MCP connector (src/lib/mcp) authenticates via managed OAuth and queries with the caller's token, so existing RLS limits what the assistant sees; never use API keys or the service role for it.
