@@ -1,0 +1,224 @@
+{
+  "version": 1,
+  "sdk_version": "3.4.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://yeebyhmlvqnjiwwduhof.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "marketing-juff",
+      "version": "1.0.0",
+      "title": "Marketing Juff"
+    },
+    "tools": [
+      {
+        "name": "mapa_do_sistema",
+        "title": "Mapa do sistema",
+        "description": "Explica os módulos e o vocabulário do Marketing Juff e traz contagens e quadros que você pode ver.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "tarefas_listar",
+        "title": "Listar tarefas",
+        "description": "Lista cards dos quadros que você pode ver, com filtros por responsável, quadro, situação, datas, prioridade, etiqueta e busca.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "responsavel": {
+              "description": "Nome ou parte do nome; 'eu' = você.",
+              "type": "string"
+            },
+            "quadro": {
+              "description": "Nome ou id do quadro.",
+              "type": "string"
+            },
+            "situacao": {
+              "type": "string",
+              "enum": [
+                "abertos",
+                "concluidos",
+                "atrasados",
+                "sem_data",
+                "parados",
+                "todos"
+              ]
+            },
+            "de": {
+              "description": "Data de entrega inicial AAAA-MM-DD.",
+              "type": "string"
+            },
+            "ate": {
+              "description": "Data de entrega final AAAA-MM-DD.",
+              "type": "string"
+            },
+            "prioridade": {
+              "type": "string"
+            },
+            "etiqueta": {
+              "type": "string"
+            },
+            "busca": {
+              "description": "Texto no título ou descrição.",
+              "type": "string"
+            },
+            "incluir_arquivados": {
+              "type": "boolean"
+            },
+            "limite": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          },
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "card_detalhe",
+        "title": "Detalhe do card",
+        "description": "Traz tudo de um card: descrição, checklist, comentários, anexos, histórico, membros e etiquetas.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "card": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Id ou título exato do card."
+            }
+          },
+          "required": [
+            "card"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "quadros_panorama",
+        "title": "Panorama dos quadros",
+        "description": "Por quadro: colunas com contagem, atrasados, parados, sem responsável e divisão por responsável.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "quadro": {
+              "description": "Nome ou id do quadro.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "dados_consultar",
+        "title": "Consultar dados",
+        "description": "Lê linhas de uma área do sistema (Biblioteca, Estratégia, Social, Tarefas), respeitando suas permissões. Áreas: produtos, medidas, cores_camiseta, paleta, textos, arquivos, estampas, combos, combo_itens, cores_estampa, receitas, referencias, atas, ata_valores, ata_campos, decisoes, emails, email_tipos, email_regras, stories, story_frames, seeding_remessas, seeding_pecas, seeding_custos, quadros, colunas, etiquetas, feriados. Meu dia e dados pessoais ficam fora.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "area": {
+              "type": "string",
+              "enum": [
+                "produtos",
+                "medidas",
+                "cores_camiseta",
+                "paleta",
+                "textos",
+                "arquivos",
+                "estampas",
+                "combos",
+                "combo_itens",
+                "cores_estampa",
+                "receitas",
+                "referencias",
+                "atas",
+                "ata_valores",
+                "ata_campos",
+                "decisoes",
+                "emails",
+                "email_tipos",
+                "email_regras",
+                "stories",
+                "story_frames",
+                "seeding_remessas",
+                "seeding_pecas",
+                "seeding_custos",
+                "quadros",
+                "colunas",
+                "etiquetas",
+                "feriados"
+              ]
+            },
+            "filtros": {
+              "description": "Igualdade por coluna, ex. {\"mes\": 11}.",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              }
+            },
+            "busca_coluna": {
+              "description": "Coluna de texto para busca parcial.",
+              "type": "string"
+            },
+            "busca": {
+              "type": "string"
+            },
+            "limite": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            }
+          },
+          "required": [
+            "area"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

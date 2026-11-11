@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import juffLogo from "@/assets/juff-logo.png.asset.json";
+import { oauthReturnPath } from "@/lib/oauth-return-path";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -27,11 +28,14 @@ export const Route = createFileRoute("/auth")({
       { name: "robots", content: "noindex" },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { next?: string } =>
+    typeof s["next"] === "string" ? { next: s["next"] as string } : {},
   component: AuthPage,
 });
 
 function AuthPage() {
   const router = useRouter();
+  const { next } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
@@ -48,6 +52,10 @@ function AuthPage() {
       return;
     }
     await router.invalidate();
+    if (next && oauthReturnPath(next) !== "/") {
+      window.location.assign(oauthReturnPath(next));
+      return;
+    }
 
     // Operadores caem em Meu trabalho; admin e gestor caem nos Quadros.
     const { data: userData } = await supabase.auth.getUser();
