@@ -19,6 +19,7 @@
 - Board background suggestions combine accessible boards with browser-local recent combinations recorded only after successful saves, preserving solid/gradient mode without changing board colors or permissions.
 - AppShell places master navigation on its own grid row below desktop widths and wraps permitted subtabs, so account actions cannot squeeze navigation out of the screen.
 - Product-catalog consumers share biblioteca query keys and one AppShell realtime subscription; invalidate joined product data for product-color changes and reconcile on reconnect/focus so all selectors and exports use the current catalog without changing historical records.
+- Product sheet writes and its color RPC use the existing `can_edit('biblioteca.produtos')` authorization, matching the unlock control; updates must return a row so denied writes cannot silently appear saved.
 
 - Card comments use a compact TipTap editor and sanitized HTML with plain-text fallback; edition timestamps are database-triggered so all write paths stay consistent.
 - Task member triggers exclude the current responsible person and serialize member writes against the card row, keeping manual assignments and column-driven changes consistent.
