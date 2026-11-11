@@ -488,8 +488,9 @@ export async function salvarProduto(
     >
   >,
 ) {
-  const { error } = await supabase.from("biblioteca_produtos").update(patch).eq("id", id);
+  const { data, error } = await supabase.from("biblioteca_produtos").update(patch).eq("id", id).select("id").single();
   if (error) throw error;
+  if (!data) throw new Error("Produto não encontrado ou sem permissão para editar.");
 }
 
 /** Lote de cores de um produto em uma chamada só. */

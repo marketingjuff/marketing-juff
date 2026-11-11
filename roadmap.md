@@ -1,4 +1,7 @@
 # Comentários formatados
+## Edição de Produtos por permissão
+- [ ] Alinhar gravação da ficha e cores à permissão de edição de Produtos, mantendo consulta bloqueada.
+- [ ] Testar persistência de XTRA e demais alterações autorizadas.
 ## Arquivamento de tarefas
 - [x] Adicionar data e arquivamento diário de concluídos após 30 dias sem alteração.
 - [x] Incluir consulta por quadro, filtros, paginação e restauração.
