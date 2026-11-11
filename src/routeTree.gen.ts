@@ -12,9 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedObjetivosRouteImport } from './routes/_authenticated/objetivos'
 import { Route as AuthenticatedTrocarSenhaRouteImport } from './routes/_authenticated/trocar-senha'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedBibliotecaArquivosRouteImport } from './routes/_authenticated/biblioteca/arquivos'
 import { Route as AuthenticatedBibliotecaCatalogoEstampasRouteImport } from './routes/_authenticated/biblioteca/catalogo-estampas'
 import { Route as AuthenticatedBibliotecaConferenciaRouteImport } from './routes/_authenticated/biblioteca/conferencia'
@@ -49,6 +52,17 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedConfiguracoesRoute =
   AuthenticatedConfiguracoesRouteImport.update({
     id: '/configuracoes',
@@ -66,6 +80,11 @@ const AuthenticatedTrocarSenhaRoute =
     path: '/trocar-senha',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedBibliotecaArquivosRoute =
   AuthenticatedBibliotecaArquivosRouteImport.update({
     id: '/biblioteca/arquivos',
@@ -183,9 +202,12 @@ const AuthenticatedTarefasQuadrosQuadroIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/objetivos': typeof AuthenticatedObjetivosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/biblioteca/arquivos': typeof AuthenticatedBibliotecaArquivosRoute
   '/biblioteca/catalogo-estampas': typeof AuthenticatedBibliotecaCatalogoEstampasRoute
   '/biblioteca/conferencia': typeof AuthenticatedBibliotecaConferenciaRoute
@@ -209,9 +231,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/objetivos': typeof AuthenticatedObjetivosRoute
   '/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/biblioteca/arquivos': typeof AuthenticatedBibliotecaArquivosRoute
   '/biblioteca/catalogo-estampas': typeof AuthenticatedBibliotecaCatalogoEstampasRoute
   '/biblioteca/conferencia': typeof AuthenticatedBibliotecaConferenciaRoute
@@ -237,9 +262,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/objetivos': typeof AuthenticatedObjetivosRoute
   '/_authenticated/trocar-senha': typeof AuthenticatedTrocarSenhaRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_authenticated/biblioteca/arquivos': typeof AuthenticatedBibliotecaArquivosRoute
   '/_authenticated/biblioteca/catalogo-estampas': typeof AuthenticatedBibliotecaCatalogoEstampasRoute
   '/_authenticated/biblioteca/conferencia': typeof AuthenticatedBibliotecaConferenciaRoute
@@ -265,9 +293,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/mcp'
+    | '/.well-known/oauth-protected-resource'
     | '/configuracoes'
     | '/objetivos'
     | '/trocar-senha'
+    | '/.lovable/oauth/consent'
     | '/biblioteca/arquivos'
     | '/biblioteca/catalogo-estampas'
     | '/biblioteca/conferencia'
@@ -291,9 +322,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/mcp'
+    | '/.well-known/oauth-protected-resource'
     | '/configuracoes'
     | '/objetivos'
     | '/trocar-senha'
+    | '/.lovable/oauth/consent'
     | '/biblioteca/arquivos'
     | '/biblioteca/catalogo-estampas'
     | '/biblioteca/conferencia'
@@ -318,9 +352,12 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/mcp'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/configuracoes'
     | '/_authenticated/objetivos'
     | '/_authenticated/trocar-senha'
+    | '/.lovable/oauth/consent'
     | '/_authenticated/biblioteca/arquivos'
     | '/_authenticated/biblioteca/catalogo-estampas'
     | '/_authenticated/biblioteca/conferencia'
@@ -346,6 +383,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  McpRoute: typeof McpRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicPushEnviarRoute: typeof ApiPublicPushEnviarRoute
 }
 
@@ -372,6 +412,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/configuracoes': {
       id: '/_authenticated/configuracoes'
       path: '/configuracoes'
@@ -392,6 +446,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/trocar-senha'
       preLoaderRoute: typeof AuthenticatedTrocarSenhaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/biblioteca/arquivos': {
       id: '/_authenticated/biblioteca/arquivos'
@@ -588,6 +649,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  McpRoute: McpRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicPushEnviarRoute: ApiPublicPushEnviarRoute,
 }
 export const routeTree = rootRouteImport
