@@ -12,9 +12,9 @@ const oauth = () => (supabase.auth as unknown as { oauth: OAuthApi }).oauth;
 
 export const Route = createFileRoute("/.lovable/oauth/consent")({
   ssr: false,
-  validateSearch: (s: Record<string, unknown>) => ({ authorization_id: typeof s.authorization_id === "string" ? s.authorization_id : "" }),
+  validateSearch: (s: Record<string, unknown>) => ({ authorization_id: typeof s["authorization_id"] === "string" ? s["authorization_id"] : "" }),
   head: () => ({ meta: [{ title: "Conectar ao Marketing Juff" }, { name: "description", content: "Autorize um assistente a ler o Marketing Juff." }, { property: "og:title", content: "Conectar ao Marketing Juff" }, { property: "og:description", content: "Autorização de conector." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
-  errorComponent: ({ error }) => <div className="p-8 text-sm text-destructive">Não foi possível abrir a autorização: {error.message}</div>,
+  errorComponent: ({ error }) => <div className="p-8 text-sm text-destructive">Não foi possível abrir a autorização: {(error as Error).message}</div>,
   component: Consent,
 });
 

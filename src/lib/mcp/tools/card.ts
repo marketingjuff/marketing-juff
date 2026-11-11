@@ -15,7 +15,7 @@ export default defineTool({
     if (error) return falha(error.message);
     if (!achados?.length) return falha("Card não encontrado ou sem acesso.");
     if (achados.length > 1) return resposta({ varios: achados.map((c) => ({ ...c, link: linkCard(c.quadro_id, c.id) })) });
-    const id = achados[0].id;
+    const id = achados[0]!.id;
     const [{ data: c }, { data: pessoas }, ck, cm, an, hi, mb, et] = await Promise.all([
       sb.from("tarefa_cards").select("*, quadro:tarefa_quadros!tarefa_cards_quadro_id_fkey(nome), coluna:tarefa_colunas!tarefa_cards_coluna_id_fkey(nome)").eq("id", id).single(),
       sb.from("profiles").select("id, nome"),

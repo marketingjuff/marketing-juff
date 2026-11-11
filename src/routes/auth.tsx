@@ -29,7 +29,7 @@ export const Route = createFileRoute("/auth")({
     ],
   }),
   validateSearch: (s: Record<string, unknown>): { next?: string } =>
-    typeof s.next === "string" ? { next: s.next } : {},
+    typeof s["next"] === "string" ? { next: s["next"] as string } : {},
   component: AuthPage,
 });
 
