@@ -559,7 +559,7 @@ export function CardDialog({
                         presets={presetsMarca}
                         salvas={coresSalvas}
                         onSalvarAtual={guardarCor}
-                        onRemoverSalva={podeTirarCorSalva ? tirarCorSalva : undefined}
+                        {...(podeTirarCorSalva ? { onRemoverSalva: tirarCorSalva } : {})}
                       />
                       {c.cor ? (
                         <Button size="sm" variant="ghost" onClick={() => salvar({ cor: null })}>
@@ -577,7 +577,7 @@ export function CardDialog({
                         presets={presetsMarca}
                         salvas={coresSalvas}
                         onSalvarAtual={guardarCor}
-                        onRemoverSalva={podeTirarCorSalva ? tirarCorSalva : undefined}
+                        {...(podeTirarCorSalva ? { onRemoverSalva: tirarCorSalva } : {})}
                       />
                       {c.cor_fundo ? (
                         <Button size="sm" variant="ghost" onClick={() => salvar({ cor_fundo: null })}>
