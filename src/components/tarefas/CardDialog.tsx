@@ -194,6 +194,7 @@ export function CardDialog({
   }, [card?.id, card?.titulo, card?.descricao]);
 
   const { data: perfil } = useQuery(profileQueryOptions);
+  const podeTirarCorSalva = perfil?.role === "admin" || perfil?.role === "gestor";
   useCardAoVivo(card?.id ?? null, card?.quadro_id ?? null, ativo);
   const { travados, digitando } = useCampoEmEdicao(card?.id ?? null, ativo, perfil?.id ?? "", perfil?.nome ?? "Alguém");
   const [filtroLinha, setFiltroLinha] = useState<"tudo" | "comentarios" | "atividades">("comentarios");
@@ -558,7 +559,7 @@ export function CardDialog({
                         presets={presetsMarca}
                         salvas={coresSalvas}
                         onSalvarAtual={guardarCor}
-                        onRemoverSalva={tirarCorSalva}
+                        {...(podeTirarCorSalva ? { onRemoverSalva: tirarCorSalva } : {})}
                       />
                       {c.cor ? (
                         <Button size="sm" variant="ghost" onClick={() => salvar({ cor: null })}>
@@ -576,7 +577,7 @@ export function CardDialog({
                         presets={presetsMarca}
                         salvas={coresSalvas}
                         onSalvarAtual={guardarCor}
-                        onRemoverSalva={tirarCorSalva}
+                        {...(podeTirarCorSalva ? { onRemoverSalva: tirarCorSalva } : {})}
                       />
                       {c.cor_fundo ? (
                         <Button size="sm" variant="ghost" onClick={() => salvar({ cor_fundo: null })}>
