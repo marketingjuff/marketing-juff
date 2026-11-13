@@ -166,3 +166,30 @@ export async function prepararChecklist(sb: SB, cardId: string, op: OpsChecklist
   if (op.adicionar?.length) { const ad = op.adicionar; passos.push(() => adicionarChecklist(sb, cardId, ad)); desc.push(`checklist adicionado (${ad.filter((t) => t.trim()).map((t) => `"${t.trim()}"`).join(", ")})`); }
   return { desc, gravar: async () => { for (const p of passos) await p(); } };
 }
+
+export async function acharQuadro(sb: SB, ref: string) {
+  const r = ref.trim();
+  const { data } = await (UUID.test(r) ? sb.from("tarefa_quadros").select("id, nome").eq("id", r) : sb.from("tarefa_quadros").select("id, nome").ilike("nome", r)).eq("arquivado", false);
+  if (!data?.length) throw new Erro(`Quadro "${r}" não encontrado ou sem acesso.`);
+  if (data.length > 1) throw new Erro("Mais de um quadro com esse nome; use o id.");
+  return data[0]!;
+}
+
+export async function acharColuna(sb: SB, quadro: { id: string; nome: string }, ref: string) {
+  const { data: cols } = await sb.from("tarefa_colunas").select("id, nome").eq("quadro_id", quadro.id).eq("arquivado", false).order("posicao");
+  const col = (cols ?? []).find((c) => c.id === ref.trim() || norm(c.nome) === norm(ref));
+  if (!col) throw new Erro(`Coluna "${ref}" não existe em ${quadro.nome}. Colunas: ${(cols ?? []).map((c) => c.nome).join(", ")}.`);
+  return col;
+}
+
+export async function idsDaColuna(sb: SB, colunaId: string) {
+  const { data, error } = await sb.from("tarefa_cards").select("id, titulo").eq("coluna_id", colunaId).eq("arquivado", false).order("posicao").order("created_at");
+  if (error) throw new Erro(error.message);
+  return data ?? [];
+}
+
+export async function gravarOrdemColuna(sb: SB, colunaId: string, ids: string[]) {
+  if (!ids.length) return;
+  const { error } = await sb.rpc("tarefa_reordenar_cards", { _coluna_id: colunaId, _ids: ids });
+  if (error) throw new Erro(error.message);
+}
