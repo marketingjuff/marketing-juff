@@ -851,7 +851,7 @@ export function CardDialog({
                       <CheckCircle2 className="size-3" /> Concluir
                     </Button>
                   )}
-                </>
+                </div>
               ) : null}
             </div>
             <TrilhoEtiquetas
