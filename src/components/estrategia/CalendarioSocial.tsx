@@ -52,11 +52,42 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
   );
   const { data: capas = {} } = useQuery(capasQueryOptions(ano, mes, paths));
 
-  // publicações na mesma ordem do calendário (mais antiga primeiro)
-  const postsPublicados = useMemo(
-    () => publicados.filter((p) => p.tipo === "post"),
-    [publicados],
+  // meses vizinhos: a navegação do diálogo atravessa a borda do mês
+  const vizinhos = useMemo(() => {
+    const antes = new Date(ano, mes - 2, 1);
+    const depois = new Date(ano, mes, 1);
+    return {
+      ant: { ano: antes.getFullYear(), mes: antes.getMonth() + 1 },
+      prox: { ano: depois.getFullYear(), mes: depois.getMonth() + 1 },
+    };
+  }, [ano, mes]);
+
+  const { data: pubAnt = [] } = useQuery(
+    publicadosQueryOptions(vizinhos.ant.ano, vizinhos.ant.mes),
   );
+  const { data: pubProx = [] } = useQuery(
+    publicadosQueryOptions(vizinhos.prox.ano, vizinhos.prox.mes),
+  );
+
+  const pathsAnt = useMemo(() => pubAnt.map((p) => p.capa_path).filter(Boolean), [pubAnt]);
+  const pathsProx = useMemo(() => pubProx.map((p) => p.capa_path).filter(Boolean), [pubProx]);
+  const { data: capasAnt = {} } = useQuery(
+    capasQueryOptions(vizinhos.ant.ano, vizinhos.ant.mes, pathsAnt),
+  );
+  const { data: capasProx = {} } = useQuery(
+    capasQueryOptions(vizinhos.prox.ano, vizinhos.prox.mes, pathsProx),
+  );
+  const todasCapas = useMemo(
+    () => ({ ...capasAnt, ...capas, ...capasProx }),
+    [capasAnt, capas, capasProx],
+  );
+
+  // publicações dos três meses, na ordem em que foram ao ar
+  const postsPublicados = useMemo(() => {
+    const todos = [...pubAnt, ...publicados, ...pubProx].filter((p) => p.tipo === "post");
+    const chave = (p: ItemPublicado) => `${p.publicado_em ?? ""}|${p.data}|${p.id}`;
+    return todos.sort((a, b) => chave(a).localeCompare(chave(b)));
+  }, [pubAnt, publicados, pubProx]);
 
   const chavePlan = ["social", "planejados", ano, mes] as const;
 
