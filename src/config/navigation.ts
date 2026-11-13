@@ -34,6 +34,7 @@ export const PERMISSION_CATALOG: PermissionEntry[] = [
 
   { key: "estrategia.ata", grupo: "Estratégia", label: "Ata mensal", nivelConfiguravel: true, modo: "tres" },
   { key: "estrategia.emails", grupo: "Estratégia", label: "Cronograma de e-mails", nivelConfiguravel: true, modo: "tres" },
+  { key: "estrategia.calendario_social", grupo: "Estratégia", label: "Calendário social", nivelConfiguravel: true, modo: "tres" },
 
   { key: "biblioteca.produtos", grupo: "Biblioteca", label: "Produtos", nivelConfiguravel: true, modo: "tres" },
   { key: "biblioteca.marca", grupo: "Biblioteca", label: "Marca", nivelConfiguravel: true, modo: "tres" },
@@ -110,13 +111,13 @@ export const PRESETS: Preset[] = [
     id: "marketing_completo",
     label: "Marketing completo",
     descricao: "Tudo em edição, menos Configurações",
-    permissoes: ["social.stories", "social.seeding", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "estrategia.ata", "estrategia.emails", "biblioteca.produtos", "biblioteca.marca", "biblioteca.arquivos", "biblioteca.estampa", "biblioteca.catalogo_estampas"],
+    permissoes: ["estrategia.calendario_social", "social.stories", "social.seeding", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "estrategia.ata", "estrategia.emails", "biblioteca.produtos", "biblioteca.marca", "biblioteca.arquivos", "biblioteca.estampa", "biblioteca.catalogo_estampas"],
   },
   {
     id: "social",
     label: "Social",
     descricao: "Stories e Tarefas em edição, Ata e Biblioteca em leitura",
-    permissoes: ["social.stories", "social.seeding", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "estrategia.ata:leitura", "estrategia.emails:leitura", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura", "biblioteca.catalogo_estampas:leitura"],
+    permissoes: ["estrategia.calendario_social", "social.stories", "social.seeding", "tarefas.quadros", "tarefas.meu_trabalho", "tarefas.calendario", "tarefas.meu_dia", "estrategia.ata:leitura", "estrategia.emails:leitura", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura", "biblioteca.catalogo_estampas:leitura"],
   },
   {
     id: "comercial",
@@ -140,13 +141,13 @@ export const PRESETS: Preset[] = [
     id: "consulta",
     label: "Consulta",
     descricao: "Enxerga tudo, não edita nada",
-    permissoes: ["social.stories:leitura", "social.seeding:leitura", "tarefas.quadros:leitura", "tarefas.meu_trabalho", "tarefas.calendario", "estrategia.ata:leitura", "estrategia.emails:leitura", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura", "biblioteca.catalogo_estampas:leitura"],
+    permissoes: ["estrategia.calendario_social:leitura", "social.stories:leitura", "social.seeding:leitura", "tarefas.quadros:leitura", "tarefas.meu_trabalho", "tarefas.calendario", "estrategia.ata:leitura", "estrategia.emails:leitura", "biblioteca.produtos:leitura", "biblioteca.marca:leitura", "biblioteca.arquivos:leitura", "biblioteca.estampa:leitura", "biblioteca.catalogo_estampas:leitura"],
   },
   {
     id: "produtora_conteudo",
     label: "Produtora de conteúdo",
     descricao: "Só Seeding em edição, mais Biblioteca em leitura",
-    permissoes: ["social.seeding", "biblioteca.produtos:leitura", "biblioteca.estampa:leitura"],
+    permissoes: ["estrategia.calendario_social", "social.seeding", "biblioteca.produtos:leitura", "biblioteca.estampa:leitura"],
   },
 ];
 
@@ -212,7 +213,8 @@ export const NAVIGATION: MasterTab[] = [
     icone: "telescope",
     cor: "#2e572d",
     subTabs: [
-      { key: "ata", label: "Ata mensal", to: "/estrategia/ata", permission: "estrategia.ata" },
+      { key: "ata", label: "Principal", to: "/estrategia/ata", permission: "estrategia.ata" },
+      { key: "calendario-social", label: "Calendário social", to: "/estrategia/calendario-social", permission: "estrategia.calendario_social" },
     ],
   },
   {
