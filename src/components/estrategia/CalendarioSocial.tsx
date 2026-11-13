@@ -332,7 +332,7 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
           {verItem ? (
             <div className="space-y-3">
               {capas[verItem.capa_path] ? (
-                <img src={capas[verItem.capa_path]} alt="" className="h-48 w-full rounded-lg object-cover" />
+                <img src={capas[verItem.capa_path]} alt="" className="max-h-[60vh] w-full rounded-lg object-contain" />
               ) : null}
               <p className="whitespace-pre-wrap text-sm">{verItem.legenda || "sem legenda"}</p>
               <div className="flex gap-4 text-xs text-muted-foreground">
