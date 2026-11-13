@@ -48,7 +48,7 @@ function AtaPage() {
   const [panorama, setPanorama] = useState(false);
 
   const { data: campos = [] } = useQuery({ ...camposQueryOptions(frente), enabled: pode });
-  const { data: ata } = useQuery({ ...ataQueryOptions(frente, ano, mes), enabled: pode });
+  const { data: ata, isPending: carregandoAta } = useQuery({ ...ataQueryOptions(frente, ano, mes), enabled: pode });
   const { data: meses = [] } = useQuery({ ...panoramaQueryOptions(frente, ano), enabled: pode && panorama });
 
   if (!pode) {
@@ -130,7 +130,7 @@ function AtaPage() {
             />
           </div>
         ) : (
-          <div className="rounded-xl border border-border bg-card p-4">
+          <div key={`${frente}-${ano}-${mes}-${ata?.id ?? "nova"}`} className="rounded-xl border border-border bg-card p-4">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {ativos.map((c) => (
                 <CampoAta
@@ -138,7 +138,7 @@ function AtaPage() {
                   label={c.label}
                   icone={c.icone}
                   valor={ata?.valores[c.id] ?? ""}
-                  editavel={editavel}
+                  editavel={editavel && !carregandoAta}
                   onSalvar={(novo) =>
                     otimista(
                       (a) => ({ ...a, valores: { ...a.valores, [c.id]: novo } }),
@@ -154,7 +154,7 @@ function AtaPage() {
               <Textarea
                 defaultValue={ata?.anotacoes ?? ""}
                 rows={3}
-                disabled={!editavel}
+                disabled={!editavel || carregandoAta}
                 className="text-sm"
                 onBlur={(e) => {
                   const v = e.target.value;

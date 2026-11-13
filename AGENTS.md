@@ -28,3 +28,4 @@
 - Per-board pill label filter: the `filtro_etiquetas` flag on `tarefa_quadros` switches the board between the dropdown label selector and a multi-select pill bar, and also enables label pills in the create-card form; the selected pills persist only in browser localStorage per board, never in the database.
 - Archived task cards use board-scoped database filters and infinite pagination; archive timestamps are trigger-owned and automatic archival runs in SQL-only daily scheduling, preserving existing RLS and column placement.
 - The Claude MCP connector (src/lib/mcp) authenticates via managed OAuth and queries with the caller's token, so existing RLS limits what the assistant sees; never use API keys or the service role for it.
+- Monthly meeting editors remount by front, year, month and loaded meeting ID, and remain disabled while loading, so unsaved text cannot leak into another month's blur save.
