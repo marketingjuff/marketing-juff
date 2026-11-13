@@ -47,6 +47,24 @@ export type Database = {
         }
         Relationships: []
       }
+      app_segredos: {
+        Row: {
+          atualizado_em: string
+          chave: string
+          valor: string
+        }
+        Insert: {
+          atualizado_em?: string
+          chave: string
+          valor: string
+        }
+        Update: {
+          atualizado_em?: string
+          chave?: string
+          valor?: string
+        }
+        Relationships: []
+      }
       atalhos_paginas: {
         Row: {
           created_at: string
