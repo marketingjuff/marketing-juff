@@ -93,12 +93,12 @@ async function gravarOrdem(sb: SB, ids: string[]) {
 }
 
 export type OpsChecklist = {
-  substituir?: string[];
-  editar?: { item: string | number; texto: string }[];
-  marcar?: { item: string | number; feito: boolean }[];
-  remover?: (string | number)[];
-  ordem?: string[];
-  adicionar?: string[];
+  substituir?: string[] | undefined;
+  editar?: { item: string | number; texto: string }[] | undefined;
+  marcar?: { item: string | number; feito: boolean }[] | undefined;
+  remover?: (string | number)[] | undefined;
+  ordem?: string[] | undefined;
+  adicionar?: string[] | undefined;
 };
 
 /** Aplica as operações de checklist; posições referem-se à lista antes desta chamada. Devolve descrições para o histórico. */
