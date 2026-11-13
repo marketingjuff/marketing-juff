@@ -470,6 +470,13 @@
       "when": 1794528298108,
       "tag": "0066_dependencias_entre_cards",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1794528766538,
+      "tag": "0067_seguranca_push_e_politicas",
+      "breakpoints": true
     }
   ]
 }

@@ -3,10 +3,11 @@ import { z } from "zod";
 
 /**
  * Chamado pelo banco logo depois que uma notificação nasce.
- * Rota pública, então não confia em quem chama: só envia se a notificação
- * existir, tiver nascido há pouco e ainda não tiver gerado push. A marca de
- * envio é gravada antes do disparo, então cada notificação vira no máximo um push.
- * Nunca devolve dados.
+ * Rota pública, então exige a chave secreta no cabeçalho x-push-chave, que o
+ * próprio banco envia a partir de public.app_segredos. Sem a chave, recusa.
+ * Mesmo com a chave, só envia se a notificação existir, tiver nascido há pouco
+ * e ainda não tiver gerado push. A marca de envio é gravada antes do disparo,
+ * então cada notificação vira no máximo um push. Nunca devolve dados.
  */
 const Corpo = z.object({ notificacao_id: z.string().uuid() });
 
@@ -20,6 +21,16 @@ export const Route = createFileRoute("/api/public/push-enviar")({
           if (!parsed.success) return new Response("sem id", { status: 400 });
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+          const enviada = request.headers.get("x-push-chave") ?? "";
+          const { data: segredo } = await supabaseAdmin
+            .from("app_segredos")
+            .select("valor")
+            .eq("chave", "push_chave")
+            .maybeSingle();
+          if (!segredo?.valor || enviada !== segredo.valor) {
+            return new Response("sem permissao", { status: 401 });
+          }
           const limite = new Date(Date.now() - 5 * 60_000).toISOString();
           const { data: n } = await supabaseAdmin
             .from("notificacoes")
