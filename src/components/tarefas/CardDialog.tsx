@@ -5,9 +5,11 @@ import { useCardAoVivo } from "@/hooks/use-card-ao-vivo";
 import { useCampoEmEdicao } from "@/hooks/use-campo-em-edicao";
 import { canEdit, profileQueryOptions } from "@/lib/auth";
 import { TrilhoEtiquetas } from "./TrilhoEtiquetas";
+import { BlocoDependencias } from "./BlocoDependencias";
+import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Archive, Users, RefreshCw, Download, User, Clock, CheckSquare, Paperclip, SlidersHorizontal, ExternalLink, Plus, Trash2, Upload, X, Pencil, CheckCircle2, RotateCcw, Copy, CheckCheck } from "lucide-react";
+import { Archive, Users, RefreshCw, Download, User, Clock, CheckSquare, Paperclip, SlidersHorizontal, ExternalLink, Plus, Trash2, Upload, X, Pencil, CheckCircle2, RotateCcw, Copy, CheckCheck, Link2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -110,6 +112,67 @@ function dataHora(iso: string) {
   });
 }
 
+function CampoTextoSalvando({
+  valor,
+  disabled,
+  placeholder,
+  onSalvar,
+}: {
+  valor: string;
+  disabled: boolean;
+  placeholder?: string;
+  onSalvar: (texto: string) => void;
+}) {
+  const [texto, setTexto] = useState(valor);
+  const textoRef = useRef(valor);
+  const valorRef = useRef(valor);
+  const salvarRef = useRef(onSalvar);
+  salvarRef.current = onSalvar;
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setTexto(valor);
+    textoRef.current = valor;
+    valorRef.current = valor;
+  }, [valor]);
+
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+      if (textoRef.current !== valorRef.current) salvarRef.current(textoRef.current);
+    },
+    [],
+  );
+
+  return (
+    <Input
+      className="h-8"
+      disabled={disabled}
+      value={texto}
+      {...(placeholder ? { placeholder } : {})}
+      onChange={(e) => {
+        const novo = e.target.value;
+        setTexto(novo);
+        textoRef.current = novo;
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = setTimeout(() => {
+          if (textoRef.current !== valorRef.current) {
+            valorRef.current = textoRef.current;
+            salvarRef.current(textoRef.current);
+          }
+        }, 700);
+      }}
+      onBlur={() => {
+        if (timer.current) clearTimeout(timer.current);
+        if (textoRef.current !== valorRef.current) {
+          valorRef.current = textoRef.current;
+          salvarRef.current(textoRef.current);
+        }
+      }}
+    />
+  );
+}
+
 export function CardDialog({
   card,
   open,
@@ -128,6 +191,7 @@ export function CardDialog({
   role?: string | undefined;
 }) {
   const qc = useQueryClient();
+  const navegar = useNavigate();
   const cardId = card?.id ?? "";
   const ativo = open && !!card;
   const { data: pessoas = [] } = useQuery({ ...pessoasQueryOptions, enabled: ativo });
@@ -210,6 +274,14 @@ export function CardDialog({
   const podeMexer = podeMexerNoCard(c, role, meuId, editable);
   const mexer = podeMexer && !c.concluido;
   const podeArquivar = podeArquivarCard(c, { podeMexer, mexer });
+  const abrirOutroCard = (quadroDoCard: string, idDoCard: string) => {
+    onOpenChange(false);
+    void navegar({
+      to: "/tarefas/quadros/$quadroId",
+      params: { quadroId: quadroDoCard },
+      search: { card: idDoCard },
+    });
+  };
 
   const arquivar = async (archivar: boolean) => {
     await rodar(() => arquivarCard(c.id, archivar));
@@ -610,14 +682,26 @@ export function CardDialog({
                     <Input type="date" className="h-8" disabled={!mexer} value={c.adiado_ate ?? ""}
                       onChange={(e) => salvar({ adiado_ate: e.target.value || null })} />
                   </Campo>
-                  <Campo label="Depende de">
-                    <Input className="h-8" disabled={!mexer} defaultValue={c.depende_de} key={`dep-${c.id}`}
-                      onBlur={(e) => e.target.value !== c.depende_de && salvar({ depende_de: e.target.value })} />
+                  <Campo label="Dependências">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-full justify-start gap-1"
+                      onClick={() =>
+                        document.getElementById("bloco-dependencias")?.scrollIntoView({ behavior: "smooth", block: "center" })
+                      }
+                    >
+                      <Link2 className="size-3.5" /> Abrir dependências
+                    </Button>
                   </Campo>
                   <Campo label="Link externo">
-                    <Input className="h-8" disabled={!mexer} defaultValue={c.link_externo} key={`lnk-${c.id}`}
+                    <CampoTextoSalvando
+                      key={`lnk-${c.id}`}
+                      valor={c.link_externo}
+                      disabled={!mexer}
                       placeholder="https://"
-                      onBlur={(e) => e.target.value !== c.link_externo && salvar({ link_externo: e.target.value })} />
+                      onSalvar={(texto) => salvar({ link_externo: texto })}
+                    />
                     {c.link_externo ? (
                       <a href={c.link_externo} target="_blank" rel="noreferrer" className="block truncate text-[14px] text-primary underline">
                         {c.link_externo}
@@ -815,6 +899,16 @@ export function CardDialog({
               />
               <AvisoEscrevendo quem={travados["descricao"]} />
             </div>
+
+            <BlocoDependencias
+              key={c.id}
+              cardId={c.id}
+              quadroId={c.quadro_id}
+              mexer={mexer}
+              textoAntigo={c.depende_de}
+              onLimparTextoAntigo={() => salvar({ depende_de: "" })}
+              onAbrirCard={abrirOutroCard}
+            />
 
             <div className="space-y-2" id="bloco-checklist">
               <div className="flex items-center justify-between">

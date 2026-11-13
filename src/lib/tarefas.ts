@@ -1612,3 +1612,110 @@ export function pesoTopo(card: Pick<Card, "etiquetas">, etiquetas: Map<string, E
   }
   return peso;
 }
+
+// ---------------- dependências entre cards ----------------
+
+export type CardVinculado = {
+  id: string;
+  titulo: string;
+  concluido: boolean;
+  quadro_id: string;
+  quadro_nome: string;
+  coluna_nome: string;
+};
+
+export type Dependencias = { depende: CardVinculado[]; bloqueia: CardVinculado[] };
+
+const VINCULO_SELECT = "id, titulo, concluido, quadro_id, tarefa_quadros(nome), tarefa_colunas(nome)";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapVinculo(x: any): CardVinculado {
+  return {
+    id: x.id,
+    titulo: x.titulo ?? "",
+    concluido: !!x.concluido,
+    quadro_id: x.quadro_id,
+    quadro_nome: x.tarefa_quadros?.nome ?? "",
+    coluna_nome: x.tarefa_colunas?.nome ?? "",
+  };
+}
+
+/** Os dois lados do vínculo. Depende, cards que travam este. Bloqueia, cards que este trava. */
+export const dependenciasQueryOptions = (cardId: string) =>
+  queryOptions({
+    queryKey: ["tarefas", "dependencias", cardId],
+    queryFn: async (): Promise<Dependencias> => {
+      if (!cardId) return { depende: [], bloqueia: [] };
+      const [lado1, lado2] = await Promise.all([
+        supabase
+          .from("tarefa_card_dependencias")
+          .select(`alvo:tarefa_cards!tarefa_card_dependencias_depende_de_id_fkey(${VINCULO_SELECT})`)
+          .eq("card_id", cardId),
+        supabase
+          .from("tarefa_card_dependencias")
+          .select(`origem:tarefa_cards!tarefa_card_dependencias_card_id_fkey(${VINCULO_SELECT})`)
+          .eq("depende_de_id", cardId),
+      ]);
+      if (lado1.error) throw lado1.error;
+      if (lado2.error) throw lado2.error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const depende = ((lado1.data ?? []) as any[]).map((l) => l.alvo).filter(Boolean).map(mapVinculo);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const bloqueia = ((lado2.data ?? []) as any[]).map((l) => l.origem).filter(Boolean).map(mapVinculo);
+      return { depende, bloqueia };
+    },
+    staleTime: 30_000,
+  });
+
+/** Mapa de card para quantidade de dependências ainda não concluídas, por quadro. */
+export const dependenciasPendentesQueryOptions = (quadroId: string) =>
+  queryOptions({
+    queryKey: ["tarefas", "dependencias-pendentes", quadroId],
+    queryFn: async (): Promise<Record<string, number>> => {
+      if (!quadroId) return {};
+      const { data, error } = await supabase.rpc("tarefa_dependencias_pendentes", { _quadro_id: quadroId });
+      if (error) throw error;
+      const mapa: Record<string, number> = {};
+      for (const linha of (data ?? []) as { card_id: string; pendentes: number }[]) {
+        mapa[linha.card_id] = linha.pendentes;
+      }
+      return mapa;
+    },
+    staleTime: 30_000,
+  });
+
+/** Busca card pelo título em qualquer quadro que a pessoa enxerga. A RLS já filtra. */
+export async function buscarCardsParaVincular(termo: string, excluirId: string): Promise<CardVinculado[]> {
+  const limpo = termo.trim();
+  if (limpo.length < 2) return [];
+  const { data, error } = await supabase
+    .from("tarefa_cards")
+    .select(VINCULO_SELECT)
+    .ilike("titulo", `%${limpo}%`)
+    .eq("arquivado", false)
+    .neq("id", excluirId)
+    .order("updated_at", { ascending: false })
+    .limit(20);
+  if (error) throw error;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return ((data ?? []) as any[]).map(mapVinculo);
+}
+
+export async function criarDependencia(cardId: string, dependeDeId: string): Promise<void> {
+  const { error } = await supabase
+    .from("tarefa_card_dependencias")
+    .insert({ card_id: cardId, depende_de_id: dependeDeId, criado_por: await uid() });
+  if (error) {
+    if (error.code === "23505") throw new Error("Esse vínculo já existe");
+    throw new Error("Não foi possível criar a dependência");
+  }
+}
+
+export async function excluirDependencia(cardId: string, dependeDeId: string): Promise<void> {
+  const { error } = await supabase
+    .from("tarefa_card_dependencias")
+    .delete()
+    .eq("card_id", cardId)
+    .eq("depende_de_id", dependeDeId);
+  if (error) throw new Error("Não foi possível remover a dependência");
+}

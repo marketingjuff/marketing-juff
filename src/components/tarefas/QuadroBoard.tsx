@@ -205,7 +205,10 @@ export function QuadroBoard({
   const [reorganizando, setReorganizando] = useState<string | null>(null);
   const [colunaRegra, setColunaRegra] = useState<string | null>(null);
 
-  const invalidar = () => qc.invalidateQueries({ queryKey: ["tarefas", "quadro", quadro.id] });
+  const invalidar = () => {
+    void qc.invalidateQueries({ queryKey: ["tarefas", "dependencias-pendentes", quadro.id] });
+    return qc.invalidateQueries({ queryKey: ["tarefas", "quadro", quadro.id] });
+  };
   const atualRef = useRef({ colunas, cards });
   atualRef.current = { colunas, cards };
 

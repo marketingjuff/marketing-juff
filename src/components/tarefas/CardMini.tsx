@@ -1,4 +1,6 @@
-import { CheckCircle2, RefreshCw, CheckSquare, MessageSquare, AlertCircle, Paperclip, Pause, Flag } from "lucide-react";
+import { CheckCircle2, RefreshCw, CheckSquare, MessageSquare, AlertCircle, Paperclip, Pause, Flag, Lock } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { dependenciasPendentesQueryOptions } from "@/lib/tarefas";
 import { cn } from "@/lib/utils";
 import {
   PRIORIDADES,
@@ -84,6 +86,11 @@ export function CardMini({
   const prio = PRIORIDADES.find((p) => p.valor === card.prioridade);
   const resp = card.responsavel_id ? pessoas.get(card.responsavel_id) : undefined;
   const tags = card.etiquetas.map((id) => etiquetas.get(id)).filter(Boolean) as Etiqueta[];
+  const { data: depPendentes = {} } = useQuery({
+    ...dependenciasPendentesQueryOptions(card.quadro_id),
+    enabled: !!card.quadro_id,
+  });
+  const travadoPor = card.concluido ? 0 : (depPendentes[card.id] ?? 0);
 
   return (
     <button
@@ -146,6 +153,15 @@ export function CardMini({
             >
               <AlertCircle className="size-3" />
               {card.comentarios_nao_lidos}
+            </span>
+          ) : null}
+          {travadoPor > 0 ? (
+            <span
+              className="flex items-center gap-0.5 text-[10px] font-semibold leading-tight text-destructive"
+              title={`Depende de ${travadoPor} card ainda não concluído`}
+            >
+              <Lock className="size-3" />
+              {travadoPor}
             </span>
           ) : null}
           {exigeResponsavel && !card.responsavel_id ? (

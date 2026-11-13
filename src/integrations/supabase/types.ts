@@ -2245,6 +2245,49 @@ export type Database = {
           },
         ]
       }
+      tarefa_card_dependencias: {
+        Row: {
+          card_id: string
+          created_at: string
+          criado_por: string | null
+          depende_de_id: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          criado_por?: string | null
+          depende_de_id: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          criado_por?: string | null
+          depende_de_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefa_card_dependencias_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefa_card_dependencias_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefa_card_dependencias_depende_de_id_fkey"
+            columns: ["depende_de_id"]
+            isOneToOne: false
+            referencedRelation: "tarefa_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tarefa_card_etiquetas: {
         Row: {
           card_id: string
@@ -3039,6 +3082,13 @@ export type Database = {
       tarefa_comentarios_marcar_lidos: {
         Args: { _card_id: string }
         Returns: number
+      }
+      tarefa_dependencias_pendentes: {
+        Args: { _quadro_id: string }
+        Returns: {
+          card_id: string
+          pendentes: number
+        }[]
       }
       tarefa_reordenar_cards: {
         Args: { _coluna_id: string; _ids: string[] }
