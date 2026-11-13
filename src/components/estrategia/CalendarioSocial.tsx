@@ -74,6 +74,14 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
   const [verItem, setVerItem] = useState<ItemPublicado | null>(null);
   const [verStories, setVerStories] = useState<ItemPublicado[] | null>(null);
 
+  // navegar entre publicações sem fechar o diálogo
+  const indicePub = verItem ? postsPublicados.findIndex((p) => p.id === verItem.id) : -1;
+  const anterior = indicePub > 0 ? postsPublicados[indicePub - 1] : null;
+  const proxima =
+    indicePub >= 0 && indicePub < postsPublicados.length - 1
+      ? postsPublicados[indicePub + 1]
+      : null;
+
   const [titulo, setTitulo] = useState("");
   const [formatoId, setFormatoId] = useState<string>("");
   const [descricao, setDescricao] = useState("");
