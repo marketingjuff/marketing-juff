@@ -1,7 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { supabaseForUser, falha, linkCard } from "../supabase";
-import { UUID, PRIORIDADE, DATA, Erro, exigirEdicao, acharResponsavel, acharEtiquetas, adicionarChecklist, registrarHistorico } from "../escrita";
+import { UUID, PRIORIDADE, DATA, Erro, exigirEdicao, acharResponsavel, acharEtiquetas, adicionarChecklist, registrarHistorico, adicionarDependencias } from "../escrita";
 
 export default defineTool({
   name: "card_criar",
@@ -17,6 +17,7 @@ export default defineTool({
     prioridade: PRIORIDADE.optional(),
     etiquetas: z.array(z.string()).optional().describe("Nomes de etiquetas existentes."),
     checklist: z.array(z.string()).optional(),
+    depende_de: z.array(z.string()).optional().describe("Ids ou títulos exatos dos cards dos quais este depende (adiciona)."),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   handler: async (a, ctx) => {
@@ -48,7 +49,8 @@ export default defineTool({
         if (e) throw new Erro(`Etiquetas: ${e.message}`);
       }
       if (a.checklist?.length) await adicionarChecklist(sb, novo.id, a.checklist);
-      await registrarHistorico(sb, ctx, novo.id, "criou", `Card criado em ${q.nome} / ${col.nome}.`);
+      const deps = a.depende_de?.length ? await adicionarDependencias(sb, novo.id, a.depende_de, ctx) : [];
+      await registrarHistorico(sb, ctx, novo.id, "criou", `Card criado em ${q.nome} / ${col.nome}.${deps.length ? ` Depende de: ${deps.join(", ")}.` : ""}`);
       const link = linkCard(q.id, novo.id);
       return { content: [{ type: "text", text: `Card criado: ${link}` }], structuredContent: { id: novo.id, link } };
     } catch (e) {

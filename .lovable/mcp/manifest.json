@@ -281,6 +281,13 @@
               "items": {
                 "type": "string"
               }
+            },
+            "depende_de": {
+              "description": "Ids ou títulos exatos dos cards dos quais este depende (adiciona).",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           "required": [
@@ -363,6 +370,13 @@
               }
             },
             "adicionar_checklist": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "depende_de": {
+              "description": "Ids ou títulos exatos dos cards dos quais este depende (adiciona).",
               "type": "array",
               "items": {
                 "type": "string"
