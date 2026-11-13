@@ -76,10 +76,10 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
 
   // navegar entre publicações sem fechar o diálogo
   const indicePub = verItem ? postsPublicados.findIndex((p) => p.id === verItem.id) : -1;
-  const anterior = indicePub > 0 ? postsPublicados[indicePub - 1] : null;
-  const proxima =
+  const anterior: ItemPublicado | null = indicePub > 0 ? postsPublicados[indicePub - 1] ?? null : null;
+  const proxima: ItemPublicado | null =
     indicePub >= 0 && indicePub < postsPublicados.length - 1
-      ? postsPublicados[indicePub + 1]
+      ? postsPublicados[indicePub + 1] ?? null
       : null;
 
   const [titulo, setTitulo] = useState("");
