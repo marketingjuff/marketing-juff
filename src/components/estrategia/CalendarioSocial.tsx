@@ -52,6 +52,12 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
   );
   const { data: capas = {} } = useQuery(capasQueryOptions(ano, mes, paths));
 
+  // publicações na mesma ordem do calendário (mais antiga primeiro)
+  const postsPublicados = useMemo(
+    () => publicados.filter((p) => p.tipo === "post"),
+    [publicados],
+  );
+
   const chavePlan = ["social", "planejados", ano, mes] as const;
 
   function gravarPrefs(novo: { filtro: Filtro; stories: boolean }) {
