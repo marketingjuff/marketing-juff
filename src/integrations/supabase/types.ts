@@ -2977,6 +2977,7 @@ export type Database = {
         Returns: undefined
       }
       can_edit: { Args: { _perm: string }; Returns: boolean }
+      e_colaborador: { Args: never; Returns: boolean }
       estrategia_ata_id: {
         Args: { _ano: number; _frente: string; _mes: number }
         Returns: string
