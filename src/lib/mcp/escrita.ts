@@ -56,3 +56,20 @@ export async function registrarHistorico(sb: SB, ctx: ToolContext, cardId: strin
   const { error } = await sb.from("tarefa_historico").insert({ card_id: cardId, autor_id: ctx.getUserId()!, acao, detalhe: `Via Claude (MCP), por ${nome}. ${detalhe}`.trim() });
   if (error) throw new Erro(`Histórico: ${error.message}`);
 }
+
+export async function adicionarDependencias(sb: SB, cardId: string, refs: string[], ctx: ToolContext) {
+  const ids: string[] = [];
+  const nomes: string[] = [];
+  for (const r of refs.map((x) => x.trim()).filter(Boolean)) {
+    const { data } = await (UUID.test(r) ? sb.from("tarefa_cards").select("id, titulo").eq("id", r) : sb.from("tarefa_cards").select("id, titulo").eq("titulo", r)).limit(20);
+    if (!data?.length) throw new Erro(`Card de dependência "${r}" não encontrado ou sem acesso.`);
+    if (data.length > 1) throw new Erro(`Vários cards com o título "${r}"; use o id: ${data.map((c) => c.id).join(", ")}.`);
+    if (data[0]!.id === cardId) throw new Erro("Um card não pode depender dele mesmo.");
+    ids.push(data[0]!.id); nomes.push(data[0]!.titulo);
+  }
+  const unicos = [...new Set(ids)];
+  if (!unicos.length) return [];
+  const { error } = await sb.from("tarefa_card_dependencias").upsert(unicos.map((depende_de_id) => ({ card_id: cardId, depende_de_id, criado_por: ctx.getUserId()! })), { onConflict: "card_id,depende_de_id", ignoreDuplicates: true });
+  if (error) throw new Erro(`Dependências: ${error.message}`);
+  return nomes;
+}

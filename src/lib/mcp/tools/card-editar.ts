@@ -1,7 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { supabaseForUser, falha, linkCard } from "../supabase";
-import { UUID, PRIORIDADE, DATA, Erro, exigirEdicao, acharResponsavel, acharEtiquetas, adicionarChecklist, registrarHistorico } from "../escrita";
+import { UUID, PRIORIDADE, DATA, Erro, exigirEdicao, acharResponsavel, acharEtiquetas, adicionarChecklist, registrarHistorico, adicionarDependencias } from "../escrita";
 
 export default defineTool({
   name: "card_editar",
@@ -16,6 +16,7 @@ export default defineTool({
     prioridade: PRIORIDADE.nullable().optional(),
     etiquetas: z.array(z.string()).optional().describe("Lista final de etiquetas existentes (substitui as atuais)."),
     adicionar_checklist: z.array(z.string()).optional(),
+    depende_de: z.array(z.string()).optional().describe("Ids ou títulos exatos dos cards dos quais este depende (adiciona)."),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   handler: async (a, ctx) => {
@@ -50,6 +51,7 @@ export default defineTool({
         desc.push("etiquetas");
       }
       if (a.adicionar_checklist?.length) { await adicionarChecklist(sb, c.id, a.adicionar_checklist); desc.push("checklist"); }
+      if (a.depende_de?.length) { const deps = await adicionarDependencias(sb, c.id, a.depende_de, ctx); desc.push(`dependências (${deps.join(", ")})`); }
       if (!desc.length) throw new Erro("Nada para alterar.");
       await registrarHistorico(sb, ctx, c.id, "editou", `Alterou: ${desc.join(", ")}.`);
       const link = linkCard(c.quadro_id, c.id);
