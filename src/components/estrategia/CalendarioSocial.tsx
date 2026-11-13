@@ -113,6 +113,14 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
       ? postsPublicados[indicePub + 1] ?? null
       : null;
 
+  /** Abre a publicação e, se ela for de outro mês, leva o calendário junto. */
+  function abrirPublicacao(item: ItemPublicado | null) {
+    if (!item) return;
+    const [a, m] = item.data.split("-").map(Number);
+    if (a && m) { setAno(a); setMes(m); }
+    setVerItem(item);
+  }
+
   const [titulo, setTitulo] = useState("");
   const [formatoId, setFormatoId] = useState<string>("");
   const [descricao, setDescricao] = useState("");
@@ -382,7 +390,7 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
                   size="icon"
                   className="size-7"
                   disabled={!anterior}
-                  onClick={() => setVerItem(anterior)}
+                  onClick={() => abrirPublicacao(anterior)}
                   aria-label="Publicação anterior"
                 >
                   <ChevronLeft className="size-4" />
@@ -395,7 +403,7 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
                   size="icon"
                   className="size-7"
                   disabled={!proxima}
-                  onClick={() => setVerItem(proxima)}
+                  onClick={() => abrirPublicacao(proxima)}
                   aria-label="Próxima publicação"
                 >
                   <ChevronRight className="size-4" />
@@ -405,8 +413,8 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
           </DialogHeader>
           {verItem ? (
             <div className="space-y-3">
-              {capas[verItem.capa_path] ? (
-                <img src={capas[verItem.capa_path]} alt="" className="max-h-[60vh] w-full rounded-lg object-contain" />
+              {todasCapas[verItem.capa_path] ? (
+                <img src={todasCapas[verItem.capa_path]} alt="" className="max-h-[60vh] w-full rounded-lg object-contain" />
               ) : null}
               <p className="whitespace-pre-wrap text-sm">{verItem.legenda || "sem legenda"}</p>
               <div className="flex gap-4 text-xs text-muted-foreground">
