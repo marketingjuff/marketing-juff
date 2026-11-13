@@ -801,6 +801,33 @@ export function CardDialog({
                   >
                     <Copy className="size-3.5" />
                   </Button>
+                  {podeArquivar ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      title={c.arquivado ? "Desarquivar card" : "Arquivar card"}
+                      aria-label={c.arquivado ? "Desarquivar card" : "Arquivar card"}
+                      className="size-[25px] shrink-0 p-0"
+                      onClick={() => arquivar(!c.arquivado)}
+                    >
+                      <Archive className="size-3.5" />
+                    </Button>
+                  ) : null}
+                  {isAdmin ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      title="Excluir card"
+                      aria-label="Excluir card"
+                      className="size-[25px] shrink-0 p-0 text-destructive"
+                      onClick={() => {
+                        setConfirmTexto("");
+                        setConfirmar(true);
+                      }}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  ) : null}
                   {c.concluido ? (
                     <Button
                       size="sm"
