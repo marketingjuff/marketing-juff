@@ -781,8 +781,7 @@ export function CardDialog({
               ) : null}
 
               {podeMexer ? (
-                <>
-                  <span className="flex-1" />
+                <div className="ml-auto flex shrink-0 items-center gap-1">
                   {c.concluido ? (
                     <span className="flex items-center gap-1 px-1 text-[11px] font-medium text-success">
                       <CheckCircle2 className="size-3" /> Concluído
@@ -801,6 +800,33 @@ export function CardDialog({
                   >
                     <Copy className="size-3.5" />
                   </Button>
+                  {podeArquivar ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      title={c.arquivado ? "Desarquivar card" : "Arquivar card"}
+                      aria-label={c.arquivado ? "Desarquivar card" : "Arquivar card"}
+                      className="size-[25px] shrink-0 p-0"
+                      onClick={() => arquivar(!c.arquivado)}
+                    >
+                      <Archive className="size-3.5" />
+                    </Button>
+                  ) : null}
+                  {isAdmin ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      title="Excluir card"
+                      aria-label="Excluir card"
+                      className="size-[25px] shrink-0 p-0 text-destructive"
+                      onClick={() => {
+                        setConfirmTexto("");
+                        setConfirmar(true);
+                      }}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  ) : null}
                   {c.concluido ? (
                     <Button
                       size="sm"
@@ -825,17 +851,7 @@ export function CardDialog({
                       <CheckCircle2 className="size-3" /> Concluir
                     </Button>
                   )}
-                  {c.concluido && podeArquivar && !c.arquivado ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-[25px] shrink-0 gap-1 px-2 text-[11px]"
-                      onClick={() => arquivar(true)}
-                    >
-                      <Archive className="size-3" /> Arquivar
-                    </Button>
-                  ) : null}
-                </>
+                </div>
               ) : null}
             </div>
             <TrilhoEtiquetas
