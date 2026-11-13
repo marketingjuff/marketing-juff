@@ -85,7 +85,7 @@ export const baixarImagemDaWeb = createServerFn({ method: "POST" })
     return { url: u.toString(), pagina };
   })
   .handler(async ({ data, context }) => {
-    const { data: pode } = await context.supabase.rpc("can_edit", { _perm: "biblioteca.referencias" });
+    const { data: pode } = await context.supabase.rpc("can_edit", { _perm: "biblioteca.arquivos" });
     if (!pode) return { ok: false as const, motivo: "sem permissão" };
     let alvo = data.url;
     let ultimoMotivo = "";
