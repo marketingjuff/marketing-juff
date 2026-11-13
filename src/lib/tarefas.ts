@@ -1719,3 +1719,9 @@ export async function excluirDependencia(cardId: string, dependeDeId: string): P
     .eq("depende_de_id", dependeDeId);
   if (error) throw new Error("Não foi possível remover a dependência");
 }
+
+export async function reordenarChecklist(ids: string[]): Promise<void> {
+  const res = await Promise.all(ids.map((id, posicao) => supabase.from("tarefa_checklist").update({ posicao }).eq("id", id)));
+  const erro = res.find((r) => r.error)?.error;
+  if (erro) throw erro;
+}

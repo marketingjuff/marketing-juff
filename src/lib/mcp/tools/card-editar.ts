@@ -1,12 +1,12 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { supabaseForUser, falha, linkCard } from "../supabase";
-import { UUID, PRIORIDADE, DATA, Erro, exigirEdicao, acharResponsavel, acharEtiquetas, adicionarChecklist, registrarHistorico, adicionarDependencias } from "../escrita";
+import { UUID, PRIORIDADE, DATA, Erro, exigirEdicao, acharResponsavel, acharEtiquetas, aplicarChecklist, registrarHistorico, adicionarDependencias } from "../escrita";
 
 export default defineTool({
   name: "card_editar",
   title: "Editar card",
-  description: "Altera título, descrição, responsável, entrega, prioridade, etiquetas e adiciona itens de checklist de um card (id ou título exato). Não muda o quadro.",
+  description: "Altera título, descrição, responsável, entrega, prioridade, etiquetas e checklist (adicionar, editar, remover, marcar, reordenar ou substituir; use ids/posições de card_detalhe) de um card (id ou título exato). Não muda o quadro.",
   inputSchema: {
     card: z.string().min(1).describe("Id ou título exato do card."),
     titulo: z.string().trim().min(1).max(500).optional(),
@@ -15,7 +15,12 @@ export default defineTool({
     data_entrega: DATA.nullable().optional().describe("AAAA-MM-DD; null remove."),
     prioridade: PRIORIDADE.nullable().optional(),
     etiquetas: z.array(z.string()).optional().describe("Lista final de etiquetas existentes (substitui as atuais)."),
-    adicionar_checklist: z.array(z.string()).optional(),
+    adicionar_checklist: z.array(z.string()).optional().describe("Textos adicionados ao fim."),
+    editar_checklist: z.array(z.object({ item: z.union([z.string(), z.number().int().min(1)]).describe("Id ou posição (1 = primeiro)."), texto: z.string().max(2000).describe("Novo texto; vazio apaga.") })).optional(),
+    remover_checklist: z.array(z.union([z.string(), z.number().int().min(1)])).optional().describe("Ids ou posições."),
+    marcar_checklist: z.array(z.object({ item: z.union([z.string(), z.number().int().min(1)]), feito: z.boolean() })).optional(),
+    ordem_checklist: z.array(z.string()).optional().describe("Lista final de ids (todos os itens restantes) na ordem desejada."),
+    substituir_checklist: z.array(z.string()).optional().describe("Lista final de textos; troca o checklist inteiro."),
     depende_de: z.array(z.string()).optional().describe("Ids ou títulos exatos dos cards dos quais este depende (adiciona)."),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
@@ -50,7 +55,7 @@ export default defineTool({
         if (entrar.length) { const { error } = await sb.from("tarefa_card_etiquetas").insert(entrar.map((etiqueta_id) => ({ card_id: c.id, etiqueta_id }))); if (error) throw new Erro(error.message); }
         desc.push("etiquetas");
       }
-      if (a.adicionar_checklist?.length) { await adicionarChecklist(sb, c.id, a.adicionar_checklist); desc.push("checklist"); }
+      desc.push(...await aplicarChecklist(sb, c.id, { adicionar: a.adicionar_checklist, editar: a.editar_checklist, remover: a.remover_checklist, marcar: a.marcar_checklist, ordem: a.ordem_checklist, substituir: a.substituir_checklist }));
       if (a.depende_de?.length) { const deps = await adicionarDependencias(sb, c.id, a.depende_de, ctx); desc.push(`dependências (${deps.join(", ")})`); }
       if (!desc.length) throw new Erro("Nada para alterar.");
       await registrarHistorico(sb, ctx, c.id, "editou", `Alterou: ${desc.join(", ")}.`);

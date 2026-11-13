@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ListaChecklist } from "@/components/tarefas/ListaChecklist";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -65,7 +66,6 @@ import {
   deleteCard,
   deleteComentario,
   updateComentario,
-  deleteItemChecklist,
   etiquetasDoQuadro,
   etiquetasQueryOptions,
   formatarData,
@@ -76,7 +76,6 @@ import {
   quadrosQueryOptions,
   registrarHistorico,
   setEtiquetasDoCard,
-  toggleItemChecklist,
   updateCard,
   uploadAnexo,
   anexosNaDescricao,
@@ -235,6 +234,7 @@ export function CardDialog({
   const [novoItem, setNovoItem] = useState("");
   const [adicionandoItens, setAdicionandoItens] = useState(false);
   const adicionandoItensRef = useRef(false);
+  const novoItemRef = useRef<HTMLInputElement>(null);
   const [comentario, setComentario] = useState("");
   const [editandoComentario, setEditandoComentario] = useState<string | null>(null);
   const [textoEdicao, setTextoEdicao] = useState("");
@@ -350,6 +350,7 @@ export function CardDialog({
         await addItemChecklist(c.id, item);
         salvos += 1;
       }
+      void registrarHistorico(c.id, "Adicionou item ao checklist", itens.join("; "));
     } catch (e) {
       setNovoItem(itens.slice(salvos).join("\n"));
       toast.error((e as Error).message);
@@ -357,6 +358,7 @@ export function CardDialog({
       invalidar();
       adicionandoItensRef.current = false;
       setAdicionandoItens(false);
+      setTimeout(() => novoItemRef.current?.focus(), 0);
     }
   }
 
@@ -928,30 +930,7 @@ export function CardDialog({
               {checklist.length > 0 ? (
                 <Progress value={(feitos / checklist.length) * 100} className="h-1.5" />
               ) : null}
-              <ul className="space-y-1">
-                {checklist.map((i) => (
-                  <li key={i.id} className="group flex items-center gap-2 text-[17px]">
-                    <Checkbox
-                      checked={i.feito}
-                      disabled={!mexer}
-                      onCheckedChange={(v) => rodar(() => toggleItemChecklist(i.id, !!v))}
-                    />
-                    <span className={cn("flex-1", i.feito && "text-muted-foreground line-through")}>
-                      {i.texto}
-                    </span>
-                    {mexer ? (
-                      <button
-                        type="button"
-                        className="opacity-0 group-hover:opacity-100"
-                        aria-label="Remover item"
-                        onClick={() => rodar(() => deleteItemChecklist(i.id))}
-                      >
-                        <X className="size-3.5 text-muted-foreground" />
-                      </button>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
+              <ListaChecklist cardId={c.id} itens={checklist} mexer={mexer} onMudou={invalidar} />
               {mexer ? (
                 <form
                   className="flex gap-2"
@@ -961,10 +940,11 @@ export function CardDialog({
                   }}
                 >
                   <Input
+                    ref={novoItemRef}
                     value={novoItem}
                     placeholder="Novo item"
                     className="h-8"
-                    disabled={adicionandoItens}
+                    readOnly={adicionandoItens}
                     onPaste={(e) => {
                       const texto = e.clipboardData.getData("text/plain");
                       if (!/[\n\r\u2028\u2029]/.test(texto)) return;

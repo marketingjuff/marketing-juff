@@ -19,7 +19,7 @@ export default defineTool({
     const [{ data: c }, { data: pessoas }, ck, cm, an, hi, mb, et] = await Promise.all([
       sb.from("tarefa_cards").select("*, quadro:tarefa_quadros!tarefa_cards_quadro_id_fkey(nome), coluna:tarefa_colunas!tarefa_cards_coluna_id_fkey(nome)").eq("id", id).single(),
       sb.from("profiles").select("id, nome"),
-      sb.from("tarefa_checklist").select("texto, feito, posicao").eq("card_id", id).order("posicao"),
+      sb.from("tarefa_checklist").select("id, texto, feito, posicao").eq("card_id", id).order("posicao").order("created_at"),
       sb.from("tarefa_comentarios").select("autor_id, texto, created_at").eq("card_id", id).order("created_at"),
       sb.from("tarefa_anexos").select("*").eq("card_id", id),
       sb.from("tarefa_historico").select("*").eq("card_id", id).order("created_at").limit(200),
@@ -30,7 +30,7 @@ export default defineTool({
     const x: any = c;
     return resposta({
       ...x, responsavel: x?.responsavel_id ? n.get(x.responsavel_id) : null, quadro: x?.quadro?.nome, coluna: x?.coluna?.nome,
-      checklist: ck.data ?? [],
+      checklist: (ck.data ?? []).map((i, n) => ({ id: i.id, posicao: n + 1, texto: i.texto, feito: i.feito })),
       comentarios: (cm.data ?? []).map((k) => ({ autor: n.get(k.autor_id), texto: k.texto, hora: k.created_at })),
       anexos: ((an.data ?? []) as any[]).map((a) => ({ nome: a.nome ?? a.arquivo_nome ?? a.path })),
       historico: hi.data ?? [],

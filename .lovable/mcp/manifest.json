@@ -302,7 +302,7 @@
       {
         "name": "card_editar",
         "title": "Editar card",
-        "description": "Altera título, descrição, responsável, entrega, prioridade, etiquetas e adiciona itens de checklist de um card (id ou título exato). Não muda o quadro.",
+        "description": "Altera título, descrição, responsável, entrega, prioridade, etiquetas e checklist (adicionar, editar, remover, marcar, reordenar ou substituir; use ids/posições de card_detalhe) de um card (id ou título exato). Não muda o quadro.",
         "annotations": {
           "readOnlyHint": false,
           "destructiveHint": false,
@@ -370,6 +370,94 @@
               }
             },
             "adicionar_checklist": {
+              "description": "Textos adicionados ao fim.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "editar_checklist": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "item": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      }
+                    ],
+                    "description": "Id ou posição (1 = primeiro)."
+                  },
+                  "texto": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "description": "Novo texto; vazio apaga."
+                  }
+                },
+                "required": [
+                  "item",
+                  "texto"
+                ]
+              }
+            },
+            "remover_checklist": {
+              "description": "Ids ou posições.",
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                ]
+              }
+            },
+            "marcar_checklist": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "item": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      }
+                    ]
+                  },
+                  "feito": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "item",
+                  "feito"
+                ]
+              }
+            },
+            "ordem_checklist": {
+              "description": "Lista final de ids (todos os itens restantes) na ordem desejada.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "substituir_checklist": {
+              "description": "Lista final de textos; troca o checklist inteiro.",
               "type": "array",
               "items": {
                 "type": "string"
