@@ -213,7 +213,7 @@ export const logosQueryOptions = queryOptions({
       .from(LOGOS_BUCKET)
       .createSignedUrls(
         linhas.map((l) => l.file_path),
-        3600,
+        300,
       );
     const urls = new Map<string, string>();
     for (const item of assinadas ?? []) {
