@@ -852,16 +852,6 @@ export function CardDialog({
                       <CheckCircle2 className="size-3" /> Concluir
                     </Button>
                   )}
-                  {c.concluido && podeArquivar && !c.arquivado ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-[25px] shrink-0 gap-1 px-2 text-[11px]"
-                      onClick={() => arquivar(true)}
-                    >
-                      <Archive className="size-3" /> Arquivar
-                    </Button>
-                  ) : null}
                 </>
               ) : null}
             </div>
