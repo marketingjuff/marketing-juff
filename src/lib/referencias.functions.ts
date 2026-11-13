@@ -7,7 +7,10 @@ const UA =
 function enderecoSeguro(bruto: string) {
   const u = new URL(bruto);
   if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error("Endereço inválido");
+  if (u.username || u.password) throw new Error("Endereço inválido");
+  if (u.port && u.port !== "80" && u.port !== "443") throw new Error("Endereço inválido");
   const h = u.hostname.toLowerCase();
+  if (!h.includes(".") || /^[\d.]+$/.test(h)) throw new Error("Endereço inválido");
   if (
     h === "localhost" ||
     h.endsWith(".local") ||
@@ -40,9 +43,22 @@ function imagemDaPagina(html: string, base: string): string | null {
   return null;
 }
 
-async function tentar(url: string, referer: string | null) {
+async function tentar(url: string, referer: string | null): Promise<Response> {
+  let atual = url;
+  for (let salto = 0; salto < 4; salto++) {
+    const r = await tentarUm(atual, referer);
+    if (r.status >= 300 && r.status < 400 && r.headers.get("location")) {
+      atual = enderecoSeguro(new URL(r.headers.get("location")!, atual).toString()).toString();
+      continue;
+    }
+    return r;
+  }
+  throw new Error("redirecionamentos demais");
+}
+
+async function tentarUm(url: string, referer: string | null) {
   return fetch(url, {
-    redirect: "follow",
+    redirect: "manual",
     headers: {
       "User-Agent": UA,
       Accept: "image/avif,image/webp,image/apng,image/*,text/html;q=0.5,*/*;q=0.3",
@@ -68,7 +84,9 @@ export const baixarImagemDaWeb = createServerFn({ method: "POST" })
     }
     return { url: u.toString(), pagina };
   })
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { data: pode } = await context.supabase.rpc("can_edit", { _perm: "biblioteca.referencias" });
+    if (!pode) return { ok: false as const, motivo: "sem permissão" };
     let alvo = data.url;
     let ultimoMotivo = "";
     for (let passo = 0; passo < 2; passo++) {
