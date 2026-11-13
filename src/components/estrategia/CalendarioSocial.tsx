@@ -52,11 +52,42 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
   );
   const { data: capas = {} } = useQuery(capasQueryOptions(ano, mes, paths));
 
-  // publicações na mesma ordem do calendário (mais antiga primeiro)
-  const postsPublicados = useMemo(
-    () => publicados.filter((p) => p.tipo === "post"),
-    [publicados],
+  // meses vizinhos: a navegação do diálogo atravessa a borda do mês
+  const vizinhos = useMemo(() => {
+    const antes = new Date(ano, mes - 2, 1);
+    const depois = new Date(ano, mes, 1);
+    return {
+      ant: { ano: antes.getFullYear(), mes: antes.getMonth() + 1 },
+      prox: { ano: depois.getFullYear(), mes: depois.getMonth() + 1 },
+    };
+  }, [ano, mes]);
+
+  const { data: pubAnt = [] } = useQuery(
+    publicadosQueryOptions(vizinhos.ant.ano, vizinhos.ant.mes),
   );
+  const { data: pubProx = [] } = useQuery(
+    publicadosQueryOptions(vizinhos.prox.ano, vizinhos.prox.mes),
+  );
+
+  const pathsAnt = useMemo(() => pubAnt.map((p) => p.capa_path).filter(Boolean), [pubAnt]);
+  const pathsProx = useMemo(() => pubProx.map((p) => p.capa_path).filter(Boolean), [pubProx]);
+  const { data: capasAnt = {} } = useQuery(
+    capasQueryOptions(vizinhos.ant.ano, vizinhos.ant.mes, pathsAnt),
+  );
+  const { data: capasProx = {} } = useQuery(
+    capasQueryOptions(vizinhos.prox.ano, vizinhos.prox.mes, pathsProx),
+  );
+  const todasCapas = useMemo(
+    () => ({ ...capasAnt, ...capas, ...capasProx }),
+    [capasAnt, capas, capasProx],
+  );
+
+  // publicações dos três meses, na ordem em que foram ao ar
+  const postsPublicados = useMemo(() => {
+    const todos = [...pubAnt, ...publicados, ...pubProx].filter((p) => p.tipo === "post");
+    const chave = (p: ItemPublicado) => `${p.publicado_em ?? ""}|${p.data}|${p.id}`;
+    return todos.sort((a, b) => chave(a).localeCompare(chave(b)));
+  }, [pubAnt, publicados, pubProx]);
 
   const chavePlan = ["social", "planejados", ano, mes] as const;
 
@@ -81,6 +112,14 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
     indicePub >= 0 && indicePub < postsPublicados.length - 1
       ? postsPublicados[indicePub + 1] ?? null
       : null;
+
+  /** Abre a publicação e, se ela for de outro mês, leva o calendário junto. */
+  function abrirPublicacao(item: ItemPublicado | null) {
+    if (!item) return;
+    const [a, m] = item.data.split("-").map(Number);
+    if (a && m) { setAno(a); setMes(m); }
+    setVerItem(item);
+  }
 
   const [titulo, setTitulo] = useState("");
   const [formatoId, setFormatoId] = useState<string>("");
@@ -351,7 +390,7 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
                   size="icon"
                   className="size-7"
                   disabled={!anterior}
-                  onClick={() => setVerItem(anterior)}
+                  onClick={() => abrirPublicacao(anterior)}
                   aria-label="Publicação anterior"
                 >
                   <ChevronLeft className="size-4" />
@@ -364,7 +403,7 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
                   size="icon"
                   className="size-7"
                   disabled={!proxima}
-                  onClick={() => setVerItem(proxima)}
+                  onClick={() => abrirPublicacao(proxima)}
                   aria-label="Próxima publicação"
                 >
                   <ChevronRight className="size-4" />
@@ -374,8 +413,8 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
           </DialogHeader>
           {verItem ? (
             <div className="space-y-3">
-              {capas[verItem.capa_path] ? (
-                <img src={capas[verItem.capa_path]} alt="" className="max-h-[60vh] w-full rounded-lg object-contain" />
+              {todasCapas[verItem.capa_path] ? (
+                <img src={todasCapas[verItem.capa_path]} alt="" className="max-h-[60vh] w-full rounded-lg object-contain" />
               ) : null}
               <p className="whitespace-pre-wrap text-sm">{verItem.legenda || "sem legenda"}</p>
               <div className="flex gap-4 text-xs text-muted-foreground">
