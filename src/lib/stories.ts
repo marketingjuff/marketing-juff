@@ -212,7 +212,7 @@ export async function fetchStories(sequenceId: string | null): Promise<Story[]> 
   const urls = new Map<string, string>();
   const paths = frames.map((f) => String(f.image_path));
   if (paths.length > 0) {
-    const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrls(paths, 3600);
+    const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrls(paths, 300);
     for (const item of signed ?? []) {
       if (item.path && item.signedUrl) urls.set(item.path, item.signedUrl);
     }
