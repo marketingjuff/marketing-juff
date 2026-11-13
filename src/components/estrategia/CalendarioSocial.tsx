@@ -359,7 +359,7 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
                 key={s.id}
                 src={capas[s.capa_path]}
                 alt=""
-                className="h-[88px] w-[52px] shrink-0 rounded-md object-cover"
+                className="h-[220px] w-auto shrink-0 rounded-md object-contain"
               />
             ))}
           </div>
