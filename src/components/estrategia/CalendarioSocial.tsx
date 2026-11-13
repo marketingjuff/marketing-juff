@@ -52,6 +52,12 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
   );
   const { data: capas = {} } = useQuery(capasQueryOptions(ano, mes, paths));
 
+  // publicações na mesma ordem do calendário (mais antiga primeiro)
+  const postsPublicados = useMemo(
+    () => publicados.filter((p) => p.tipo === "post"),
+    [publicados],
+  );
+
   const chavePlan = ["social", "planejados", ano, mes] as const;
 
   function gravarPrefs(novo: { filtro: Filtro; stories: boolean }) {
@@ -67,6 +73,14 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
   const [edicao, setEdicao] = useState<PostPlanejado | null>(null);
   const [verItem, setVerItem] = useState<ItemPublicado | null>(null);
   const [verStories, setVerStories] = useState<ItemPublicado[] | null>(null);
+
+  // navegar entre publicações sem fechar o diálogo
+  const indicePub = verItem ? postsPublicados.findIndex((p) => p.id === verItem.id) : -1;
+  const anterior: ItemPublicado | null = indicePub > 0 ? postsPublicados[indicePub - 1] ?? null : null;
+  const proxima: ItemPublicado | null =
+    indicePub >= 0 && indicePub < postsPublicados.length - 1
+      ? postsPublicados[indicePub + 1] ?? null
+      : null;
 
   const [titulo, setTitulo] = useState("");
   const [formatoId, setFormatoId] = useState<string>("");
@@ -328,7 +342,36 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
       {/* publicado */}
       <Dialog open={!!verItem} onOpenChange={(o) => !o && setVerItem(null)}>
         <DialogContent className="sm:max-w-[440px]">
-          <DialogHeader><DialogTitle>Publicado</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <div className="flex items-center justify-between gap-3 pr-7">
+              <DialogTitle>Publicado</DialogTitle>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-7"
+                  disabled={!anterior}
+                  onClick={() => setVerItem(anterior)}
+                  aria-label="Publicação anterior"
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                <span className="min-w-[52px] text-center text-xs text-muted-foreground">
+                  {indicePub >= 0 ? `${indicePub + 1} de ${postsPublicados.length}` : ""}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-7"
+                  disabled={!proxima}
+                  onClick={() => setVerItem(proxima)}
+                  aria-label="Próxima publicação"
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
           {verItem ? (
             <div className="space-y-3">
               {capas[verItem.capa_path] ? (
