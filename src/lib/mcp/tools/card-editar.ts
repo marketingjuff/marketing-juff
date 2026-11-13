@@ -29,11 +29,11 @@ export default defineTool({
       await exigirEdicao(sb, c.quadro_id);
       const mud: Record<string, unknown> = {};
       const desc: string[] = [];
-      if (a.titulo !== undefined) { mud.titulo = a.titulo; desc.push("título"); }
-      if (a.descricao !== undefined) { mud.descricao = a.descricao; desc.push("descrição"); }
-      if (a.responsavel !== undefined) { mud.responsavel_id = a.responsavel === null ? null : await acharResponsavel(sb, a.responsavel); desc.push("responsável"); }
-      if (a.data_entrega !== undefined) { mud.data_entrega = a.data_entrega; desc.push("entrega"); }
-      if (a.prioridade !== undefined) { mud.prioridade = a.prioridade; desc.push("prioridade"); }
+      if (a.titulo !== undefined) { mud["titulo"] = a.titulo; desc.push("título"); }
+      if (a.descricao !== undefined) { mud["descricao"] = a.descricao; desc.push("descrição"); }
+      if (a.responsavel !== undefined) { mud["responsavel_id"] = a.responsavel === null ? null : await acharResponsavel(sb, a.responsavel); desc.push("responsável"); }
+      if (a.data_entrega !== undefined) { mud["data_entrega"] = a.data_entrega; desc.push("entrega"); }
+      if (a.prioridade !== undefined) { mud["prioridade"] = a.prioridade; desc.push("prioridade"); }
       const etiquetaIds = a.etiquetas ? await acharEtiquetas(sb, c.quadro_id, a.etiquetas) : null;
       if (Object.keys(mud).length) {
         const { data, error } = await sb.from("tarefa_cards").update(mud).eq("id", c.id).select("id");
