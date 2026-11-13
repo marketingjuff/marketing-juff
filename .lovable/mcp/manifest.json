@@ -218,6 +218,163 @@
           "additionalProperties": false
         },
         "outputSchema": null
+      },
+      {
+        "name": "card_criar",
+        "title": "Criar card",
+        "description": "Cria um card num quadro e coluna (nome ou id) que você pode editar. Responsável e etiquetas precisam já existir.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "quadro": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Nome ou id do quadro."
+            },
+            "coluna": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Nome ou id da coluna."
+            },
+            "titulo": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "descricao": {
+              "type": "string",
+              "maxLength": 20000
+            },
+            "responsavel": {
+              "description": "Nome ou id de uma pessoa existente.",
+              "type": "string"
+            },
+            "data_entrega": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "prioridade": {
+              "type": "string",
+              "enum": [
+                "baixa",
+                "media",
+                "alta",
+                "maxima"
+              ]
+            },
+            "etiquetas": {
+              "description": "Nomes de etiquetas existentes.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "checklist": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "quadro",
+            "coluna",
+            "titulo"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "card_editar",
+        "title": "Editar card",
+        "description": "Altera título, descrição, responsável, entrega, prioridade, etiquetas e adiciona itens de checklist de um card (id ou título exato). Não muda o quadro.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "card": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Id ou título exato do card."
+            },
+            "titulo": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "descricao": {
+              "type": "string",
+              "maxLength": 20000
+            },
+            "responsavel": {
+              "description": "Nome ou id existente; null remove.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "data_entrega": {
+              "description": "AAAA-MM-DD; null remove.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "prioridade": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "baixa",
+                    "media",
+                    "alta",
+                    "maxima"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "etiquetas": {
+              "description": "Lista final de etiquetas existentes (substitui as atuais).",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "adicionar_checklist": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "card"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": null
       }
     ]
   }
