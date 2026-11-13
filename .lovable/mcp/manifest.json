@@ -302,10 +302,10 @@
       {
         "name": "card_editar",
         "title": "Editar card",
-        "description": "Altera título, descrição, responsável, entrega, prioridade, etiquetas e checklist (adicionar, editar, remover, marcar, reordenar ou substituir; use ids/posições de card_detalhe) de um card (id ou título exato). Não muda o quadro.",
+        "description": "Edita qualquer campo de um card (id ou título exato): textos, pessoas, datas, horas, prioridade, esforço, link, recorrência, etiquetas, membros, checklist e dependências. Tudo é validado antes de gravar. Não muda quadro/coluna (use card_mover) e não apaga card (use card_arquivar).",
         "annotations": {
           "readOnlyHint": false,
-          "destructiveHint": false,
+          "destructiveHint": true,
           "idempotentHint": false,
           "openWorldHint": false
         },
@@ -334,12 +334,48 @@
                 "null"
               ]
             },
+            "data_inicio": {
+              "description": "AAAA-MM-DD; null remove.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "hora_inicio": {
+              "description": "HH:MM; null remove.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{2}:\\d{2}(:\\d{2})?$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "data_entrega": {
               "description": "AAAA-MM-DD; null remove.",
               "anyOf": [
                 {
                   "type": "string",
                   "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "hora_entrega": {
+              "description": "HH:MM; null remove.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{2}:\\d{2}(:\\d{2})?$"
                 },
                 {
                   "type": "null"
@@ -362,8 +398,46 @@
                 }
               ]
             },
+            "esforco": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "rapido",
+                    "meio_dia",
+                    "varios_dias"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "link_externo": {
+              "description": "Texto vazio remove.",
+              "type": "string",
+              "maxLength": 2000
+            },
+            "recorrencia": {
+              "type": "string",
+              "enum": [
+                "nunca",
+                "diario",
+                "dias_uteis",
+                "semanal",
+                "mensal_dia",
+                "mensal_semana"
+              ]
+            },
             "etiquetas": {
               "description": "Lista final de etiquetas existentes (substitui as atuais).",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "membros": {
+              "description": "Lista final de pessoas existentes (substitui a atual).",
               "type": "array",
               "items": {
                 "type": "string"
@@ -395,19 +469,21 @@
                     "description": "Id ou posição (1 = primeiro)."
                   },
                   "texto": {
+                    "description": "Novo texto; vazio apaga.",
                     "type": "string",
-                    "maxLength": 2000,
-                    "description": "Novo texto; vazio apaga."
+                    "maxLength": 2000
+                  },
+                  "feito": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
-                  "item",
-                  "texto"
+                  "item"
                 ]
               }
             },
             "remover_checklist": {
-              "description": "Ids ou posições.",
+              "description": "Ids ou posições dos itens a apagar.",
               "type": "array",
               "items": {
                 "anyOf": [
@@ -449,11 +525,36 @@
                 ]
               }
             },
-            "ordem_checklist": {
+            "reordenar_checklist": {
               "description": "Lista final de ids (todos os itens restantes) na ordem desejada.",
               "type": "array",
               "items": {
-                "type": "string"
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                ]
+              }
+            },
+            "ordem_checklist": {
+              "description": "Mesmo que reordenar_checklist.",
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                ]
               }
             },
             "substituir_checklist": {
@@ -464,11 +565,133 @@
               }
             },
             "depende_de": {
-              "description": "Ids ou títulos exatos dos cards dos quais este depende (adiciona).",
+              "description": "Ids ou títulos exatos de cards dos quais este passa a depender.",
               "type": "array",
               "items": {
                 "type": "string"
               }
+            },
+            "remover_dependencia": {
+              "description": "Ids ou títulos exatos de cards dos quais este deixa de depender.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "card"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "card_mover",
+        "title": "Mover card",
+        "description": "Move um card para outra coluna, posição ou quadro que você pode editar. Coluna de conclusão marca como concluído; sair dela desmarca.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "card": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Id ou título exato do card."
+            },
+            "coluna": {
+              "description": "Nome ou id da coluna de destino; vazio mantém a atual.",
+              "type": "string"
+            },
+            "quadro": {
+              "description": "Nome ou id do quadro de destino; vazio mantém o atual.",
+              "type": "string"
+            },
+            "posicao": {
+              "description": "Posição na coluna de destino (1 = topo); vazio vai para o fim.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "card"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "card_ordenar_coluna",
+        "title": "Ordenar coluna",
+        "description": "Define a ordem dos cards de uma coluna; os que não forem listados vão para o fim, na ordem que já tinham.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "quadro": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Nome ou id do quadro."
+            },
+            "coluna": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Nome ou id da coluna."
+            },
+            "cards": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Ids ou títulos exatos, na ordem final."
+            }
+          },
+          "required": [
+            "quadro",
+            "coluna",
+            "cards"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "card_arquivar",
+        "title": "Arquivar card",
+        "description": "Arquiva ou desarquiva um card (nunca apaga). Apagar card não existe no conector; arquivar é o caminho.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "card": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Id ou título exato do card."
+            },
+            "arquivar": {
+              "description": "true arquiva (padrão), false desarquiva.",
+              "type": "boolean"
             }
           },
           "required": [
