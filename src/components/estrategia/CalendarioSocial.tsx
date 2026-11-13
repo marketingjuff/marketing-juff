@@ -151,7 +151,7 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
       className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors"
       style={filtro === chave
         ? { backgroundColor: cor, borderColor: cor, color: "#ffffff" }
-        : { borderColor: "hsl(var(--border))" }}
+        : { borderColor: "var(--border)" }}
     >
       <span className="size-2 rounded-full bg-current" />{rotulo}
     </button>
@@ -182,7 +182,7 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
             className="ml-2 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold"
             style={stories
               ? { backgroundColor: ADS, borderColor: ADS, color: "#ffffff" }
-              : { borderColor: "hsl(var(--border))" }}
+              : { borderColor: "var(--border)" }}
           >
             <span className="size-2 rounded-full bg-current" />Stories
           </button>
