@@ -1626,7 +1626,7 @@ export type CardVinculado = {
 
 export type Dependencias = { depende: CardVinculado[]; bloqueia: CardVinculado[] };
 
-const VINCULO_SELECT = "id, titulo, concluido, quadro_id, tarefa_quadros(nome), tarefa_colunas(nome)";
+const VINCULO_SELECT = "id, titulo, concluido, quadro_id, tarefa_quadros!tarefa_cards_quadro_id_fkey(nome), tarefa_colunas!tarefa_cards_coluna_id_fkey(nome)";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapVinculo(x: any): CardVinculado {
