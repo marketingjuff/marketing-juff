@@ -688,8 +688,14 @@ export function CardDialog({
                       size="sm"
                       className="h-8 w-full justify-start gap-1"
                       onClick={() =>
-                        document.getElementById("bloco-dependencias")?.scrollIntoView({ behavior: "smooth", block: "center" })
-                      }
+                        {
+                        const b = document.getElementById("bloco-dependencias");
+                        if (!b) return;
+                        b.scrollIntoView({ behavior: "smooth", block: "center" });
+                        b.classList.add("ring-2", "ring-primary", "ring-offset-2", "rounded-md");
+                        window.setTimeout(() => b.classList.remove("ring-2", "ring-primary", "ring-offset-2"), 1600);
+                        window.setTimeout(() => b.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true }), 400);
+                      }}
                     >
                       <Link2 className="size-3.5" /> Abrir dependências
                     </Button>
