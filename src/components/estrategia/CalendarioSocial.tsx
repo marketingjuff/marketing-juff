@@ -342,7 +342,36 @@ export function CalendarioSocial({ editavel }: { editavel: boolean }) {
       {/* publicado */}
       <Dialog open={!!verItem} onOpenChange={(o) => !o && setVerItem(null)}>
         <DialogContent className="sm:max-w-[440px]">
-          <DialogHeader><DialogTitle>Publicado</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <div className="flex items-center justify-between gap-3 pr-7">
+              <DialogTitle>Publicado</DialogTitle>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-7"
+                  disabled={!anterior}
+                  onClick={() => setVerItem(anterior)}
+                  aria-label="Publicação anterior"
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                <span className="min-w-[52px] text-center text-xs text-muted-foreground">
+                  {indicePub >= 0 ? `${indicePub + 1} de ${postsPublicados.length}` : ""}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-7"
+                  disabled={!proxima}
+                  onClick={() => setVerItem(proxima)}
+                  aria-label="Próxima publicação"
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
           {verItem ? (
             <div className="space-y-3">
               {capas[verItem.capa_path] ? (
