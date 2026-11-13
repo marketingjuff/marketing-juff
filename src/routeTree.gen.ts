@@ -37,6 +37,7 @@ import { Route as AuthenticatedTarefasMeuDiaRouteImport } from './routes/_authen
 import { Route as AuthenticatedTarefasMeuTrabalhoRouteImport } from './routes/_authenticated/tarefas/meu-trabalho'
 import { Route as AuthenticatedTarefasQuadrosRouteImport } from './routes/_authenticated/tarefas/quadros'
 import { Route as ApiPublicPushEnviarRouteImport } from './routes/api/public/push-enviar'
+import { Route as ApiPublicSocialInstagramSyncRouteImport } from './routes/api/public/social-instagram-sync'
 import { Route as AuthenticatedTarefasQuadrosQuadroIdRouteImport } from './routes/_authenticated/tarefas/quadros_.$quadroId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -199,6 +200,12 @@ const ApiPublicPushEnviarRoute = ApiPublicPushEnviarRouteImport.update({
   path: '/api/public/push-enviar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSocialInstagramSyncRoute =
+  ApiPublicSocialInstagramSyncRouteImport.update({
+    id: '/api/public/social-instagram-sync',
+    path: '/api/public/social-instagram-sync',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedTarefasQuadrosQuadroIdRoute =
   AuthenticatedTarefasQuadrosQuadroIdRouteImport.update({
     id: '/tarefas/quadros_/$quadroId',
@@ -234,6 +241,7 @@ export interface FileRoutesByFullPath {
   '/tarefas/meu-trabalho': typeof AuthenticatedTarefasMeuTrabalhoRoute
   '/tarefas/quadros': typeof AuthenticatedTarefasQuadrosRoute
   '/api/public/push-enviar': typeof ApiPublicPushEnviarRoute
+  '/api/public/social-instagram-sync': typeof ApiPublicSocialInstagramSyncRoute
   '/tarefas/quadros/$quadroId': typeof AuthenticatedTarefasQuadrosQuadroIdRoute
 }
 export interface FileRoutesByTo {
@@ -264,6 +272,7 @@ export interface FileRoutesByTo {
   '/tarefas/meu-trabalho': typeof AuthenticatedTarefasMeuTrabalhoRoute
   '/tarefas/quadros': typeof AuthenticatedTarefasQuadrosRoute
   '/api/public/push-enviar': typeof ApiPublicPushEnviarRoute
+  '/api/public/social-instagram-sync': typeof ApiPublicSocialInstagramSyncRoute
   '/tarefas/quadros/$quadroId': typeof AuthenticatedTarefasQuadrosQuadroIdRoute
 }
 export interface FileRoutesById {
@@ -296,6 +305,7 @@ export interface FileRoutesById {
   '/_authenticated/tarefas/meu-trabalho': typeof AuthenticatedTarefasMeuTrabalhoRoute
   '/_authenticated/tarefas/quadros': typeof AuthenticatedTarefasQuadrosRoute
   '/api/public/push-enviar': typeof ApiPublicPushEnviarRoute
+  '/api/public/social-instagram-sync': typeof ApiPublicSocialInstagramSyncRoute
   '/_authenticated/tarefas/quadros_/$quadroId': typeof AuthenticatedTarefasQuadrosQuadroIdRoute
 }
 export interface FileRouteTypes {
@@ -328,6 +338,7 @@ export interface FileRouteTypes {
     | '/tarefas/meu-trabalho'
     | '/tarefas/quadros'
     | '/api/public/push-enviar'
+    | '/api/public/social-instagram-sync'
     | '/tarefas/quadros/$quadroId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -358,6 +369,7 @@ export interface FileRouteTypes {
     | '/tarefas/meu-trabalho'
     | '/tarefas/quadros'
     | '/api/public/push-enviar'
+    | '/api/public/social-instagram-sync'
     | '/tarefas/quadros/$quadroId'
   id:
     | '__root__'
@@ -389,6 +401,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tarefas/meu-trabalho'
     | '/_authenticated/tarefas/quadros'
     | '/api/public/push-enviar'
+    | '/api/public/social-instagram-sync'
     | '/_authenticated/tarefas/quadros_/$quadroId'
   fileRoutesById: FileRoutesById
 }
@@ -400,6 +413,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicPushEnviarRoute: typeof ApiPublicPushEnviarRoute
+  ApiPublicSocialInstagramSyncRoute: typeof ApiPublicSocialInstagramSyncRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -600,6 +614,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPushEnviarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/social-instagram-sync': {
+      id: '/api/public/social-instagram-sync'
+      path: '/api/public/social-instagram-sync'
+      fullPath: '/api/public/social-instagram-sync'
+      preLoaderRoute: typeof ApiPublicSocialInstagramSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/tarefas/quadros_/$quadroId': {
       id: '/_authenticated/tarefas/quadros_/$quadroId'
       path: '/tarefas/quadros/$quadroId'
@@ -677,6 +698,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicPushEnviarRoute: ApiPublicPushEnviarRoute,
+  ApiPublicSocialInstagramSyncRoute: ApiPublicSocialInstagramSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -17,9 +17,11 @@ function dataSP(iso: string) {
     .format(new Date(iso));
 }
 
-async function getJson(url: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type J = any;
+async function getJson(url: string): Promise<J> {
   const r = await fetch(url);
-  const j = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+  const j = (await r.json().catch(() => ({}))) as J;
   if (!r.ok) throw new Error((j.error as { message?: string })?.message ?? `HTTP ${r.status}`);
   return j;
 }
@@ -44,11 +46,11 @@ export const Route = createFileRoute("/api/public/social-instagram-sync")({
 
           const { data: tk } = await supabaseAdmin
             .from("app_segredos").select("valor").eq("chave", "social_ig_token").maybeSingle();
-          let token = tk?.valor || process.env.META_IG_TOKEN || "";
+          let token = tk?.valor || process.env["META_IG_TOKEN"] || "";
           if (!token) throw new Error("Token do Instagram não configurado");
 
           // Renova quando faltar menos de dez dias.
-          const appId = process.env.META_APP_ID; const appSecret = process.env.META_APP_SECRET;
+          const appId = process.env["META_APP_ID"]; const appSecret = process.env["META_APP_SECRET"];
           if (appId && appSecret) {
             try {
               const dbg = await getJson(`${G}/debug_token?input_token=${encodeURIComponent(token)}&access_token=${appId}|${appSecret}`);
@@ -116,7 +118,7 @@ export const Route = createFileRoute("/api/public/social-instagram-sync")({
           }
           if (stories.length) {
             const { error } = await supabaseAdmin.from("social_publicados").upsert(
-              stories.map((s, i) => linha(s, "story", { visualizacoes: metricas[i].views, respostas: metricas[i].replies })),
+              stories.map((s, i) => linha(s, "story", { visualizacoes: metricas[i]?.views ?? 0, respostas: metricas[i]?.replies ?? 0 })),
               { onConflict: "ig_id" });
             if (error) throw error;
           }
