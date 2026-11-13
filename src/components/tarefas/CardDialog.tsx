@@ -781,8 +781,7 @@ export function CardDialog({
               ) : null}
 
               {podeMexer ? (
-                <>
-                  <span className="flex-1" />
+                <div className="ml-auto flex shrink-0 items-center gap-1">
                   {c.concluido ? (
                     <span className="flex items-center gap-1 px-1 text-[11px] font-medium text-success">
                       <CheckCircle2 className="size-3" /> Concluído
