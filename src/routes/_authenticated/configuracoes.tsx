@@ -33,6 +33,7 @@ import { PainelCalendario } from "@/components/config/PainelCalendario";
 import { PainelMeuDia } from "@/components/config/PainelMeuDia";
 import { PainelCamposEstrategia } from "@/components/config/PainelCamposEstrategia";
 import { PainelEmailsEstrategia } from "@/components/config/PainelEmailsEstrategia";
+import { PainelCalendarioSocial } from "@/components/config/PainelCalendarioSocial";
 import { PainelNotificacoes } from "@/components/config/PainelNotificacoes";
 import { PainelCoresProduto } from "@/components/config/PainelCoresProduto";
 import { MinhaBolinha } from "@/components/config/MinhaBolinha";
@@ -130,7 +131,7 @@ const SECOES: SecaoConfig[] = [
   { key: "social", label: "Social", icone: Sparkles, subtitulo: "Frases de CTA e links usados nos stories." },
   { key: "tarefas", label: "Tarefas", icone: LayoutGrid, subtitulo: "Calendário e etiquetas usadas nos cards de todos os quadros." },
   { key: "meu_dia", label: "Meu dia", icone: CalendarClock, subtitulo: "Seus recorrentes e os feriados da Juff." },
-  { key: "estrategia", label: "Estratégia", icone: Telescope, subtitulo: "Campos da ata mensal, tipos e regras de e-mail." },
+  { key: "estrategia", label: "Estratégia", icone: Telescope, subtitulo: "Campos da ata mensal, tipos e regras de e-mail, formatos do calendário social." },
   { key: "biblioteca", label: "Biblioteca", icone: Library, subtitulo: "Cores oficiais de camiseta usadas na Biblioteca.", roles: ["admin"] },
   { key: "notificacoes", label: "Notificações", icone: Bell, subtitulo: "O que você quer receber no sininho." },
   { key: "usuarios", label: "Usuários e permissões", icone: Users, subtitulo: "Contas, papéis e permissões de acesso." },
@@ -374,6 +375,7 @@ function Configuracoes() {
           <div className="space-y-6">
             <PainelCamposEstrategia />
             <PainelEmailsEstrategia podeAlterar={isAdmin || isGestor} />
+            <PainelCalendarioSocial podeAlterar={isAdmin || isGestor} ehAdmin={isAdmin} />
           </div>
         ) : null}
         {secaoAtual.key === "biblioteca" ? <PainelCoresProduto /> : null}

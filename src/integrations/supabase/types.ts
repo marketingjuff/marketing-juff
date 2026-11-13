@@ -1713,6 +1713,155 @@ export type Database = {
         }
         Relationships: []
       }
+      social_formatos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          nome: string
+          posicao: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome: string
+          posicao?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          nome?: string
+          posicao?: number
+        }
+        Relationships: []
+      }
+      social_instagram_estado: {
+        Row: {
+          id: boolean
+          ig_user_id: string
+          nome_conta: string
+          ultima_leitura: string | null
+          ultimo_erro: string
+        }
+        Insert: {
+          id?: boolean
+          ig_user_id?: string
+          nome_conta?: string
+          ultima_leitura?: string | null
+          ultimo_erro?: string
+        }
+        Update: {
+          id?: boolean
+          ig_user_id?: string
+          nome_conta?: string
+          ultima_leitura?: string | null
+          ultimo_erro?: string
+        }
+        Relationships: []
+      }
+      social_planejados: {
+        Row: {
+          ads: boolean
+          created_at: string
+          criado_por: string | null
+          data: string
+          descricao: string
+          formato_id: string | null
+          id: string
+          posicao: number
+          titulo: string
+        }
+        Insert: {
+          ads?: boolean
+          created_at?: string
+          criado_por?: string | null
+          data: string
+          descricao?: string
+          formato_id?: string | null
+          id?: string
+          posicao?: number
+          titulo?: string
+        }
+        Update: {
+          ads?: boolean
+          created_at?: string
+          criado_por?: string | null
+          data?: string
+          descricao?: string
+          formato_id?: string | null
+          id?: string
+          posicao?: number
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_planejados_formato_id_fkey"
+            columns: ["formato_id"]
+            isOneToOne: false
+            referencedRelation: "social_formatos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_publicados: {
+        Row: {
+          ads: boolean
+          atualizado_em: string
+          capa_path: string
+          comentarios: number
+          created_at: string
+          curtidas: number
+          data: string
+          formato: string
+          id: string
+          ig_id: string
+          legenda: string
+          permalink: string
+          publicado_em: string
+          respostas: number
+          tipo: string
+          visualizacoes: number
+        }
+        Insert: {
+          ads?: boolean
+          atualizado_em?: string
+          capa_path?: string
+          comentarios?: number
+          created_at?: string
+          curtidas?: number
+          data: string
+          formato?: string
+          id?: string
+          ig_id: string
+          legenda?: string
+          permalink?: string
+          publicado_em: string
+          respostas?: number
+          tipo?: string
+          visualizacoes?: number
+        }
+        Update: {
+          ads?: boolean
+          atualizado_em?: string
+          capa_path?: string
+          comentarios?: number
+          created_at?: string
+          curtidas?: number
+          data?: string
+          formato?: string
+          id?: string
+          ig_id?: string
+          legenda?: string
+          permalink?: string
+          publicado_em?: string
+          respostas?: number
+          tipo?: string
+          visualizacoes?: number
+        }
+        Relationships: []
+      }
       social_seeding_custos: {
         Row: {
           mes: string
@@ -3078,6 +3227,10 @@ export type Database = {
         Returns: undefined
       }
       reordenar_atalhos: { Args: { p_ids: string[] }; Returns: undefined }
+      social_formatos_reordenar: {
+        Args: { _ids: string[] }
+        Returns: undefined
+      }
       social_seeding_custo_do_mes: { Args: { p_mes: string }; Returns: number }
       social_seeding_marcar_coluna: {
         Args: { p_campo: string; p_remessa: string; p_valor: boolean }
@@ -3087,6 +3240,7 @@ export type Database = {
         Args: { p_ate: string; p_de: string }
         Returns: Json
       }
+      social_sync_chave_admin: { Args: never; Returns: string }
       tarefa_arquivar_concluidos: { Args: never; Returns: number }
       tarefa_avancar_recorrentes: { Args: never; Returns: number }
       tarefa_card_avancar: { Args: { _id: string }; Returns: string }

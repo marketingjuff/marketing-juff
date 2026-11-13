@@ -484,6 +484,13 @@
       "when": 1794529107739,
       "tag": "0068_leitura_colaborador",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1794581980794,
+      "tag": "0069_estrategia_calendario_social",
+      "breakpoints": true
     }
   ]
 }

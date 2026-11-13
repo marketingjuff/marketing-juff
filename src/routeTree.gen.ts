@@ -29,6 +29,7 @@ import { Route as AuthenticatedBibliotecaProdutosRouteImport } from './routes/_a
 import { Route as AuthenticatedBibliotecaReferenciasRouteImport } from './routes/_authenticated/biblioteca/referencias'
 import { Route as AuthenticatedBibliotecaTextosRouteImport } from './routes/_authenticated/biblioteca/textos'
 import { Route as AuthenticatedEstrategiaAtaRouteImport } from './routes/_authenticated/estrategia/ata'
+import { Route as AuthenticatedEstrategiaCalendarioSocialRouteImport } from './routes/_authenticated/estrategia/calendario-social'
 import { Route as AuthenticatedSocialSeedingRouteImport } from './routes/_authenticated/social/seeding'
 import { Route as AuthenticatedSocialStoriesRouteImport } from './routes/_authenticated/social/stories'
 import { Route as AuthenticatedTarefasCalendarioRouteImport } from './routes/_authenticated/tarefas/calendario'
@@ -36,6 +37,7 @@ import { Route as AuthenticatedTarefasMeuDiaRouteImport } from './routes/_authen
 import { Route as AuthenticatedTarefasMeuTrabalhoRouteImport } from './routes/_authenticated/tarefas/meu-trabalho'
 import { Route as AuthenticatedTarefasQuadrosRouteImport } from './routes/_authenticated/tarefas/quadros'
 import { Route as ApiPublicPushEnviarRouteImport } from './routes/api/public/push-enviar'
+import { Route as ApiPublicSocialInstagramSyncRouteImport } from './routes/api/public/social-instagram-sync'
 import { Route as AuthenticatedTarefasQuadrosQuadroIdRouteImport } from './routes/_authenticated/tarefas/quadros_.$quadroId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -151,6 +153,12 @@ const AuthenticatedEstrategiaAtaRoute =
     path: '/estrategia/ata',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedEstrategiaCalendarioSocialRoute =
+  AuthenticatedEstrategiaCalendarioSocialRouteImport.update({
+    id: '/estrategia/calendario-social',
+    path: '/estrategia/calendario-social',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSocialSeedingRoute =
   AuthenticatedSocialSeedingRouteImport.update({
     id: '/social/seeding',
@@ -192,6 +200,12 @@ const ApiPublicPushEnviarRoute = ApiPublicPushEnviarRouteImport.update({
   path: '/api/public/push-enviar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSocialInstagramSyncRoute =
+  ApiPublicSocialInstagramSyncRouteImport.update({
+    id: '/api/public/social-instagram-sync',
+    path: '/api/public/social-instagram-sync',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedTarefasQuadrosQuadroIdRoute =
   AuthenticatedTarefasQuadrosQuadroIdRouteImport.update({
     id: '/tarefas/quadros_/$quadroId',
@@ -219,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/biblioteca/referencias': typeof AuthenticatedBibliotecaReferenciasRoute
   '/biblioteca/textos': typeof AuthenticatedBibliotecaTextosRoute
   '/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
+  '/estrategia/calendario-social': typeof AuthenticatedEstrategiaCalendarioSocialRoute
   '/social/seeding': typeof AuthenticatedSocialSeedingRoute
   '/social/stories': typeof AuthenticatedSocialStoriesRoute
   '/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
@@ -226,6 +241,7 @@ export interface FileRoutesByFullPath {
   '/tarefas/meu-trabalho': typeof AuthenticatedTarefasMeuTrabalhoRoute
   '/tarefas/quadros': typeof AuthenticatedTarefasQuadrosRoute
   '/api/public/push-enviar': typeof ApiPublicPushEnviarRoute
+  '/api/public/social-instagram-sync': typeof ApiPublicSocialInstagramSyncRoute
   '/tarefas/quadros/$quadroId': typeof AuthenticatedTarefasQuadrosQuadroIdRoute
 }
 export interface FileRoutesByTo {
@@ -248,6 +264,7 @@ export interface FileRoutesByTo {
   '/biblioteca/referencias': typeof AuthenticatedBibliotecaReferenciasRoute
   '/biblioteca/textos': typeof AuthenticatedBibliotecaTextosRoute
   '/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
+  '/estrategia/calendario-social': typeof AuthenticatedEstrategiaCalendarioSocialRoute
   '/social/seeding': typeof AuthenticatedSocialSeedingRoute
   '/social/stories': typeof AuthenticatedSocialStoriesRoute
   '/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
@@ -255,6 +272,7 @@ export interface FileRoutesByTo {
   '/tarefas/meu-trabalho': typeof AuthenticatedTarefasMeuTrabalhoRoute
   '/tarefas/quadros': typeof AuthenticatedTarefasQuadrosRoute
   '/api/public/push-enviar': typeof ApiPublicPushEnviarRoute
+  '/api/public/social-instagram-sync': typeof ApiPublicSocialInstagramSyncRoute
   '/tarefas/quadros/$quadroId': typeof AuthenticatedTarefasQuadrosQuadroIdRoute
 }
 export interface FileRoutesById {
@@ -279,6 +297,7 @@ export interface FileRoutesById {
   '/_authenticated/biblioteca/referencias': typeof AuthenticatedBibliotecaReferenciasRoute
   '/_authenticated/biblioteca/textos': typeof AuthenticatedBibliotecaTextosRoute
   '/_authenticated/estrategia/ata': typeof AuthenticatedEstrategiaAtaRoute
+  '/_authenticated/estrategia/calendario-social': typeof AuthenticatedEstrategiaCalendarioSocialRoute
   '/_authenticated/social/seeding': typeof AuthenticatedSocialSeedingRoute
   '/_authenticated/social/stories': typeof AuthenticatedSocialStoriesRoute
   '/_authenticated/tarefas/calendario': typeof AuthenticatedTarefasCalendarioRoute
@@ -286,6 +305,7 @@ export interface FileRoutesById {
   '/_authenticated/tarefas/meu-trabalho': typeof AuthenticatedTarefasMeuTrabalhoRoute
   '/_authenticated/tarefas/quadros': typeof AuthenticatedTarefasQuadrosRoute
   '/api/public/push-enviar': typeof ApiPublicPushEnviarRoute
+  '/api/public/social-instagram-sync': typeof ApiPublicSocialInstagramSyncRoute
   '/_authenticated/tarefas/quadros_/$quadroId': typeof AuthenticatedTarefasQuadrosQuadroIdRoute
 }
 export interface FileRouteTypes {
@@ -310,6 +330,7 @@ export interface FileRouteTypes {
     | '/biblioteca/referencias'
     | '/biblioteca/textos'
     | '/estrategia/ata'
+    | '/estrategia/calendario-social'
     | '/social/seeding'
     | '/social/stories'
     | '/tarefas/calendario'
@@ -317,6 +338,7 @@ export interface FileRouteTypes {
     | '/tarefas/meu-trabalho'
     | '/tarefas/quadros'
     | '/api/public/push-enviar'
+    | '/api/public/social-instagram-sync'
     | '/tarefas/quadros/$quadroId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -339,6 +361,7 @@ export interface FileRouteTypes {
     | '/biblioteca/referencias'
     | '/biblioteca/textos'
     | '/estrategia/ata'
+    | '/estrategia/calendario-social'
     | '/social/seeding'
     | '/social/stories'
     | '/tarefas/calendario'
@@ -346,6 +369,7 @@ export interface FileRouteTypes {
     | '/tarefas/meu-trabalho'
     | '/tarefas/quadros'
     | '/api/public/push-enviar'
+    | '/api/public/social-instagram-sync'
     | '/tarefas/quadros/$quadroId'
   id:
     | '__root__'
@@ -369,6 +393,7 @@ export interface FileRouteTypes {
     | '/_authenticated/biblioteca/referencias'
     | '/_authenticated/biblioteca/textos'
     | '/_authenticated/estrategia/ata'
+    | '/_authenticated/estrategia/calendario-social'
     | '/_authenticated/social/seeding'
     | '/_authenticated/social/stories'
     | '/_authenticated/tarefas/calendario'
@@ -376,6 +401,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tarefas/meu-trabalho'
     | '/_authenticated/tarefas/quadros'
     | '/api/public/push-enviar'
+    | '/api/public/social-instagram-sync'
     | '/_authenticated/tarefas/quadros_/$quadroId'
   fileRoutesById: FileRoutesById
 }
@@ -387,6 +413,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicPushEnviarRoute: typeof ApiPublicPushEnviarRoute
+  ApiPublicSocialInstagramSyncRoute: typeof ApiPublicSocialInstagramSyncRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -531,6 +558,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEstrategiaAtaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/estrategia/calendario-social': {
+      id: '/_authenticated/estrategia/calendario-social'
+      path: '/estrategia/calendario-social'
+      fullPath: '/estrategia/calendario-social'
+      preLoaderRoute: typeof AuthenticatedEstrategiaCalendarioSocialRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/social/seeding': {
       id: '/_authenticated/social/seeding'
       path: '/social/seeding'
@@ -580,6 +614,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPushEnviarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/social-instagram-sync': {
+      id: '/api/public/social-instagram-sync'
+      path: '/api/public/social-instagram-sync'
+      fullPath: '/api/public/social-instagram-sync'
+      preLoaderRoute: typeof ApiPublicSocialInstagramSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/tarefas/quadros_/$quadroId': {
       id: '/_authenticated/tarefas/quadros_/$quadroId'
       path: '/tarefas/quadros/$quadroId'
@@ -605,6 +646,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBibliotecaReferenciasRoute: typeof AuthenticatedBibliotecaReferenciasRoute
   AuthenticatedBibliotecaTextosRoute: typeof AuthenticatedBibliotecaTextosRoute
   AuthenticatedEstrategiaAtaRoute: typeof AuthenticatedEstrategiaAtaRoute
+  AuthenticatedEstrategiaCalendarioSocialRoute: typeof AuthenticatedEstrategiaCalendarioSocialRoute
   AuthenticatedSocialSeedingRoute: typeof AuthenticatedSocialSeedingRoute
   AuthenticatedSocialStoriesRoute: typeof AuthenticatedSocialStoriesRoute
   AuthenticatedTarefasCalendarioRoute: typeof AuthenticatedTarefasCalendarioRoute
@@ -632,6 +674,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedBibliotecaReferenciasRoute,
   AuthenticatedBibliotecaTextosRoute: AuthenticatedBibliotecaTextosRoute,
   AuthenticatedEstrategiaAtaRoute: AuthenticatedEstrategiaAtaRoute,
+  AuthenticatedEstrategiaCalendarioSocialRoute:
+    AuthenticatedEstrategiaCalendarioSocialRoute,
   AuthenticatedSocialSeedingRoute: AuthenticatedSocialSeedingRoute,
   AuthenticatedSocialStoriesRoute: AuthenticatedSocialStoriesRoute,
   AuthenticatedTarefasCalendarioRoute: AuthenticatedTarefasCalendarioRoute,
@@ -654,6 +698,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicPushEnviarRoute: ApiPublicPushEnviarRoute,
+  ApiPublicSocialInstagramSyncRoute: ApiPublicSocialInstagramSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
