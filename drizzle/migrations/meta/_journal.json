@@ -477,6 +477,13 @@
       "when": 1794528766538,
       "tag": "0067_seguranca_push_e_politicas",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1794529107739,
+      "tag": "0068_leitura_colaborador",
+      "breakpoints": true
     }
   ]
 }
